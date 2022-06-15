@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
+import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import {
   Input,
+  Textarea,
   Combobox,
   Table,
   TableActions,
@@ -12,11 +13,16 @@ import { useYup } from "hooks";
 import { Prompt } from "Components/modal";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import * as yup from "yup";
-import s from "./dashboard.module.scss";
+import s from "./sales.module.scss";
+import { useReactToPrint } from "react-to-print";
+
+import PrintInvoice from "./printInvoice";
 
 const mainSchema = yup.object({
   date: yup.string().required(),
   gst: yup.number().required().typeError("Enter a valid Number"),
+  customerName: yup.string().required(),
+  customerDetail: yup.string().required(),
 });
 
 const itemSchema = yup.object({
@@ -53,22 +59,33 @@ const Detail = ({ label, value }) => {
 };
 
 const Form = ({ edit, onSuccess }) => {
-  const navigate = useNavigate();
+  const { user } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
   const [err, setErr] = useState(null);
+  const printRef = useRef();
+  const handlePrint = useReactToPrint({ content: () => printRef.current });
   return (
     <div className={`grid gap-1 p-1 ${s.addSaleForm}`}>
       {viewOnly && (
-        <>
-          <div className="flex jsb align-center">
-            <h3>Sale Information</h3>
+        <div className={`flex wrap`}>
+          <div className="flex gap-1 all-columns justify-end align-center">
             <button className="btn" onClick={() => setViewOnly(false)}>
-              Edit Sale
+              Edit
+            </button>
+            <button className="btn" onClick={handlePrint}>
+              Print
             </button>
           </div>
-          <div>
+          <div className="flex-1">
+            <h3>Customer Information</h3>
+            <Detail label="Name" value={edit.customer?.name} />
+            <Detail label="Detail" value={edit.customer?.detail} />
+          </div>
+          <div className="flex-1">
+            <h3>Sale Information</h3>
+            <Detail label="No" value={edit.id} />
             <Detail
               label="Date"
               value={moment(edit?.date, "DD-MM-YYYY hh:mma")}
@@ -88,7 +105,7 @@ const Form = ({ edit, onSuccess }) => {
               }
             />
           </div>
-        </>
+        </div>
       )}
 
       <h3>Items</h3>
@@ -143,6 +160,12 @@ const Form = ({ edit, onSuccess }) => {
       )}
       {err && <p className="error">{err}</p>}
 
+      {edit && (
+        <div style={{ display: "none" }}>
+          <PrintInvoice ref={printRef} sale={edit} user={user} />
+        </div>
+      )}
+
       {!viewOnly && (
         <>
           <ItemForm
@@ -184,7 +207,12 @@ const ItemForm = ({ edit, onSuccess }) => {
     setValue,
     clearErrors,
     formState: { errors },
-  } = useForm({ resolver: useYup(itemSchema) });
+  } = useForm({
+    defaultValues: {
+      unit: "PC",
+    },
+    resolver: useYup(itemSchema),
+  });
 
   useEffect(() => {
     reset({ ...edit });
@@ -247,15 +275,17 @@ const MainForm = ({ edit, items, setErr, onSuccess }) => {
     handleSubmit,
     register,
     reset,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
   });
-
   useEffect(() => {
-    reset({ ...edit, date: moment(edit?.date, "YYYY-MM-DDThh:mm") });
+    reset({
+      ...edit,
+      date: moment(edit?.date, "YYYY-MM-DDThh:mm"),
+      customerName: edit?.customer?.name || "",
+      customerDetail: edit?.customer?.detail || "",
+    });
   }, [edit]);
   return (
     <form
@@ -264,7 +294,12 @@ const MainForm = ({ edit, items, setErr, onSuccess }) => {
           return setErr("Add at least one item");
         }
         onSuccess({
-          ...values,
+          date: values.date,
+          gst: values.gst,
+          customer: {
+            name: values.customerName,
+            detail: values.customerDetail,
+          },
           items,
           id: edit?.id || Math.random().toString().substr(-8),
         });
@@ -285,6 +320,24 @@ const MainForm = ({ edit, items, setErr, onSuccess }) => {
         {...register("gst")}
         error={errors.gst}
       />
+
+      <div className="all-columns">
+        <h3>Customer Information</h3>
+      </div>
+
+      <Input
+        label="Name"
+        {...register("customerName")}
+        required
+        error={errors["customerName"]}
+      />
+      <Textarea
+        label="Detail"
+        {...register("customerDetail")}
+        required
+        error={errors["customerDetail"]}
+      />
+
       <div className="btns">
         <button className="btn">{edit ? "Update" : "Submit"}</button>
       </div>

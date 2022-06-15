@@ -97,6 +97,7 @@ export const TableActions = ({ actions }) => {
           title={action.label}
           className="clear"
           onClick={action.callBack}
+          type="button"
         >
           {action.icon}
         </button>
@@ -109,6 +110,7 @@ export const TableActions = ({ actions }) => {
         ref={btn}
         data-testid="gear-btn"
         onClick={() => setOpen(true)}
+        type="button"
       >
         <BsFillGearFill className={s.gear} /> <FaSortDown className={s.sort} />
       </button>

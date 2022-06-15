@@ -1,10 +1,13 @@
+@import "Components/variables";
+
 .container {
   min-height: 100vh;
   min-width: 100vw;
   display: grid;
   place-items: center;
   form {
+    background: white;
     border-radius: 0.5rem;
-    box-shadow: 0 0 10px rgba(199, 143, 77, 0.5);
+    box-shadow: 0 0 1rem rgba($primary-color-dark3, 0.75);
   }
 }

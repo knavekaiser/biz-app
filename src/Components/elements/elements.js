@@ -3,18 +3,11 @@ import React, {
   useEffect,
   useRef,
   useLayoutEffect,
-  useCallback,
   forwardRef,
 } from "react";
 import { IoIosClose } from "react-icons/io";
-import {
-  FaUpload,
-  FaSortDown,
-  FaSearch,
-  FaCircleNotch,
-  FaRegTrashAlt,
-} from "react-icons/fa";
-import { BsFillGearFill, BsFillExclamationTriangleFill } from "react-icons/bs";
+import { FaUpload, FaSearch, FaRegTrashAlt, FaTimes } from "react-icons/fa";
+import { BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
 import { Link, useLocation, createSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -85,7 +78,6 @@ export const SearchField = ({
   const [data, setData] = useState([]);
   const value = watch(name);
   const [showResult, setShowResult] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [style, setStyle] = useState({});
   const clickHandlerAdded = useState(false);
   const container = useRef();
@@ -94,7 +86,6 @@ export const SearchField = ({
 
   useLayoutEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
-    const top = window.innerHeight - y;
     setStyle({
       position: "absolute",
       left: x,
@@ -121,22 +112,15 @@ export const SearchField = ({
       return () => {
         document.removeEventListener("click", clickHandler);
       };
-      clickHandlerAdded.current = true;
     }
   }, [showResult]);
   useEffect(() => {
     if (value) {
       if (url) {
-        setLoading(true);
-        getData(url)
-          .then((rawData) => {
-            setLoading(false);
-            const data = processData(rawData, value);
-            setData(data);
-          })
-          .catch((err) => {
-            setLoading(false);
-          });
+        getData(url).then((rawData) => {
+          const data = processData(rawData, value);
+          setData(data);
+        });
       } else if (defaultData) {
         setData(
           defaultData.filter((item) =>
@@ -202,7 +186,14 @@ export const SearchField = ({
   );
 };
 
-export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
+export const FileInput = ({
+  label,
+  thumbnail,
+  required,
+  multiple,
+  onChange,
+  prefill,
+}) => {
   const id = useRef(Math.random().toString(36).substr(4));
   const prefillLoaded = useRef(false);
   const [files, setFiles] = useState([]);
@@ -227,9 +218,11 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
         <label>
           {label} {required && "*"}
         </label>
-        <span className={s.fileCount} onClick={() => setShowFiles(true)}>
-          {files.length} files selected
-        </span>
+        {!thumbnail && (
+          <span className={s.fileCount} onClick={() => setShowFiles(true)}>
+            {files.length} files selected
+          </span>
+        )}
       </div>
       <input
         id={id.current}
@@ -258,57 +251,120 @@ export const FileInput = ({ label, required, multiple, onChange, prefill }) => {
           }
         }}
       />
-      <div className={s.inputField}>
-        <label htmlFor={id.current}>
-          <span className={s.fileNames}>
-            {files.reduce((p, a) => {
-              return p + (a.name || a.fileName) + ", ";
-            }, "") || "Item select"}
-          </span>
-          <span className={s.btn}>
-            <FaUpload />
-          </span>
-        </label>
-      </div>
-      <Modal
-        open={showFiles}
-        className={s.fileInputModal}
-        setOpen={setShowFiles}
-        head={true}
-        label="Files"
-      >
-        <div className={s.container}>
-          <Table columns={[{ label: "File" }, { label: "Action" }]}>
-            {files.map((file, i) => (
-              <tr key={i}>
-                <td>
-                  <a target="_blank" href={file.uploadFilePath}>
-                    {file.name || file.fileName || file.uploadFilePath}
-                  </a>
-                </td>
-                <TableActions
-                  actions={[
-                    {
-                      icon: <FaRegTrashAlt />,
-                      label: "Remove",
-                      callBack: () => {
-                        setFiles((prev) =>
-                          prev.filter((f) =>
-                            typeof f === "string"
-                              ? f !== file
-                              : (f.name || f.fileName) !==
-                                (file.name || file.fileName)
-                          )
-                        );
-                      },
-                    },
-                  ]}
-                />
-              </tr>
-            ))}
-          </Table>
+      {thumbnail ? (
+        <ul className={s.files}>
+          {files.map((file, i) => {
+            // console.log(file);
+            const ClearBtn = () => (
+              <button
+                className={`clear ${s.clear}`}
+                type="button"
+                onClick={() =>
+                  setFiles((prev) =>
+                    prev.filter((f) =>
+                      typeof f === "string"
+                        ? f !== file
+                        : (f.name || f.fileName) !==
+                          (file.name || file.fileName)
+                    )
+                  )
+                }
+              >
+                <FaTimes />
+              </button>
+            );
+
+            if (
+              !file.size &&
+              new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file.name)
+            ) {
+              return (
+                <li className={s.file} key={i}>
+                  <ClearBtn />
+                  <img src={file.name} />
+                </li>
+              );
+            }
+
+            if (new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file?.name)) {
+              const url = URL.createObjectURL(file);
+              return (
+                <li className={s.file} key={i}>
+                  <ClearBtn />
+                  <img src={url} />
+                </li>
+              );
+            }
+            return (
+              <li className={s.file} key={i}>
+                <ClearBtn />
+                {file.name || "__file--"}
+              </li>
+            );
+          })}
+          {(multiple || (!multiple && !files.length)) && (
+            <li className={s.fileInput}>
+              <label htmlFor={id.current}>
+                <FaUpload />
+              </label>
+            </li>
+          )}
+        </ul>
+      ) : (
+        <div className={s.inputField}>
+          <label htmlFor={id.current}>
+            <span className={s.fileNames}>
+              {files.reduce((p, a) => {
+                return p + (a.name || a.fileName) + ", ";
+              }, "") || "Item select"}
+            </span>
+            <span className={s.btn}>
+              <FaUpload />
+            </span>
+          </label>
         </div>
-      </Modal>
+      )}
+      {!thumbnail && (
+        <Modal
+          open={showFiles}
+          className={s.fileInputModal}
+          setOpen={setShowFiles}
+          head={true}
+          label="Files"
+        >
+          <div className={s.container}>
+            <Table columns={[{ label: "File" }, { label: "Action" }]}>
+              {files.map((file, i) => (
+                <tr key={i}>
+                  <td>
+                    <a target="_blank" href={file.uploadFilePath}>
+                      {file.name || file.fileName || file.uploadFilePath}
+                    </a>
+                  </td>
+                  <TableActions
+                    actions={[
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Remove",
+                        callBack: () => {
+                          setFiles((prev) =>
+                            prev.filter((f) =>
+                              typeof f === "string"
+                                ? f !== file
+                                : (f.name || f.fileName) !==
+                                  (file.name || file.fileName)
+                            )
+                          );
+                        },
+                      },
+                    ]}
+                  />
+                </tr>
+              ))}
+            </Table>
+          </div>
+        </Modal>
+      )}
     </section>
   );
 };
@@ -349,7 +405,7 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
 };
 
 export const Textarea = forwardRef(
-  ({ className, label, error, ...rest }, ref) => {
+  ({ className, label, error, required, ...rest }, ref) => {
     return (
       <section
         className={`${s.input} ${s.textarea} ${className || ""} ${
@@ -358,7 +414,7 @@ export const Textarea = forwardRef(
       >
         {label && (
           <label>
-            {label} {rest.required && "*"}
+            {label} {required && "*"}
           </label>
         )}
         <span className={s.field}>

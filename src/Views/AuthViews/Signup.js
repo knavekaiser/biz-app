@@ -2,7 +2,9 @@ import { useContext } from "react";
 import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
 import { Input } from "Components/elements";
+import { Link, useNavigate } from "react-router-dom";
 import { useYup } from "hooks";
+import { paths } from "config";
 import * as yup from "yup";
 
 const validationSchema = yup.object({
@@ -16,27 +18,41 @@ const Form = () => {
   const {
     handleSubmit,
     register,
-    reset,
+
     formState: { errors },
   } = useForm({
     resolver: useYup(validationSchema),
   });
-
+  const navigate = useNavigate();
   return (
     <form
-      className="grid gap-2"
-      handleSubmit={handleSubmit((values) => {
+      className="grid gap-1 p-1 m-a"
+      onSubmit={handleSubmit((values) => {
         setUser({
           id: Math.random().toString().substr(-8),
           name: values.name,
           phone: values.phone,
         });
+        navigate("/");
       })}
     >
-      <Input label="Phone" {...register("phone")} />
-      <Input label="Name" {...register("name")} />
-      <Input label="Password" type="password" {...register("password")} />
-      <button>Sign Up</button>
+      <h2>Sign Up</h2>
+      <Input
+        label="Phone"
+        required
+        {...register("phone")}
+        error={errors.phone}
+      />
+      <Input label="Name" required {...register("name")} error={errors.name} />
+      <Input
+        label="Password"
+        required
+        type="password"
+        {...register("password")}
+        error={errors.password}
+      />
+      <button className="btn">Sign Up</button>
+      <Link to={paths.signIn}>Already have an account</Link>
     </form>
   );
 };
