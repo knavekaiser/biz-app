@@ -10,9 +10,7 @@ import s from "./auth.module.scss";
 const Auth = () => {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();
-  console.log("red");
   useEffect(() => {
-    console.log(user);
     if (user) {
       navigate("/");
     }
