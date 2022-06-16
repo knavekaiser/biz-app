@@ -5,10 +5,20 @@
   margin: 1rem auto;
   border-radius: 1rem;
   max-width: 60rem;
+  .sales {
+    tr {
+      grid-template-columns: 1fr 6rem 6rem 6rem 3rem;
+    }
+  }
 }
 
 .addSaleForm {
-  min-width: 42rem;
+  .saleDetail {
+    .box {
+      min-width: 10rem;
+      flex: 1;
+    }
+  }
   .noContent {
     text-align: center;
     background-color: rgba(0, 0, 0, 0.05);
@@ -16,6 +26,12 @@
     font-style: italic;
     color: rgba(0, 0, 0, 0.6);
     border-radius: 0.5rem;
+  }
+  .items {
+    min-height: 10rem;
+    tr {
+      grid-template-columns: 1fr 5rem 4rem 4rem 5rem 3rem;
+    }
   }
   .itemForm {
     grid-template-columns: 1fr 5rem 5rem 8rem 5rem;
@@ -141,6 +157,31 @@
       object-fit: contain;
       width: 8rem;
       max-height: 8rem;
+    }
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    .sales {
+      tr {
+        grid-template-columns: 6rem 3rem 4rem 3rem 3rem;
+      }
+    }
+  }
+  .addSaleForm {
+    .itemForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+      .itemName {
+        grid-column: 1 / -1;
+      }
+      & > button {
+        grid-column: 1 / -1;
+      }
+    }
+    .mainForm {
+      grid-template-columns: 1fr;
     }
   }
 }

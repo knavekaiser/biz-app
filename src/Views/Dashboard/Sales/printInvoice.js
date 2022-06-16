@@ -66,10 +66,10 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
           <tr key={i}>
             <td>{i}</td>
             <td>{item.name}</td>
-            <td>{item.price}</td>
+            <td>{item.price.toFixed(2)}</td>
             <td>{item.qty}</td>
             <td>{item.unit}</td>
-            <td>{item.price * item.qty}/-</td>
+            <td>{(item.price * item.qty).toFixed(2)}/-</td>
           </tr>
         ))}
       </Table>
@@ -88,12 +88,15 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
           <tr>
             <td>1</td>
             <td>Integrated GST</td>
-            <td>{sale.gst}</td>
-            <td>{sale.items.reduce((p, c) => p + c.qty * c.price, 0)}/-</td>
+            <td>{sale.gst.toFixed(2)}</td>
+            <td>
+              {sale.items.reduce((p, c) => p + c.qty * c.price, 0).toFixed(2)}/-
+            </td>
             <td>
               {sale.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
-                .percent(sale.gst)}
+                .percent(sale.gst)
+                .toFixed(2)}
               /-
             </td>
           </tr>
@@ -111,11 +114,12 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
           ).toWords()}
         </p>
         <p className={s.digit}>
-          {sale.items.reduce((p, c) => p + c.qty * c.price, 0) +
+          {(
+            sale.items.reduce((p, c) => p + c.qty * c.price, 0) +
             sale.items
               .reduce((p, c) => p + c.qty * c.price, 0)
-              .percent(sale.gst || 0) +
-            "/-"}
+              .percent(sale.gst || 0)
+          ).toFixed(2) + "/-"}
         </p>
       </div>
 

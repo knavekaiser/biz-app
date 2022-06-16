@@ -69,7 +69,7 @@ const Form = ({ edit, onSuccess }) => {
   return (
     <div className={`grid gap-1 p-1 ${s.addSaleForm}`}>
       {viewOnly && (
-        <div className={`flex wrap`}>
+        <div className={`flex wrap gap-1 ${s.saleDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
             <button className="btn" onClick={() => setViewOnly(false)}>
               Edit
@@ -78,12 +78,12 @@ const Form = ({ edit, onSuccess }) => {
               Print
             </button>
           </div>
-          <div className="flex-1">
+          <div className={s.box}>
             <h3>Customer Information</h3>
             <Detail label="Name" value={edit.customer?.name} />
             <Detail label="Detail" value={edit.customer?.detail} />
           </div>
-          <div className="flex-1">
+          <div className={s.box}>
             <h3>Sale Information</h3>
             <Detail label="No" value={edit.id} />
             <Detail
@@ -93,16 +93,18 @@ const Form = ({ edit, onSuccess }) => {
             <Detail label="Gst" value={(edit?.gst || 0) + "%"} />
             <Detail
               label="NET"
-              value={edit.items.reduce((p, c) => p + c.qty * c.price, 0)}
+              value={edit.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .toFixed(2)}
             />
             <Detail
               label="Total"
-              value={
+              value={(
                 edit.items.reduce((p, c) => p + c.qty * c.price, 0) +
                 edit.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
-              }
+              ).toFixed(2)}
             />
           </div>
         </div>
@@ -111,6 +113,7 @@ const Form = ({ edit, onSuccess }) => {
       <h3>Items</h3>
       {items.length > 0 ? (
         <Table
+          className={s.items}
           columns={[
             { label: "Product" },
             { label: "Price" },
@@ -123,10 +126,10 @@ const Form = ({ edit, onSuccess }) => {
           {items.map((item, i) => (
             <tr key={i}>
               <td>{item.name}</td>
-              <td>{item.price}</td>
+              <td>{item.price.toFixed(2)}</td>
               <td>{item.qty}</td>
               <td>{item.unit}</td>
-              <td>{item.price * item.qty}</td>
+              <td>{(item.price * item.qty).toFixed(2)}</td>
               {!viewOnly && (
                 <TableActions
                   actions={[
@@ -232,6 +235,7 @@ const ItemForm = ({ edit, onSuccess }) => {
         label="Product"
         {...register("name")}
         required
+        className={s.itemName}
         error={errors.name}
       />
       <Input

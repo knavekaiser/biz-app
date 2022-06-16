@@ -1,7 +1,8 @@
 import "./App.scss";
 import { useEffect, useContext } from "react";
 import { SiteContext } from "SiteContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { paths } from "config";
 
 import AuthView from "Views/AuthViews";
 import Dashboard from "Views/Dashboard";
@@ -83,9 +84,12 @@ Number.prototype.toWords = function () {
 function App() {
   const { user } = useContext(SiteContext);
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     if (!user) {
       navigate("/signin");
+    } else if ([paths.signIn, paths.signUp].includes(location.pathname)) {
+      navigate("/");
     }
   }, [user]);
   if (!user) {

@@ -39,6 +39,7 @@ const Sales = () => {
         </button>
       </div>
       <Table
+        className={s.sales}
         columns={[
           { label: "Date" },
           { label: "Total Items" },
@@ -53,8 +54,10 @@ const Sales = () => {
               <Moment format="DD-MM-YYYY hh:mma">{item.date}</Moment>
             </td>
             <td>{item.items.length}</td>
-            <td>{item.items.reduce((p, c) => c.price * c.qty, 0)}</td>
-            <td>{item.gst}</td>
+            <td>
+              {item.items.reduce((p, c) => c.price * c.qty, 0).toFixed(2)}
+            </td>
+            <td>{item.gst.toFixed(2)}</td>
             <TableActions
               actions={[
                 {
@@ -88,6 +91,7 @@ const Sales = () => {
         open={addSale}
         head
         label={`${sale ? "View / Update" : "Add"} Sale`}
+        className={s.addSaleFormModal}
         setOpen={() => {
           setSale(null);
           setAddSale(false);

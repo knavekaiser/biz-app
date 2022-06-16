@@ -219,6 +219,7 @@ const Terms = ({ terms, setTerms }) => {
         label={edit ? "Update Term" : "Add Term"}
         open={addTerm}
         setOpen={setAddTerm}
+        className={s.termFormModal}
       >
         <TermForm
           edit={edit}
