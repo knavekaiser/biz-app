@@ -12,6 +12,7 @@
   place-items: center;
   margin: auto;
   pointer-events: none;
+  max-height: calc((var(--vh) * 100));
   & > * {
     pointer-events: all;
     grid-column: 1/2;
@@ -20,7 +21,7 @@
 }
 
 .modalBackdrop {
-  height: 100vh;
+  height: calc((var(--vh) * 100 - 4px));
   width: 100vw;
   background: rgba(0, 0, 0, 0.7);
   pointer-events: all;
@@ -29,7 +30,7 @@
   pointer-events: all;
   z-index: 10;
   background: white;
-  max-height: calc(100vh - 2rem);
+  max-height: calc((var(--vh) * 100) - 2rem);
   max-width: calc(100vw - 2rem);
   & ~ .modalBackdrop {
     z-index: 10;
@@ -49,7 +50,7 @@
     overflow: hidden;
     & > div:nth-child(2) {
       overflow: auto;
-      max-height: calc(100vh - (3rem + 36px));
+      max-height: calc((var(--vh) * 100) - (3rem + 36px));
       max-width: calc(100vw - 3rem);
     }
   }
@@ -71,7 +72,7 @@
 }
 
 .promptBackdrop {
-  height: 100vh;
+  height: calc((var(--vh) * 100) - 2rem);
   width: 100vw;
   background: rgba(0, 0, 0, 0.5);
 }
@@ -137,13 +138,13 @@
 
 @media only screen and (max-width: 480px) {
   .modal {
-    max-height: calc(100vh);
-    max-width: calc(100vw);
+    max-height: calc((var(--vh) * 100));
+    max-width: 100vw;
     &.withHead {
       & > div:nth-child(2) {
         overflow: auto;
-        max-height: calc(100vh - (1rem + 30px));
-        max-width: calc(100vw);
+        max-height: calc((var(--vh) * 100 - 44px));
+        max-width: 100vw;
       }
     }
   }

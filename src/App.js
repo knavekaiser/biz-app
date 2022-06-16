@@ -49,6 +49,11 @@ var b = [
   "ninety",
 ];
 
+function resizeWindow() {
+  let vh = window.innerHeight * 0.01;
+  document.body.style.setProperty("--vh", `${vh}px`);
+}
+
 Number.prototype.toWords = function () {
   if (this.toString().length > 9) return this;
   let n = ("000000000" + this)
@@ -92,6 +97,12 @@ function App() {
       navigate("/");
     }
   }, [user]);
+
+  useEffect(() => {
+    window.addEventListener("resize", () => resizeWindow());
+    resizeWindow();
+  }, []);
+
   if (!user) {
     return (
       <div className="App">
@@ -100,7 +111,7 @@ function App() {
     );
   }
   return (
-    <div className="App">
+    <div className={"App"}>
       <Dashboard />
     </div>
   );

@@ -1,7 +1,7 @@
 @import "Components/variables";
 
 .container {
-  min-height: 100vh;
+  min-height: calc((var(--vh) * 100));
   min-width: 100vw;
   display: grid;
   place-items: center;

@@ -163,6 +163,7 @@
 
 @media only screen and (max-width: 480px) {
   .content {
+    margin: 0;
     .sales {
       tr {
         grid-template-columns: 6rem 3rem 4rem 3rem 3rem;
