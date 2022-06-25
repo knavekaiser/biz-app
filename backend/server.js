@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// import db from "./app/models/index.js";
+const path = require("path");
 
 app.use((req, res, next) => {
   ["query", "body", "params"].forEach((data) => {
@@ -24,8 +24,10 @@ app.use((req, res, next) => {
   next();
 });
 
+require("./app/routes")(app);
+
 // simple route
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.json({ message: "Welcome to Infin AI API." });
 });
 
@@ -40,10 +42,11 @@ app.get("/assets/*/:file", (req, res) => {
   }
 });
 
-//*************************************************** */
-require("./app/routes")(app);
+app.use(express.static(path.join(__dirname, "client")));
+app.get("*", (req, res) =>
+  res.sendFile(path.join(__dirname, "/client/index.html"))
+);
 
-// set port, listen for requests
 const PORT = process.env.PORT || 8060;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
