@@ -1,4 +1,4 @@
-const baseApiUrl = process.env.REACT_APP_HOST;
+const baseApiUrl = "/";
 
 const endpoints = {
   baseApiUrl,
