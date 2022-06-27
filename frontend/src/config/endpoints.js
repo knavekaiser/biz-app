@@ -1,4 +1,4 @@
-const baseApiUrl = "/";
+const baseApiUrl = "";
 
 const endpoints = {
   baseApiUrl,
