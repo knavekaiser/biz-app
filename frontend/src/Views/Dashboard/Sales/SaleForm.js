@@ -110,7 +110,7 @@ const Form = ({ edit, sales, onSuccess }) => {
               label="Gross"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
-                .fix(2, config.numberSeparator)}
+                .fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             />
             <Detail
@@ -127,7 +127,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                 edit.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
-              ).fix(2, config.numberSeparator)}
+              ).fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             />
             <Detail
@@ -137,7 +137,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                 edit.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
-              ).fix(2, config.numberSeparator)}
+              ).fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             />
           </div>
@@ -165,10 +165,10 @@ const Form = ({ edit, sales, onSuccess }) => {
               <td className="text-right">{item.qty}</td>
               <td>{item.unit}</td>
               <td className="text-right">
-                {item.price.fix(2, config.numberSeparator)}
+                {item.price.fix(2, config?.numberSeparator)}
               </td>
               <td className="text-right">
-                {(item.price * item.qty).fix(2, config.numberSeparator)}
+                {(item.price * item.qty).fix(2, config?.numberSeparator)}
               </td>
               {!viewOnly && (
                 <TableActions

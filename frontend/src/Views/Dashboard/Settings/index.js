@@ -505,7 +505,7 @@ const Config = () => {
         printCurrency: config.print.currency,
         printItemColumns: config.print.itemColumns,
         printInvoiceNoSuffix: config.print.invoiceNoSuffix,
-        numberSeparator: config.numberSeparator,
+        numberSeparator: config?.numberSeparator,
       });
       setUnitOfMeasure(config.unitsOfMeasure);
     }

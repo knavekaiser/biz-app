@@ -64,7 +64,7 @@ const Sales = () => {
                 item.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(item.gst)
-              ).fix(2, config.numberSeparator)}
+              ).fix(2, config?.numberSeparator)}
             </td>
             <TableActions
               actions={[
