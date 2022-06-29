@@ -38,7 +38,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     delete req.body.no;
-    Invoice.updateOne({ _id: req.params.id }, req.body, { new: true })
+    Invoice.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })

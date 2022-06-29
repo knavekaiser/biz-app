@@ -9,6 +9,7 @@ module.exports = mongoose.model(
       },
       print: {
         currency: { type: Schema.Types.String, max: 3, default: "INR" },
+        invoiceNoSuffix: { type: Schema.Types.String },
         itemColumns: {
           type: Schema.Types.Array,
           default: ["no", "product", "total"],

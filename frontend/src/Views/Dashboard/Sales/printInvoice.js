@@ -65,9 +65,10 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
         </div>
         <div className={`${s.box} flex-1`}>
           <Detail
-            label="Date"
-            value={moment(sale?.date, "DD-MM-YYYY hh:mma")}
+            label="Inv No"
+            value={`${sale.no} ${config.print?.invoiceNoSuffix || ""}`}
           />
+          <Detail label="Date" value={moment(sale?.date, "DD-MM-YYYY")} />
           <Detail label="GSTIN" value={user.gstin} />
           <Detail label="PAN" value={user.pan} />
           {user.bankDetails && (
@@ -78,7 +79,6 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
             </>
           )}
           <Detail label="IFSC" value={user.ifsc} />
-          <Detail label="No" value={sale.no} />
           <Detail label="Address" value={user.address} />
           <Detail label="Phone" value={user.phone} />
           <Detail label="Email" value={user.email} />

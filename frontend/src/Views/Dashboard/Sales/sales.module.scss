@@ -50,6 +50,13 @@
       font-size: 0.8em;
     }
   }
+  &.viewOnly {
+    .items {
+      tr {
+        grid-template-columns: 1fr 5rem 4rem 4rem 5rem;
+      }
+    }
+  }
 }
 
 .print {

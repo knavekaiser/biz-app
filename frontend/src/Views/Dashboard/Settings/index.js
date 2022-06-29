@@ -498,12 +498,15 @@ const Config = () => {
   );
 
   useEffect(() => {
-    reset({
-      nextInvoiceNo: config.nextInvoiceNo,
-      printCurrency: config.print.currency,
-      printItemColumns: config.print.itemColumns,
-    });
-    setUnitOfMeasure(config.unitsOfMeasure);
+    if (config) {
+      reset({
+        nextInvoiceNo: config.nextInvoiceNo,
+        printCurrency: config.print.currency,
+        printItemColumns: config.print.itemColumns,
+        printInvoiceNoSuffix: config.print.invoiceNoSuffix,
+      });
+      setUnitOfMeasure(config.unitsOfMeasure);
+    }
   }, [config]);
 
   useEffect(() => {
@@ -529,6 +532,7 @@ const Config = () => {
           print: {
             itemColumns: values.printItemColumns,
             currency: values.printCurrency,
+            invoiceNoSuffix: values.printInvoiceNoSuffix,
           },
         }).then(({ data }) => {
           if (data.success) {
@@ -574,9 +578,15 @@ const Config = () => {
       </section>
 
       <Input
-        label="Next Invoice No."
+        label="Next Invoice Number"
         {...register("nextInvoiceNo")}
         error={errors.nextInvoiceNo}
+      />
+
+      <Input
+        label="Print Invoice No Suffix"
+        {...register("printInvoiceNoSuffix")}
+        error={errors.printInvoiceNoSuffix}
       />
 
       <Input

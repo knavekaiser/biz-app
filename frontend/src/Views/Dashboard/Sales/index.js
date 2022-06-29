@@ -38,7 +38,7 @@ const Sales = () => {
           { label: "No." },
           { label: "Date" },
           { label: "Customer" },
-          { label: "Net Amount" },
+          { label: "Net Amount", className: "text-right" },
           { label: "Action" },
         ]}
       >
@@ -49,8 +49,13 @@ const Sales = () => {
               <Moment format="DD-MM-YYYY">{item.date}</Moment>
             </td>
             <td>{item.customer?.name}</td>
-            <td>
-              {item.items.reduce((p, c) => p + c.price * c.qty, 0).toFixed(2)}
+            <td className="text-right">
+              {(
+                item.items.reduce((p, c) => p + c.qty * c.price, 0) +
+                item.items
+                  .reduce((p, c) => p + c.qty * c.price, 0)
+                  .percent(item.gst)
+              ).toFixed(2)}
             </td>
             <TableActions
               actions={[

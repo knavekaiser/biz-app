@@ -7,6 +7,7 @@ import {
   Combobox,
   Table,
   TableActions,
+  SearchField,
   moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
@@ -60,7 +61,7 @@ const Detail = ({ label, value }) => {
 };
 
 const Form = ({ edit, sales, onSuccess }) => {
-  const { user } = useContext(SiteContext);
+  const { user, config } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
@@ -68,7 +69,11 @@ const Form = ({ edit, sales, onSuccess }) => {
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
   return (
-    <div className={`grid gap-1 p-1 ${s.addSaleForm}`}>
+    <div
+      className={`grid gap-1 p-1 ${s.addSaleForm} ${
+        viewOnly ? s.viewOnly : ""
+      }`}
+    >
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.saleDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
@@ -96,17 +101,31 @@ const Form = ({ edit, sales, onSuccess }) => {
           </div>
           <div className={s.box}>
             <h3>Sale Information</h3>
-            <Detail label="No" value={edit.no} />
             <Detail
-              label="Date"
-              value={moment(edit?.date, "DD-MM-YYYY hh:mma")}
+              label="Inv No"
+              value={`${edit.no} ${config.print?.invoiceNoSuffix || ""}`}
             />
-            <Detail label="Gst" value={(edit?.gst || 0) + "%"} />
+            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
             <Detail
-              label="NET"
+              label="Gross"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
                 .toFixed(2)}
+            />
+            <Detail
+              label="GST"
+              value={edit.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .percent(edit?.gst || 0)}
+            />
+            <Detail
+              label="Net"
+              value={(
+                edit.items.reduce((p, c) => p + c.qty * c.price, 0) +
+                edit.items
+                  .reduce((p, c) => p + c.qty * c.price, 0)
+                  .percent(edit.gst)
+              ).toFixed(2)}
             />
             <Detail
               label="Total"
@@ -127,10 +146,10 @@ const Form = ({ edit, sales, onSuccess }) => {
           className={s.items}
           columns={[
             { label: "Product" },
-            { label: "Price" },
             { label: "QTY" },
             { label: "Unit" },
-            { label: "Total" },
+            { label: "Rate", className: "text-right" },
+            { label: "Total", className: "text-right" },
             ...(viewOnly ? [] : [{ label: "Action" }]),
           ]}
         >
@@ -139,10 +158,12 @@ const Form = ({ edit, sales, onSuccess }) => {
               <td className={s.name}>
                 <span className="ellipsis">{item.name}</span>
               </td>
-              <td>{item.price.toFixed(2)}</td>
               <td>{item.qty}</td>
               <td>{item.unit}</td>
-              <td>{(item.price * item.qty).toFixed(2)}</td>
+              <td className="text-right">{item.price.toFixed(2)}</td>
+              <td className="text-right">
+                {(item.price * item.qty).toFixed(2)}
+              </td>
               {!viewOnly && (
                 <TableActions
                   actions={[
@@ -187,6 +208,7 @@ const Form = ({ edit, sales, onSuccess }) => {
           <ItemForm
             key={editItem ? "edit" : "add"}
             edit={editItem}
+            sales={sales}
             onSuccess={(newItem) => {
               setErr(null);
               if (editItem) {
@@ -211,6 +233,7 @@ const Form = ({ edit, sales, onSuccess }) => {
             sales={sales}
             setErr={setErr}
             onSuccess={onSuccess}
+            setViewOnly={setViewOnly}
           />
         </>
       )}
@@ -218,7 +241,7 @@ const Form = ({ edit, sales, onSuccess }) => {
   );
 };
 
-const ItemForm = ({ edit, onSuccess }) => {
+const ItemForm = ({ edit, sales, onSuccess }) => {
   const { config } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -234,7 +257,6 @@ const ItemForm = ({ edit, onSuccess }) => {
     },
     resolver: useYup(itemSchema),
   });
-
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -249,13 +271,33 @@ const ItemForm = ({ edit, onSuccess }) => {
       })}
       className={`${s.itemForm} grid gap-1`}
     >
-      <Input
+      <SearchField
         label="Product"
-        {...register("name")}
-        required
-        className={s.itemName}
+        data={sales
+          .reduce((p, c) => [...p, ...c.items], [])
+          .map((item) => ({
+            label: item.name,
+            value: item._id,
+            data: item,
+          }))}
+        register={register}
+        name="name"
+        formOptions={{ required: true }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(item) => {
+          if (typeof item === "string") {
+            setValue("name", item);
+          } else {
+            setValue("name", item.name);
+            setValue("price", item.price);
+          }
+        }}
         error={errors.name}
+        className={s.itemName}
       />
+
       <Input
         label="Price"
         type="number"
@@ -289,7 +331,15 @@ const ItemForm = ({ edit, onSuccess }) => {
   );
 };
 
-const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
+const MainForm = ({
+  disabled,
+  edit,
+  items,
+  sales,
+  setErr,
+  onSuccess,
+  setViewOnly,
+}) => {
   const { config, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -307,7 +357,7 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
   useEffect(() => {
     reset({
       ...edit,
-      date: moment(edit?.date, "YYYY-MM-DDThh:mm"),
+      date: moment(edit?.date, "YYYY-MM-DD"),
       customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
     });
@@ -338,8 +388,8 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       className={`${s.mainForm} grid gap-1`}
     >
       <Input
-        label="Date & Time"
-        type="datetime-local"
+        label="Date"
+        type="date"
         {...register("date")}
         required
         error={errors.date}
@@ -370,6 +420,14 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       />
 
       <div className="btns">
+        <button
+          type="button"
+          onClick={() => setViewOnly(true)}
+          className="btn"
+          disabled={disabled || loading}
+        >
+          Cancel
+        </button>
         <button className="btn" disabled={disabled || loading}>
           {edit ? "Update" : "Submit"}
         </button>

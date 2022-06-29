@@ -1,5 +1,5 @@
 module.exports = {
-  appName: "Infin AI",
+  appName: "BIZ APP",
 
   responseFn: {
     success: (res, data, message = "Success") => {
