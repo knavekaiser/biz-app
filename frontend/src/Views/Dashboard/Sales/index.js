@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { SiteContext } from "SiteContext";
 import { Table, TableActions, Moment } from "Components/elements";
 import { FaRegEye, FaRegTrashAlt } from "react-icons/fa";
 import { Prompt, Modal } from "Components/modal";
@@ -9,6 +10,7 @@ import { endpoints } from "config";
 import SaleForm from "./SaleForm";
 
 const Sales = () => {
+  const { config } = useContext(SiteContext);
   const [sales, setSales] = useState([]);
   const [sale, setSale] = useState(null);
   const [addSale, setAddSale] = useState(false);
@@ -43,7 +45,14 @@ const Sales = () => {
         ]}
       >
         {sales.map((item) => (
-          <tr key={item._id}>
+          <tr
+            onClick={() => {
+              setSale(item);
+              setAddSale(true);
+            }}
+            style={{ cursor: "pointer" }}
+            key={item._id}
+          >
             <td>{item.no}</td>
             <td>
               <Moment format="DD-MM-YYYY">{item.date}</Moment>
@@ -55,7 +64,7 @@ const Sales = () => {
                 item.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(item.gst)
-              ).toFixed(2)}
+              ).fix(2, config.numberSeparator)}
             </td>
             <TableActions
               actions={[

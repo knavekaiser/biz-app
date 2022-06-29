@@ -4,6 +4,7 @@
   min-height: calc((var(--vh) * 100));
   min-width: 100vw;
   display: grid;
+  grid-template-rows: 1fr min-content;
   place-items: center;
   form {
     width: 100%;
@@ -11,5 +12,8 @@
     background: white;
     border-radius: 0.5rem;
     box-shadow: 0 0 1rem rgba($primary-color-dark3, 0.75);
+  }
+  footer {
+    padding: 1.5rem;
   }
 }

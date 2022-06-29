@@ -22,6 +22,8 @@ const Auth = () => {
         <Route path={paths.signUp} element={<Signup />} />
         <Route path={paths.signIn} element={<SignIn />} />
       </Routes>
+
+      <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>
     </div>
   );
 };

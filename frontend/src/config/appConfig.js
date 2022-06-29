@@ -4,6 +4,13 @@ Number.prototype.getPercentage = function (n) {
 Number.prototype.percent = function (n) {
   return (this / 100) * n;
 };
+Number.prototype.fix = function (n, locale) {
+  const decimal = this.toFixed(n).replace(/.*\./, "");
+  if (locale) {
+    return parseInt(this).toLocaleString(locale) + "." + decimal;
+  }
+  return +this.toFixed(n);
+};
 
 var a = [
   "",

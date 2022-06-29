@@ -112,7 +112,9 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
                 </td>
               )}
               {config.print.itemColumns.includes("price") && (
-                <td className="text-right">{item.price.toFixed(2)}</td>
+                <td className="text-right">
+                  {item.price.fix(2, config.numberSeparator)}
+                </td>
               )}
               {config.print.itemColumns.includes("qty") && (
                 <td className="text-right">{item.qty}</td>
@@ -122,7 +124,7 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
               )}
               {config.print.itemColumns.includes("total") && (
                 <td className="text-right">
-                  {(item.price * item.qty).toFixed(2)}
+                  {(item.price * item.qty).fix(2, config.numberSeparator)}
                 </td>
               )}
             </tr>
@@ -150,15 +152,19 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
           <tr>
             <td>1</td>
             <td>Integrated GST</td>
-            <td className="text-right">{sale.gst.toFixed(2)}</td>
             <td className="text-right">
-              {sale.items.reduce((p, c) => p + c.qty * c.price, 0).toFixed(2)}
+              {sale.gst.fix(2, config.numberSeparator)}
+            </td>
+            <td className="text-right">
+              {sale.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .fix(2, config.numberSeparator)}
             </td>
             <td className="text-right">
               {sale.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
                 .percent(sale.gst)
-                .toFixed(2)}
+                .fix(2, config.numberSeparator)}
             </td>
           </tr>
         </Table>
@@ -180,7 +186,7 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
             sale.items
               .reduce((p, c) => p + c.qty * c.price, 0)
               .percent(sale.gst || 0)
-          ).toFixed(2)}
+          ).fix(2, config.numberSeparator)}
         </p>
       </div>
 

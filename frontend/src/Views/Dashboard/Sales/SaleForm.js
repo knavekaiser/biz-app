@@ -110,7 +110,7 @@ const Form = ({ edit, sales, onSuccess }) => {
               label="Gross"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
-                .toFixed(2)}
+                .fix(2, config.numberSeparator)}
             />
             <Detail
               label="GST"
@@ -125,7 +125,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                 edit.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
-              ).toFixed(2)}
+              ).fix(2, config.numberSeparator)}
             />
             <Detail
               label="Total"
@@ -134,7 +134,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                 edit.items
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
-              ).toFixed(2)}
+              ).fix(2, config.numberSeparator)}
             />
           </div>
         </div>
@@ -160,9 +160,11 @@ const Form = ({ edit, sales, onSuccess }) => {
               </td>
               <td>{item.qty}</td>
               <td>{item.unit}</td>
-              <td className="text-right">{item.price.toFixed(2)}</td>
               <td className="text-right">
-                {(item.price * item.qty).toFixed(2)}
+                {item.price.fix(2, config.numberSeparator)}
+              </td>
+              <td className="text-right">
+                {(item.price * item.qty).fix(2, config.numberSeparator)}
               </td>
               {!viewOnly && (
                 <TableActions

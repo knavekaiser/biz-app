@@ -15,6 +15,7 @@ module.exports = mongoose.model(
           default: ["no", "product", "total"],
         },
       },
+      numberSeparator: { type: Schema.Types.String, default: "en-US" },
       nextInvoiceNo: { type: Schema.Types.Number, min: 0, default: 1 },
     },
     { timestamps: true }

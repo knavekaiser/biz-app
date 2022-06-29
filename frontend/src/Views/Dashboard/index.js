@@ -53,6 +53,7 @@ const Dashboard = () => {
         <Route path="/" element={<Sales />} />
         <Route path={paths.settings.baseUrl} element={<Settings />} />
       </Routes>
+      <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>
     </div>
   );
 };

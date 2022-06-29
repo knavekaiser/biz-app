@@ -9,6 +9,7 @@ import {
   TableActions,
   Tabs,
   CustomRadio,
+  Combobox,
 } from "Components/elements";
 import * as yup from "yup";
 import s from "./settings.module.scss";
@@ -504,6 +505,7 @@ const Config = () => {
         printCurrency: config.print.currency,
         printItemColumns: config.print.itemColumns,
         printInvoiceNoSuffix: config.print.invoiceNoSuffix,
+        numberSeparator: config.numberSeparator,
       });
       setUnitOfMeasure(config.unitsOfMeasure);
     }
@@ -529,6 +531,7 @@ const Config = () => {
         updateConfig({
           unitsOfMeasure,
           nextInvoiceNo: values.nextInvoiceNo,
+          numberSeparator: values.numberSeparator,
           print: {
             itemColumns: values.printItemColumns,
             currency: values.printCurrency,
@@ -593,6 +596,18 @@ const Config = () => {
         label="Print Currency"
         {...register("printCurrency")}
         error={errors.printCurrency}
+      />
+
+      <Combobox
+        label="Number Separator"
+        name="numberSeparator"
+        watch={watch}
+        options={[
+          { label: "Indian", value: "en-IN" },
+          { label: "US", value: "en-US" },
+        ]}
+        register={register}
+        setValue={setValue}
       />
 
       <CustomRadio

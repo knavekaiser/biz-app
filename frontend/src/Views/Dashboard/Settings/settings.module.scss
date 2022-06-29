@@ -8,6 +8,7 @@
   display: grid;
   grid-gap: 1rem;
   padding: 1rem;
+  grid-template-rows: min-content min-content;
   .terms {
     tr {
       grid-template-columns: 1fr 4rem;

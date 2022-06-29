@@ -42,8 +42,7 @@ const Form = () => {
         );
       })}
     >
-      <h1 className="text-center">Cash App</h1>
-      <br />
+      <h1 className="text-center">Biz App</h1>
       <h2>Sign In</h2>
       {invalidCred && <p className="error">Invalid credentials</p>}
       <Input

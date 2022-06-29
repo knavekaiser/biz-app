@@ -2,6 +2,9 @@
 
 .container {
   border-radius: 0.5rem;
+  display: grid;
+  height: calc((var(--vh) * 100));
+  grid-template-rows: min-content 1fr min-content;
   .header {
     z-index: 100;
     position: sticky;
@@ -35,6 +38,20 @@
     }
   }
   .content {
+    background: red !important;
+    width: 100%;
     max-width: 60rem;
+    grid-template-rows: min-content 1fr;
+  }
+  footer {
+    text-align: center;
+    padding-bottom: 1rem;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  footer {
+    text-align: center;
+    padding: 1rem;
   }
 }
