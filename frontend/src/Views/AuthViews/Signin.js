@@ -6,6 +6,7 @@ import { Input } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { paths, endpoints } from "config";
 import * as yup from "yup";
+import s from "./auth.module.scss";
 
 const validationSchema = yup.object({
   phone: yup.string().required("Required"),
@@ -42,6 +43,7 @@ const Form = () => {
         );
       })}
     >
+      <img className={s.illustration} src="/assets/plant.png" />
       <h1 className="text-center">Biz App</h1>
       <h2>Sign In</h2>
       {invalidCred && <p className="error">Invalid credentials</p>}

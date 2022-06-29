@@ -7,6 +7,7 @@ import { useYup, useFetch } from "hooks";
 import { paths, endpoints } from "config";
 import { Prompt } from "Components/modal";
 import * as yup from "yup";
+import s from "./auth.module.scss";
 
 const validationSchema = yup.object({
   phone: yup.string().required("Required"),
@@ -48,8 +49,8 @@ const Form = () => {
         });
       })}
     >
+      <img className={s.illustration} src="/assets/plant.png" />
       <h1 className="text-center">Cash App</h1>
-      <br />
       <h2>Sign Up</h2>
       <Input
         label="Phone"

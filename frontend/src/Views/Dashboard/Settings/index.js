@@ -621,7 +621,7 @@ const Config = () => {
         options={[
           { label: "Invoice No", value: "no" },
           { label: "Product", value: "product" },
-          { label: "QTY", value: "qty" },
+          { label: "Qty", value: "qty" },
           { label: "Unit", value: "unit" },
           { label: "Total", value: "total" },
         ]}

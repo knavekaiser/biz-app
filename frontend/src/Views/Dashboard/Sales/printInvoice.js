@@ -66,7 +66,7 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
         <div className={`${s.box} flex-1`}>
           <Detail
             label="Inv No"
-            value={`${sale.no} ${config.print?.invoiceNoSuffix || ""}`}
+            value={`${sale.no}${config.print?.invoiceNoSuffix || ""}`}
           />
           <Detail label="Date" value={moment(sale?.date, "DD-MM-YYYY")} />
           <Detail label="GSTIN" value={user.gstin} />

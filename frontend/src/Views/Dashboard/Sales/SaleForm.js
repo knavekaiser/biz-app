@@ -36,7 +36,7 @@ const itemSchema = yup.object({
     .typeError("Enter a valid Number"),
   qty: yup
     .number()
-    .min(1, "QTY can not be less than 1")
+    .min(1, "Qty can not be less than 1")
     .required()
     .typeError("Enter a valid Number"),
   unit: yup.lazy((value) => {
@@ -51,10 +51,10 @@ const itemSchema = yup.object({
   }),
 });
 
-const Detail = ({ label, value }) => {
+const Detail = ({ label, value, className }) => {
   return (
-    <p className={s.detail}>
-      <span className={s.label}>{label}</span>:{" "}
+    <p className={`${s.detail} ${className || ""}`}>
+      <span className={s.label}>{label}:</span>{" "}
       <span className={s.value}>{value}</span>
     </p>
   );
@@ -103,7 +103,7 @@ const Form = ({ edit, sales, onSuccess }) => {
             <h3>Sale Information</h3>
             <Detail
               label="Inv No"
-              value={`${edit.no} ${config.print?.invoiceNoSuffix || ""}`}
+              value={`${edit.no}${config.print?.invoiceNoSuffix || ""}`}
             />
             <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
             <Detail
@@ -111,12 +111,14 @@ const Form = ({ edit, sales, onSuccess }) => {
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
                 .fix(2, config.numberSeparator)}
+              className="flex justify-space-between"
             />
             <Detail
               label="GST"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
                 .percent(edit?.gst || 0)}
+              className="flex justify-space-between"
             />
             <Detail
               label="Net"
@@ -126,6 +128,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
               ).fix(2, config.numberSeparator)}
+              className="flex justify-space-between"
             />
             <Detail
               label="Total"
@@ -135,6 +138,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(edit.gst)
               ).fix(2, config.numberSeparator)}
+              className="flex justify-space-between"
             />
           </div>
         </div>
@@ -146,7 +150,7 @@ const Form = ({ edit, sales, onSuccess }) => {
           className={s.items}
           columns={[
             { label: "Product" },
-            { label: "QTY" },
+            { label: "Qty", className: "text-right" },
             { label: "Unit" },
             { label: "Rate", className: "text-right" },
             { label: "Total", className: "text-right" },
@@ -158,7 +162,7 @@ const Form = ({ edit, sales, onSuccess }) => {
               <td className={s.name}>
                 <span className="ellipsis">{item.name}</span>
               </td>
-              <td>{item.qty}</td>
+              <td className="text-right">{item.qty}</td>
               <td>{item.unit}</td>
               <td className="text-right">
                 {item.price.fix(2, config.numberSeparator)}
@@ -279,7 +283,7 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
           .reduce((p, c) => [...p, ...c.items], [])
           .map((item) => ({
             label: item.name,
-            value: item._id,
+            value: item.name,
             data: item,
           }))}
         register={register}
@@ -347,6 +351,8 @@ const MainForm = ({
     handleSubmit,
     register,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
@@ -408,12 +414,30 @@ const MainForm = ({
         <h3>Customer Information</h3>
       </div>
 
-      <Input
+      <SearchField
         label="Name"
-        {...register("customerName")}
-        required
-        error={errors["customerName"]}
+        data={sales.map((item) => ({
+          label: item.customer.name,
+          value: item.customer.name,
+          data: item.customer,
+        }))}
+        register={register}
+        name="customerName"
+        formOptions={{ required: true }}
+        renderListItem={(item) => <>{item.label}</>}
+        watch={watch}
+        setValue={setValue}
+        onChange={(item) => {
+          if (typeof item === "string") {
+            setValue("customerName", item);
+          } else {
+            setValue("customerName", item.name);
+            setValue("customerDetail", item.detail);
+          }
+        }}
+        error={errors.customerName}
       />
+
       <Textarea
         label="Detail"
         {...register("customerDetail")}

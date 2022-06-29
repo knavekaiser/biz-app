@@ -7,13 +7,28 @@
   grid-template-rows: 1fr min-content;
   place-items: center;
   form {
+    overflow: hidden;
+    .illustration {
+      width: calc(100% + 2rem);
+      margin: -1rem;
+    }
     width: 100%;
     max-width: 25rem;
     background: white;
     border-radius: 0.5rem;
     box-shadow: 0 0 1rem rgba($primary-color-dark3, 0.75);
+    h1 {
+      // color: $primary-color;
+    }
   }
   footer {
     padding: 1.5rem;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .container {
+    padding: 1rem;
+    padding-bottom: 0;
   }
 }

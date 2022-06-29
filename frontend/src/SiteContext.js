@@ -5,7 +5,7 @@ import { endpoints } from "config";
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [config, setConfig] = useState(null);
+  const [config, setConfig] = useState({});
 
   const { get: getConfig } = useFetch(endpoints.userConfig);
   useEffect(() => {
