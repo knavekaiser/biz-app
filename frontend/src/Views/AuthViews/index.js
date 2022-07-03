@@ -3,6 +3,7 @@ import { SiteContext } from "SiteContext";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Signup from "./Signup";
 import SignIn from "./Signin";
+import ResetPassword from "./ResetPassword";
 import { paths } from "config";
 
 import s from "./auth.module.scss";
@@ -21,6 +22,7 @@ const Auth = () => {
       <Routes>
         <Route path={paths.signUp} element={<Signup />} />
         <Route path={paths.signIn} element={<SignIn />} />
+        <Route path={paths.resetPassword} element={<ResetPassword />} />
       </Routes>
 
       <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>

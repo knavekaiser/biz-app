@@ -13,4 +13,5 @@ module.exports = {
   Config: require("./config.model"),
   Invoice: require("./invoice.model"),
   User: require("./user.model"),
+  Otp: require("./otp.model"),
 };

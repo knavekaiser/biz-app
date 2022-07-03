@@ -1,6 +1,7 @@
 const paths = {
   signIn: "/signin",
   signUp: "/signup",
+  resetPassword: "/reset-password",
   settings: {
     baseUrl: "/settings/*",
     businessInformation: "business-information",

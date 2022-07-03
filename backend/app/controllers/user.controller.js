@@ -1,10 +1,15 @@
 const {
   authConfig,
+  appConfig,
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { appHelper, genId } = require("../helpers");
+const {
+  appHelper,
+  smsHelper,
+  appHelper: { genId },
+} = require("../helpers");
 
-const { User, Config } = require("../models");
+const { User, Otp, Config } = require("../models");
 
 exports.signup = async (req, res) => {
   try {
@@ -32,6 +37,103 @@ exports.login = async (req, res) => {
       return appHelper.signIn(res, user._doc);
     } else {
       return responseFn.error(res, {}, responseStr.invalid_cred);
+    }
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ phone: req.body.phone });
+
+    if (user) {
+      const otp = genId(6, { numbers: true });
+      new Otp({
+        user: user._id,
+        code: appHelper.generateHash(otp),
+      })
+        .save()
+        .then(async (otpRec) => {
+          // smsHelper.send()
+          const result = { success: true };
+          if (result.success) {
+            return responseFn.success(
+              res,
+              {
+                data: {
+                  phone: user.phone,
+                  timeout: appConfig.otpTimeout,
+                },
+              },
+              responseStr.otp_sent + ` (use ${otp})`
+            );
+          } else {
+            await Otp.deleteOne({ _id: otpRec._id });
+            return responseFn.error(res, {}, responseStr.otp_sms_failed);
+          }
+        })
+        .catch(async (err) => {
+          if (err.code === 11000) {
+            const otpRec = await Otp.findOne({ user: user._id });
+
+            return responseFn.error(
+              res,
+              {
+                cooldown: parseInt(
+                  appConfig.otpTimeout -
+                    (new Date() - new Date(otpRec.createdAt)) / 1000
+                ),
+              },
+              responseStr.otp_sent_already
+            );
+          }
+          return responseFn.error(res, {}, error.message, 500);
+        });
+    } else {
+      return responseFn.error(res, {}, responseStr.record_not_found);
+    }
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ phone: req.body.phone });
+    const otpRec = await Otp.findOne({ user: user._id });
+    if (!otpRec) {
+      return responseFn.error(res, {}, responseStr.otp_not_found);
+    }
+    if (appHelper.compareHash(req.body.code, otpRec.code)) {
+      await User.updateOne(
+        { _id: user._id },
+        { password: appHelper.generateHash(req.body.password) }
+      );
+      await Otp.deleteOne({ _id: otpRec._id });
+      return responseFn.success(res, {}, responseStr.password_reset_successful);
+    } else {
+      if (otpRec.attempts >= appConfig.passwordResetOtpAttepts - 1) {
+        await Otp.deleteOne({ _id: otpRec._id });
+        return responseFn.error(
+          res,
+          {},
+          responseStr.too_many_attempts_to_reset_password
+        );
+      } else {
+        await Otp.updateOne({ _id: otpRec._id }, { $inc: { attempts: 1 } });
+        return responseFn.error(
+          res,
+          {
+            attemptsLeft:
+              appConfig.passwordResetOtpAttepts - (otpRec.attempts + 1),
+          },
+          responseStr.wrong_otp.replace(
+            "{NUM}",
+            appConfig.passwordResetOtpAttepts - (otpRec.attempts + 1)
+          )
+        );
+      }
     }
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

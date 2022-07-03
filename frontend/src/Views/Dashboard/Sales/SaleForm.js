@@ -117,7 +117,8 @@ const Form = ({ edit, sales, onSuccess }) => {
               label="GST"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
-                .percent(edit?.gst || 0)}
+                .percent(edit?.gst || 0)
+                .fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             />
             <Detail

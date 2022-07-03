@@ -23,7 +23,11 @@ function App() {
   useEffect(() => {
     if (!user) {
       navigate("/signin", { replace: true });
-    } else if ([paths.signIn, paths.signUp].includes(location.pathname)) {
+    } else if (
+      [paths.signIn, paths.signUp, paths.resetPassword].includes(
+        location.pathname
+      )
+    ) {
       navigate("/", { replace: true });
     }
   }, [user]);

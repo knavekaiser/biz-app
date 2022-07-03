@@ -7,4 +7,5 @@ Number.prototype.percent = function (n) {
 
 module.exports = {
   appHelper: require("./app.helper"),
+  smsHelper: require("./sms.helper"),
 };

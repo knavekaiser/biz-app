@@ -12,6 +12,12 @@ Number.prototype.fix = function (n, locale) {
   return +this.toFixed(n);
 };
 
+Number.prototype.pad = function (l) {
+  let ziros = "";
+  for (let i = 0; i < l; i++) ziros += "0";
+  return ziros.length >= `${this}`.length ? (ziros + this).slice(-l) : this;
+};
+
 var a = [
   "",
   "one ",

@@ -20,6 +20,24 @@
     h1 {
       // color: $primary-color;
     }
+    .resetPasswordLink {
+      margin-top: -0.75rem;
+      text-align: right;
+      text-decoration: underline;
+    }
+    .resend {
+      margin-top: -0.75rem;
+      button {
+        display: inline-block;
+        font-size: 1em;
+        background: none;
+        border: none;
+        outline: none;
+        font-weight: bold;
+        cursor: pointer;
+        font-style: italic;
+      }
+    }
   }
   footer {
     padding: 1.5rem;

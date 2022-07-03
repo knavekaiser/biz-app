@@ -12,7 +12,10 @@ import s from "./auth.module.scss";
 const validationSchema = yup.object({
   phone: yup.string().required("Required"),
   name: yup.string().required("Required"),
-  password: yup.string().required("Required"),
+  password: yup
+    .string()
+    .min(8, "Password must be 8 characters or longer")
+    .required("Required"),
 });
 
 const Form = () => {
@@ -49,8 +52,8 @@ const Form = () => {
         });
       })}
     >
-      <img className={s.illustration} src="/assets/plant.png" />
-      <h1 className="text-center">Cash App</h1>
+      <img className={s.illustration} src="/assets/infinAI.png" />
+      <h1 className="text-center">Biz App</h1>
       <h2>Sign Up</h2>
       <Input
         label="Phone"

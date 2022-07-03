@@ -8,7 +8,7 @@
     "start": "nodemon server.js"
   },
   "author": "Naeem Ahmad",
-  "license": "None",
+  "license": "UNLICENSED",
   "private": null,
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -19,6 +19,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.4.0",
     "multer": "^1.4.5-lts.1",
+    "node-fetch": "2.6.6",
     "nodemailer": "^6.7.5",
     "yup": "^0.32.11"
   }

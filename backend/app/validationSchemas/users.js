@@ -16,12 +16,38 @@ module.exports = {
       password: commonYup.password.required(),
     }),
   }),
+
   login: yup.object({
     body: yup.object({
       phone: yup.string().required(),
       password: yup.string().required(),
     }),
   }),
+
+  forgotPassword: yup.object({
+    body: yup.object({
+      phone: yup
+        .string()
+        .required()
+        .test("checkPhone", "Account not found", (v) =>
+          User.findOne({ phone: v })
+        ),
+    }),
+  }),
+
+  resetPassword: yup.object({
+    body: yup.object({
+      phone: yup
+        .string()
+        .required()
+        .test("checkPhone", "Account not found", (v) =>
+          User.findOne({ phone: v })
+        ),
+      code: yup.string().required(),
+      password: commonYup.password.required(),
+    }),
+  }),
+
   update: yup.object({
     body: yup.object({
       name: yup.string().min(3),

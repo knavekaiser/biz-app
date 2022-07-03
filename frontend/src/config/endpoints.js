@@ -8,6 +8,8 @@ const endpoints = {
   invoices: `${baseApiUrl}/api/invoices`,
   userConfig: `${baseApiUrl}/api/user-config`,
   logout: `${baseApiUrl}/api/users/logout`,
+  forgotPassword: `${baseApiUrl}/api/users/forgot-password`,
+  resetPassword: `${baseApiUrl}/api/users/reset-password`,
 };
 
 export default endpoints;

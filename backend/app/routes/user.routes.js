@@ -8,6 +8,16 @@ module.exports = function (app) {
   //-------------------------- Auth
   router.post("/signup", validate(schema.signup), controller.signup);
   router.post("/signin", validate(schema.login), controller.login);
+  router.post(
+    "/forgot-password",
+    validate(schema.forgotPassword),
+    controller.forgotPassword
+  );
+  router.post(
+    "/reset-password",
+    validate(schema.resetPassword),
+    controller.resetPassword
+  );
   router.post("/logout", controller.logout);
 
   //-------------------------- Profile
