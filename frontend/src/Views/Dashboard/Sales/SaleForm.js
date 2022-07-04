@@ -447,14 +447,16 @@ const MainForm = ({
       />
 
       <div className="btns">
-        <button
-          type="button"
-          onClick={() => setViewOnly(true)}
-          className="btn"
-          disabled={disabled || loading}
-        >
-          Cancel
-        </button>
+        {
+          //   <button
+          //   type="button"
+          //   onClick={() => setViewOnly(true)}
+          //   className="btn"
+          //   disabled={disabled || loading}
+          // >
+          //   Cancel
+          // </button>
+        }
         <button className="btn" disabled={disabled || loading}>
           {edit ? "Update" : "Submit"}
         </button>

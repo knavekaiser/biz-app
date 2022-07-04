@@ -55,7 +55,7 @@ const Sales = () => {
           >
             <td className={s.no}>
               {item.no}
-              {config.print?.invoiceNoSuffix || ""}
+              {config?.print?.invoiceNoSuffix || ""}
             </td>
             <td className={s.date}>
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
