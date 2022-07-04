@@ -53,12 +53,15 @@ const Sales = () => {
             style={{ cursor: "pointer" }}
             key={item._id}
           >
-            <td>{item.no}</td>
-            <td>
-              <Moment format="DD-MM-YYYY">{item.date}</Moment>
+            <td className={s.no}>
+              {item.no}
+              {config.print?.invoiceNoSuffix || ""}
             </td>
-            <td>{item.customer?.name}</td>
-            <td className="text-right">
+            <td className={s.date}>
+              <Moment format="DD/MM/YYYY">{item.date}</Moment>
+            </td>
+            <td className={s.customer}>{item.customer?.name}</td>
+            <td className={`text-right ${s.net}`}>
               {(
                 item.items.reduce((p, c) => p + c.qty * c.price, 0) +
                 item.items
@@ -67,6 +70,7 @@ const Sales = () => {
               ).fix(2, config?.numberSeparator)}
             </td>
             <TableActions
+              className={s.actions}
               actions={[
                 {
                   icon: <FaRegEye />,

@@ -20,9 +20,7 @@ const Form = () => {
     handleSubmit,
     register,
     formState: { errors },
-  } = useForm({
-    resolver: useYup(validationSchema),
-  });
+  } = useForm({ resolver: useYup(validationSchema) });
   const navigate = useNavigate();
   const [invalidCred, setInvalidCred] = useState(false);
   const { post: login, loading } = useFetch(endpoints.signIn);

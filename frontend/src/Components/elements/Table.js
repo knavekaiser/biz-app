@@ -66,7 +66,7 @@ export const Table = ({
   );
 };
 
-export const TableActions = ({ actions }) => {
+export const TableActions = ({ actions, className }) => {
   const btn = useRef();
   const popupContainerRef = useRef();
   const [open, setOpen] = useState(false);
@@ -96,7 +96,10 @@ export const TableActions = ({ actions }) => {
     }
   }, [open]);
   return actions.length < 4 ? (
-    <td className={s.tableActions} data-testid="tableActions">
+    <td
+      className={`${s.tableActions} ${className || ""}`}
+      data-testid="tableActions"
+    >
       {actions.map((action, i) => (
         <button
           key={i}
@@ -110,7 +113,7 @@ export const TableActions = ({ actions }) => {
       ))}
     </td>
   ) : (
-    <td className={s.tableActions}>
+    <td className={`${s.tableActions} ${className || ""}`}>
       <button
         className={s.btn}
         ref={btn}
