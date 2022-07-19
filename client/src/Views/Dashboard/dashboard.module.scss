@@ -4,7 +4,7 @@
   border-radius: 0.5rem;
   display: grid;
   height: calc((var(--vh) * 100));
-  grid-template-rows: min-content 1fr min-content;
+  grid-template-rows: min-content min-content 1fr min-content;
   .header {
     z-index: 100;
     position: sticky;
@@ -28,6 +28,8 @@
     .logoutBtn {
       font-size: 1.2em;
       color: $primary-color;
+      margin: auto;
+      margin-right: 0;
     }
     nav {
       flex: 1;
@@ -36,6 +38,12 @@
       color: black;
       font-weight: 600;
     }
+  }
+  .tabs {
+    padding: 1rem;
+    padding-bottom: 0;
+    max-width: 60rem;
+    margin: auto;
   }
   .content {
     background: red !important;
@@ -50,6 +58,13 @@
 }
 
 @media only screen and (max-width: 480px) {
+  .container {
+    .tabs {
+      padding: 0.5rem;
+      max-width: 60rem;
+      margin: auto;
+    }
+  }
   footer {
     text-align: center;
     padding: 1rem;

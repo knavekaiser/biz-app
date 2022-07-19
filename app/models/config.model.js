@@ -10,6 +10,7 @@ module.exports = mongoose.model(
       print: {
         currency: { type: Schema.Types.String, max: 3, default: "INR" },
         invoiceNoSuffix: { type: Schema.Types.String },
+        purchaseNoSuffix: { type: Schema.Types.String },
         itemColumns: {
           type: Schema.Types.Array,
           default: ["no", "product", "total"],
@@ -17,6 +18,7 @@ module.exports = mongoose.model(
       },
       numberSeparator: { type: Schema.Types.String, default: "en-US" },
       nextInvoiceNo: { type: Schema.Types.Number, min: 0, default: 1 },
+      nextPurchaseNo: { type: Schema.Types.Number, min: 0, default: 1 },
     },
     { timestamps: true }
   )

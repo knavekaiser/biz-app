@@ -12,6 +12,7 @@ mongoose
 module.exports = {
   Config: require("./config.model"),
   Invoice: require("./invoice.model"),
+  Purchase: require("./purchase.model"),
   User: require("./user.model"),
   Otp: require("./otp.model"),
 };

@@ -502,9 +502,11 @@ const Config = () => {
     if (config) {
       reset({
         nextInvoiceNo: config.nextInvoiceNo,
+        nextPurchaseNo: config.nextPurchaseNo,
         printCurrency: config.print.currency,
         printItemColumns: config.print.itemColumns,
         printInvoiceNoSuffix: config.print.invoiceNoSuffix,
+        printPurchaseNoSuffix: config.print.purchaseNoSuffix,
         numberSeparator: config?.numberSeparator,
       });
       setUnitOfMeasure(config.unitsOfMeasure);
@@ -531,11 +533,13 @@ const Config = () => {
         updateConfig({
           unitsOfMeasure,
           nextInvoiceNo: values.nextInvoiceNo,
+          nextPurchaseNo: values.nextPurchaseNo,
           numberSeparator: values.numberSeparator,
           print: {
             itemColumns: values.printItemColumns,
             currency: values.printCurrency,
             invoiceNoSuffix: values.printInvoiceNoSuffix,
+            purchaseNoSuffix: values.printPurchaseNoSuffix,
           },
         }).then(({ data }) => {
           if (data.success) {
@@ -587,9 +591,21 @@ const Config = () => {
       />
 
       <Input
-        label="Print Invoice No Suffix"
+        label="Next Purchase Number"
+        {...register("nextPurchaseNo")}
+        error={errors.nextPurchaseNo}
+      />
+
+      <Input
+        label="Invoice No Suffix"
         {...register("printInvoiceNoSuffix")}
         error={errors.printInvoiceNoSuffix}
+      />
+
+      <Input
+        label="Purchase No Suffix"
+        {...register("printPurchaseNoSuffix")}
+        error={errors.printPurchaseNoSuffix}
       />
 
       <Input

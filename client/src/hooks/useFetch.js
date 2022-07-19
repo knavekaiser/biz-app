@@ -53,10 +53,17 @@ export const useFetch = (
       })
         .then(async (res) => {
           try {
-            const data = await res.json();
+            let data;
+            let error;
+            try {
+              data = await res.json();
+            } catch (err) {
+              error = err;
+            }
             return {
               res,
               data,
+              error,
             };
           } catch (error) {
             if (["The user aborted a request."].includes(error?.message)) {
