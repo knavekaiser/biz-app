@@ -646,6 +646,13 @@
       padding: 0.5rem 0;
       color: white;
       text-align: left;
+      &.action {
+        background: inherit;
+        position: sticky;
+        right: 0;
+        margin-left: -10px;
+        padding-left: 10px !important;
+      }
     }
   }
   tbody {
@@ -729,6 +736,11 @@
 .tableActions {
   display: flex;
   grid-gap: 6px;
+  position: sticky;
+  right: 0;
+  background: white;
+  margin-left: -10px;
+  padding-left: 10px !important;
   .btn {
     padding: 1px 2px;
     padding-right: 1px;

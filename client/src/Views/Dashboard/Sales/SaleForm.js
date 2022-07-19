@@ -122,16 +122,6 @@ const Form = ({ edit, sales, onSuccess }) => {
               className="flex justify-space-between"
             />
             <Detail
-              label="Net"
-              value={(
-                edit.items.reduce((p, c) => p + c.qty * c.price, 0) +
-                edit.items
-                  .reduce((p, c) => p + c.qty * c.price, 0)
-                  .percent(edit.gst)
-              ).fix(2, config?.numberSeparator)}
-              className="flex justify-space-between"
-            />
-            <Detail
               label="Total"
               value={(
                 edit.items.reduce((p, c) => p + c.qty * c.price, 0) +
@@ -155,7 +145,7 @@ const Form = ({ edit, sales, onSuccess }) => {
             { label: "Unit" },
             { label: "Rate", className: "text-right" },
             { label: "Total", className: "text-right" },
-            ...(viewOnly ? [] : [{ label: "Action" }]),
+            ...(viewOnly ? [] : [{ label: "Action", action: true }]),
           ]}
         >
           {items.map((item, i) => (

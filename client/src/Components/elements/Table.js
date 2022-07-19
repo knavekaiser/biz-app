@@ -40,7 +40,9 @@ export const Table = ({
             {columns.map((column, i) => (
               <th
                 key={i}
-                className={column.className || ""}
+                className={`${column.action ? s.action : ""} ${
+                  column.className || ""
+                }`}
                 style={{ ...column.style }}
               >
                 {column.label}

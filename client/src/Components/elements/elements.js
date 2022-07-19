@@ -78,6 +78,7 @@ export const SearchField = ({
   error,
   renderField,
   clearErrors,
+  className,
   ...rest
 }) => {
   const [data, setData] = useState([]);
@@ -138,7 +139,7 @@ export const SearchField = ({
     }
   }, [value]);
   return (
-    <section ref={container}>
+    <section ref={container} className={className || ""}>
       {renderField ? (
         renderField({
           register,

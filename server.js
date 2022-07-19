@@ -28,7 +28,7 @@ require("./app/routes")(app);
 
 // simple route
 app.get("/api", (req, res) => {
-  res.json({ message: "Welcome to Infin AI API." });
+  res.json({ message: "Welcome to Biz App API." });
 });
 
 const fs = require("fs");
@@ -42,9 +42,9 @@ app.get("/assets/*/:file", (req, res) => {
   }
 });
 
-app.use(express.static(path.join(__dirname, "client")));
+app.use(express.static(path.join(__dirname, "client/build")));
 app.get("*", (req, res) =>
-  res.sendFile(path.join(__dirname, "/client/index.html"))
+  res.sendFile(path.join(__dirname, "/client/build/index.html"))
 );
 
 const PORT = process.env.PORT || 8060;
