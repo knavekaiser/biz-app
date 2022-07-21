@@ -8,6 +8,7 @@ import {
   Table,
   TableActions,
   SearchField,
+  Select,
   moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
@@ -59,6 +60,28 @@ const Form = ({ edit, receipts, onSuccess }) => {
   const [err, setErr] = useState(null);
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
+
+  const [invoices, setInvoices] = useState([]);
+
+  const { get: getInvoices } = useFetch(endpoints.invoices);
+
+  useEffect(() => {
+    getInvoices().then(({ data }) => {
+      if (data?.success) {
+        setInvoices(
+          data.data.map((item) => ({
+            ...item,
+            net:
+              item.items.reduce((p, c) => p + c.qty * c.price, 0) +
+              item.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .percent(item.gst),
+          }))
+        );
+      }
+    });
+  }, []);
+
   return (
     <div
       className={`grid gap-1 p-1 ${s.addReceiptForm} ${
@@ -126,6 +149,9 @@ const Form = ({ edit, receipts, onSuccess }) => {
           <h3>Receipt Information</h3>
 
           <MainForm
+            invoices={invoices.filter(
+              (inv) => !items.some((item) => item.no === inv.no)
+            )}
             edit={edit}
             items={items}
             setItems={setItems}
@@ -140,7 +166,7 @@ const Form = ({ edit, receipts, onSuccess }) => {
   );
 };
 
-const ItemForm = ({ edit, receipts, onSuccess }) => {
+const ItemForm = ({ edit, receipts, invoices, onSuccess }) => {
   const { config } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -149,6 +175,7 @@ const ItemForm = ({ edit, receipts, onSuccess }) => {
     watch,
     setValue,
     clearErrors,
+    control,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -156,6 +183,7 @@ const ItemForm = ({ edit, receipts, onSuccess }) => {
     },
     resolver: useYup(itemSchema),
   });
+
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -176,46 +204,32 @@ const ItemForm = ({ edit, receipts, onSuccess }) => {
       })}
       className={`${s.itemForm} grid gap-1`}
     >
-      <SearchField
+      <Select
+        control={control}
         label="Invoice No."
-        url={endpoints.invoices}
-        getQuery={(v) => ({
-          no: v,
-        })}
-        processData={(data, vlaue) => {
-          return (data?.data || [])
-            .filter((item) => item.due)
-            .map((item) => ({
-              ...item,
-              net:
-                item.items.reduce((p, c) => p + c.qty * c.price, 0) +
-                item.items
-                  .reduce((p, c) => p + c.qty * c.price, 0)
-                  .percent(item.gst),
-            }));
-        }}
+        options={invoices.map((item) => ({
+          label: `${item.no}. ${moment(item.dateTime, "DD-MM-YY")} Net: ${
+            item.net
+          }`,
+          value: item.no,
+          data: item,
+        }))}
         register={register}
         name="no"
         formOptions={{ required: true }}
-        renderListItem={(item) => (
-          <>
-            {item.no}. Net: {item.net}; Due: {item.due}
-          </>
-        )}
         watch={watch}
         setValue={setValue}
-        custom
         onChange={(item) => {
           if (typeof item === "string") {
           } else {
-            setValue("no", item.no);
-            setValue("due", item.due);
-            setValue("net", item.net);
+            setValue("no", item.data.no);
+            setValue("due", item.data.due);
+            setValue("net", item.data.net);
           }
         }}
         error={errors.name}
         type="number"
-        className={s.itemName}
+        // className={s.itemName}
       />
 
       <Input label="Net" type="number" {...register("net")} readOnly />
@@ -236,6 +250,7 @@ const ItemForm = ({ edit, receipts, onSuccess }) => {
 };
 
 const MainForm = ({
+  invoices,
   edit,
   items,
   setItems,
@@ -277,7 +292,7 @@ const MainForm = ({
       if (totalAmount < values.amount) {
         return Prompt({
           type: "error",
-          message: `Please add another invoice or reduce the receipt amount.`,
+          message: `Please add another invoice or reduce the receipt amount. Total adjusted amount ${totalAmount}`,
         });
       }
       if (values.amount > totalDue) {
@@ -402,8 +417,9 @@ const MainForm = ({
 
       {adjustInvoice && (
         <>
-          <h3>Invoices</h3>{" "}
+          <h3>Adjusted Invoices</h3>{" "}
           <ItemForm
+            invoices={invoices}
             key={editItem ? "edit" : "add"}
             edit={editItem}
             receipts={receipts}

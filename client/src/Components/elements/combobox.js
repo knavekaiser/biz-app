@@ -342,7 +342,7 @@ export const Select = ({
   label,
   className,
   placeholder,
-  renderMultipleValue,
+  renderOption,
   setValue,
   readOnly,
   onChange: _onChange,
@@ -365,12 +365,13 @@ export const Select = ({
                   ? "No options provided"
                   : placeholder || "Enter"
               }
-              components={{ DropdownIndicator }}
+              components={{
+                DropdownIndicator,
+                ...(renderOption && { Option: renderOption }),
+              }}
               className={`reactSelect ${s.reactSelect} ${
                 readOnly ? "readOnly" : ""
-              } ${error ? "err" : ""} ${className || ""} ${
-                renderMultipleValue ? `hideMultipleValue ${s.customValue}` : ""
-              }`}
+              } ${error ? "err" : ""} ${className || ""}`}
               classNamePrefix="reactSelect"
               isDisabled={!options || !options?.length}
               inputRef={ref}
@@ -410,27 +411,6 @@ export const Select = ({
                 menuPortal: (base) => ({ ...base, zIndex: 99999999999 }),
               }}
             />
-            {renderMultipleValue &&
-              setValue &&
-              value.map &&
-              value.map((department) => (
-                <Chip
-                  key={department}
-                  label={
-                    options?.find(
-                      (dept) => dept.value.toString() === department.toString()
-                    )?.label || department
-                  }
-                  remove={() => {
-                    setValue(
-                      "deptsLookupMultiselect",
-                      value.filter(
-                        (item) => item.toString() !== department.toString()
-                      )
-                    );
-                  }}
-                />
-              ))}
           </div>
           {error && <span className={s.errMsg}>{error.message}</span>}
         </section>
