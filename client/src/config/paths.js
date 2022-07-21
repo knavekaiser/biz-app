@@ -4,6 +4,8 @@ const paths = {
   resetPassword: "/reset-password",
   sales: "/sales",
   purchases: "/purchases",
+  receipts: "/receipts",
+  payments: "/payments",
   settings: {
     baseUrl: "/settings/*",
     businessInformation: "business-information",

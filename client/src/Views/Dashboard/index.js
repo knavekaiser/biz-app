@@ -12,6 +12,7 @@ import s from "./dashboard.module.scss";
 
 import Sales from "./Sales";
 import Purchases from "./Purchases";
+import Receipts from "./Receipts";
 
 const Dashboard = () => {
   const { user, setUser, setConfig } = useContext(SiteContext);
@@ -49,9 +50,11 @@ const Dashboard = () => {
       </div>
       <div className={s.tabs}>
         <Tabs
+          className={s.tab}
           tabs={[
             { label: "Sales", path: paths.sales },
             { label: "Purchases", path: paths.purchases },
+            { label: "Receipts", path: paths.receipts },
             { label: "Settings", path: paths.settings.baseUrl },
           ]}
         />
@@ -59,6 +62,7 @@ const Dashboard = () => {
       <Routes>
         <Route path={paths.sales} element={<Sales />} />
         <Route path={paths.purchases} element={<Purchases />} />
+        <Route path={paths.receipts} element={<Receipts />} />
         <Route path={paths.settings.baseUrl} element={<Settings />} />
       </Routes>
       <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>

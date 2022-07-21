@@ -8,6 +8,7 @@ const endpoints = {
 
   invoices: `${baseApiUrl}/api/invoices`,
   purchases: `${baseApiUrl}/api/purchases`,
+  receipts: `${baseApiUrl}/api/receipts`,
 
   userConfig: `${baseApiUrl}/api/user-config`,
   logout: `${baseApiUrl}/api/users/logout`,

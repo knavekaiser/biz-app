@@ -15,4 +15,5 @@ module.exports = {
   Purchase: require("./purchase.model"),
   User: require("./user.model"),
   Otp: require("./otp.model"),
+  Receipt: require("./receipt.model"),
 };

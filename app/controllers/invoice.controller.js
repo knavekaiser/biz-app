@@ -1,13 +1,95 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
+const { ObjectId } = require("mongodb");
 
 const { Invoice, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    Invoice.find({ user: req.authUser._id })
-      .then((data) => responseFn.success(res, { data }))
+    const conditions = { user: ObjectId(req.authUser._id) };
+    if (+req.query.no) {
+      conditions.no = +req.query.no;
+    }
+    Invoice.aggregate([
+      { $match: conditions },
+      {
+        $lookup: {
+          from: "receipts",
+          as: "due",
+          pipeline: [
+            {
+              $match: {
+                user: ObjectId(req.authUser._id),
+                "invoices.no": +req.query.no || -100,
+              },
+            },
+            {
+              $unwind: {
+                path: "$invoices",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            {
+              $project: {
+                receipt_id: "$_id",
+                _id: "$invoices._id",
+                no: "$invoices.no",
+                amount: "$invoices.amount",
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          due: {
+            $subtract: [
+              {
+                $reduce: {
+                  input: "$items",
+                  initialValue: 0,
+                  in: {
+                    $add: [
+                      {
+                        $add: [
+                          { $multiply: ["$$this.price", "$$this.qty"] },
+                          {
+                            $multiply: [
+                              {
+                                $divide: [
+                                  { $multiply: ["$$this.price", "$$this.qty"] },
+                                  100,
+                                ],
+                              },
+                              "$gst",
+                            ],
+                          },
+                        ],
+                      },
+
+                      "$$value",
+                    ],
+                  },
+                },
+              },
+
+              {
+                $reduce: {
+                  input: "$due",
+                  initialValue: 0,
+                  in: { $add: ["$$value", "$$this.amount"] },
+                },
+              },
+            ],
+          },
+        },
+      },
+      { $project: { __v: 0 } },
+    ])
+      .then((data) => {
+        responseFn.success(res, { data });
+      })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

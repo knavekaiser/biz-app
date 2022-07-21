@@ -66,6 +66,9 @@ export const Input = forwardRef(
 export const SearchField = ({
   url,
   data: defaultData,
+  getQuery,
+  type,
+  custom,
   processData,
   renderListItem,
   label,
@@ -123,9 +126,9 @@ export const SearchField = ({
   useEffect(() => {
     if (value) {
       if (url) {
-        getData(url).then((rawData) => {
-          const data = processData(rawData, value);
-          setData(data);
+        getData(null, { query: getQuery(value) || {} }).then(({ data }) => {
+          const _data = processData(data, value);
+          setData(_data);
         });
       } else if (defaultData) {
         setData(
@@ -163,6 +166,7 @@ export const SearchField = ({
             }
           }}
           error={error}
+          type={type || "text"}
           icon={<FaSearch />}
         />
       )}
@@ -846,16 +850,18 @@ export const Tabs = ({
   useEffect(() => {
     if (
       !onChange &&
-      !tabs.some((tab) => location.pathname.includes(tab.path))
+      !tabs.some((tab) =>
+        location.pathname.includes(tab.path.replace("/*", ""))
+      )
     ) {
       navigate(tabs[0].path, { replace: true });
     }
   }, []);
   return (
     <div
-      className={`${s.tabs} ${s[className]} ${secondary ? s.secondary : ""} ${
-        tertiary ? s.tertiary : ""
-      }`}
+      className={`${s.tabs} ${className || ""} ${
+        secondary ? s.secondary : ""
+      } ${tertiary ? s.tertiary : ""}`}
       data-testid="tabs"
     >
       {tabs.map((tab) =>
