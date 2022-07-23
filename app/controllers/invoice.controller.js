@@ -17,11 +17,12 @@ exports.findAll = async (req, res) => {
         $lookup: {
           from: "receipts",
           as: "due",
+          let: { invNo: "$no" },
           pipeline: [
             {
               $match: {
                 user: ObjectId(req.authUser._id),
-                "invoices.no": +req.query.no || -100,
+                ...(conditions.no && { "invoices.no": conditions.no }),
               },
             },
             {
@@ -38,11 +39,25 @@ exports.findAll = async (req, res) => {
                 amount: "$invoices.amount",
               },
             },
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$no", "$$invNo"],
+                },
+              },
+            },
           ],
         },
       },
       {
         $set: {
+          paid: {
+            $reduce: {
+              input: "$due",
+              initialValue: 0,
+              in: { $add: ["$$value", "$$this.amount"] },
+            },
+          },
           due: {
             $subtract: [
               {
@@ -73,7 +88,6 @@ exports.findAll = async (req, res) => {
                   },
                 },
               },
-
               {
                 $reduce: {
                   input: "$due",

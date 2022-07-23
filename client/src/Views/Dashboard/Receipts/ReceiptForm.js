@@ -9,11 +9,13 @@ import {
   TableActions,
   SearchField,
   Select,
+  Tabs,
   moment,
+  Moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
-import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
+import { FaPencilAlt, FaRegTrashAlt, FaTimes, FaCheck } from "react-icons/fa";
 import * as yup from "yup";
 import s from "./receipts.module.scss";
 import { useReactToPrint } from "react-to-print";
@@ -71,6 +73,7 @@ const Form = ({ edit, receipts, onSuccess }) => {
         setInvoices(
           data.data.map((item) => ({
             ...item,
+            due: item.due.fix(2),
             net:
               item.items.reduce((p, c) => p + c.qty * c.price, 0) +
               item.items
@@ -94,9 +97,11 @@ const Form = ({ edit, receipts, onSuccess }) => {
             <button className="btn" onClick={() => setViewOnly(false)}>
               Edit
             </button>
-            <button className="btn" onClick={handlePrint}>
-              Print
-            </button>
+            {
+              //   <button className="btn" onClick={handlePrint}>
+              //   Print
+              // </button>
+            }
           </div>
           <div className={s.box}>
             <h3>Customer Information</h3>
@@ -149,9 +154,12 @@ const Form = ({ edit, receipts, onSuccess }) => {
           <h3>Receipt Information</h3>
 
           <MainForm
-            invoices={invoices.filter(
-              (inv) => !items.some((item) => item.no === inv.no)
-            )}
+            invoices={
+              invoices
+              //   .filter(
+              //   (inv) => !items.some((item) => item.no === inv.no)
+              // )
+            }
             edit={edit}
             items={items}
             setItems={setItems}
@@ -166,7 +174,7 @@ const Form = ({ edit, receipts, onSuccess }) => {
   );
 };
 
-const ItemForm = ({ edit, receipts, invoices, onSuccess }) => {
+const ItemForm = ({ edit, setEdit, receipts, invoices, onSuccess }) => {
   const { config } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -199,6 +207,7 @@ const ItemForm = ({ edit, receipts, invoices, onSuccess }) => {
             message: `Enter an amount less or equal to ${values.due}`,
           });
         }
+        values.no = +values.no;
         onSuccess(values);
         reset();
       })}
@@ -207,13 +216,15 @@ const ItemForm = ({ edit, receipts, invoices, onSuccess }) => {
       <Select
         control={control}
         label="Invoice No."
-        options={invoices.map((item) => ({
-          label: `${item.no}. ${moment(item.dateTime, "DD-MM-YY")} Net: ${
-            item.net
-          }`,
-          value: item.no,
-          data: item,
-        }))}
+        options={invoices
+          .filter((item) => item.due)
+          .map((item) => ({
+            label: `${item.no}. ${moment(item.dateTime, "DD-MM-YY")} Due: ${
+              item.due
+            }`,
+            value: item.no,
+            data: item,
+          }))}
         register={register}
         name="no"
         formOptions={{ required: true }}
@@ -244,7 +255,18 @@ const ItemForm = ({ edit, receipts, invoices, onSuccess }) => {
         error={errors.amount}
       />
 
-      <button className="btn">Add</button>
+      {edit ? (
+        <div className={`flex ${s.btns}`}>
+          <button type="submit">
+            <FaCheck />
+          </button>
+          <button type="button" onClick={() => setEdit(null)}>
+            <FaTimes />
+          </button>
+        </div>
+      ) : (
+        <button className="btn">Add</button>
+      )}
     </form>
   );
 };
@@ -260,8 +282,9 @@ const MainForm = ({
   setViewOnly,
 }) => {
   const { config, setConfig } = useContext(SiteContext);
-  const [adjustInvoice, setAdjustInvoice] = useState(false);
+  const [adjustInvoice, setAdjustInvoice] = useState(!!edit?.invoices?.length);
   const [editItem, setEditItem] = useState(null);
+  const [adjustInvoiceTab, setAdjustInvoiceTab] = useState("table");
   const {
     handleSubmit,
     register,
@@ -278,48 +301,50 @@ const MainForm = ({
     endpoints.receipts + `/${edit?._id || ""}`
   );
 
-  const submitForm = useCallback((values) => {
-    if (items.length > 0) {
-      const totalNet = items.reduce((p, c) => p + c.net, 0);
-      const totalAmount = items.reduce((p, c) => p + c.amount, 0);
-      const totalDue = items.reduce((p, c) => p + c.due, 0);
-      if (totalAmount > values.amount) {
-        return Prompt({
-          type: "error",
-          message: `Adjusted amount (${totalAmount}) can not be more than the receipt amount.`,
-        });
+  const submitForm = useCallback(
+    (values) => {
+      if (items.length > 0) {
+        const totalNet = items.reduce((p, c) => p + c.net, 0);
+        const totalAmount = items.reduce((p, c) => p + c.amount, 0);
+        const totalDue = items.reduce((p, c) => p + c.due, 0);
+        if (totalAmount > values.amount) {
+          return Prompt({
+            type: "error",
+            message: `Adjusted amount (${totalAmount}) can not be more than the receipt amount.`,
+          });
+        }
+        // if (totalAmount < values.amount) {
+        //   return Prompt({
+        //     type: "error",
+        //     message: `Please add another invoice or reduce the receipt amount. Total adjusted amount ${totalAmount}`,
+        //   });
+        // }
+        // if (values.amount > totalDue) {
+        //   return Prompt({
+        //     type: "error",
+        //     message: `Amount must be less or equal to ${totalDue}. Please reduce the amount or add another invoice.`,
+        //   });
+        // }
       }
-      if (totalAmount < values.amount) {
-        return Prompt({
-          type: "error",
-          message: `Please add another invoice or reduce the receipt amount. Total adjusted amount ${totalAmount}`,
-        });
-      }
-      if (values.amount > totalDue) {
-        return Prompt({
-          type: "error",
-          message: `Amount must be less or equal to ${totalDue}. Please reduce the amount or add another invoice.`,
-        });
-      }
-    }
-    console.log(values);
-    (edit ? updateInvoice : saveInvoice)({
-      dateTime: values.date,
-      amount: values.amount,
-      type: values.type,
-      customer: {
-        name: values.customerName,
-        detail: values.customerDetail,
-      },
-      invoices: items.map((item) => ({ ...item, _id: undefined })),
-    }).then(({ data }) => {
-      if (data.errors) {
-        return Prompt({ type: "error", message: data.message });
-      } else if (data.success) {
-        onSuccess(data.data);
-      }
-    });
-  }, []);
+      (edit ? updateInvoice : saveInvoice)({
+        dateTime: values.date,
+        amount: values.amount,
+        type: values.type,
+        customer: {
+          name: values.customerName,
+          detail: values.customerDetail,
+        },
+        invoices: items.map((item) => ({ ...item, _id: undefined })),
+      }).then(({ data }) => {
+        if (data.errors) {
+          return Prompt({ type: "error", message: data.message });
+        } else if (data.success) {
+          onSuccess(data.data);
+        }
+      });
+    },
+    [items]
+  );
 
   useEffect(() => {
     reset({
@@ -417,11 +442,61 @@ const MainForm = ({
 
       {adjustInvoice && (
         <>
-          <h3>Adjusted Invoices</h3>{" "}
+          <h3>Adjusted Invoices</h3>
+          <Tabs
+            secondary
+            activeTab={adjustInvoiceTab}
+            onChange={(tab) => setAdjustInvoiceTab(tab.value)}
+            tabs={[
+              {
+                label: "Invoice Table",
+                value: "table",
+              },
+              {
+                label: "Search Invoice",
+                value: "search",
+              },
+            ]}
+          />
+        </>
+      )}
+
+      {adjustInvoice && adjustInvoiceTab === "table" && (
+        <Table
+          className={s.invoiceTable}
+          columns={[
+            { label: "Invoice No" },
+            { label: "Date" },
+            { label: "Customer" },
+            { label: "Net", className: "text-right" },
+            { label: "Due", className: "text-right" },
+            { label: "Adjust" },
+          ]}
+        >
+          {invoices
+            .filter(
+              (invoice) =>
+                items.some((item) => item.no === invoice.no) || invoice.due
+            )
+            .map((invoice) => (
+              <SingleInvoiceAdjustTr
+                invoice={invoice}
+                key={invoice._id}
+                config={config}
+                items={items}
+                setItems={setItems}
+              />
+            ))}
+        </Table>
+      )}
+
+      {adjustInvoice && adjustInvoiceTab === "search" && (
+        <>
           <ItemForm
             invoices={invoices}
             key={editItem ? "edit" : "add"}
             edit={editItem}
+            setEdit={setEditItem}
             receipts={receipts}
             onSuccess={(newItem) => {
               setErr(null);
@@ -517,6 +592,59 @@ const MainForm = ({
         </div>
       </form>
     </div>
+  );
+};
+
+const SingleInvoiceAdjustTr = ({ invoice, items, setItems, config }) => {
+  const [adjust, setAdjust] = useState(
+    items.find((item) => item.no === invoice.no)?.amount || ""
+  );
+  useEffect(() => {
+    setAdjust(items.find((item) => item.no === invoice.no)?.amount || "");
+  }, [items]);
+  return (
+    <tr>
+      <td>
+        {invoice.no}
+        {config?.print?.invoiceNoSuffix || ""}
+      </td>
+      <td className={s.date}>
+        <Moment format="DD/MM/YYYY">{invoice.date}</Moment>
+      </td>
+      <td className={s.customer}>{invoice.customer?.name}</td>
+      <td className={`text-right ${s.net}`}>{invoice.net}</td>
+      <td className={`text-right ${s.net}`}>{invoice.due}</td>
+      <td>
+        <Input
+          placeholder="Adjust"
+          type="number"
+          onBlur={(e) => {
+            const value = +e.target.value || 0;
+            if (value <= 0) {
+              e.target.value = "";
+              setItems((prev) => [
+                ...prev.filter((item) => item.no !== invoice.no),
+              ]);
+              return;
+            }
+            if (invoice.due) {
+              setItems((prev) => [
+                ...prev.filter((item) => item.no !== invoice.no),
+                {
+                  _id: Math.random().toString().substr(-8),
+                  no: invoice.no,
+                  due: invoice.due,
+                  net: invoice.net,
+                  amount: Math.min(value, invoice.due),
+                },
+              ]);
+            }
+          }}
+          value={adjust}
+          onChange={(e) => setAdjust(e.target.value)}
+        />
+      </td>
+    </tr>
   );
 };
 
