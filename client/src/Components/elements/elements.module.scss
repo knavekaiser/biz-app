@@ -847,6 +847,7 @@
 
 .select {
   display: grid;
+  height: min-content;
   label {
     font-size: 0.8rem;
     font-weight: 600;

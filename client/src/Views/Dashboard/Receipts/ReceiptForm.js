@@ -292,6 +292,7 @@ const MainForm = ({
     setValue,
     watch,
     clearErrors,
+    control,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
@@ -346,6 +347,8 @@ const MainForm = ({
     [items]
   );
 
+  const customerName = watch("customerName");
+
   useEffect(() => {
     reset({
       ...edit,
@@ -396,9 +399,11 @@ const MainForm = ({
           <h3>Customer Information</h3>
         </div>
 
-        <SearchField
+        <Select
+          readOnly={edit}
+          control={control}
           label="Name"
-          data={receipts.map((item) => ({
+          options={invoices.map((item) => ({
             label: item.customer.name,
             value: item.customer.name,
             data: item.customer,
@@ -410,22 +415,14 @@ const MainForm = ({
           watch={watch}
           setValue={setValue}
           onChange={(item) => {
-            if (typeof item === "string") {
-              setValue("customerName", item);
-            } else {
-              setValue("customerName", item.name);
-              setValue("customerDetail", item.detail);
-            }
+            setValue("customerName", item.data.name);
+            setValue("customerDetail", item.data.detail);
+            setItems([]);
           }}
           error={errors.customerName}
         />
 
-        <Textarea
-          label="Detail"
-          {...register("customerDetail")}
-          required
-          error={errors["customerDetail"]}
-        />
+        <Textarea label="Detail" readOnly {...register("customerDetail")} />
       </form>
 
       <div className="all-columns flex justify-center">
@@ -461,39 +458,52 @@ const MainForm = ({
         </>
       )}
 
-      {adjustInvoice && adjustInvoiceTab === "table" && (
-        <Table
-          className={s.invoiceTable}
-          columns={[
-            { label: "Invoice No" },
-            { label: "Date" },
-            { label: "Customer" },
-            { label: "Net", className: "text-right" },
-            { label: "Due", className: "text-right" },
-            { label: "Adjust" },
-          ]}
-        >
-          {invoices
-            .filter(
-              (invoice) =>
-                items.some((item) => item.no === invoice.no) || invoice.due
-            )
-            .map((invoice) => (
-              <SingleInvoiceAdjustTr
-                invoice={invoice}
-                key={invoice._id}
-                config={config}
-                items={items}
-                setItems={setItems}
-              />
-            ))}
-        </Table>
-      )}
+      {adjustInvoice &&
+        adjustInvoiceTab === "table" &&
+        (invoices.filter(
+          (invoice) =>
+            invoice.customer.name === customerName &&
+            (items.some((item) => item.no === invoice.no) || invoice.due)
+        ).length > 0 ? (
+          <Table
+            className={s.invoiceTable}
+            columns={[
+              { label: "Invoice No" },
+              { label: "Date" },
+              { label: "Customer" },
+              { label: "Net", className: "text-right" },
+              { label: "Due", className: "text-right" },
+              { label: "Adjust" },
+            ]}
+          >
+            {invoices
+              .filter(
+                (invoice) =>
+                  invoice.customer.name === customerName &&
+                  (items.some((item) => item.no === invoice.no) || invoice.due)
+              )
+              .map((invoice) => (
+                <SingleInvoiceAdjustTr
+                  invoice={invoice}
+                  key={invoice._id}
+                  config={config}
+                  items={items}
+                  setItems={setItems}
+                />
+              ))}
+          </Table>
+        ) : (
+          <p className={s.noContent}>
+            No pending invoice from selected customer.
+          </p>
+        ))}
 
       {adjustInvoice && adjustInvoiceTab === "search" && (
         <>
           <ItemForm
-            invoices={invoices}
+            invoices={invoices.filter(
+              (item) => item.customer.name === customerName
+            )}
             key={editItem ? "edit" : "add"}
             edit={editItem}
             setEdit={setEditItem}
@@ -527,8 +537,8 @@ const MainForm = ({
               className={s.items}
               columns={[
                 { label: "Invoice No." },
-                { label: "Net", className: "text-right" },
-                { label: "Due", className: "text-right" },
+                // { label: "Net", className: "text-right" },
+                // { label: "Due", className: "text-right" },
                 { label: "Amount", className: "text-right" },
                 { label: "Action", action: true },
               ]}
@@ -538,12 +548,14 @@ const MainForm = ({
                   <td className={s.name}>
                     <span className="ellipsis">{item.no}</span>
                   </td>
-                  <td className="text-right">
-                    {item.net?.fix(2, config?.numberSeparator)}
-                  </td>
-                  <td className="text-right">
-                    {item.due?.fix(2, config?.numberSeparator)}
-                  </td>
+                  {
+                    //   <td className="text-right">
+                    //   {item.net?.fix(2, config?.numberSeparator)}
+                    // </td>
+                    // <td className="text-right">
+                    //   {item.due?.fix(2, config?.numberSeparator)}
+                    // </td>
+                  }
                   <td className="text-right">
                     {item.amount.fix(2, config?.numberSeparator)}
                   </td>
@@ -612,8 +624,12 @@ const SingleInvoiceAdjustTr = ({ invoice, items, setItems, config }) => {
         <Moment format="DD/MM/YYYY">{invoice.date}</Moment>
       </td>
       <td className={s.customer}>{invoice.customer?.name}</td>
-      <td className={`text-right ${s.net}`}>{invoice.net}</td>
-      <td className={`text-right ${s.net}`}>{invoice.due}</td>
+      <td className={`text-right ${s.net}`}>
+        {invoice.net.fix(2, config?.numberSeparator)}
+      </td>
+      <td className={`text-right ${s.net}`}>
+        {invoice.due.fix(2, config?.numberSeparator)}
+      </td>
       <td>
         <Input
           placeholder="Adjust"
