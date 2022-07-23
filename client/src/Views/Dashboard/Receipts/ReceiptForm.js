@@ -240,7 +240,7 @@ const ItemForm = ({ edit, setEdit, receipts, invoices, onSuccess }) => {
         }}
         error={errors.name}
         type="number"
-        // className={s.itemName}
+        className={s.itemName}
       />
 
       <Input label="Net" type="number" {...register("net")} readOnly />

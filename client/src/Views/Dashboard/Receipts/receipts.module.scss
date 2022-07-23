@@ -263,7 +263,9 @@
       }
     }
     .mainForm {
-      grid-template-columns: 1fr;
+      .mainFormWrapper {
+        grid-template-columns: 1fr;
+      }
     }
   }
 }

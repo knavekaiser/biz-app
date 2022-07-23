@@ -356,7 +356,7 @@ export const Select = ({
         field: { onChange, onBlur, value, name, ref },
         fieldState: { invalid, isTouched, isDirty, error },
       }) => (
-        <section className={`${s.select}`}>
+        <section className={`${s.select} ${className || ""}`}>
           {label && <label>{label}</label>}
           <div className={s.field}>
             <ReactSelect
