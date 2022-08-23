@@ -4,4 +4,5 @@ module.exports = function (app) {
   require("./purchase.routes")(app);
   require("./receipt.routes")(app);
   require("./config.routes")(app);
+  require("./payment.routes")(app);
 };

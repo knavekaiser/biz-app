@@ -1,12 +1,106 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
+const { ObjectId } = require("mongodb");
 
 const { Purchase, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    Purchase.find({ user: req.authUser._id })
+    const conditions = { user: ObjectId(req.authUser._id) };
+    if (+req.query.no) {
+      conditions.no = +req.query.no;
+    }
+    Purchase.aggregate([
+      { $match: conditions },
+      {
+        $lookup: {
+          from: "payments",
+          as: "due",
+          let: { invNo: "$no" },
+          pipeline: [
+            {
+              $match: {
+                user: ObjectId(req.authUser._id),
+                ...(conditions.no && { "purchases.no": conditions.no }),
+              },
+            },
+            {
+              $unwind: {
+                path: "$purchases",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            {
+              $project: {
+                receipt_id: "$_id",
+                _id: "$purchases._id",
+                no: "$purchases.no",
+                amount: "$purchases.amount",
+              },
+            },
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$no", "$$invNo"],
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          paid: {
+            $reduce: {
+              input: "$due",
+              initialValue: 0,
+              in: { $add: ["$$value", "$$this.amount"] },
+            },
+          },
+          due: {
+            $subtract: [
+              {
+                $reduce: {
+                  input: "$items",
+                  initialValue: 0,
+                  in: {
+                    $add: [
+                      {
+                        $add: [
+                          { $multiply: ["$$this.price", "$$this.qty"] },
+                          {
+                            $multiply: [
+                              {
+                                $divide: [
+                                  { $multiply: ["$$this.price", "$$this.qty"] },
+                                  100,
+                                ],
+                              },
+                              "$gst",
+                            ],
+                          },
+                        ],
+                      },
+
+                      "$$value",
+                    ],
+                  },
+                },
+              },
+              {
+                $reduce: {
+                  input: "$due",
+                  initialValue: 0,
+                  in: { $add: ["$$value", "$$this.amount"] },
+                },
+              },
+            ],
+          },
+        },
+      },
+      { $project: { __v: 0 } },
+    ])
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
