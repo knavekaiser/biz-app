@@ -33,7 +33,7 @@ export const useFetch = (
         ).toString()}`;
       }
       setLoading(true);
-      const response = await fetch(_url, {
+      return fetch(_url, {
         method: method,
         headers: {
           ...(!(typeof payload?.append === "function") && {
@@ -52,45 +52,18 @@ export const useFetch = (
         signal: controller.current.signal,
       })
         .then(async (res) => {
-          try {
-            let data;
-            let error;
-            try {
-              data = await res.json();
-            } catch (err) {
-              error = err;
-            }
-            return {
-              res,
-              data,
-              error,
-            };
-          } catch (error) {
-            if (["The user aborted a request."].includes(error?.message)) {
-              return { res, data: {} };
-            }
-            return { res, error };
-          }
+          let data = await res.json();
+          setLoading(false);
+          return { res, data };
         })
         .catch((err) => {
+          setLoading(false);
           if (["The user aborted a request."].includes(err?.message)) {
             return { data: {} };
           }
           setError(err);
-          return { error: err };
+          throw err;
         });
-
-      if (response?.error) {
-        if (["invalid_token"].includes(response.error)) {
-          return Prompt({
-            type: "error",
-            message: error.message,
-            callback: () => {},
-          });
-        }
-      }
-      setLoading(false);
-      return response;
     },
     [url]
   );

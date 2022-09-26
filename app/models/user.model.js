@@ -1,7 +1,16 @@
+const {
+  appHelper: { normalizeDomain },
+} = require("../helpers");
+
 module.exports = mongoose.model(
   "User",
   new Schema(
     {
+      username: {
+        type: Schema.Types.String,
+        unique: [true, "username is taken"],
+        required: true,
+      },
       name: { type: Schema.Types.String, min: 3, required: true },
       motto: { type: Schema.Types.String },
       phone: {
@@ -14,6 +23,13 @@ module.exports = mongoose.model(
       email: {
         type: Schema.Types.String,
         unique: [true, "Email is already in use"],
+        sparse: true,
+      },
+      domain: {
+        type: Schema.Types.String,
+        unique: [true, "Domain is being used"],
+        get: (v) => normalizeDomain(v) || null,
+        set: (v) => normalizeDomain(v) || null,
         sparse: true,
       },
       address: { type: Schema.Types.String },

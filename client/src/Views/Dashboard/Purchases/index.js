@@ -19,17 +19,13 @@ const Purchases = () => {
   const { remove: deletePurchase } = useFetch(endpoints.purchases + "/{ID}");
 
   useEffect(() => {
-    getPurchases().then(({ data, error }) => {
-      if (error) {
-        return Prompt({
-          type: "error",
-          message: error.message || error,
-        });
-      }
-      if (data.success) {
-        return setPurchases(data.data);
-      }
-    });
+    getPurchases()
+      .then(({ data }) => {
+        if (data.success) {
+          return setPurchases(data.data);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>

@@ -6,6 +6,8 @@ const paths = {
   purchases: "/purchases",
   receipts: "/receipts",
   payments: "/payments",
+  dynamicTables: "/dynamic-tables/*",
+  dynamicTable: "/dynamic-tables/:table",
   settings: {
     baseUrl: "/settings/*",
     businessInformation: "business-information",
@@ -13,6 +15,8 @@ const paths = {
     ownerDetails: "owner-details",
     termsAndConditions: "terms-and-conditions",
     config: "config",
+    collections: "collections",
+    siteConfig: "site-config",
   },
 };
 

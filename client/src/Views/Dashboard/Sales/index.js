@@ -19,11 +19,16 @@ const Sales = () => {
   const { remove: deleteSale } = useFetch(endpoints.invoices + "/{ID}");
 
   useEffect(() => {
-    getSales().then(({ data }) => {
-      if (data.success) {
-        return setSales(data.data);
-      }
-    });
+    getSales()
+      .then(({ data }) => {
+        if (data.success) {
+          return setSales(data.data);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        Prompt({ type: "error", message: err.message });
+      });
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>

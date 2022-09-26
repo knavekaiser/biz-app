@@ -19,17 +19,13 @@ const Receipts = () => {
   const { remove: deleteReceipt } = useFetch(endpoints.receipts + "/{ID}");
 
   useEffect(() => {
-    getReceipts().then(({ data, error }) => {
-      if (error) {
-        return Prompt({
-          type: "error",
-          message: error.message || error,
-        });
-      }
-      if (data.success) {
-        return setReceipts(data.data);
-      }
-    });
+    getReceipts()
+      .then(({ data }) => {
+        if (data.success) {
+          return setReceipts(data.data);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>

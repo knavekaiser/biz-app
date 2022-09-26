@@ -20,6 +20,31 @@ module.exports = mongoose.model(
       nextInvoiceNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextPurchaseNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextReceiptNo: { type: Schema.Types.Number, min: 0, default: 1 },
+      siteConfig: {
+        currency: { type: Schema.Types.String, default: "USD" },
+        currencies: [
+          new Schema({
+            currency: { type: Schema.Types.String, required: true },
+            symbol: { type: Schema.Types.String, required: true },
+          }),
+        ],
+        landingPage: {
+          hero: {
+            background: { type: Schema.Types.String },
+            slideLabel: { type: Schema.Types.String },
+            slides: [
+              new Schema({
+                title: { type: Schema.Types.String },
+                images: [{ type: Schema.Types.String }],
+              }),
+            ],
+          },
+        },
+        browsePage: {
+          sidebarFilters: [],
+        },
+        productCard: [],
+      },
     },
     { timestamps: true }
   )

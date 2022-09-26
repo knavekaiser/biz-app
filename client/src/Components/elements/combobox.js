@@ -6,10 +6,11 @@ import {
   useLayoutEffect,
   forwardRef,
 } from "react";
+import { useFetch } from "hooks";
 import s from "./elements.module.scss";
 
 import { FaSortDown, FaSearch } from "react-icons/fa";
-import { Modal } from "../modal";
+import { Modal, Prompt } from "../modal";
 import { Input, Chip } from "./elements";
 import { Controller } from "react-hook-form";
 
@@ -337,7 +338,10 @@ export const Select = ({
   control,
   formOptions,
   name,
-  options,
+  options: defaultOptions,
+  url,
+  getQuery,
+  handleData,
   multiple,
   label,
   className,
@@ -347,6 +351,28 @@ export const Select = ({
   readOnly,
   onChange: _onChange,
 }) => {
+  const [inputValue, setInputValue] = useState("");
+  const [options, setOptions] = useState(defaultOptions);
+
+  const { get: fetchData, loading } = useFetch(url);
+
+  const getOptions = useCallback((inputValue) => {
+    fetchData(null, { query: getQuery(inputValue) })
+      .then(({ data }) => {
+        if (data.success) {
+          handleData(data.data, setOptions);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
+
+  useEffect(() => {
+    if (inputValue) {
+      getOptions(inputValue);
+    }
+  }, [inputValue]);
   return (
     <Controller
       control={control}
@@ -361,7 +387,9 @@ export const Select = ({
           <div className={s.field}>
             <ReactSelect
               placeholder={
-                !options || !options?.length
+                url
+                  ? "Search..."
+                  : !options || !options?.length
                   ? "No options provided"
                   : placeholder || "Enter"
               }
@@ -373,7 +401,7 @@ export const Select = ({
                 readOnly ? "readOnly" : ""
               } ${error ? "err" : ""} ${className || ""}`}
               classNamePrefix="reactSelect"
-              isDisabled={!options || !options?.length}
+              isDisabled={url ? false : !options || !options?.length}
               inputRef={ref}
               menuPortalTarget={document.querySelector("#portal")}
               menuPlacement="auto"
@@ -385,6 +413,11 @@ export const Select = ({
                 ) ||
                 ""
               }
+              onInputChange={(value) => {
+                if (url) {
+                  setInputValue(value);
+                }
+              }}
               onChange={(val) => {
                 if (multiple) {
                   onChange(val.map((item) => item.value));

@@ -3,6 +3,7 @@ import { useEffect, useContext } from "react";
 import { SiteContext } from "SiteContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { paths, endpoints } from "config";
+import { Prompt } from "Components/modal";
 import { useFetch } from "hooks";
 
 import AuthView from "Views/AuthViews";
@@ -36,12 +37,14 @@ function App() {
     window.addEventListener("resize", () => resizeWindow());
     resizeWindow();
 
-    getProfile().then(({ data }) => {
-      if (data.success) {
-        setUser(data.data);
-        navigate(location.pathname || "/", { replace: true });
-      }
-    });
+    getProfile()
+      .then(({ data }) => {
+        if (data.success) {
+          setUser(data.data);
+          navigate(location.pathname || "/", { replace: true });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
   if (!user) {

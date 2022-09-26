@@ -15,8 +15,9 @@ import {
   useNavigate,
   createSearchParams,
 } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Modal } from "../modal";
+import Sortable from "sortablejs";
 
 import s from "./elements.module.scss";
 import countries from "countries";
@@ -442,6 +443,7 @@ export const Textarea = forwardRef(
     );
   }
 );
+
 export const Radio = ({
   register = () => {},
   formOptions,
@@ -478,80 +480,132 @@ export const Radio = ({
   );
 };
 export const CustomRadio = ({
-  register = () => {},
+  control,
   name,
-  watch,
+  formOptions,
   label,
   options,
-  setValue,
   multiple,
-  onChange,
-  formOptions,
   className,
   selectedClassName,
+  sortable,
 }) => {
-  const selected = watch?.(name);
-  return (
-    <section
-      className={`${s.customRadio} ${className || ""}`}
-      data-testid="customRadioInput"
-    >
-      {label && (
-        <label>
-          {label} {formOptions?.required && "*"}
-        </label>
-      )}
-      <div className={s.options}>
-        {options.map(({ label, value: v, disabled }, i) => (
-          <label
-            htmlFor={name + v}
-            key={i}
-            className={`${s.option} ${
-              selected?.includes && selected?.includes(v)
-                ? s.selected + " " + (selectedClassName || "")
-                : ""
-            } ${disabled ? s.disabled : ""}`}
-          >
-            <input
-              {...register(name)}
-              type="checkbox"
-              name={name}
-              id={name + v}
-              value={v}
-              checked={
-                selected === v ||
-                (selected?.includes && selected?.includes(v)) ||
-                ""
+  const onChangeRef = useRef();
+  const containerRef = useRef();
+  const [opts, setOpts] = useState(options);
+  useEffect(() => {
+    if (multiple && sortable) {
+      Sortable.create(containerRef.current, {
+        animation: 250,
+        easing: "ease-in-out",
+        removeCloneOnHide: true,
+        handle: ".handle",
+        onEnd: (e) => {
+          const itemEl = e.item;
+          const { oldIndex, newIndex } = e;
+          if (oldIndex !== newIndex) {
+            let newValue;
+            setOpts((prev) => {
+              const items = [...prev.filter((item, i) => i !== oldIndex)];
+              items.splice(newIndex, 0, prev[oldIndex]);
+              if (
+                control._formValues[name] &&
+                typeof onChangeRef.current === "function"
+              ) {
+                newValue = control._formValues[name].sort((a, b) =>
+                  items.findIndex((item) => item.value === a) >
+                  items.findIndex((item) => item.value === b)
+                    ? 1
+                    : -1
+                );
               }
-              onChange={(e) => {
-                if (
-                  e.target.value === selected ||
-                  (selected?.includes && selected?.includes(e.target.value))
-                ) {
-                  if (multiple) {
-                    setValue(
-                      name,
-                      (selected || []).filter(
-                        (value) => value !== e.target.value
-                      )
-                    );
-                  }
-                } else {
-                  if (multiple) {
-                    setValue(name, [...selected, e.target.value]);
-                  } else {
-                    setValue(name, e.target.value);
-                  }
-                }
-              }}
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-    </section>
+              return items.map((item, i) => ({ ...item, order: i }));
+            });
+            if (newValue !== undefined) {
+              onChangeRef.current(newValue);
+            }
+          }
+        },
+      });
+    }
+  }, [opts.map((item) => item.value).join("_")]);
+  useEffect(() => {
+    setOpts(options);
+  }, [options]);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      key={`${opts.map((item) => item.value).join("_")}_${name}_wrapper`}
+      render={({
+        field: { onChange, onBlur, value = multiple ? [] : "", name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        onChangeRef.current = onChange;
+        return (
+          <section
+            className={`${s.customRadio} ${className || ""}`}
+            data-testid="customRadioInput"
+          >
+            {label && (
+              <label>
+                {label} {formOptions?.required && "*"}
+              </label>
+            )}
+            <div className={s.options} ref={containerRef}>
+              {opts
+                .sort((a, b) => (a.order > b.order ? 1 : -1))
+                .map(({ label, value: v, disabled }, i) => (
+                  <label
+                    htmlFor={name + v}
+                    key={i}
+                    className={`${s.option} ${
+                      value.includes(v)
+                        ? s.selected + " " + (selectedClassName || "")
+                        : ""
+                    } ${disabled ? s.disabled : ""} handle`}
+                  >
+                    <input
+                      type="checkbox"
+                      name={name}
+                      id={name + v}
+                      value={v}
+                      checked={value === v || value.includes(v) || ""}
+                      ref={ref}
+                      onChange={(e) => {
+                        const _v = e.target.value;
+                        let _newValue = multiple ? [] : "";
+                        if (_v === value || value.includes(_v)) {
+                          _newValue = multiple
+                            ? value.filter((v) => v !== _v)
+                            : "";
+                        } else {
+                          _newValue = multiple ? [...value, _v] : _v;
+                        }
+                        onChange(
+                          multiple && sortable
+                            ? _newValue.sort((a, b) =>
+                                opts.findIndex((item) => item.value === a) >
+                                opts.findIndex((item) => item.value === b)
+                                  ? 1
+                                  : -1
+                              )
+                            : _newValue
+                        );
+                      }}
+                    />
+                    {label}
+                  </label>
+                ))}
+            </div>
+          </section>
+        );
+      }}
+    />
   );
 };
+
 export const SwitchInput = ({
   register = () => {},
   name,
@@ -611,74 +665,57 @@ export const SwitchInput = ({
     </div>
   );
 };
-export const Toggle = ({
-  register = () => {},
-  watch,
-  checked,
-  defaultValue,
-  readOnly,
-  name,
-  onChange,
-  setValue = () => {},
-}) => {
+export const Toggle = ({ name, control, formOptions, disabled }) => {
   const id = useRef(Math.random().toString(36).substr(-8));
-  const value = watch?.(name);
-  if (readOnly) {
-    return (
-      <section
-        className={`${s.toggle} ${defaultValue ? s.on : ""} ${
-          readOnly ? s.readOnly : ""
-        }`}
-        title="Read only"
-      >
-        <input
-          type="checkbox"
-          style={{ display: "none" }}
-          checked={defaultValue}
-          onChange={(e) => {}}
-          id={id.current}
-          readOnly={true}
-        />
-        <label className={s.ball} htmlFor={id.current} />
-      </section>
-    );
-  }
+
   return (
-    <section
-      data-testid="toggleInput"
-      className={`${s.toggle} ${value || checked ? s.on : ""}`}
-      onClick={(e) => {
-        e.target.querySelector("label")?.click();
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({
+        field: { onChange, onBlur, value, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        return (
+          <section
+            data-testid="toggleInput"
+            className={`${s.toggle} ${value || value ? s.on : ""} ${
+              disabled ? s.disabled : ""
+            }`}
+            onClick={(e) => {
+              e.target.querySelector("label")?.click();
+            }}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if ([32, 13, 39, 37].includes(e.keyCode)) {
+                e.preventDefault();
+                // if ([32, 13].includes(e.keyCode)) {
+                //   setValue(name, !value);
+                // }
+                // if (e.keyCode === 39) {
+                //   setValue(name, false);
+                // }
+                // if (e.keyCode === 37) {
+                //   setValue(name, true);
+                // }
+              }
+            }}
+          >
+            <input
+              ref={ref}
+              type="checkbox"
+              checked={!!value}
+              onChange={onChange}
+              style={{ display: "none" }}
+              name={name}
+              id={id.current}
+            />
+            <label className={s.ball} htmlFor={id.current} />
+          </section>
+        );
       }}
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if ([32, 13, 39, 37].includes(e.keyCode)) {
-          e.preventDefault();
-          if ([32, 13].includes(e.keyCode)) {
-            setValue(name, !value);
-          }
-          if (e.keyCode === 39) {
-            setValue(name, false);
-          }
-          if (e.keyCode === 37) {
-            setValue(name, true);
-          }
-        }
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => {
-          onChange?.(e);
-        }}
-        {...register(name)}
-        style={{ display: "none" }}
-        name={name}
-        id={id.current}
-      />
-      <label className={s.ball} htmlFor={id.current} />
-    </section>
+    />
   );
 };
 
@@ -884,7 +921,7 @@ export const Tabs = ({
             }}
             className={
               // location?.pathname.endsWith(path) ? s.active : ""
-              location?.pathname.includes(tab.path.replace("/*", ""))
+              location?.pathname.includes("/" + tab.path.replace("/*", ""))
                 ? s.active
                 : ""
             }

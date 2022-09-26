@@ -11,10 +11,12 @@ const endpoints = {
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
 
-  userConfig: `${baseApiUrl}/api/user-config`,
-  logout: `${baseApiUrl}/api/users/logout`,
   forgotPassword: `${baseApiUrl}/api/users/forgot-password`,
   resetPassword: `${baseApiUrl}/api/users/reset-password`,
+  logout: `${baseApiUrl}/api/users/logout`,
+  userConfig: `${baseApiUrl}/api/user-config`,
+  collections: `${baseApiUrl}/api/collections`,
+  dynamic: `${baseApiUrl}/api/dynamic`,
 };
 
 export default endpoints;

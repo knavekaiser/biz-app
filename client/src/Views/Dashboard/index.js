@@ -14,6 +14,7 @@ import Sales from "./Sales";
 import Purchases from "./Purchases";
 import Receipts from "./Receipts";
 import Payments from "./Payments";
+import DynamicTables from "./DynamicTables";
 
 const Dashboard = () => {
   const { user, setUser, setConfig } = useContext(SiteContext);
@@ -57,6 +58,10 @@ const Dashboard = () => {
             { label: "Purchases", path: paths.purchases },
             { label: "Receipts", path: paths.receipts },
             { label: "Payments", path: paths.payments },
+            {
+              label: "Dynamic Tables",
+              path: paths.dynamicTables.replace("/*", ""),
+            },
             { label: "Settings", path: paths.settings.baseUrl },
           ]}
         />
@@ -66,6 +71,7 @@ const Dashboard = () => {
         <Route path={paths.purchases} element={<Purchases />} />
         <Route path={paths.receipts} element={<Receipts />} />
         <Route path={paths.payments} element={<Payments />} />
+        <Route path={paths.dynamicTables} element={<DynamicTables />} />
         <Route path={paths.settings.baseUrl} element={<Settings />} />
       </Routes>
       <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>

@@ -45,12 +45,14 @@ module.exports = {
 
     file_too_large:
       "File is too large. Please provide files that are less that {maxSize}",
+    unsupported_file_type: "Only {fileTypes} are supported",
 
     success: "Success",
     unauthorized: "Unauthorized",
     forbidden: "Forbidden",
   },
 
+  uploadDir: "/assets/uploads",
   otpTimeout: 120, //in seconds
   passwordResetOtpAttepts: 5,
   supportedImageSizes: 5, // 5MB

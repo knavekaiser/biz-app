@@ -1,8 +1,8 @@
 @import "Components/variables";
 
 .container {
+  padding: 1rem 0;
   min-height: calc((var(--vh) * 100));
-  min-width: 100vw;
   display: grid;
   grid-template-rows: 1fr min-content;
   place-items: center;

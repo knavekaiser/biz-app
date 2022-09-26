@@ -19,17 +19,13 @@ const Payments = () => {
   const { remove: deletePayment } = useFetch(endpoints.payments + "/{ID}");
 
   useEffect(() => {
-    getPayments().then(({ data, error }) => {
-      if (error) {
-        return Prompt({
-          type: "error",
-          message: error.message || error,
-        });
-      }
-      if (data.success) {
-        return setPayments(data.data);
-      }
-    });
+    getPayments()
+      .then(({ data }) => {
+        if (data.success) {
+          return setPayments(data.data);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>

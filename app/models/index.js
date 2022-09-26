@@ -17,4 +17,5 @@ module.exports = {
   Receipt: require("./receipt.model"),
   Purchase: require("./purchase.model"),
   Payment: require("./payment.model"),
+  Collection: require("./collection.model"),
 };

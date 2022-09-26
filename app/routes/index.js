@@ -5,4 +5,7 @@ module.exports = function (app) {
   require("./receipt.routes")(app);
   require("./config.routes")(app);
   require("./payment.routes")(app);
+  require("./collection.routes")(app);
+  require("./dynamic.routes")(app);
+  require("./whiteLabel.routes")(app);
 };

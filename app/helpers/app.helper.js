@@ -7,7 +7,7 @@ const {
   appConfig,
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { User } = require("../models");
+const User = require("../models/user.model");
 
 exports.generateHash = (string) => bcrypt.hashSync(string, 8);
 
@@ -69,3 +69,9 @@ exports.genId = (l, { uppercase, lowercase, letters, numbers } = {}) => {
 
   return id;
 };
+
+exports.normalizeDomain = (url) =>
+  (url || "")
+    .toLowerCase()
+    .replace(/(https?:\/\/)(www\.)?/, "")
+    .replace(/\/.*/, "") || "";
