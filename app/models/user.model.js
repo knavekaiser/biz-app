@@ -9,7 +9,7 @@ module.exports = mongoose.model(
       username: {
         type: Schema.Types.String,
         unique: [true, "username is taken"],
-        required: true,
+        sparse: true,
       },
       name: { type: Schema.Types.String, min: 3, required: true },
       motto: { type: Schema.Types.String },
