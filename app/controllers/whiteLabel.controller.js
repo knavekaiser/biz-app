@@ -70,7 +70,7 @@ exports.browse = async (req, res) => {
     );
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
 
-    const business = await User.findOne({ domain: "infinai.loca.lt" });
+    const business = await User.findOne({ domain: req.headers.origin });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
@@ -176,7 +176,7 @@ exports.getRelatedProducts = async (req, res) => {
     );
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
 
-    const business = await User.findOne({ domain: "infinai.loca.lt" });
+    const business = await User.findOne({ domain: req.headers.origin });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
     const config = await Config.findOne({ user: business._id });
 
@@ -257,7 +257,7 @@ exports.getElements = async (req, res) => {
     );
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
 
-    const business = await User.findOne({ domain: "infinai.loca.lt" });
+    const business = await User.findOne({ domain: req.headers.origin });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
