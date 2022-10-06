@@ -81,7 +81,7 @@ exports.browse = async (req, res) => {
     const query = {};
     if (req.params._id) {
       if (mongoose.isValidObjectId(req.params._id)) {
-        query._id = mongoose.Types.ObjectId(req.params._id);
+        query._id = ObjectId(req.params._id);
       }
     }
     const sort = {};
