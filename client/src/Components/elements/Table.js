@@ -2,6 +2,8 @@ import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 import { FaSortDown, FaCircleNotch } from "react-icons/fa";
+import { Moment } from "./moment";
+import { Images } from "Components/elements";
 import { BsFillGearFill } from "react-icons/bs";
 import { Modal } from "../modal";
 
@@ -13,6 +15,7 @@ export const Table = ({
   sortable,
   actions,
   loading,
+  placeholder,
 }) => {
   const tbody = useRef();
   const table = useRef();
@@ -60,8 +63,20 @@ export const Table = ({
               </span>
             </td>
           </tr>
+        ) : children?.length > 0 ? (
+          <>
+            {children}
+            {children.flat().filter((item) => item).length === 1 &&
+              children[0]?.props?.className?.includes("inlineForm") && (
+                <tr className={s.placeholder}>
+                  <td>{placeholder || "Nothing yet..."}</td>
+                </tr>
+              )}
+          </>
         ) : (
-          children
+          <tr className={s.placeholder}>
+            <td>{placeholder || "Nothing yet..."}</td>
+          </tr>
         )}
       </tbody>
     </table>
@@ -149,6 +164,94 @@ export const TableActions = ({ actions, className }) => {
         </div>
       </Modal>
     </td>
+  );
+};
+
+export const DynamicTable = ({
+  fields = [],
+  data = [],
+  loading,
+  actions,
+  className = "",
+}) => {
+  return (
+    <Table
+      loading={loading}
+      className={className}
+      columns={[
+        ...(fields.map((field) => ({ label: field.label })) || []),
+        ...(actions ? [{ label: "Action" }] : []),
+      ]}
+    >
+      {data.map((item, i) => (
+        <tr key={i}>
+          {fields.map((field, j) => {
+            if (field.dataType === "object" && item[field.name]) {
+              return (
+                <td key={j}>
+                  {Object.keys(item[field.name]).length} Properties
+                </td>
+              );
+            }
+            if (
+              field.dataType === "objectId" &&
+              field.collection &&
+              item[field.name]
+            ) {
+              return <td key={j}>{item[field.name][field.optionLabel]}</td>;
+            }
+            if (field.inputType === "date") {
+              return (
+                <td key={j}>
+                  <Moment format={"DD-MM-YYYY"}>{item[field.name]}</Moment>
+                </td>
+              );
+            }
+            if (
+              ["image", "images", "picture", "photo", "img"].includes(
+                field.name
+              )
+            ) {
+              return (
+                <td key={j}>
+                  <Images images={item[field.name]} />
+                </td>
+              );
+            }
+            if (
+              Array.isArray(item[field.name]) &&
+              field.dataElementType === "object"
+            ) {
+              return <td key={j}>{item[field.name].length} Items</td>;
+            }
+            if (Array.isArray(item[field.name])) {
+              const values = item[field.name];
+              return (
+                <td key={j}>
+                  <div className="manyItems">
+                    <span className="value">{values[0]}</span>
+
+                    {values.length > 1 && (
+                      <span className="icon">+{values.length - 1}</span>
+                    )}
+
+                    {values.length > 1 && (
+                      <div className="allItems">
+                        {values.map((u, i) =>
+                          i === 0 ? null : <p key={u}>{values[i]}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </td>
+              );
+            }
+            return <td key={j}>{item[field.name]}</td>;
+          })}
+          <TableActions actions={actions(item)} />
+        </tr>
+      ))}
+    </Table>
   );
 };
 

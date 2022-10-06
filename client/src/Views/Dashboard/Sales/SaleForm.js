@@ -246,7 +246,7 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
     reset,
     watch,
     setValue,
-    clearErrors,
+    control,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -312,16 +312,12 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
       <Combobox
         label="Unit"
         name="unit"
-        watch={watch}
-        register={register}
-        setValue={setValue}
-        required
-        clearErrors={clearErrors}
+        control={control}
+        formOptions={{ required: true }}
         options={config.unitsOfMeasure.map((unit) => ({
           label: unit,
           value: unit,
         }))}
-        error={errors.unit}
       />
       <button className="btn">Add</button>
     </form>

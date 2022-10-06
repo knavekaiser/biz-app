@@ -262,6 +262,17 @@
       }
     }
   }
+  &.error {
+    .files {
+      border-color: red;
+    }
+    .errMsg {
+      font-size: 10pt;
+      color: red;
+      text-align: left;
+      display: block;
+    }
+  }
 }
 .switchInput {
   display: grid;
@@ -418,9 +429,6 @@
   }
 }
 
-// .searchFieldModal {
-//   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
-// }
 .combobox {
   cursor: pointer;
   & > label {
@@ -563,10 +571,15 @@
         }
       }
       &.selected {
-        background: #e8e8e8;
+        background: $grey1;
       }
       &.hover {
-        background: #eeeeee !important;
+        background: rgba($primary-color, 0.3) !important;
+      }
+      &.disabled {
+        font-style: italic;
+        color: $grey2;
+        cursor: not-allowed;
       }
     }
     overflow-x: hidden;
@@ -592,6 +605,51 @@
         }
         grid-template-columns: 1fr 4rem;
       }
+    }
+  }
+}
+
+.calendarInput {
+  display: grid;
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+  }
+  .calendarWrapper {
+    overflow: hidden;
+    border-radius: 4px;
+    width: max-content;
+    border: 1px solid #b7b7b7;
+    .selected {
+      font-weight: bold;
+      position: relative;
+      &::before {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 6px;
+        transform: translate(-50%, -50%);
+        height: 2.85em;
+        width: 3.5em;
+        margin: auto;
+        background: rgba($primary-color, 0.3);
+        z-index: -1;
+      }
+    }
+    .actions {
+      padding: 8px;
+      padding-top: 0;
+      display: flex;
+      grid-gap: 12px;
+    }
+  }
+  &:focus-within {
+    .calendarWrapper {
+      border-color: $primary-color;
     }
   }
 }
@@ -639,6 +697,15 @@
     td,
     th {
       padding: 4px 0;
+    }
+    &.placeholder {
+      text-align: center;
+      // background: rgb(244, 244, 244);
+      td {
+        grid-column: 1 / -1;
+        padding: 2rem;
+        font-style: italic;
+      }
     }
   }
   thead {
@@ -719,6 +786,9 @@
           position: sticky;
           right: 0;
           z-index: 20;
+        }
+        .btns {
+          background: red;
         }
       }
     }

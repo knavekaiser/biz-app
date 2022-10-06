@@ -33,6 +33,7 @@ const Form = () => {
   return (
     <form
       className="grid gap-1 p-1 m-a"
+      autocomplete="off"
       onSubmit={handleSubmit((values) => {
         signup({
           phone: values.phone,
@@ -53,29 +54,31 @@ const Form = () => {
       })}
     >
       <img className={s.illustration} src="/assets/infinAI.png" />
-      <h1 className="text-center">Biz App</h1>
-      <h2>Sign Up</h2>
-      <Input
-        label="Phone"
-        required
-        {...register("phone")}
-        error={errors.phone}
-      />
-      <Input
-        label="Business Name"
-        required
-        {...register("name")}
-        error={errors.name}
-      />
-      <Input
-        label="Password"
-        required
-        type="password"
-        {...register("password")}
-        error={errors.password}
-      />
-      <button className="btn">Sign Up</button>
-      <Link to={paths.signIn}>Already have an account</Link>
+      <div className={"grid gap-1"}>
+        <h1 className="text-center">Biz App</h1>
+        <h2>Sign Up</h2>
+        <Input
+          label="Phone"
+          required
+          {...register("phone")}
+          error={errors.phone}
+        />
+        <Input
+          label="Business Name"
+          required
+          {...register("name")}
+          error={errors.name}
+        />
+        <Input
+          label="Password"
+          required
+          type="password"
+          {...register("password")}
+          error={errors.password}
+        />
+        <button className="btn">Sign Up</button>
+        <Link to={paths.signIn}>Already have an account</Link>
+      </div>
     </form>
   );
 };

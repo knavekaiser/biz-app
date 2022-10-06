@@ -20,6 +20,7 @@ module.exports = mongoose.model(
       nextInvoiceNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextPurchaseNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextReceiptNo: { type: Schema.Types.Number, min: 0, default: 1 },
+      businessType: { type: Schema.Types.String },
       siteConfig: {
         currency: { type: Schema.Types.String, default: "USD" },
         currencies: [
@@ -42,6 +43,12 @@ module.exports = mongoose.model(
         },
         browsePage: {
           sidebarFilters: [],
+        },
+        productViewPage: {
+          viewWhatsApp: { type: Schema.Types.Boolean, default: false },
+          productElements: [],
+          recommendationFilters: [],
+          recommendationLimit: { type: Schema.Types.Number, default: false },
         },
         productCard: [],
       },

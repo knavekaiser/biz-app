@@ -19,6 +19,7 @@ module.exports = mongoose.model(
         required: true,
         unique: [true, "Phone is already in use"],
       },
+      whatsappNumber: { type: Schema.Types.String, min: 8, required: true },
       password: { type: Schema.Types.String, min: 10, required: true },
       email: {
         type: Schema.Types.String,

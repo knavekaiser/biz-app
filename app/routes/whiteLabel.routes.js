@@ -4,7 +4,9 @@ const controller = require("../controllers/whiteLabel.controller");
 var router = require("express").Router();
 
 module.exports = function (app) {
-  router.get("/site-config", controller.getData);
+  router.get("/site-config", controller.getSiteConfig);
+  router.get("/elements/:table", controller.getElements);
+  router.get("/browse/related/:_id", controller.getRelatedProducts);
   router.get("/browse/:_id?", controller.browse);
 
   app.use("/api", router);

@@ -49,27 +49,29 @@ const Form = () => {
       })}
     >
       <img className={s.illustration} src="/assets/infinAI.png" />
-      <h1 className="text-center">Biz Com</h1>
-      <h2>Sign In</h2>
-      {invalidCred && <p className="error">Invalid credentials</p>}
-      <Input
-        required
-        label="Phone"
-        {...register("phone")}
-        error={errors.phone}
-      />
-      <Input
-        required
-        label="Password"
-        type="password"
-        {...register("password")}
-        error={errors.password}
-      />
-      <Link className={s.resetPasswordLink} to={paths.resetPassword}>
-        Forgot Password?
-      </Link>
-      <button className="btn">Sign In</button>
-      <Link to={paths.signUp}>Create New Account</Link>
+      <div className={`grid gap-1`}>
+        <h1 className="text-center">Biz Com</h1>
+        <h2>Sign In</h2>
+        {invalidCred && <p className="error">Invalid credentials</p>}
+        <Input
+          required
+          label="Phone"
+          {...register("phone")}
+          error={errors.phone}
+        />
+        <Input
+          required
+          label="Password"
+          type="password"
+          {...register("password")}
+          error={errors.password}
+        />
+        <Link className={s.resetPasswordLink} to={paths.resetPassword}>
+          Forgot Password?
+        </Link>
+        <button className="btn">Sign In</button>
+        <Link to={paths.signUp}>Create New Account</Link>
+      </div>
     </form>
   );
 };

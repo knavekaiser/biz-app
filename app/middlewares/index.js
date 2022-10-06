@@ -6,4 +6,5 @@ module.exports = {
   authJwt,
   file,
   validate,
+  dynamic: require("./dynamic"),
 };

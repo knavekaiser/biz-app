@@ -182,7 +182,6 @@ const ItemForm = ({ edit, setEdit, payments, purchases, onSuccess }) => {
     reset,
     watch,
     setValue,
-    clearErrors,
     control,
     formState: { errors },
   } = useForm({
@@ -225,11 +224,8 @@ const ItemForm = ({ edit, setEdit, payments, purchases, onSuccess }) => {
             value: item.no,
             data: item,
           }))}
-        register={register}
         name="no"
         formOptions={{ required: true }}
-        watch={watch}
-        setValue={setValue}
         onChange={(item) => {
           if (typeof item === "string") {
           } else {
@@ -238,7 +234,6 @@ const ItemForm = ({ edit, setEdit, payments, purchases, onSuccess }) => {
             setValue("net", item.data.net);
           }
         }}
-        error={errors.name}
         type="number"
         className={s.itemName}
       />
@@ -293,7 +288,6 @@ const MainForm = ({
     reset,
     setValue,
     watch,
-    clearErrors,
     control,
     formState: { errors },
   } = useForm({
@@ -376,16 +370,12 @@ const MainForm = ({
         <Combobox
           label="Type"
           name="type"
-          watch={watch}
-          register={register}
-          setValue={setValue}
-          required
-          clearErrors={clearErrors}
+          control={control}
+          formOptions={{ required: true }}
           options={[
             { label: "Cash", value: "Cash" },
             { label: "Bank Transfer", value: "Bank Transfer" },
           ]}
-          error={errors.type}
         />
 
         <Input
@@ -402,7 +392,7 @@ const MainForm = ({
         </div>
 
         <Select
-          readOnly={edit}
+          disabled={edit}
           control={control}
           label="Name"
           options={purchases.map((item) => ({
@@ -410,18 +400,14 @@ const MainForm = ({
             value: item.vendor.name,
             data: item.vendor,
           }))}
-          register={register}
           name="vendorName"
           formOptions={{ required: true }}
           renderListItem={(item) => <>{item.label}</>}
-          watch={watch}
-          setValue={setValue}
           onChange={(item) => {
             setValue("vendorName", item.data.name);
             setValue("vendorDetail", item.data.detail);
             setItems([]);
           }}
-          error={errors.vendorName}
         />
 
         <Textarea label="Detail" readOnly {...register("vendorDetail")} />

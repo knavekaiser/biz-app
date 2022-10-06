@@ -5,13 +5,15 @@ const {
   dbHelper,
   appHelper: { normalizeDomain },
 } = require("../helpers");
+const { ObjectId } = require("mongodb");
 
-const { User, Config } = require("../models");
+const { User, Config, Collection } = require("../models");
 
-exports.getData = async (req, res) => {
+exports.getSiteConfig = async (req, res) => {
   try {
     const domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    const productCollection = await Collection.findOne({ name: "Product" });
     User.aggregate([
       { $match: { domain } },
       {
@@ -28,11 +30,13 @@ exports.getData = async (req, res) => {
           siteTitle: "$name",
           slogan: "$motto",
           logo: "$logo",
+          whatsappNumber: "$whatsappNumber",
           siteConfig: {
             productCard: "$config.siteConfig.productCard",
             currency: "$config.siteConfig.currency",
             landingPage: "$config.siteConfig.landingPage",
             browsePage: "$config.siteConfig.browsePage",
+            productViewPage: "$config.siteConfig.productViewPage",
           },
         },
       },
@@ -43,6 +47,7 @@ exports.getData = async (req, res) => {
             ...data[0],
             siteConfig: {
               currency: "USD",
+              productFields: productCollection?.fields || null,
               ...data[0].siteConfig,
               currencies: [
                 { currency: "USD", symbol: "$" },
@@ -68,11 +73,10 @@ exports.browse = async (req, res) => {
     const business = await User.findOne({ domain: "infinai.loca.lt" });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
 
-    const ProductModel = await dbHelper.getModel(
+    const { Model, collection } = await dbHelper.getModel(
       business._id + "_" + "Product"
     );
-    if (!ProductModel)
-      return responseFn.error(res, responseStr.record_not_found);
+    if (!Model) return responseFn.error(res, responseStr.record_not_found);
 
     const query = {};
     if (req.params._id) {
@@ -89,9 +93,41 @@ exports.browse = async (req, res) => {
     }
     const page = +req.query.page || 1;
     const pageSize = +req.query.pageSize || 10;
-    ProductModel.aggregate([
+
+    collection.fields.forEach((field) => {
+      if (req.query[field.name]) {
+        if (field.dataType === "string") {
+          query[field.name] = {
+            $in: req.query[field.name]
+              .split(",")
+              .map((i) => new RegExp(i, "gi")),
+          };
+        } else if (field.dataType === "number") {
+          query[field.name] = {
+            $in: req.query[field.name]
+              .split(",")
+              .map((i) => +i)
+              .filter((i) => i),
+          };
+        }
+      } else if (
+        field.dataType === "number" &&
+        +req.query[field.name + "-min"] < +req.query[field.name + "-max"]
+      ) {
+        query[field.name] = {
+          $gte: +req.query[field.name + "-min"],
+          $lte: +req.query[field.name + "-max"],
+        };
+      }
+    });
+
+    Model.aggregate([
+      ...dbHelper.getDynamicPipeline({
+        fields: collection.fields,
+        business_id: business._id,
+        table: "Product",
+      }),
       { $match: query },
-      { $sort: sort },
       {
         $lookup: {
           from: "users",
@@ -103,6 +139,7 @@ exports.browse = async (req, res) => {
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
       { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
       { $unset: ["__v", "user"] },
+      { $sort: sort },
       // { $set: {
       //   images: {
       //     $map: {}
@@ -123,6 +160,115 @@ exports.browse = async (req, res) => {
           return responseFn.error(res, responseStr.record_not_found);
         }
         responseFn.success(res, data);
+      })
+      .catch((err) =>
+        responseFn.error(res, err.message || responseStr.error_occurred)
+      );
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getRelatedProducts = async (req, res) => {
+  try {
+    const domain = normalizeDomain(
+      req.headers["origin"] || req.headers["host"]
+    );
+    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+
+    const business = await User.findOne({ domain: "infinai.loca.lt" });
+    if (!business) return responseFn.error(res, responseStr.record_not_found);
+    const config = await Config.findOne({ user: business._id });
+
+    const { Model, collection } = await dbHelper.getModel(
+      business._id + "_" + "Product"
+    );
+    if (!Model) return responseFn.error(res, responseStr.record_not_found);
+
+    if (!mongoose.isValidObjectId(req.params._id)) {
+      return responseFn.error(res, responseStr.record_not_found);
+    }
+    const product = await Model.findOne({ _id: ObjectId(req.params._id) });
+    if (!product) {
+      return responseFn.error(
+        res,
+        responseStr.record_not_found.replace("Product")
+      );
+    }
+
+    const query = { _id: { $ne: product._id } };
+
+    const recommendationFilters =
+      config?.siteConfig?.productViewPage?.recommendationFilters;
+    (recommendationFilters || []).forEach((filter) => {
+      const field = collection.fields.find(
+        (field) => field.name === filter.fieldName
+      );
+      if (filter.oparator === "lessThan") {
+        query[filter.fieldName] = { $lt: product[filter.fieldName] };
+      } else if (filter.oparator === "greaterThan") {
+        query[filter.fieldName] = { $gt: product[filter.fieldName] };
+      } else if (filter.oparator === "arrayIncludes") {
+        query[filter.fieldName] = {
+          $in: filter.includes[product[filter.fieldName]].map((item) =>
+            field?.dataType === "objectId" ? ObjectId(item) : item
+          ),
+        };
+      }
+    });
+    const limit =
+      config?.siteConfig?.productViewPage?.recommendationLimit || 10;
+
+    Model.aggregate([
+      ...dbHelper.getDynamicPipeline({
+        fields: collection.fields,
+        business_id: business._id,
+        table: "Product",
+      }),
+      { $match: query },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
+      { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
+      { $unset: ["__v", "user"] },
+    ])
+      .then((data) => {
+        responseFn.success(res, { data });
+      })
+      .catch((err) =>
+        responseFn.error(res, err.message || responseStr.error_occurred)
+      );
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getElements = async (req, res) => {
+  try {
+    const domain = normalizeDomain(
+      req.headers["origin"] || req.headers["host"]
+    );
+    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+
+    const business = await User.findOne({ domain: "infinai.loca.lt" });
+    if (!business) return responseFn.error(res, responseStr.record_not_found);
+
+    const { Model, collection } = await dbHelper.getModel(
+      business._id + "_" + req.params.table
+    );
+    if (!Model) return responseFn.error(res, responseStr.record_not_found);
+
+    const queries = {};
+    Model.find()
+      .then((data) => {
+        responseFn.success(res, { data });
       })
       .catch((err) =>
         responseFn.error(res, err.message || responseStr.error_occurred)

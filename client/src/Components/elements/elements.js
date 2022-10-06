@@ -2,6 +2,7 @@ import React, {
   useState,
   useEffect,
   useRef,
+  useCallback,
   useLayoutEffect,
   forwardRef,
 } from "react";
@@ -17,7 +18,12 @@ import {
 } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { Modal } from "../modal";
+import { DateRangePicker } from "react-date-range";
 import Sortable from "sortablejs";
+import { moment, getAllDates } from "./moment";
+
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
 import s from "./elements.module.scss";
 import countries from "countries";
@@ -378,6 +384,196 @@ export const FileInput = ({
     </section>
   );
 };
+export const FileInputNew = ({
+  label,
+  control,
+  name,
+  thumbnail,
+  formOptions,
+  multiple,
+}) => {
+  const [files, setFiles] = useState([]);
+  const [showFiles, setShowFiles] = useState(false);
+  useEffect(() => {
+    if (control._formValues[name]?.length !== files.length) {
+      setFiles(
+        control._formValues[name]?.map((file) =>
+          typeof file === "string" ? { name: file, uploadFilePath: file } : file
+        ) || []
+      );
+    }
+  }, [control._formValues[name]?.length]);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({
+        field: { onChange, onBlur, value = multiple ? [] : "", name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => (
+        <section
+          data-testid="fileInput"
+          className={`${s.fileInput} ${error ? s.error : ""}`}
+        >
+          <div className={s.label}>
+            <label>
+              {label} {formOptions?.required && "*"}
+            </label>
+            {!thumbnail && (
+              <span className={s.fileCount} onClick={() => setShowFiles(true)}>
+                {files.length} files selected
+              </span>
+            )}
+          </div>
+          <input
+            id={name}
+            style={{ display: "none" }}
+            type="file"
+            multiple={multiple}
+            // required={formOptions?.required}
+            onChange={(e) => {
+              if (e.target.files.length > 0) {
+                let _files;
+                if (multiple) {
+                  _files = [
+                    ...files,
+                    ...[...e.target.files].filter(
+                      (item) =>
+                        !files.some(
+                          (file) =>
+                            (file.name || file.fileName) ===
+                            (item.name || item.fileName)
+                        )
+                    ),
+                  ];
+                  setFiles(_files);
+                } else {
+                  _files = [e.target.files[0]];
+                  setFiles(_files);
+                }
+                onChange(_files);
+              }
+            }}
+          />
+          {thumbnail ? (
+            <ul className={s.files}>
+              {files.map((file, i) => {
+                const ClearBtn = () => (
+                  <button
+                    className={`clear ${s.clear}`}
+                    type="button"
+                    onClick={() => {
+                      let _files = files.filter((f) =>
+                        typeof f === "string"
+                          ? f !== file
+                          : (f.name || f.fileName) !==
+                            (file.name || file.fileName)
+                      );
+                      setFiles(_files);
+                      onChange(_files);
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                );
+
+                if (
+                  !file.size &&
+                  new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file.name)
+                ) {
+                  return (
+                    <li className={s.file} key={i}>
+                      <ClearBtn />
+                      <img src={file.name} />
+                    </li>
+                  );
+                }
+
+                if (new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file?.name)) {
+                  const url = URL.createObjectURL(file);
+                  return (
+                    <li className={s.file} key={i}>
+                      <ClearBtn />
+                      <img src={url} />
+                    </li>
+                  );
+                }
+                return (
+                  <li className={s.file} key={i}>
+                    <ClearBtn />
+                    {file.name || "__file--"}
+                  </li>
+                );
+              })}
+              {(multiple || (!multiple && !files.length)) && (
+                <li className={s.fileInput}>
+                  <label htmlFor={name}>
+                    <FaUpload />
+                  </label>
+                </li>
+              )}
+            </ul>
+          ) : (
+            <div className={s.inputField}>
+              <label htmlFor={name}>
+                <span className={s.fileNames}>
+                  {files.reduce((p, a) => {
+                    return p + (a.name || a.fileName) + ", ";
+                  }, "") || "Item select"}
+                </span>
+                <span className={s.btn}>
+                  <FaUpload />
+                </span>
+              </label>
+            </div>
+          )}
+          {!thumbnail && (
+            <Modal
+              open={showFiles}
+              className={s.fileInputModal}
+              setOpen={setShowFiles}
+              head={true}
+              label="Files"
+            >
+              <div className={s.container}>
+                <Table columns={[{ label: "File" }, { label: "Action" }]}>
+                  {files.map((file, i) => (
+                    <tr key={i}>
+                      <td>
+                        <a target="_blank" href={file.uploadFilePath}>
+                          {file.name || file.fileName || file.uploadFilePath}
+                        </a>
+                      </td>
+                      <TableActions
+                        actions={[
+                          {
+                            icon: <FaRegTrashAlt />,
+                            label: "Remove",
+                            callBack: () => {
+                              let _files = files.filter((f) =>
+                                typeof f === "string"
+                                  ? f !== file
+                                  : (f.name || f.fileName) !==
+                                    (file.name || file.fileName)
+                              );
+                              setFiles(_files);
+                              onChange(_files);
+                            },
+                          },
+                        ]}
+                      />
+                    </tr>
+                  ))}
+                </Table>
+              </div>
+            </Modal>
+          )}
+          {error && <span className={s.errMsg}>{error.message}</span>}
+        </section>
+      )}
+    />
+  );
+};
 export const uploadFiles = async ({ files, uploadFiles }) => {
   let links = [];
   let error = null;
@@ -732,7 +928,7 @@ export const MobileNumberInput = ({
   icon,
   ...rest
 }) => {
-  const { register: cRegister, watch: cWatch, setValue: cSetValue } = useForm();
+  const { control: cControl, setValue: cSetValue } = useForm();
   const _id = useRef(Math.random().toString(32).substr(-8));
   const [country, setCountry] = useState(null);
   const phoneNumber = watch(name);
@@ -812,19 +1008,17 @@ export const MobileNumberInput = ({
                   "No"
                 );
               }}
-              register={cRegister}
+              control={cControl}
               name="country"
-              watch={cWatch}
-              setValue={cSetValue}
-              onChange={(option) => {
-                setCountry(option);
-                clearErrors?.(name);
-                const _number =
-                  phoneNumber && phone(phoneNumber, { country: option.iso2 });
-                if (_number?.isValid) {
-                  setValue(name, _number.phoneNumber);
-                }
-              }}
+              // onChange={(option) => {
+              //   setCountry(option);
+              //   clearErrors?.(name);
+              //   const _number =
+              //     phoneNumber && phone(phoneNumber, { country: option.iso2 });
+              //   if (_number?.isValid) {
+              //     setValue(name, _number.phoneNumber);
+              //   }
+              // }}
             />
           </div>
           <input
@@ -949,5 +1143,143 @@ export const Chip = ({ label, remove }) => {
         <IoIosClose />
       </button>
     </span>
+  );
+};
+
+export const CalendarInput = ({
+  control,
+  name,
+  label,
+  formOptions,
+  dateWindow,
+  disabledDates = [],
+  multipleRanges,
+}) => {
+  const [dateRange, setDateRange] = useState({});
+  const setDefaultRange = useCallback(() => {
+    let startDate = new Date();
+    let endDate = new Date();
+    if (dateWindow === "pastIncludingToday") {
+      startDate = new Date();
+      endDate = new Date();
+    } else if (dateWindow === "pastExcludingToday") {
+      startDate = new Date().deduct("0 0 0 1");
+      endDate = new Date().deduct("0 0 0 1");
+    } else if (dateWindow === "futureIncludingToday") {
+      startDate = new Date();
+      endDate = new Date();
+    } else if (dateWindow === "futureExcludingToday") {
+      startDate = new Date().add("0 0 0 1");
+      endDate = new Date().add("0 0 0 1");
+    }
+    setDateRange({ startDate, endDate, key: "selection" });
+  }, [dateWindow]);
+  useEffect(() => {
+    setDefaultRange();
+  }, [dateWindow]);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({ field: { onChange, onBlur, value = [], name, ref } }) => {
+        return (
+          <section className={s.calendarInput}>
+            {label && <label>{label}</label>}
+            <div className={s.calendarWrapper}>
+              <DateRangePicker
+                className={multipleRanges ? "multiple" : ""}
+                disabledDay={(date) => {
+                  if (dateWindow === "pastIncludingToday") {
+                    return (
+                      date.setHours(0, 0, 0, 0) >
+                      new Date().setHours(0, 0, 0, 0)
+                    );
+                  } else if (dateWindow === "pastExcludingToday") {
+                    return (
+                      date.setHours(0, 0, 0, 0) >=
+                      new Date().setHours(0, 0, 0, 0)
+                    );
+                  } else if (dateWindow === "futureIncludingToday") {
+                    return (
+                      date.setHours(0, 0, 0, 0) <
+                      new Date().setHours(0, 0, 0, 0)
+                    );
+                  } else if (dateWindow === "futureExcludingToday") {
+                    return (
+                      date.setHours(0, 0, 0, 0) <=
+                      new Date().setHours(0, 0, 0, 0)
+                    );
+                  }
+                  if (disabledDates.includes(moment(date, "YYYY-MM-DD"))) {
+                    return true;
+                  }
+                  return false;
+                }}
+                ranges={[dateRange]}
+                onChange={({ selection }) => {
+                  setDateRange(selection);
+                  if (!multipleRanges) {
+                    onChange(getAllDates(selection));
+                  }
+                }}
+                staticRanges={[]}
+                inputRanges={[]}
+                dayContentRenderer={(date) => {
+                  return (
+                    <span
+                      className={
+                        multipleRanges &&
+                        value.includes(moment(date, "YYYY-MM-DD"))
+                          ? s.selected
+                          : ""
+                      }
+                    >
+                      {date.getDate()}
+                    </span>
+                  );
+                }}
+              />
+              {multipleRanges && (
+                <div className={`flex p-1 pt-0 gap-1`}>
+                  <button
+                    className={`btn all-columns`}
+                    type="button"
+                    onClick={() => {
+                      onChange(
+                        [
+                          ...new Set([...value, ...getAllDates(dateRange)]),
+                        ].sort((a, b) => (a > b ? 1 : -1))
+                      );
+                      setDefaultRange();
+                    }}
+                  >
+                    Add Days
+                  </button>
+                  <button
+                    className={`btn all-columns`}
+                    type="button"
+                    onClick={() => {
+                      const dates = getAllDates(dateRange);
+                      onChange(
+                        value
+                          .filter(
+                            (date) =>
+                              !dates.includes(moment(date, "YYYY-MM-DD"))
+                          )
+                          .sort((a, b) => (a > b ? 1 : -1))
+                      );
+                      setDefaultRange();
+                    }}
+                  >
+                    Remove Days
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      }}
+    />
   );
 };

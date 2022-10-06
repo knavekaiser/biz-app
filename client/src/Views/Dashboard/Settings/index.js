@@ -15,7 +15,7 @@ import * as yup from "yup";
 import s from "./settings.module.scss";
 import { useYup, useFetch } from "hooks";
 import { FaPencilAlt, FaRegTrashAlt, FaTimes } from "react-icons/fa";
-import { Prompt, Modal } from "Components/modal";
+import { Prompt } from "Components/modal";
 import { paths, endpoints } from "config";
 import { Routes, Route } from "react-router-dom";
 
@@ -80,6 +80,7 @@ const BusinessInformation = () => {
       name: user.name || "",
       motto: user.motto || "",
       phone: user.phone || "",
+      whatsappNumber: user.whatsappNumber || "",
       email: user.email || "",
       address: user.address || "",
       gstin: user.gstin || "",
@@ -111,6 +112,7 @@ const BusinessInformation = () => {
         formData.append(`pan`, values.pan);
         formData.append(`ifsc`, values.ifsc);
         formData.append(`domain`, values.domain);
+        formData.append(`whatsappNumber`, values.whatsappNumber);
 
         updateOwnerDetails(formData).then(({ data }) => {
           if (data.success) {
@@ -144,6 +146,11 @@ const BusinessInformation = () => {
         error={errors.motto}
       />
       <Input label="Phone" {...register("phone")} error={errors.phone} />
+      <Input
+        label="Whatapp Business Number"
+        {...register("whatsappNumber")}
+        error={errors.phone}
+      />
       <Input label="Email" {...register("email")} error={errors.email} />
       <Textarea
         label="Address"
@@ -479,14 +486,12 @@ const Config = () => {
 
       <Combobox
         label="Number Separator"
+        control={control}
         name="numberSeparator"
-        watch={watch}
         options={[
           { label: "Indian", value: "en-IN" },
           { label: "US", value: "en-US" },
         ]}
-        register={register}
-        setValue={setValue}
       />
 
       <CustomRadio
@@ -518,6 +523,7 @@ const UnitForm = ({ onSuccess }) => {
       <Input value={unit} onChange={(e) => setUnit(e.target.value)} />
       <button
         type="button"
+        className="btn"
         onClick={() => {
           if (unit) {
             onSuccess(unit);

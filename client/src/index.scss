@@ -31,6 +31,15 @@ button {
     color: $primary-color-dark3;
     border: none;
     background: none;
+    &.iconOnly {
+      font-size: 1.3em;
+      padding: 0.25rem 0.5rem;
+      align-items: center;
+    }
+    &.border {
+      border: 1px solid $grey2;
+      border-radius: 4px;
+    }
   }
 }
 
@@ -70,6 +79,9 @@ a {
   grid-gap: 2rem;
 }
 
+.p_5 {
+  padding: 0.5rem;
+}
 .p-1 {
   padding: 1rem;
 }
@@ -81,6 +93,9 @@ a {
 }
 .pl-1 {
   padding-left: 1rem;
+}
+.pl_5 {
+  padding-left: 0.5rem;
 }
 .pl-2 {
   padding-left: 2rem;
@@ -97,6 +112,9 @@ a {
 .pt-1 {
   padding-top: 1rem;
 }
+.pt_5 {
+  padding-top: 0.5rem;
+}
 .pt-2 {
   padding-top: 2rem;
 }
@@ -106,10 +124,16 @@ a {
 .pb-1 {
   padding-bottom: 1rem;
 }
+.pb_5 {
+  padding-bottom: 0.5rem;
+}
 .pb-2 {
   padding-bottom: 2rem;
 }
 
+.m_5 {
+  margin: 0.5rem;
+}
 .m-1 {
   margin: 1rem;
 }
@@ -121,6 +145,9 @@ a {
 }
 .mr-0 {
   margin-right: 0;
+}
+.mr_5 {
+  margin-right: 0.5rem;
 }
 .mr-1 {
   margin-right: 1rem;
@@ -134,6 +161,9 @@ a {
 .ml-1 {
   margin-left: 1rem;
 }
+.ml_5 {
+  margin-left: 0.5rem;
+}
 .ml-2 {
   margin-left: 2rem;
 }
@@ -142,6 +172,9 @@ a {
 }
 .mt-1 {
   margin-top: 1rem;
+}
+.mt_5 {
+  margin-top: 0.5rem;
 }
 .mt-2 {
   margin-top: 2rem;
@@ -152,8 +185,17 @@ a {
 .mb-1 {
   margin-bottom: 1rem;
 }
+.mb_5 {
+  margin-bottom: 0.5rem;
+}
 .mb-2 {
   margin-bottom: 2rem;
+}
+
+.subtitle1 {
+  font-size: 14px;
+  color: $grey2;
+  font-style: italic;
 }
 
 .justify-start {
@@ -243,4 +285,77 @@ a {
   background: $red;
   color: white;
   padding: 0.5rem;
+}
+
+.manyItems {
+  display: flex;
+  align-items: center;
+  position: relative;
+  grid-gap: 6px;
+  .icon {
+    background: $primary-color-dark2;
+    color: white;
+    height: calc(2em * 0.87);
+    width: 2em;
+    display: inline-block;
+    border-radius: 50%;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    &:hover {
+      & + .allItems {
+        display: grid;
+      }
+    }
+  }
+  .allItems {
+    z-index: 20;
+    text-align: left;
+    display: none;
+    position: absolute;
+    background: white;
+    color: black;
+    width: max-content;
+    padding: 0.5rem;
+    right: -0.8rem;
+    top: 2.5em;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.52));
+    border-radius: 4px;
+    grid-gap: 0.2em;
+    &:hover {
+      display: grid;
+    }
+    &::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      border: 0.5rem solid transparent;
+      border-top: 0;
+      border-bottom: 0.7rem solid white;
+      position: absolute;
+      right: 1rem;
+      top: -0.7rem;
+    }
+  }
+}
+
+.inlineForm {
+  display: flex !important;
+  td {
+    width: 100%;
+    display: flex;
+    grid-template-columns: inherit;
+    grid-gap: inherit;
+    form {
+      width: inherit;
+      display: grid;
+      grid-template-columns: inherit;
+      grid-gap: inherit;
+      .btns {
+        align-items: center;
+        grid-column: -1 / -2;
+      }
+    }
+  }
 }

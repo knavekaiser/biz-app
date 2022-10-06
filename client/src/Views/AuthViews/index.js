@@ -24,7 +24,10 @@ const Auth = () => {
         <Route path={paths.signIn} element={<SignIn />} />
         <Route path={paths.resetPassword} element={<ResetPassword />} />
       </Routes>
-
+      <img
+        className={s.background}
+        src={`https://images.unsplash.com/photo-1568279668196-697fbf5249ca?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=${window.innerWidth}&q=80`}
+      />
       <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>
     </div>
   );

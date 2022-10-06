@@ -2,19 +2,57 @@ const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 const { dbHelper } = require("../helpers");
+const { ObjectId } = require("mongodb");
 
 const { Collection, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    const Model = await dbHelper.getModel(
-      req.authUser._id + "_" + req.params.table
-    );
-    const conditions = { user: req.authUser._id };
+    const { Model, collection } = req;
+    const conditions = {};
     if (req.params.id) {
       conditions._id = req.params.id;
     }
-    Model.find(conditions)
+
+    const { page, pageSize, ...query } = req.query;
+    Object.entries(query).forEach(([key, value]) => {
+      if (key === "_id") {
+        conditions._id = {
+          $in: value
+            .split(",")
+            .map((item) =>
+              mongoose.isValidObjectId(item) ? ObjectId(item) : item
+            ),
+        };
+        return;
+      }
+
+      const field = collection.fields.find((item) => item.name === key);
+      if (!field) return;
+
+      if (field.dataType === "string") {
+        conditions[field.name] = {
+          $in: value.split(",").map((i) => new RegExp(i, "gi")),
+        };
+      } else if (field.dataType === "number") {
+        conditions[field.name] = {
+          $in: value
+            .split(",")
+            .map((i) => +i)
+            .filter((i) => i),
+        };
+      }
+    });
+
+    let pipeline = [{ $match: conditions }];
+    // pipeline = dbHelper.getDynamicPipeline({
+    //   fields: collection.fields,
+    //   pipeline,
+    //   business_id: req.authUser._id,
+    //   table: req.params.table,
+    // });
+
+    Model.aggregate(pipeline)
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -24,16 +62,19 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const Model = await dbHelper.getModel(
-      req.authUser._id + "_" + req.params.table
-    );
-    new Model({
-      ...req.body,
-      user: req.authUser._id,
-    })
+    const { Model, collection } = req;
+    new Model({ ...req.body })
       .save()
       .then(async (data) => {
-        return responseFn.success(res, { data });
+        const newItem = await Model.aggregate(
+          dbHelper.getDynamicPipeline({
+            fields: collection.fields,
+            pipeline: [{ $match: { _id: data._id } }],
+            business_id: req.authUser._id,
+            table: req.params.table,
+          })
+        );
+        return responseFn.success(res, { data: newItem[0] });
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -43,10 +84,12 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const Model = await dbHelper.getModel(
-      req.authUser._id + "_" + req.params.table
-    );
-    Model.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+    const { Model } = req;
+    Model.findOneAndUpdate(
+      { _id: req.params.id },
+      { ...req.body },
+      { new: true }
+    )
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -58,9 +101,7 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
   try {
-    const Model = await dbHelper.getModel(
-      req.authUser._id + "_" + req.params.table
-    );
+    const { Model } = req;
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }

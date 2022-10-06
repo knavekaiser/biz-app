@@ -1,5 +1,4 @@
-import { useState, useEffect, useContext, useRef } from "react";
-import { SiteContext } from "SiteContext";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import {
   Input,
@@ -9,107 +8,160 @@ import {
   TableActions,
   Checkbox,
   Select,
+  CustomRadio,
   moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
-import { Prompt } from "Components/modal";
-import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
+import { Prompt, Modal } from "Components/modal";
+import {
+  FaPencilAlt,
+  FaRegTrashAlt,
+  FaTimes,
+  FaCheck,
+  FaPlus,
+} from "react-icons/fa";
 import * as yup from "yup";
 import s from "./payments.module.scss";
-import { useReactToPrint } from "react-to-print";
 import { endpoints } from "config";
+
+yup.addMethod(yup.string, "noneOf", function (arr, message) {
+  return this.test("noneOf", message, function (value) {
+    const { path, createError } = this;
+    return (
+      !arr.includes(value) ||
+      createError({
+        path,
+        message: message?.replace(`{value}`, value) || message,
+      })
+    );
+  });
+});
 
 const mainSchema = yup.object({
   name: yup.string().required(),
 });
 
-const itemSchema = yup.object({
-  name: yup.string().required(),
-  dataType: yup.string().required(),
+const optionsSchema = yup.object({
   label: yup.string().required(),
-  fieldType: yup.string().required(),
-  inputType: yup.string(),
-  required: yup.boolean(),
+  value: yup.string().required(),
 });
 
-const Detail = ({ label, value, className }) => {
-  return (
-    <p className={`${s.detail} ${className || ""}`}>
-      <span className={s.label}>{label}:</span>{" "}
-      <span className={s.value}>{value}</span>
-    </p>
-  );
-};
-
 const Form = ({ edit, collections, onSuccess }) => {
-  const { user, config } = useContext(SiteContext);
   const [fields, setFields] = useState(edit?.fields || []);
   const [editField, setEditField] = useState(null);
   const [err, setErr] = useState(null);
-  const printRef = useRef();
-  const handlePrint = useReactToPrint({ content: () => printRef.current });
+
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: useYup(mainSchema),
+  });
+  const { post: saveCollection, put: updateCollection, loading } = useFetch(
+    endpoints.collections + `/${edit?._id || ""}`
+  );
+  const onSubmit = useCallback(
+    (values) => {
+      if (fields.length < 1) {
+        return setErr("Add at least one field");
+      }
+
+      (edit ? updateCollection : saveCollection)({
+        name: values.name,
+        fields: fields.map((item) => ({ ...item, _id: undefined })),
+      }).then(({ data }) => {
+        if (data.errors) {
+          return Prompt({ type: "error", message: data.message });
+        } else if (data.success) {
+          onSuccess(data.data);
+        }
+      });
+    },
+    [fields]
+  );
+  useEffect(() => {
+    reset({ ...edit });
+  }, [edit]);
   return (
     <div className={`grid gap-1 p-1 ${s.addCollectionForm}`}>
+      <h3>Table Information</h3>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={`${s.mainForm} grid gap-1`}
+      >
+        <Input
+          label="Table Name (singular)"
+          type="text"
+          {...register("name")}
+          required
+          error={errors.name}
+        />
+      </form>
+
       <h3>Fields</h3>
-      {fields.length > 0 ? (
-        <Table
-          className={s.fields}
-          columns={[
-            { label: "Name" },
-            { label: "Data Type" },
-            { label: "Label" },
-            { label: "Field Type" },
-            { label: "Input Type" },
-            { label: "Required" },
-            { label: "Action", action: true },
-          ]}
-        >
-          {fields.map((item, i) => (
-            <tr key={i}>
-              <td>
-                <span className="ellipsis">{item.name}</span>
-              </td>
-              <td>{item.dataType}</td>
-              <td>{item.label}</td>
-              <td>{item.fieldType}</td>
-              <td>{item.inputType}</td>
-              <td>{item.required ? "Yes" : "No"}</td>
-              <TableActions
-                actions={[
-                  {
-                    icon: <FaPencilAlt />,
-                    label: "Edit",
-                    callBack: () => setEditField(item),
-                  },
-                  {
-                    icon: <FaRegTrashAlt />,
-                    label: "Delete",
-                    callBack: () =>
-                      Prompt({
-                        type: "confirmation",
-                        message: `Are you sure you want to remove this Field?`,
-                        callback: () => {
-                          setFields((prev) =>
-                            prev.filter((product) => product._id !== item._id)
-                          );
-                        },
-                      }),
-                  },
-                ]}
-              />
-            </tr>
-          ))}
-        </Table>
-      ) : (
-        <p className={s.noContent}>No fields yet.</p>
-      )}
+      <Table
+        className={s.fields}
+        columns={[
+          { label: "Name" },
+          { label: "Data Type" },
+          { label: "Label" },
+          { label: "Field Type" },
+          { label: "Input Type" },
+          { label: "Required" },
+          { label: "Action", action: true },
+        ]}
+        placeholder="No fields yet."
+      >
+        {fields.map((item, i) => (
+          <tr key={i}>
+            <td>
+              <span className="ellipsis">{item.name}</span>
+            </td>
+            <td>{item.dataType}</td>
+            <td>{item.label}</td>
+            <td>{item.fieldType}</td>
+            <td>{item.inputType}</td>
+            <td>{item.required ? "Yes" : "No"}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => setEditField(item),
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Field?`,
+                      callback: () => {
+                        setFields((prev) =>
+                          prev.filter((product) => product.name !== item.name)
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
       {err && <p className="error">{err}</p>}
 
       <FieldForm
         key={editField ? "edit" : "add"}
         edit={editField}
         editCollection={edit}
+        fields={fields}
         collections={collections}
+        productCollection={collections.find((c) => c?.name === "Product")}
         onSuccess={(newField) => {
           setErr(null);
           if (editField) {
@@ -127,21 +179,28 @@ const Form = ({ edit, collections, onSuccess }) => {
         }}
       />
 
-      <h3 className="mt-1">Table Information</h3>
-
-      <MainForm
-        disabled={editField}
-        edit={edit}
-        fields={fields}
-        setErr={setErr}
-        onSuccess={onSuccess}
-      />
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={`${s.mainForm} grid gap-1`}
+      >
+        <div className="btns mt-1">
+          <button className="btn" disabled={editField || loading}>
+            {edit ? "Update" : "Submit"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-const FieldForm = ({ edit, editCollection, collections, onSuccess }) => {
-  const { config } = useContext(SiteContext);
+const FieldForm = ({
+  edit,
+  fields,
+  editCollection,
+  collections,
+  productCollection,
+  onSuccess,
+}) => {
   const {
     handleSubmit,
     register,
@@ -152,305 +211,708 @@ const FieldForm = ({ edit, editCollection, collections, onSuccess }) => {
     control,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      unit: "Piece",
-    },
-    resolver: useYup(itemSchema),
+    resolver: useYup(
+      yup.object({
+        name: yup
+          .string()
+          .noneOf(
+            fields
+              .filter((item) => (!edit ? true : edit.name !== item.name))
+              .map((item) => item.name),
+            `{value} already exists`
+          )
+          .required(),
+        dataType: yup.string().required(),
+        label: yup.string().required(),
+        fieldType: yup.string().required(),
+        inputType: yup.string(),
+        required: yup.boolean(),
+      })
+    ),
   });
+  const name = watch("name");
   const inputType = watch("inputType");
   const dataType = watch("dataType");
+  const dataElementType = watch("dataElementType");
+  const dataElements = watch("fields");
   const collection = watch("collection");
   const fieldType = watch("fieldType");
   const optionType = watch("optionType");
+  const options = watch("options");
+  const multiRange = watch("multipleRanges");
+  const label = watch("label");
+
+  const onSubmit = useCallback(
+    (values) => {
+      // if (!edit) {
+      //   values._id = Math.random().toString().substr(-8);
+      // }
+      if (
+        !edit &&
+        fields.find(
+          (item) => item.name.toLowerCase() === values.name.toLowerCase()
+        )
+      ) {
+        return;
+      }
+      onSuccess(values);
+      reset();
+    },
+    [edit]
+  );
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
   return (
-    <form
-      onSubmit={handleSubmit((values) => {
-        if (!edit) {
-          values._id = Math.random().toString().substr(-8);
-        }
-        console.log(values);
-        onSuccess(values);
-        reset();
-      })}
-      className={`${s.fieldForm} grid gap-1`}
-    >
-      <h3 className="all-columns">Data</h3>
+    <div className={s.fieldFormWrapper}>
+      <div className={s.dataDetail}>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={`${s.fieldForm} grid gap-1`}
+        >
+          <h3 className="all-columns">Data</h3>
 
-      <Input
-        label="Field Name"
-        type="text"
-        required
-        {...register("name")}
-        error={errors.name}
-      />
-      <Combobox
-        label="Data Type"
-        name="dataType"
-        watch={watch}
-        register={register}
-        setValue={setValue}
-        required
-        clearErrors={clearErrors}
-        options={[
-          { label: "String", value: "string" },
-          { label: "Number", value: "number" },
-          { label: "Date", value: "date" },
-          { label: "Boolean", value: "boolean" },
-          { label: "Array", value: "array" },
-          { label: "Object ID", value: "objectId" },
-        ]}
-        error={errors.inputType}
-      />
-
-      {dataType === "objectId" && (
-        <>
-          <Select
+          <Input
+            label="Field Name"
+            type="text"
+            required
+            disabled={edit}
+            {...register("name")}
+            error={errors.name}
+          />
+          <Combobox
+            label="Data Type"
+            name="dataType"
             control={control}
-            label="Collection"
-            options={collections
-              .filter((coll) => coll._id !== editCollection?._id)
-              .map((item) => ({
-                label: item.name,
-                value: item.name,
-              }))}
-            register={register}
-            name="collection"
             formOptions={{ required: true }}
-            watch={watch}
-            setValue={setValue}
-            error={errors.collection}
-            className={s.itemName}
+            options={[
+              { label: "String", value: "string" },
+              { label: "Number", value: "number" },
+              { label: "Date", value: "date" },
+              { label: "Boolean", value: "boolean" },
+              { label: "Array", value: "array" },
+              { label: "Object", value: "object" },
+              { label: "Object ID", value: "objectId" },
+            ]}
+            disabled={edit}
           />
 
-          {collection && (
-            <Combobox
-              label="Foreign Field"
-              name="foreignField"
-              watch={watch}
-              register={register}
-              setValue={setValue}
-              required
-              clearErrors={clearErrors}
-              options={[
-                {
-                  label: "ID",
-                  value: "_id",
-                },
-                ...(collections
-                  .find((coll) => coll.name === collection)
-                  ?.fields.map((item) => ({
-                    label: item.label,
+          {dataType === "objectId" && (
+            <>
+              <Select
+                control={control}
+                label="Collection"
+                options={collections
+                  .filter((coll) => coll._id !== editCollection?._id)
+                  .map((item) => ({
+                    label: item.name,
                     value: item.name,
-                  })) || []),
+                  }))}
+                name="collection"
+                formOptions={{ required: true }}
+                className={s.itemName}
+              />
+
+              {collection && (
+                <Combobox
+                  label="Foreign Field"
+                  name="foreignField"
+                  control={control}
+                  formOptions={{ required: true }}
+                  options={[
+                    {
+                      label: "ID",
+                      value: "_id",
+                    },
+                    ...(collections
+                      .find((coll) => coll.name === collection)
+                      ?.fields.map((item) => ({
+                        label: item.label,
+                        value: item.name,
+                      })) || []),
+                  ]}
+                />
+              )}
+            </>
+          )}
+
+          {dataType === "array" && (
+            <Combobox
+              label="Data Element Type"
+              name="dataElementType"
+              control={control}
+              formOptions={{ required: true }}
+              options={[
+                { label: "String", value: "string" },
+                { label: "Number", value: "number" },
+                { label: "Date", value: "date" },
+                { label: "Object", value: "object" },
               ]}
-              error={errors.foreignField}
             />
           )}
-        </>
-      )}
+        </form>
 
-      <h3 className="all-columns">Input</h3>
-      <Input
-        label="Label"
-        type="text"
-        required
-        {...register("label")}
-        error={errors.label}
-      />
+        {dataType === "object" &&
+          !["includeProducts", "excludeProducts"].includes(name) && (
+            <NestedObjectFields
+              name={label || name}
+              value={dataElements}
+              setValue={(newValue) => setValue("objectFields", newValue)}
+              collection={editCollection}
+              collections={collections}
+            />
+          )}
 
-      <Combobox
-        label="Field Type"
-        name="fieldType"
-        watch={watch}
-        register={register}
-        setValue={setValue}
-        required
-        clearErrors={clearErrors}
-        options={[
-          { label: "Input", value: "input" },
-          { label: "Textarea", value: "textarea" },
-          { label: "Combobox", value: "combobox" },
-          { label: "Select", value: "select" },
-        ]}
-        error={errors.fieldType}
-      />
+        {
+          // dataType === "object" &&
+          // name === "includeProducts" &&
+          // (productCollection ? (
+          //   <ProductFilterFields
+          //     name={`${
+          //       name === "includeProducts"
+          //         ? "Include Products"
+          //         : "Exclude Products"
+          //     } filters`}
+          //     value={dataElements}
+          //     setValue={(newValue) => setValue("includeProducts", newValue)}
+          //     collection={editCollection}
+          //     collections={collections}
+          //     productCollection={productCollection}
+          //   />
+          // ) : (
+          //   <p>
+          //     Please add "Product" table to add "includeProducts" or
+          //     "excludeProducts"
+          //   </p>
+          // ))
+        }
 
-      {fieldType !== "combobox" && (
-        <Combobox
-          label="Input Type"
-          name="inputType"
-          watch={watch}
-          register={register}
-          setValue={setValue}
-          required
-          clearErrors={clearErrors}
-          options={[
-            { label: "Text", value: "text" },
-            { label: "Number", value: "number" },
-            { label: "Date", value: "date" },
-            { label: "File", value: "file" },
-          ]}
-          error={errors.inputType}
-        />
-      )}
+        {dataType === "array" && dataElementType === "object" && (
+          <NestedObjectFields
+            name={label || name}
+            value={dataElements}
+            setValue={(newValue) => setValue("fields", newValue)}
+            collection={editCollection}
+            collections={collections}
+          />
+        )}
+      </div>
 
-      {["combobox", "select"].includes(fieldType) && (
-        <Combobox
-          label="Options type"
-          name="optionType"
-          watch={watch}
-          register={register}
-          setValue={setValue}
-          required
-          clearErrors={clearErrors}
-          options={[
-            { label: "Predefined", value: "array" },
-            { label: "Other Collection", value: "collection" },
-          ]}
-          error={errors.optionType}
-        />
-      )}
-
-      {optionType === "collection" && (
-        <>
-          <Select
-            control={control}
-            label="Collection"
-            options={collections
-              .filter((coll) => coll._id !== editCollection?._id)
-              .map((item) => ({
-                label: item.name,
-                value: item.name,
-              }))}
-            register={register}
-            name="collection"
-            formOptions={{ required: true }}
-            watch={watch}
-            setValue={setValue}
-            error={errors.collection}
-            className={s.itemName}
+      <div className={s.inputDetail}>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={`${s.fieldForm} grid gap-1`}
+        >
+          <div className="flex all-columns justify-space-between align-center">
+            <h3 className="all-columns">Input Field</h3>
+            <Checkbox {...register("required")} label="Required" />
+          </div>
+          <Input
+            label="Label"
+            type="text"
+            required
+            {...register("label")}
+            error={errors.label}
           />
 
-          {collection && (
+          {!(dataType === "array" && dataElementType === "object") && (
+            <Combobox
+              label="Field Type"
+              name="fieldType"
+              control={control}
+              formOptions={{ required: true }}
+              options={[
+                { label: "Input", value: "input" },
+                { label: "Textarea", value: "textarea" },
+                { label: "Combobox", value: "combobox" },
+                { label: "Select", value: "select" },
+                { label: "Date Range", value: "dateRange" },
+                { label: "Collection Filter", value: "collectionFilter" },
+                { label: "None", value: "none" },
+              ]}
+            />
+          )}
+
+          {!(
+            fieldType === "combobox" ||
+            (dataType === "array" && dataElementType === "object") ||
+            (["includeProducts", "excludeProducts"].includes(name) &&
+              dataType === "object")
+          ) && (
+            <Combobox
+              label="Input Type"
+              name="inputType"
+              control={control}
+              options={[
+                { label: "Text", value: "text" },
+                { label: "Number", value: "number" },
+                { label: "Date", value: "date" },
+                { label: "File", value: "file" },
+                { label: "Calendar", value: "calendar" },
+              ]}
+            />
+          )}
+
+          {inputType === "number" && (
+            <Combobox
+              label="Decimal Places"
+              name="decimalPlaces"
+              control={control}
+              options={[
+                { label: "1", value: "0" },
+                { label: "1.0", value: "0.0" },
+                { label: "1.00", value: "0.00" },
+                { label: "1.000", value: "0.000" },
+                { label: "1.0000", value: "0.0000" },
+                { label: "1.00000", value: "0.00000" },
+              ]}
+            />
+          )}
+
+          {["combobox", "select"].includes(fieldType) && (
+            <Combobox
+              label="Options type"
+              name="optionType"
+              control={control}
+              formOptions={{ required: true }}
+              options={[
+                { label: "Predefined", value: "array" },
+                {
+                  label: "Other Collection",
+                  value: "collection",
+                  disabled: fieldType === "combobox",
+                },
+              ]}
+            />
+          )}
+
+          {optionType === "collection" && (
+            <>
+              <Select
+                control={control}
+                label="Collection"
+                options={collections
+                  .filter((coll) => coll._id !== editCollection?._id)
+                  .map((item) => ({
+                    label: item.name,
+                    value: item.name,
+                  }))}
+                name="collection"
+                formOptions={{ required: true }}
+                className={s.itemName}
+              />
+
+              {collection && (
+                <>
+                  <Combobox
+                    label="Option Label"
+                    name="optionLabel"
+                    control={control}
+                    formOptions={{ required: true }}
+                    options={[
+                      {
+                        label: "ID",
+                        value: "_id",
+                      },
+                      ...(collections
+                        .find((coll) => coll.name === collection)
+                        ?.fields.map((item) => ({
+                          label: item.label,
+                          value: item.name,
+                        })) || []),
+                    ]}
+                  />
+
+                  <Combobox
+                    label="Option Value"
+                    name="optionValue"
+                    control={control}
+                    formOptions={{ required: true }}
+                    options={[
+                      {
+                        label: "ID",
+                        value: "_id",
+                      },
+                      ...(collections
+                        .find((coll) => coll.name === collection)
+                        ?.fields.map((item) => ({
+                          label: item.label,
+                          value: item.name,
+                        })) || []),
+                    ]}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </form>
+
+        {["combobox", "select"].includes(fieldType) && optionType === "array" && (
+          <>
+            <h3>{label} Options</h3>
+            <Options
+              options={options}
+              setOptions={(newOptions) => setValue("options", newOptions)}
+            />
+          </>
+        )}
+
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={`${s.fieldForm} grid gap-1`}
+        >
+          {inputType === "file" && (
+            <Checkbox {...register("multiple")} label="Multiple" />
+          )}
+
+          {inputType === "calendar" && (
             <>
               <Combobox
-                label="Option Label"
-                name="optionLabel"
-                watch={watch}
-                register={register}
-                setValue={setValue}
-                required
-                clearErrors={clearErrors}
+                label="Date Window"
+                name="dateWindow"
+                control={control}
                 options={[
+                  { label: "All time", value: "allTime" },
                   {
-                    label: "ID",
-                    value: "_id",
+                    label: "Past including Today",
+                    value: "pastIncludingToday",
                   },
-                  ...(collections
-                    .find((coll) => coll.name === collection)
-                    ?.fields.map((item) => ({
-                      label: item.label,
-                      value: item.name,
-                    })) || []),
+                  {
+                    label: "Past excluding Today",
+                    value: "pastExcludingToday",
+                  },
+                  {
+                    label: "Future including Today",
+                    value: "futureIncludingToday",
+                  },
+                  {
+                    label: "Future excluding Today",
+                    value: "futureExcludingToday",
+                  },
                 ]}
-                error={errors.optionLabel}
               />
 
               <Combobox
-                label="Option Value"
-                name="optionValue"
-                watch={watch}
-                register={register}
-                setValue={setValue}
-                required
-                clearErrors={clearErrors}
+                label="Multiple Range"
+                name="multipleRanges"
+                control={control}
                 options={[
-                  {
-                    label: "ID",
-                    value: "_id",
-                  },
-                  ...(collections
-                    .find((coll) => coll.name === collection)
-                    ?.fields.map((item) => ({
-                      label: item.label,
-                      value: item.name,
-                    })) || []),
+                  { label: "Yes", value: true },
+                  { label: "No", value: false },
                 ]}
-                error={errors.optionValue}
               />
             </>
           )}
-        </>
-      )}
+        </form>
 
-      {inputType === "file" && (
-        <Checkbox {...register("multiple")} label="Multiple" />
-      )}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className={`flex gap-1 justify-center`}
+        >
+          <button className="btn">Add Field</button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
-      <Checkbox {...register("required")} label="Required" />
-      <button className="btn">Add Field</button>
+const ProductFilterFields = ({
+  name,
+  value = [],
+  setValue,
+  collection,
+  collections,
+  productCollection,
+}) => {
+  const [formOpen, setFormOpen] = useState();
+  return (
+    <>
+      <div className="flex justify-space-between align-center">
+        <h3>{name}</h3>
+        <button className="btn" onClick={() => setFormOpen(true)}>
+          Update {name}
+        </button>
+      </div>
+
+      <Table className={s.fields} columns={[{ label: "Field" }]}>
+        {value.map((item, i) => (
+          <tr key={i}>
+            <td>{item}</td>
+          </tr>
+        ))}
+      </Table>
+
+      <Modal
+        head
+        label={`Update Fields`}
+        open={formOpen}
+        setOpen={() => {
+          setFormOpen(false);
+        }}
+        className={s.nestedObjectFormModal}
+      >
+        <ProductFilterFieldsForm
+          editCollection={collection}
+          collections={collections}
+          productCollection={productCollection}
+          onSubmit={(newValues) => {
+            setValue([...(value || []), ...newValues]);
+            setFormOpen(false);
+          }}
+        />
+      </Modal>
+    </>
+  );
+};
+const ProductFilterFieldsForm = ({ productCollection, onSubmit }) => {
+  const { handleSubmit, control } = useForm();
+  return (
+    <form
+      onSubmit={handleSubmit((values) => onSubmit(values.fields))}
+      className="grid gap-1 p-1"
+    >
+      <CustomRadio
+        control={control}
+        name="fields"
+        className={s.itemColumnsRadio}
+        multiple
+        label="Fields"
+        options={productCollection.fields
+          .filter(
+            (item) =>
+              !(item.inputType === "file" || item.inputType === "calendar")
+          )
+          .map((item) => ({
+            label: item.label,
+            value: item.name,
+          }))}
+      />
+
+      <div className="flex justify-center">
+        <button className="btn">Update</button>
+      </div>
     </form>
   );
 };
 
-const MainForm = ({ disabled, edit, fields, setErr, onSuccess }) => {
-  const { config, setConfig } = useContext(SiteContext);
+const NestedObjectFields = ({
+  name,
+  value = [],
+  setValue,
+  collection,
+  collections,
+}) => {
+  const [edit, setEdit] = useState(null);
+  const [formOpen, setFormOpen] = useState(null);
+  return (
+    <>
+      <div className="flex justify-space-between align-center">
+        <h3>{name} Fields</h3>
+        <button className="btn" onClick={() => setFormOpen(true)}>
+          Add {name} Field
+        </button>
+      </div>
+      <Table
+        className={s.fields}
+        columns={[
+          { label: "Name" },
+          { label: "Data Type" },
+          { label: "Label" },
+          { label: "Field Type" },
+          { label: "Input Type" },
+          { label: "Required" },
+          { label: "Action", action: true },
+        ]}
+        placeholder="No fields yet."
+      >
+        {value.map((item, i) => (
+          <tr key={i}>
+            <td>
+              <span className="ellipsis">{item.name}</span>
+            </td>
+            <td>{item.dataType}</td>
+            <td>{item.label}</td>
+            <td>{item.fieldType}</td>
+            <td>{item.inputType}</td>
+            <td>{item.required ? "Yes" : "No"}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(item);
+                    setFormOpen(true);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Field?`,
+                      callback: () => {
+                        setValue(
+                          value.filter((field) => field.name !== item.name)
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+
+      <Modal
+        head
+        label={`${edit ? "Update" : "Add"} ${name} Field`}
+        open={formOpen}
+        setOpen={() => {
+          setFormOpen(false);
+          setEdit(null);
+        }}
+        className={s.nestedObjectFormModal}
+      >
+        <FieldForm
+          key={edit ? "edit" : "add"}
+          edit={edit}
+          fields={value}
+          editCollection={collection}
+          collections={collections}
+          productCollection={collections.find((c) => c?.name === "Product")}
+          onSuccess={(newField) => {
+            if (edit) {
+              setValue(
+                value.map((item) =>
+                  item.name.toLowerCase() === newField.name.toLowerCase()
+                    ? newField
+                    : item
+                )
+              );
+              setEdit(null);
+            } else {
+              setValue([...value, newField]);
+            }
+            setFormOpen(false);
+          }}
+        />
+      </Modal>
+    </>
+  );
+};
+
+const Options = ({ options, setOptions }) => {
+  const [edit, setEdit] = useState(null);
+  return (
+    <section className={s.optionsWrapper}>
+      <Table
+        className={`${s.options}`}
+        columns={[{ label: "Label" }, { label: "Value" }, { label: "Action" }]}
+      >
+        <tr className="inlineForm">
+          <td>
+            <OptionsForm
+              edit={edit}
+              onSuccess={(newOption) => {
+                if (edit) {
+                  setOptions(
+                    (options || []).map((item) =>
+                      item._id === newOption._id ? newOption : item
+                    )
+                  );
+                } else {
+                  setOptions([newOption, ...(options || [])]);
+                }
+                setEdit(null);
+              }}
+              clearForm={() => setEdit(null)}
+            />
+          </td>
+        </tr>
+        {options?.map((item, i) => (
+          <tr key={i}>
+            <td>{item.label}</td>
+            <td>{item.value}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(item);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Option?`,
+                      callback: () => {
+                        setOptions(
+                          (options || []).filter(
+                            (product) => product._id !== item._id
+                          )
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+    </section>
+  );
+};
+const OptionsForm = ({ edit, onSuccess, clearForm }) => {
   const {
     handleSubmit,
     register,
-    reset,
-    setValue,
-    watch,
     formState: { errors },
+    reset,
   } = useForm({
-    resolver: useYup(mainSchema),
+    resolver: useYup(optionsSchema),
   });
-
-  const { post: saveCollection, put: updateCollection, loading } = useFetch(
-    endpoints.collections + `/${edit?._id || ""}`
-  );
-
   useEffect(() => {
     reset({
-      ...edit,
+      label: edit?.label || "",
+      value: edit?.value || "",
     });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        if (fields.length < 1) {
-          return setErr("Add at least one field");
-        }
-
-        (edit ? updateCollection : saveCollection)({
-          name: values.name,
-          fields: fields.map((item) => ({ ...item, _id: undefined })),
-        }).then(({ data }) => {
-          if (data.errors) {
-            return Prompt({ type: "error", message: data.message });
-          } else if (data.success) {
-            onSuccess(data.data);
-          }
+        onSuccess({
+          ...values,
+          _id: edit?._id || Math.random().toString(36).substr(-8),
         });
+        reset();
       })}
-      className={`${s.mainForm} grid gap-1`}
     >
-      <Input
-        label="Table Name (singular)"
-        type="text"
-        {...register("name")}
-        required
-        error={errors.name}
-      />
+      <Input {...register("label")} placeholder="Label" error={errors.label} />
+      <Input {...register("value")} placeholder="Value" error={errors.value} />
 
-      <div className="btns">
-        <button className="btn" disabled={disabled || loading}>
-          {edit ? "Update" : "Submit"}
+      <section className="btns">
+        <button className="btn clear border iconOnly" type="submit">
+          {edit ? <FaCheck /> : <FaPlus />}
         </button>
-      </div>
+        {edit && (
+          <button
+            className="btn clear border iconOnly"
+            type="button"
+            onClick={() => {
+              clearForm();
+              // reset();
+            }}
+          >
+            <FaTimes />
+          </button>
+        )}
+      </section>
     </form>
   );
 };

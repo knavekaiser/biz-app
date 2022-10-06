@@ -92,3 +92,13 @@ export const Countdown = ({ time, onEnd, format }) => {
     </time>
   );
 };
+
+export const getAllDates = ({ startDate, endDate, format }) => {
+  const dates = [];
+  let currDate = startDate;
+  while (currDate <= endDate) {
+    dates.push(moment(currDate, format || "YYYY-MM-DD"));
+    currDate = currDate.add("0 0 0 1");
+  }
+  return dates;
+};

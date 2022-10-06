@@ -1,0 +1,21 @@
+Product table must be called "Product"
+
+Campaign table must be called "Campaign"
+
+Required columns for Campaign are title, description, startDate, endDate,
+status, campaignType, amountType, amount, productFilters.
+
+Campaign table must have one 'column' called "campaignType".
+Valid values should be "increase" and "decrease"
+
+Campaign table must have one 'column' called "amountType"
+Valid values should be "flat" and "percent"
+
+Campaign table must have one 'column' called "status"
+Valid values should be "active" and "inactive"
+
+Campaign table must have one column called "amount",
+Data Type is number.
+
+"amountTable" is an optional column in Campaign table.
+Each element in "amountTable" must contain "startDate", "endDate" and "amount".

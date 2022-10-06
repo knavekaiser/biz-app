@@ -40,11 +40,11 @@
       grid-template-columns: 1fr 3rem 4rem 4rem 5rem 3.5rem;
     }
   }
-  .fieldForm {
-    grid-template-columns: 1fr 1fr 1fr;
-    align-items: flex-end;
-    .fields {
-      min-height: 20rem;
+  .optionsWrapper {
+    .options {
+      tr {
+        grid-template-columns: 1fr 1fr 5.5rem;
+      }
     }
   }
   .mainForm {
@@ -64,132 +64,59 @@
       }
     }
   }
+  & > h3 {
+    margin-bottom: -0.5rem;
+  }
+}
+
+.dynamicForm {
+  // padding:
+}
+
+.fieldFormWrapper {
+  border: 1px solid $grey2;
+  border-radius: 0.5rem;
+  display: inherit;
+  grid-gap: 1rem;
+  .dataDetail,
+  .inputDetail {
+    display: grid;
+    grid-gap: 1rem;
+    padding: 1rem;
+    form > h3 {
+      margin-bottom: -0.5rem;
+    }
+  }
+  .dataDetail {
+    border-bottom: 1px solid $grey1;
+    border-radius: 0.5rem;
+    background: rgba(255, 0, 171, 0.13);
+    background: rgb(250, 250, 250);
+  }
+  .inputDetail {
+    border-top: 1px solid $grey1;
+    border-radius: 0.5rem;
+    background: rgba(0, 255, 163, 0.16);
+    background: rgb(250, 250, 250);
+  }
+
+  .fieldForm {
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: flex-end;
+    .fields {
+      min-height: 20rem;
+    }
+  }
+}
+.nestedObjectFormModal {
+  .fieldFormWrapper {
+    border-radius: 0;
+  }
 }
 
 .dynamicFormModal {
   width: 100%;
   max-width: 37.5rem;
-}
-
-.print {
-  height: 100%;
-  width: 100%;
-  display: block;
-  header {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    // grid-gap: 0 1rem;
-    .logo {
-      height: 80px;
-      width: 80px;
-      object-fit: contain;
-    }
-    div {
-      margin-top: -0.5rem;
-    }
-    h4 {
-      flex-basis: 100%;
-      text-align: center;
-      font-size: 2rem;
-      color: $primary-color-dark2;
-    }
-  }
-  .box {
-    border: 1px solid black;
-    border-radius: 0.5rem;
-    padding: 1rem;
-  }
-  .items,
-  .taxes {
-    border: 1px solid black;
-    thead {
-      background-color: white;
-      tr {
-        th {
-          color: black;
-          padding: 0.5rem 0.5rem;
-        }
-        border-bottom: 1px solid black;
-      }
-    }
-    tbody {
-      td {
-        padding: 0.35rem 0.5rem;
-      }
-      tr:first-child {
-        td {
-          padding-top: 0.5rem;
-        }
-      }
-      tr:last-child {
-        td {
-          padding-bottom: 0.75rem;
-        }
-      }
-      tr {
-        border: none;
-      }
-    }
-    tr {
-      grid-gap: 0;
-      padding: 0;
-    }
-    td,
-    th {
-      height: 100%;
-      &:not(:last-child) {
-        border-right: 1px solid black;
-      }
-    }
-  }
-  .items {
-    tr {
-      // grid-template-columns: 3rem 1fr 5rem 5rem 6rem 8rem;
-    }
-  }
-  .taxes {
-    page-break-inside: avoid;
-    tr {
-      grid-template-columns: 3rem 1fr 8rem 9rem 8rem;
-    }
-  }
-  .totalAmount {
-    page-break-inside: avoid;
-    display: flex;
-    border: 1px solid black;
-    border-radius: 0.5rem;
-    .word {
-      flex: 1;
-      border-right: 1px solid black;
-      font-weight: 700;
-      text-transform: capitalize;
-    }
-    .digit {
-      font-weight: 600;
-    }
-    .word,
-    .digit {
-      padding: 1.5rem;
-    }
-  }
-  footer {
-    page-break-inside: avoid;
-    .sign {
-      flex: 1;
-      text-align: right;
-      .signature {
-        object-fit: contain;
-        width: 8rem;
-        max-height: 8rem;
-      }
-    }
-  }
-}
-
-@page {
-  margin: 2rem;
-  margin-bottom: 0.25rem;
 }
 
 @media only screen and (max-width: 480px) {
@@ -222,6 +149,7 @@
         grid-template-columns: 1fr 3rem 4rem 4rem 5rem 3.5rem;
       }
     }
+
     .fieldForm {
       grid-template-columns: 1fr 1fr 1fr;
       align-items: flex-end;
@@ -243,11 +171,5 @@
         }
       }
     }
-  }
-}
-
-@media print {
-  .print {
-    padding-bottom: 0;
   }
 }

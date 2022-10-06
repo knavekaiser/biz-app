@@ -225,11 +225,8 @@ const ItemForm = ({ edit, setEdit, receipts, invoices, onSuccess }) => {
             value: item.no,
             data: item,
           }))}
-        register={register}
         name="no"
         formOptions={{ required: true }}
-        watch={watch}
-        setValue={setValue}
         onChange={(item) => {
           if (typeof item === "string") {
           } else {
@@ -238,7 +235,6 @@ const ItemForm = ({ edit, setEdit, receipts, invoices, onSuccess }) => {
             setValue("net", item.data.net);
           }
         }}
-        error={errors.name}
         type="number"
         className={s.itemName}
       />
@@ -374,16 +370,12 @@ const MainForm = ({
         <Combobox
           label="Type"
           name="type"
-          watch={watch}
-          register={register}
-          setValue={setValue}
-          required
-          clearErrors={clearErrors}
+          control={control}
+          formOptions={{ required: true }}
           options={[
             { label: "Cash", value: "Cash" },
             { label: "Bank Transfer", value: "Bank Transfer" },
           ]}
-          error={errors.type}
         />
 
         <Input
@@ -400,7 +392,7 @@ const MainForm = ({
         </div>
 
         <Select
-          readOnly={edit}
+          disabled={edit}
           control={control}
           label="Name"
           options={invoices.map((item) => ({
@@ -408,18 +400,14 @@ const MainForm = ({
             value: item.customer.name,
             data: item.customer,
           }))}
-          register={register}
           name="customerName"
           formOptions={{ required: true }}
           renderListItem={(item) => <>{item.label}</>}
-          watch={watch}
-          setValue={setValue}
           onChange={(item) => {
             setValue("customerName", item.data.name);
             setValue("customerDetail", item.data.detail);
             setItems([]);
           }}
-          error={errors.customerName}
         />
 
         <Textarea label="Detail" readOnly {...register("customerDetail")} />
