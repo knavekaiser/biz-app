@@ -734,7 +734,8 @@
   tbody {
     tr {
       td {
-        padding: 0.5rem 0;
+        margin: 0.5rem 0;
+        padding: 0;
       }
       &:not(:last-child) {
         border-bottom: 1px solid #b7b7b7;
@@ -852,6 +853,8 @@
     grid-gap: 1rem;
     padding: 0.5rem;
     margin: auto;
+    overflow: auto;
+    max-width: 100%;
     img {
       height: 4rem;
       width: 4rem;

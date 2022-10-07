@@ -5,7 +5,7 @@ const fieldSchema = yup.object().shape({
   name: yup.string().required(),
   dataType: yup.string().required(),
   label: yup.string().required(),
-  fieldType: yup.string().required(),
+  fieldType: yup.string(),
   inputType: yup.string(),
   required: yup.boolean().required(),
   // options for select and radio

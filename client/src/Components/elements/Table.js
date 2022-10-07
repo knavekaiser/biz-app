@@ -198,11 +198,15 @@ export const DynamicTable = ({
               field.collection &&
               item[field.name]
             ) {
-              return <td key={j}>{item[field.name][field.optionLabel]}</td>;
+              return (
+                <td key={j} className="ellipsis l-1">
+                  {item[field.name][field.optionLabel]}
+                </td>
+              );
             }
             if (field.inputType === "date") {
               return (
-                <td key={j}>
+                <td key={j} className="ellipsis l-1">
                   <Moment format={"DD-MM-YYYY"}>{item[field.name]}</Moment>
                 </td>
               );
@@ -222,12 +226,16 @@ export const DynamicTable = ({
               Array.isArray(item[field.name]) &&
               field.dataElementType === "object"
             ) {
-              return <td key={j}>{item[field.name].length} Items</td>;
+              return (
+                <td key={j} className="ellipsis l-1">
+                  {item[field.name].length} Items
+                </td>
+              );
             }
             if (Array.isArray(item[field.name])) {
               const values = item[field.name];
               return (
-                <td key={j}>
+                <td key={j} className="ellipsis l-1">
                   <div className="manyItems">
                     <span className="value">{values[0]}</span>
 
@@ -246,7 +254,11 @@ export const DynamicTable = ({
                 </td>
               );
             }
-            return <td key={j}>{item[field.name]}</td>;
+            return (
+              <td key={j} className="ellipsis l-1">
+                {item[field.name]}
+              </td>
+            );
           })}
           <TableActions actions={actions(item)} />
         </tr>

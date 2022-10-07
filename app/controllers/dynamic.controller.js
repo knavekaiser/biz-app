@@ -84,7 +84,7 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { Model } = req;
+    const { Model, collection } = req;
     Model.findOneAndUpdate(
       { _id: req.params.id },
       { ...req.body },
@@ -105,6 +105,7 @@ exports.delete = async (req, res) => {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
+
     Model.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
     })

@@ -80,10 +80,7 @@ const upload = (fields, uploadPath, options) => {
 };
 
 const dynamicUpload = async (req, res, next) => {
-  const collection = await Collection.findOne({
-    user: req.authUser._id,
-    name: req.params.table,
-  });
+  const { Model, collection } = req;
   // get options from collection
   // size limit, file types
   const options = {};
@@ -94,7 +91,7 @@ const dynamicUpload = async (req, res, next) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       const dir = `${uploadDir}/dynamicTables/${collection.name}_${collection.user}`;
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
     filename: (req, file, cb) => {
@@ -129,21 +126,54 @@ const dynamicUpload = async (req, res, next) => {
 
   upload = upload.fields(fields);
 
-  return upload(req, res, (err) => {
+  return upload(req, res, async (err) => {
     if (req.files) {
       Object.entries(req.files).forEach(([fieldname, files]) => {
         const field = fields.find((f) => f.name === fieldname);
         if (field.multiple) {
           req.body[fieldname] = [
-            ...(req.body[fieldname] || []),
+            ...(typeof req.body[fieldname] === "string"
+              ? [req.body[fieldname]]
+              : req.body[fieldname] || []),
             ...files.map((file) => getPath(file.path)),
           ];
         } else {
-          // remove the existing file
           req.body[fieldname] = getPath(files[0].path);
         }
       });
     }
+
+    const record = req.params.id
+      ? await Model.findOne({ _id: ObjectId(req.params.id) })
+      : null;
+    if (record) {
+      collection.fields.forEach((field) => {
+        if (field.inputType === "file" && record[field.name]?.length > 0) {
+          if (field.multiple) {
+            record[field.name].forEach((fileLink) => {
+              if (!req.body[field.name]?.includes(fileLink)) {
+                fs.unlink(
+                  uploadDir + fileLink.replace(appConfig.uploadDir, ""),
+                  (err) => {
+                    // store reminder to remove this file later
+                  }
+                );
+              }
+            });
+          } else {
+            if (req.body[field.name] !== record[field.name]) {
+              fs.unlink(
+                uploadDir + record[field.name].replace(appConfig.uploadDir, ""),
+                (err) => {
+                  // store reminder to remove this file later
+                }
+              );
+            }
+          }
+        }
+      });
+    }
+
     if (err) {
       if (err.code === "LIMIT_FILE_SIZE") {
         return responseFn.error(
@@ -162,4 +192,41 @@ const dynamicUpload = async (req, res, next) => {
   });
 };
 
-module.exports = { upload, dynamicUpload };
+const removeFiles = async (req, res, next) => {
+  const { Model, collection } = req;
+
+  const fileFields = collection.fields
+    .filter((field) => field.inputType === "file")
+    .map((item) => item.name);
+  const records = await Model.find(
+    { _id: { $in: [...(req.body.ids || []), req.params.id] } },
+    fileFields.join(" ")
+  );
+  const links = [];
+  records.forEach((record) => {
+    fileFields.forEach((field) => {
+      if (record[field]?.length > 0)
+        if (typeof record[field] === "string") {
+          links.push(
+            uploadDir + record[field].replace(appConfig.uploadDir, "")
+          );
+        } else {
+          links.push(
+            ...record[field].map(
+              (link) => uploadDir + link.replace(appConfig.uploadDir, "")
+            )
+          );
+        }
+    });
+  });
+
+  links.forEach((link) => {
+    fs.unlink(link, () => {
+      // store reminder to remove the files later
+    });
+  });
+
+  next();
+};
+
+module.exports = { upload, dynamicUpload, removeFiles };

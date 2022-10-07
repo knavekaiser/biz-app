@@ -129,17 +129,8 @@ exports.browse = async (req, res) => {
         table: "Product",
       }),
       { $match: query },
-      {
-        $lookup: {
-          from: "users",
-          localField: "user",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
-      { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
-      { $unset: ["__v", "user"] },
+      { $set: { seller: { name: business.name, logo: business.logo } } },
+      { $unset: ["__v"] },
       { $sort: sort },
       // { $set: {
       //   images: {

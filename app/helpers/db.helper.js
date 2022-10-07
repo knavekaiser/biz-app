@@ -35,6 +35,50 @@ const getType = (field) => {
   return t;
 };
 
+exports.getModel = async (table) => {
+  const [_id, name] = table.split("_");
+  const collection = await Collection.findOne({ name, user: _id });
+  const getFields = (fields) => {
+    const _fields = {};
+    fields.forEach((field) => {
+      // add nested fields type if field is an object
+      if (field.dataType === "array" && field.dataElementType === "object") {
+        _fields[field.name] = [new Schema(getFields(field.fields))];
+      } else {
+        _fields[field.name] = {
+          type: getType(field),
+          required: field.required,
+          ...(field.dataType === "objectId" && { ref: field.collection }),
+        };
+      }
+    });
+    return _fields;
+  };
+  if (!collection) {
+    return {
+      message: "Collection does not exist",
+    };
+  }
+  const fields = getFields(collection.fields);
+
+  if (mongoose.models[table]) {
+    // remove and redefine the model
+  }
+
+  if (mongoose.models[table]) {
+    delete mongoose.models[table];
+  }
+
+  return {
+    Model: mongoose.model(
+      table,
+      new Schema(fields, { timestamps: true }),
+      table
+    ),
+    collection: { ...collection._doc, __name: table },
+  };
+};
+
 exports.getDynamicPipeline = ({
   fields,
   pipeline = [],
@@ -290,48 +334,4 @@ exports.getDynamicPipeline = ({
   }
 
   return pipeline;
-};
-
-exports.getModel = async (table) => {
-  const [_id, name] = table.split("_");
-  const collection = await Collection.findOne({ name, user: _id });
-  const getFields = (fields) => {
-    const _fields = {};
-    fields.forEach((field) => {
-      // add nested fields type if field is an object
-      if (field.dataType === "array" && field.dataElementType === "object") {
-        _fields[field.name] = [new Schema(getFields(field.fields))];
-      } else {
-        _fields[field.name] = {
-          type: getType(field),
-          required: field.required,
-          ...(field.dataType === "objectId" && { ref: field.collection }),
-        };
-      }
-    });
-    return _fields;
-  };
-  if (!collection) {
-    return {
-      message: "Collection does not exist",
-    };
-  }
-  const fields = getFields(collection.fields);
-
-  if (mongoose.models[table]) {
-    // remove and redefine the model
-  }
-
-  if (mongoose.models[table]) {
-    delete mongoose.models[table];
-  }
-
-  return {
-    Model: mongoose.model(
-      table,
-      new Schema(fields, { timestamps: true }),
-      table
-    ),
-    collection: { ...collection._doc, __name: table },
-  };
 };

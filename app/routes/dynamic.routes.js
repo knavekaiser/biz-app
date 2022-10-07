@@ -7,16 +7,16 @@ module.exports = function (app) {
   router.post(
     "/:table",
     authJwt.verifyToken,
-    file.dynamicUpload,
     dynamic.getModel,
+    file.dynamicUpload,
     // validate(schema.create),
     controller.create
   );
   router.put(
     "/:table/:id",
     authJwt.verifyToken,
-    file.dynamicUpload,
     dynamic.getModel,
+    file.dynamicUpload,
     // validate(schema.update),
     controller.update
   );
@@ -30,6 +30,7 @@ module.exports = function (app) {
     "/:table/:id?",
     authJwt.verifyToken,
     dynamic.getModel,
+    file.removeFiles,
     controller.delete
   );
 
