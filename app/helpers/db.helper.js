@@ -194,7 +194,11 @@ exports.getDynamicPipeline = ({
                   },
                 },
               },
-              { $match: { includeProductsExpr: true } },
+              {
+                $match: {
+                  includeProductExpr: { $not: { $elemMatch: { $eq: false } } },
+                },
+              },
             ],
             as: "campaign",
           },

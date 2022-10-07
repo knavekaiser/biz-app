@@ -11,8 +11,10 @@ const { User, Config, Collection } = require("../models");
 
 exports.getSiteConfig = async (req, res) => {
   try {
-    const domain = normalizeDomain(req.headers["origin"]);
+    let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+
     const productCollection = await Collection.findOne({ name: "Product" });
     User.aggregate([
       { $match: { domain } },
@@ -65,12 +67,11 @@ exports.getSiteConfig = async (req, res) => {
 
 exports.browse = async (req, res) => {
   try {
-    const domain = normalizeDomain(
-      req.headers["origin"] || req.headers["host"]
-    );
+    let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
-    const business = await User.findOne({ domain: req.headers.origin });
+    const business = await User.findOne({ domain });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
@@ -161,9 +162,9 @@ exports.browse = async (req, res) => {
         }
         responseFn.success(res, data);
       })
-      .catch((err) =>
-        responseFn.error(res, err.message || responseStr.error_occurred)
-      );
+      .catch((err) => {
+        responseFn.error(res, err.message || responseStr.error_occurred);
+      });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
@@ -171,12 +172,11 @@ exports.browse = async (req, res) => {
 
 exports.getRelatedProducts = async (req, res) => {
   try {
-    const domain = normalizeDomain(
-      req.headers["origin"] || req.headers["host"]
-    );
+    let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
-    const business = await User.findOne({ domain: req.headers.origin });
+    const business = await User.findOne({ domain });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
     const config = await Config.findOne({ user: business._id });
 
@@ -252,12 +252,11 @@ exports.getRelatedProducts = async (req, res) => {
 
 exports.getElements = async (req, res) => {
   try {
-    const domain = normalizeDomain(
-      req.headers["origin"] || req.headers["host"]
-    );
+    let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
-    const business = await User.findOne({ domain: req.headers.origin });
+    const business = await User.findOne({ domain });
     if (!business) return responseFn.error(res, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
