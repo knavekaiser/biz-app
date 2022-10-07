@@ -224,7 +224,7 @@ const FieldForm = ({
           .required(),
         dataType: yup.string().required(),
         label: yup.string().required(),
-        fieldType: yup.string().required(),
+        fieldType: yup.string(),
         inputType: yup.string(),
         required: yup.boolean(),
       })
@@ -244,25 +244,29 @@ const FieldForm = ({
 
   const onSubmit = useCallback(
     (values) => {
-      // if (!edit) {
-      //   values._id = Math.random().toString().substr(-8);
-      // }
-      if (
-        !edit &&
-        fields.find(
-          (item) => item.name.toLowerCase() === values.name.toLowerCase()
-        )
-      ) {
-        return;
-      }
       onSuccess(values);
-      reset();
+      reset({
+        name: "",
+        inputType: "",
+        dataType: "",
+        dataElementType: "",
+        dataElements: "",
+        collection: "",
+        fieldType: "",
+        optionType: "",
+        options: "",
+        multiRange: "",
+        label: "",
+        required: "",
+        decimalPlaces: "",
+      });
     },
     [edit]
   );
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
+
   return (
     <div className={s.fieldFormWrapper}>
       <div className={s.dataDetail}>

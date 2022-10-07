@@ -33,7 +33,7 @@ const Form = () => {
   return (
     <form
       className="grid gap-1 p-1 m-a"
-      autocomplete="off"
+      autoComplete="off"
       onSubmit={handleSubmit((values) => {
         signup({
           phone: values.phone,
