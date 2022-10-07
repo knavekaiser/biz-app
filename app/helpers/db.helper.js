@@ -100,31 +100,96 @@ exports.getDynamicPipeline = ({
               },
               {
                 $set: {
-                  includeProductsExpr: {
-                    $function: {
-                      body: `function (product, campaign) {
-                    let result = true;
-                    for (let key in campaign.includeProducts) {
-                      const args = campaign.includeProducts[key];
-                      if (args.filterType === "minMax") {
-                        if (
-                          product.price < args.min ||
-                          product.price > args.max
-                        ) {
-                          result = false;
-                          break;
-                        }
-                      } else if (args.filterType === "stringContains") {
-                        if (!new RegExp(args.text, "i").test(product[key])) {
-                          result = false;
-                          break;
-                        }
-                      }
-                    }
-                    return result;
-                  }`,
-                      args: ["$$product", "$$ROOT"],
-                      lang: "js",
+                  includeProductExpr: {
+                    $map: {
+                      input: { $objectToArray: "$includeProducts" },
+                      as: "filter",
+                      in: {
+                        $switch: {
+                          branches: [
+                            {
+                              case: {
+                                $eq: ["$$filter.v.filterType", "minMax"],
+                              },
+                              then: {
+                                $reduce: {
+                                  input: {
+                                    $filter: {
+                                      input: {
+                                        $objectToArray: "$$product",
+                                      },
+                                      cond: { $eq: ["$$this.k", "$$filter.k"] },
+                                    },
+                                  },
+                                  initialValue: null,
+                                  in: {
+                                    $cond: {
+                                      if: { $eq: ["$$this.k", "$$filter.k"] },
+                                      then: {
+                                        $cond: [
+                                          {
+                                            $and: [
+                                              {
+                                                $gte: [
+                                                  "$$this.v",
+                                                  "$$filter.v.min",
+                                                ],
+                                              },
+                                              {
+                                                $lte: [
+                                                  "$$this.v",
+                                                  "$$filter.v.max",
+                                                ],
+                                              },
+                                            ],
+                                          },
+                                          true,
+                                          false,
+                                        ],
+                                      },
+                                      else: false,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                            {
+                              case: {
+                                $eq: [
+                                  "$$filter.v.filterType",
+                                  "stringContains",
+                                ],
+                              },
+                              then: {
+                                $reduce: {
+                                  input: {
+                                    $filter: {
+                                      input: {
+                                        $objectToArray: "$$product",
+                                      },
+                                      cond: { $eq: ["$$this.k", "$$filter.k"] },
+                                    },
+                                  },
+                                  initialValue: null,
+                                  in: {
+                                    $cond: {
+                                      if: { $eq: ["$$this.k", "$$filter.k"] },
+                                      then: {
+                                        $regexMatch: {
+                                          input: "$$this.v",
+                                          regex: "$$filter.v.text",
+                                        },
+                                      },
+                                      else: false,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          ],
+                          default: false,
+                        },
+                      },
                     },
                   },
                 },
