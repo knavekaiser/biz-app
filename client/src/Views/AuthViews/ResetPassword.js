@@ -91,16 +91,18 @@ const SendOtpForm = ({ onSuccess }) => {
       })}
     >
       <img className={s.illustration} src="/assets/comify.png" />
-      <h1 className="text-center">Comify</h1>
-      <h2>Reset Password</h2>
-      <Input
-        label="Phone"
-        required
-        {...register("phone")}
-        error={errors.phone}
-      />
-      <button className="btn">Next</button>
-      <Link to={paths.signIn}>Back to Login</Link>
+      <div className={"grid gap-1"}>
+        <h1 className="text-center">Comify</h1>
+        <h2>Reset Password</h2>
+        <Input
+          label="Phone"
+          required
+          {...register("phone")}
+          error={errors.phone}
+        />
+        <button className="btn">Next</button>
+        <Link to={paths.signIn}>Back to Login</Link>
+      </div>
     </form>
   );
 };
