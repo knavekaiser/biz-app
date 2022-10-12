@@ -17,6 +17,7 @@ const endpoints = {
   userConfig: `${baseApiUrl}/api/user-config`,
   collections: `${baseApiUrl}/api/collections`,
   dynamic: `${baseApiUrl}/api/dynamic`,
+  dynamicBulkCreate: `${baseApiUrl}/api/dynamic/:table/bulk-create`,
 };
 
 export default endpoints;

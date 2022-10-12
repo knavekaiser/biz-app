@@ -263,6 +263,9 @@
     }
   }
   &.error {
+    .inputField {
+      border-color: red;
+    }
     .files {
       border-color: red;
     }
@@ -1010,6 +1013,12 @@
     text-align: left;
     display: block;
   }
+}
+
+.importData {
+  padding: 1rem;
+  width: 18rem;
+  max-width: calc(100vw - 3rem);
 }
 
 $branch-angle: 35deg;

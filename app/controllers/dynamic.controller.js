@@ -82,6 +82,23 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.bulkCreate = async (req, res) => {
+  try {
+    const { Model, collection } = req;
+    Model.insertMany(req.body.data, { ordered: false })
+      .then(async (data) => {
+        return responseFn.success(
+          res,
+          {},
+          responseStr.records_created.replace("{num}", data.length)
+        );
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.update = async (req, res) => {
   try {
     const { Model, collection } = req;

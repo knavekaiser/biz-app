@@ -1,11 +1,21 @@
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 import { FaSortDown, FaCircleNotch } from "react-icons/fa";
 import { Moment } from "./moment";
-import { Images } from "Components/elements";
+import { Images, FileInputNew } from "Components/elements";
 import { BsFillGearFill } from "react-icons/bs";
-import { Modal } from "../modal";
+import { useForm } from "react-hook-form";
+import { useFetch, useYup } from "hooks";
+import { toCSV, parseXLSXtoJSON } from "helpers";
+import * as yup from "yup";
+import { Modal, Prompt } from "../modal";
 
 export const Table = ({
   columns,
@@ -363,5 +373,118 @@ export const VirtualTable = ({
         )}
       </tbody>
     </table>
+  );
+};
+
+export const ImportExport = ({ importUrl, exportUrl }) => {
+  const [importOpen, setImportOpen] = useState(false);
+  return (
+    <div className="flex gap-1">
+      <button className="btn m-a mr-0" onClick={() => setImportOpen(true)}>
+        Import Data
+      </button>
+      <Export url={exportUrl} />
+
+      <Modal open={importOpen} head label="Import Data" setOpen={setImportOpen}>
+        <ImportForm
+          url={importUrl}
+          onSuccess={() => {
+            setImportOpen(false);
+          }}
+        />
+      </Modal>
+    </div>
+  );
+};
+
+const ImportForm = ({ url, onSuccess }) => {
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    resolver: useYup(
+      yup.object({
+        file: yup.mixed().required(),
+      })
+    ),
+  });
+
+  const { post: postData, loading } = useFetch(url);
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        parseXLSXtoJSON(values.file[0], (data) => {
+          postData({ data })
+            .then(({ data }) => {
+              if (data?.message) {
+                Prompt({
+                  type: data.success ? "success" : "error",
+                  message: data.message,
+                });
+              }
+              if (data?.success) {
+                onSuccess();
+              }
+            })
+            .catch((err) =>
+              Prompt({
+                type: "error",
+                message: err.message,
+              })
+            );
+        });
+      })}
+      className={s.importData}
+    >
+      <FileInputNew
+        label="File"
+        name="file"
+        control={control}
+        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+        formOptions={{ required: true }}
+      />
+      <div className="flex mt-1 justify-end">
+        <button className="btn" type="submit" disabled={loading}>
+          Submit
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const Export = ({ url }) => {
+  const [data, setData] = useState(null);
+  const { get: getData, loading } = useFetch(url);
+  const fetchData = useCallback(() => {
+    getData()
+      .then(({ data }) => {
+        if (data?.success) {
+          if (!data.data.length) {
+            return Prompt({ type: "error", message: "There are no data" });
+          }
+          const keys = Object.keys(data.data[0]).filter((key) => key !== "__V");
+          const rawCSV = toCSV(
+            keys,
+            data.data.map((data) => keys.map((key) => data[key]))
+          );
+
+          const link = encodeURI(rawCSV);
+
+          const a = document.createElement("a");
+          a.setAttribute("id", "export-user-link");
+          a.setAttribute("href", link);
+          a.setAttribute("download", "data.csv");
+          document.body.appendChild(a);
+          a.click();
+          document.querySelector("#export-user-link").remove();
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, [url]);
+  return (
+    <button disabled={loading} className="btn" onClick={fetchData}>
+      {loading ? "Exporting..." : "Export Data"}
+    </button>
   );
 };

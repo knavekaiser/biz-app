@@ -199,7 +199,9 @@ exports.getRelatedProducts = async (req, res) => {
         query[filter.fieldName] = { $lt: product[filter.fieldName] };
       } else if (filter.oparator === "greaterThan") {
         query[filter.fieldName] = { $gt: product[filter.fieldName] };
-      } else if (filter.oparator === "arrayIncludes") {
+      } else if (filter.oparator === "match") {
+        query[filter.fieldName] = product[filter.fieldName];
+      } else if (filter.oparator === "customMapping") {
         query[filter.fieldName] = {
           $in: filter.includes[product[filter.fieldName]].map((item) =>
             field?.dataType === "objectId" ? ObjectId(item) : item
@@ -210,6 +212,7 @@ exports.getRelatedProducts = async (req, res) => {
     const limit =
       config?.siteConfig?.productViewPage?.recommendationLimit || 10;
 
+    console.log(query);
     Model.aggregate([
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,

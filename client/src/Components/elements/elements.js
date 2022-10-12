@@ -391,6 +391,7 @@ export const FileInputNew = ({
   thumbnail,
   formOptions,
   multiple,
+  accept,
 }) => {
   const [files, setFiles] = useState([]);
   const [showFiles, setShowFiles] = useState(false);
@@ -430,6 +431,7 @@ export const FileInputNew = ({
             style={{ display: "none" }}
             type="file"
             multiple={multiple}
+            accept={accept}
             // required={formOptions?.required}
             onChange={(e) => {
               if (e.target.files.length > 0) {

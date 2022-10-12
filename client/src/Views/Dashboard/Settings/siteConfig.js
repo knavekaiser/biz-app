@@ -507,9 +507,11 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
     control,
     watch,
     reset,
+    getValues,
     formState: { errors },
   } = useForm();
   const selectedFields = watch("fields");
+  const [forceRender, setForceRender] = useState(Math.random());
   useEffect(() => {
     const data = {
       fields: value.map((item) => item.fieldName),
@@ -529,6 +531,7 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
     });
     reset(data);
   }, []);
+
   return (
     <div onSubmit={(e) => e.stopPropagation()}>
       <form
@@ -543,7 +546,7 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
                   oparator: values[f]?.oparator,
                 }),
               ...(["select", "combobox"].includes(field.fieldType) && {
-                oparator: "arrayIncludes",
+                oparator: values[f]?.oparator,
                 includes: Object.entries(values[f])
                   .filter(([key, value]) => value?.length > 0)
                   .reduce((p, [k, v]) => {
@@ -612,7 +615,25 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
                 <p className="mb_5">
                   <strong>{field.label} Mapping:</strong>
                 </p>
-                <FieldMapper field={field} control={control} />
+
+                <Combobox
+                  className="mb_5"
+                  control={control}
+                  name={`${field.name}.oparator`}
+                  label="Oparator"
+                  options={[
+                    { label: `Match ${field.label}`, value: "match" },
+                    { label: "Custom Mapping", value: "customMapping" },
+                  ]}
+                  formOptions={{ required: "Select an option" }}
+                  onChange={() => {
+                    setForceRender(Math.random());
+                  }}
+                />
+
+                {getValues(`${field.name}.oparator`) === "customMapping" && (
+                  <FieldMapper field={field} control={control} />
+                )}
               </div>
             );
           }

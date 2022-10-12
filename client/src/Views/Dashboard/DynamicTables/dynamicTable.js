@@ -9,6 +9,7 @@ import {
   Table,
   DynamicTable,
   TableActions,
+  ImportExport,
 } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import s from "./payments.module.scss";
@@ -63,6 +64,13 @@ const DynamicTablePage = () => {
       <div className="flex justify-space-between">
         <h2>All {table}(s)</h2>
         <div className="flex gap-1">
+          <ImportExport
+            exportUrl={`${endpoints.dynamic}/${table}`}
+            importUrl={`${endpoints.dynamicBulkCreate.replace(
+              ":table",
+              table
+            )}`}
+          />
           <button
             className="btn m-a mr-0"
             onClick={() => navigate(paths.dynamicTables.replace("/*", ""))}

@@ -41,6 +41,7 @@ module.exports = {
     record_updated: "Record updated successfully",
     record_not_found: "Record not found",
     record_deleted: "Record has been deleted successfully",
+    records_created: "{num} records created successfully",
     records_deleted: "{num} records has been deleted successfully",
 
     file_too_large:

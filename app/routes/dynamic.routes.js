@@ -5,6 +5,14 @@ var router = require("express").Router();
 
 module.exports = function (app) {
   router.post(
+    "/:table/bulk-create",
+    authJwt.verifyToken,
+    dynamic.getModel,
+    file.dynamicUpload,
+    // validate(schema.create),
+    controller.bulkCreate
+  );
+  router.post(
     "/:table",
     authJwt.verifyToken,
     dynamic.getModel,
