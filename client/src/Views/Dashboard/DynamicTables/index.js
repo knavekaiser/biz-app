@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useRef, useCallback } from "react";
 import { SiteContext } from "SiteContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { useYup, useFetch } from "hooks";
@@ -10,16 +10,21 @@ import s from "./payments.module.scss";
 
 import CollectionForm from "./form";
 import DynamicTable from "./dynamicTable";
+import SchemaForm from "./schemaTemplateForm";
 
 const Collections = () => {
   const [edit, setEdit] = useState(null);
   const [addCollection, setAddCollection] = useState(false);
+  const [importSchema, setImportSchema] = useState(false);
   const [collections, setCollections] = useState([]);
   const { get: getCollections, loading } = useFetch(endpoints.collections);
+  const { remove: deleteCollection, loading: deleting } = useFetch(
+    endpoints.collections + `/{ID}`
+  );
   const navigate = useNavigate();
   const { "*": table } = useParams();
 
-  useEffect(() => {
+  const fetchRecords = useCallback(() => {
     getCollections()
       .then(({ data }) => {
         if (data.success) {
@@ -29,16 +34,31 @@ const Collections = () => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
+  useEffect(() => {
+    fetchRecords();
+  }, []);
+
   if (table) {
     return <DynamicTable />;
   }
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
+      <div className="flex justify-space-between">
         <h2>All Tables</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddCollection(true)}>
-          Add Table
-        </button>
+        <div className="flex gap-1">
+          <button
+            className="btn m-a mr-0"
+            onClick={() => setImportSchema(true)}
+          >
+            Import Schema
+          </button>
+          <button
+            className="btn m-a mr-0"
+            onClick={() => setAddCollection(true)}
+          >
+            Add Table
+          </button>
+        </div>
       </div>
       <Table
         loading={loading}
@@ -68,14 +88,32 @@ const Collections = () => {
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
+                  disabled: deleting,
                   callBack: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Collection?`,
                       callback: () => {
-                        setCollections((prev) =>
-                          prev.filter((product) => product._id !== item._id)
-                        );
+                        deleteCollection(
+                          {},
+                          {
+                            params: {
+                              "{ID}": item._id,
+                            },
+                          }
+                        )
+                          .then(({ data }) => {
+                            if (data?.success) {
+                              setCollections((prev) =>
+                                prev.filter(
+                                  (product) => product._id !== item._id
+                                )
+                              );
+                            }
+                          })
+                          .catch((err) =>
+                            Prompt({ type: "error", message: err.message })
+                          );
                       },
                     }),
                 },
@@ -84,6 +122,7 @@ const Collections = () => {
           </tr>
         ))}
       </Table>
+
       <Modal
         head
         label={edit ? "Update Collection" : "Add Collection"}
@@ -111,6 +150,23 @@ const Collections = () => {
               setCollections((prev) => [...prev, newCollection]);
             }
             setAddCollection(false);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        head
+        label="Import Schema"
+        open={importSchema}
+        setOpen={() => {
+          setImportSchema(false);
+        }}
+        className={s.collectionFormModal}
+      >
+        <SchemaForm
+          onSuccess={(schemas) => {
+            setImportSchema(false);
+            fetchRecords();
           }}
         />
       </Modal>

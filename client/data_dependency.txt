@@ -19,3 +19,7 @@ Data Type is number.
 
 "amountTable" is an optional column in Campaign table.
 Each element in "amountTable" must contain "startDate", "endDate" and "amount".
+
+
+reserved table names:
+template, templates

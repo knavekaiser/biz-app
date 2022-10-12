@@ -34,4 +34,10 @@ module.exports = {
         .typeError("items must be an array"),
     }),
   }),
+
+  addSchemaTemplate: yup.object({
+    body: yup.object({
+      schema_id: yup.string().required(),
+    }),
+  }),
 };

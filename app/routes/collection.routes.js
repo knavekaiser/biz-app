@@ -4,6 +4,14 @@ const { collection: schema } = require("../validationSchemas");
 var router = require("express").Router();
 
 module.exports = function (app) {
+  router.get("/templates", authJwt.verifyToken, controller.getSchemaTemplates);
+  router.post(
+    "/templates",
+    authJwt.verifyToken,
+    validate(schema.addSchemaTemplate),
+    controller.addSchemaTemplates
+  );
+
   router.post(
     "/",
     authJwt.verifyToken,

@@ -353,7 +353,7 @@ export const Select = ({
   const firstRender = useRef(true);
   const [inputValue, setInputValue] = useState("");
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [options, setOptions] = useState(defaultOptions);
+  const [options, setOptions] = useState([]);
 
   const { get: fetchData, loading } = useFetch(url);
 
@@ -407,6 +407,10 @@ export const Select = ({
       getOptions(null, _value);
     }
   }, []);
+
+  useEffect(() => {
+    setOptions(defaultOptions);
+  }, [defaultOptions]);
   return (
     <Controller
       control={control}
@@ -419,7 +423,7 @@ export const Select = ({
         <section className={`${s.select} ${className || ""}`}>
           {label && (
             <label>
-              {label} {formOptions.required && "*"}
+              {label} {formOptions?.required && "*"}
             </label>
           )}
           <div className={s.field}>

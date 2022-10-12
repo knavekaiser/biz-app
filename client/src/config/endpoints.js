@@ -16,6 +16,7 @@ const endpoints = {
   logout: `${baseApiUrl}/api/users/logout`,
   userConfig: `${baseApiUrl}/api/user-config`,
   collections: `${baseApiUrl}/api/collections`,
+  schemaTemplates: `${baseApiUrl}/api/collections/templates`,
   dynamic: `${baseApiUrl}/api/dynamic`,
   dynamicBulkCreate: `${baseApiUrl}/api/dynamic/:table/bulk-create`,
 };
