@@ -53,9 +53,9 @@ const Form = () => {
         });
       })}
     >
-      <img className={s.illustration} src="/assets/infinAI.png" />
+      <img className={s.illustration} src="/assets/comify.png" />
       <div className={"grid gap-1"}>
-        <h1 className="text-center">Biz App</h1>
+        <h1 className="text-center">Comify</h1>
         <h2>Sign Up</h2>
         <Input
           label="Phone"

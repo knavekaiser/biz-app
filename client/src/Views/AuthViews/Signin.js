@@ -48,9 +48,9 @@ const Form = () => {
         );
       })}
     >
-      <img className={s.illustration} src="/assets/infinAI.png" />
+      <img className={s.illustration} src="/assets/comify.png" />
       <div className={`grid gap-1`}>
-        <h1 className="text-center">Biz Com</h1>
+        <h1 className="text-center">Comify</h1>
         <h2>Sign In</h2>
         {invalidCred && <p className="error">Invalid credentials</p>}
         <Input

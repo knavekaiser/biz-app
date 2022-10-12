@@ -90,8 +90,8 @@ const SendOtpForm = ({ onSuccess }) => {
         });
       })}
     >
-      <img className={s.illustration} src="/assets/infinAI.png" />
-      <h1 className="text-center">Biz App</h1>
+      <img className={s.illustration} src="/assets/comify.png" />
+      <h1 className="text-center">Comify</h1>
       <h2>Reset Password</h2>
       <Input
         label="Phone"
@@ -146,7 +146,7 @@ const PasswordResetForm = ({
       })}
     >
       <img className={s.illustration} src="/assets/infinAI.png" />
-      <h1 className="text-center">Biz App</h1>
+      <h1 className="text-center">Comify</h1>
       <h2>Reset Password</h2>
 
       <p>Please enter the 6 digit code sent to {phone}.</p>

@@ -26,7 +26,7 @@ const Auth = () => {
       </Routes>
       <img
         className={s.background}
-        src={`https://images.unsplash.com/photo-1568279668196-697fbf5249ca?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=${window.innerWidth}&q=80`}
+        src={`https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=${window.innerWidth}&h=${window.innerHeight}&q=100`}
       />
       <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>
     </div>
