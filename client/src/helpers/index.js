@@ -59,7 +59,16 @@ export const parseXLSXtoJSON = (file, cb) => {
               : moment(dateString, "YYYY-MM-DD hh:mm");
           return;
         }
-        item[col] = row[j]?.trim() || row[j];
+        if (typeof row[j] === "string") {
+          row[j] = row[j]?.trim();
+          if (row[j].startsWith("[") && row[j].endsWith("]")) {
+            item[col] = row[j].slice(1).slice(0, -1).split(",");
+          } else {
+            item[col] = row[j];
+          }
+          return;
+        }
+        item[col] = row[j];
       });
       arr.push(item);
     });

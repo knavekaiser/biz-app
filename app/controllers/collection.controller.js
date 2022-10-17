@@ -22,7 +22,7 @@ exports.findAll = async (req, res) => {
           if (data.length) {
             responseFn.success(res, { data: data[0] });
           } else {
-            responseFn.error(res, responseStr.record_not_found);
+            responseFn.error(res, {}, responseStr.record_not_found);
           }
           return;
         }

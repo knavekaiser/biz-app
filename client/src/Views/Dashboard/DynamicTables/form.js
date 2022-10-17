@@ -429,7 +429,7 @@ const FieldForm = ({
                 { label: "Input", value: "input" },
                 { label: "Textarea", value: "textarea" },
                 { label: "Combobox", value: "combobox" },
-                { label: "Select", value: "select" },
+                { label: "Autocomplete", value: "select" },
                 { label: "Date Range", value: "dateRange" },
                 { label: "Collection Filter", value: "collectionFilter" },
                 { label: "None", value: "none" },
@@ -438,7 +438,9 @@ const FieldForm = ({
           )}
 
           {!(
-            fieldType === "combobox" ||
+            ["combobox", "textarea", "collectionFilter", "none"].includes(
+              fieldType
+            ) ||
             (dataType === "array" && dataElementType === "object") ||
             (["includeProducts", "excludeProducts"].includes(name) &&
               dataType === "object")
@@ -447,13 +449,21 @@ const FieldForm = ({
               label="Input Type"
               name="inputType"
               control={control}
-              options={[
-                { label: "Text", value: "text" },
-                { label: "Number", value: "number" },
-                { label: "Date", value: "date" },
-                { label: "File", value: "file" },
-                { label: "Calendar", value: "calendar" },
-              ]}
+              options={
+                fieldType === "dateRange"
+                  ? [{ label: "Calendar", value: "calendar" }]
+                  : [
+                      { label: "Text", value: "text" },
+                      { label: "Number", value: "number" },
+                      ...(fieldType !== "select"
+                        ? [
+                            { label: "Date", value: "date" },
+                            { label: "File", value: "file" },
+                            { label: "Calendar", value: "calendar" },
+                          ]
+                        : []),
+                    ]
+              }
             />
           )}
 
@@ -565,7 +575,8 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`${s.fieldForm} grid gap-1`}
         >
-          {inputType === "file" && (
+          {(["file"].includes(inputType) ||
+            ["select", "combobox"].includes(fieldType)) && (
             <Checkbox {...register("multiple")} label="Multiple" />
           )}
 

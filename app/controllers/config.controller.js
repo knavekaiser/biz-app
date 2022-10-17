@@ -1,6 +1,7 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
+const { fileHelper } = require("../helpers");
 const { Config } = require("../models");
 
 exports.findOne = async (req, res) => {
@@ -15,6 +16,17 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    const config = await Config.findOne({ user: req.authUser._id });
+    if (req.body.siteConfig) {
+      const oldSlides = config.siteConfig.landingPage?.hero?.slides || [];
+      const reqSlides = req.body.siteConfig.landingPage?.hero?.slides || [];
+      const filesToRemove = oldSlides.filter(
+        (url) => !reqSlides.some((u) => u === url)
+      );
+      if (filesToRemove?.length) {
+        fileHelper.deleteFiles(filesToRemove);
+      }
+    }
     Config.findOneAndUpdate({ user: req.authUser._id }, req.body, { new: true })
       .then((data) => {
         if (data) {

@@ -79,7 +79,11 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
   ReactDOM.render(
     <>
       <div className={`promptBackdrop`} />
-      <div data-testid="prompt" className={`prompt ${className || ""}`}>
+      <div
+        data-testid="prompt"
+        className={`prompt ${className || ""}`}
+        onSubmit={(e) => e.stopPropagation()}
+      >
         <div className="content">
           <button className="clear close" onClick={decline}>
             <IoClose />

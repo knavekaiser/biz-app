@@ -10,9 +10,13 @@ String.prototype.camelize = function () {
     return index === 0 ? word.toLowerCase() : word.toUpperCase();
   }).replace(/\s+/g, "");
 };
-
-Object.validate = async function (schema) {
-  return schema.validate(this);
+String.prototype.isJSON = function () {
+  try {
+    JSON.parse(this);
+  } catch (err) {
+    return false;
+  }
+  return true;
 };
 
 Date.prototype.deduct = function (time) {
@@ -72,6 +76,9 @@ Date.prototype.add = function (time) {
   return date;
 };
 
+Object.validate = async function (schema) {
+  return schema.validate(this);
+};
 Object.prototype.findProperties = function (prop) {
   const arr = [];
   const findProperties = (obj, parent) => {
@@ -95,4 +102,5 @@ module.exports = {
   appHelper: require("./app.helper"),
   smsHelper: require("./sms.helper"),
   dbHelper: require("./db.helper"),
+  fileHelper: require("./file.helper"),
 };

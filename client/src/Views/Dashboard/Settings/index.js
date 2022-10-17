@@ -6,7 +6,6 @@ import {
   Textarea,
   FileInput,
   Table,
-  TableActions,
   Tabs,
   CustomRadio,
   Combobox,

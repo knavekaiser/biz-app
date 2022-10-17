@@ -1,11 +1,21 @@
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext, useState, useCallback } from "react";
 import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { paths, endpoints } from "config";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
-import { CustomRadio, Table, Combobox, Select } from "Components/elements";
+import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
+import { findProperties } from "helpers";
+import {
+  Input,
+  Combobox,
+  Select,
+  CustomRadio,
+  Table,
+  TableActions,
+  FileInputNew,
+} from "Components/elements";
 import s from "./settings.module.scss";
 
 const SiteConfig = () => {
@@ -15,6 +25,7 @@ const SiteConfig = () => {
     []
   );
   const [updateSidebarFilters, setUpdateSidebarFilters] = useState(false);
+  const [updateShelves, setUpdateShelves] = useState(false);
   const [
     updateRecommendationFilters,
     setUpdateRecommendationFilters,
@@ -53,11 +64,21 @@ const SiteConfig = () => {
       viewWhatsApp:
         config?.siteConfig?.productViewPage?.viewWhatsApp?.toString() ||
         "false",
+      viewLandingPage:
+        config?.siteConfig?.landingPage?.viewLandingPage?.toString() || "false",
+      heroImages: config?.siteConfig?.landingPage?.hero?.slides || [],
+      viewHeroSection:
+        config?.siteConfig?.landingPage?.hero?.viewHeroSection?.toString() ||
+        "false",
+      landingPageShelves: config?.siteConfig?.landingPage?.shelves || [],
     });
   }, [config]);
 
   const sidebarFilters = watch("sidebarFilters");
   const recommendationFilters = watch("recommendationFilters");
+  const viewLandingPage = watch("viewLandingPage");
+  const whatsapp = watch("viewWhatsApp");
+  const landingPageShelves = watch("landingPageShelves");
 
   useEffect(() => {
     if (
@@ -121,13 +142,11 @@ const SiteConfig = () => {
     }
   }, [config?.siteConfig?.productCard, productEelementOptions]);
 
-  const whatsapp = watch("viewWhatsApp");
-
   return (
     <form
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
-        updateConfig({
+        const payload = {
           ...config,
           businessType: values.businessType,
           siteConfig: {
@@ -148,8 +167,39 @@ const SiteConfig = () => {
               recommendationFilters: values.recommendationFilters,
               recommendationLimit: values.recommendationLimit,
             },
+            landingPage: {
+              viewLandingPage: viewLandingPage === "true",
+              hero: {
+                viewHeroSection: values.viewHeroSection === "true",
+              },
+              shelves: values.landingPageShelves,
+            },
           },
-        })
+        };
+        findProperties("_id", payload).forEach((item) => {
+          item.path.reduce((obj, key, i, arr) => {
+            if (i === arr.length - 1 && obj[key].length <= 20) {
+              delete obj[key];
+            }
+            return obj[key];
+          }, payload);
+        });
+        const formData = new FormData();
+        Object.entries(payload).forEach(([key, value]) => {
+          formData.append(key, JSON.stringify(value));
+        });
+        values.heroImages.forEach((file) => {
+          if (file.type) {
+            formData.append("siteConfig.landingPage.hero.slides", file);
+          } else {
+            formData.append(
+              "siteConfig.landingPage.hero.slides",
+              file.uploadFilePath || file
+            );
+          }
+        });
+
+        updateConfig(formData)
           .then(({ data }) => {
             if (data.success) {
               setConfig(data.data);
@@ -215,7 +265,54 @@ const SiteConfig = () => {
         }
       />
 
-      <h2>Prodcut View Page</h2>
+      <h2>Landing Page</h2>
+
+      <Combobox
+        label="View Landing Page"
+        name="viewLandingPage"
+        control={control}
+        options={[
+          { label: "Yes", value: "true" },
+          { label: "No", value: "false" },
+        ]}
+      />
+
+      {viewLandingPage && (
+        <>
+          <h4>Hero Section</h4>
+
+          <Combobox
+            label="View Hero Section"
+            name="viewHeroSection"
+            control={control}
+            options={[
+              { label: "Yes", value: "true" },
+              { label: "No", value: "false" },
+            ]}
+          />
+
+          <FileInputNew
+            thumbnail
+            multiple
+            control={control}
+            name="heroImages"
+            label="Hero Images"
+          />
+
+          <LandingPageShelves
+            fields={productCollection?.fields?.filter(
+              (item) => !["file"].includes(item.inputType)
+            )}
+            shelves={landingPageShelves}
+            onChange={(shelves) => {
+              setValue("landingPageShelves", shelves);
+              setUpdateShelves(false);
+            }}
+          />
+        </>
+      )}
+
+      <h2>Produc View Page</h2>
 
       <Combobox
         label="Show WhatsApp Chat Button"
@@ -372,16 +469,241 @@ const SiteConfig = () => {
   );
 };
 
-const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
+const LandingPageShelves = ({
+  fields = [],
+  shelves = [],
+  // shelves: defaultShelves = [],
+  value = [],
+  onChange,
+}) => {
+  // const [shelves, setShelves] = useState([]);
+  const [edit, setEdit] = useState(null);
+  const [addShelf, setAddShelf] = useState(false);
+  useEffect(() => {
+    onChange(shelves);
+  }, [shelves]);
+
+  // useEffect(() => {
+  //   console.log(JSON.stringify(defaultShelves), JSON.stringify(shelves));
+  //   if (JSON.stringify(defaultShelves) !== JSON.stringify(shelves)) {
+  //     // setShelves(defaultShelves);
+  //   }
+  // }, [defaultShelves]);
+
+  return (
+    <div
+      onSubmit={(e) => {
+        e.stopPropagation();
+      }}
+      className="grid gap-1"
+    >
+      <div className="flex justify-space-between align-center">
+        <h5>Shelves</h5>
+        <button className="btn" type="button" onClick={() => setAddShelf(true)}>
+          Add Shelf
+        </button>
+      </div>
+      <Table
+        columns={[
+          { label: "Tilte" },
+          { label: "Product Count" },
+          { label: "Filters" },
+          { label: "Actions" },
+        ]}
+      >
+        {shelves?.map((item, i) => (
+          <tr key={i}>
+            <td>{item.title}</td>
+            <td>{item.productCount}</td>
+            <td>{item.productFilters.length}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(item);
+                    setAddShelf(true);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Shelf?`,
+                      callback: () => {
+                        onChange(
+                          shelves.filter((shelf) => item._id !== shelf._id)
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+      <Modal
+        open={addShelf}
+        setOpen={() => {
+          setAddShelf(false);
+          setEdit(null);
+        }}
+        head
+        label={edit ? "Edit" : "Add" + " Shelf"}
+        className={s.landingPageShelveFormModal}
+      >
+        <ShelfForm
+          edit={edit}
+          fields={fields}
+          onSubmit={(newShelf) => {
+            if (edit) {
+              onChange(
+                shelves.map((shelf) =>
+                  newShelf._id === shelf._id ? newShelf : shelf
+                )
+              );
+              setEdit(null);
+            } else {
+              onChange([...shelves, newShelf]);
+            }
+            setAddShelf(false);
+          }}
+        />
+      </Modal>
+    </div>
+  );
+};
+
+const landingPageShelveSchema = yup.object({
+  title: yup.string().required(),
+  productFilters: yup
+    .array()
+    .min(1, "Please add at least one product filter")
+    .required("Please add at least one product filter"),
+  productCount: yup
+    .number()
+    .min(2, "Please enter more than 1")
+    .required()
+    .typeError("Please enter a valid number"),
+});
+const ShelfForm = ({ fields = [], edit, onSubmit }) => {
+  const {
+    handleSubmit,
+    control,
+    register,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+    clearErrors,
+  } = useForm({
+    resolver: useYup(landingPageShelveSchema),
+  });
+  const [updateFilters, setUpdateFilters] = useState(false);
+
+  const submit = useCallback((values) => {
+    onSubmit({
+      ...values,
+      _id: edit?._id || Math.random().toString(36).substr(-8),
+    });
+  }, []);
+
+  const productFilters = watch("productFilters");
+
+  useEffect(() => {
+    reset({ ...edit });
+  }, [edit]);
+  return (
+    <div onSubmit={(e) => e.stopPropagation()} className={`p-1 grid gap-1`}>
+      <form onSubmit={handleSubmit(submit)} className="grid gap-1">
+        <Input label="Title" {...register("title")} error={errors.title} />
+
+        <Input
+          label="Number of Products"
+          type="number"
+          {...register("productCount")}
+          error={errors.productCount}
+        />
+
+        <div className="flex justify-space-between align-center">
+          <h5>Product Filters</h5>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setUpdateFilters(true)}
+          >
+            Add/Update Filters
+          </button>
+        </div>
+
+        {errors.productFilters && (
+          <p className="error">{errors.productFilters.message}</p>
+        )}
+        <Table columns={[{ label: "Field" }, { label: "Oparator/Value" }]}>
+          {productFilters?.map((item, i) => (
+            <tr key={i}>
+              <td>{item.fieldName}</td>
+              <td>
+                {item.filterType} {item.value}
+              </td>
+            </tr>
+          ))}
+        </Table>
+      </form>
+
+      <Modal
+        open={updateFilters}
+        edit={updateFilters}
+        head
+        label="Update Filters"
+        setOpen={setUpdateFilters}
+      >
+        <SidebarFilters
+          fields={fields}
+          value={productFilters}
+          onSuccess={(values) => {
+            setValue("productFilters", values);
+            setUpdateFilters(null);
+            clearErrors("productFilters");
+          }}
+          includeValue
+        />
+      </Modal>
+
+      <form onSubmit={handleSubmit(submit)}>
+        <div className="flex justify-center">
+          <button className="btn">Submit</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+const SidebarFilters = ({
+  fields = [],
+  value = [],
+  onSuccess,
+  includeValue,
+}) => {
   const {
     handleSubmit,
     register,
     control,
     watch,
     reset,
+    getValues,
     formState: { errors },
   } = useForm();
   const selectedFields = watch("fields");
+  if (includeValue) {
+    for (var i = 0; i < fields.length; i++) {
+      const field = fields[i];
+      const value = watch(`${field.name}.filterType`);
+    }
+  }
   useEffect(() => {
     const data = {
       fields: value.map((item) => item.fieldName),
@@ -389,8 +711,10 @@ const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
     value.forEach((field) => {
       const { fieldName, ...options } = field;
       Object.entries(options).forEach(([key, value]) => {
-        data[`${fieldName}`] = {};
-        data[`${fieldName}`][key] = value;
+        data[fieldName] = { ...data[fieldName] };
+        if (value !== undefined) {
+          data[fieldName][key] = value;
+        }
       });
     });
     reset(data);
@@ -402,13 +726,24 @@ const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
           const data = [];
           values.fields.forEach((f) => {
             const field = fields.find((field) => field.name === f);
+            if (!field) return;
             data.push({
               fieldName: f,
               ...(["input", "textarea"].includes(field.fieldType) && {
                 filterType: values[f]?.filterType || "textSearch",
+                ...(includeValue && {
+                  ...(values[f]?.filterType !== "minMax" && {
+                    value: values[f]?.value,
+                  }),
+                  ...(values[f]?.filterType === "minMax" && {
+                    min: values[f]?.min,
+                    max: values[f]?.max,
+                  }),
+                }),
               }),
               ...(["select", "combobox"].includes(field.fieldType) && {
                 filterStyle: values[f]?.filterStyle,
+                ...(includeValue && { value: values[f]?.value }),
               }),
             });
           });
@@ -445,12 +780,18 @@ const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
 
         {selectedFields?.map((f, i) => {
           const field = fields.find((field) => field.name === f);
+          if (!field) return null;
           if (["input", "textarea"].includes(field.fieldType)) {
             if (field.dataType === "string") {
               return (
-                <p key={i}>
-                  <strong>{field.label}:</strong> Text Search
-                </p>
+                <div key={i}>
+                  <p>
+                    <strong>{field.label}:</strong> Text Search
+                  </p>
+                  {includeValue && (
+                    <Input label="Value" {...register(`${field.name}.value`)} />
+                  )}
+                </div>
               );
             } else if (field.dataType === "number") {
               return (
@@ -468,6 +809,31 @@ const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
                     ]}
                     formOptions={{ required: "Select an option" }}
                   />
+                  {includeValue && (
+                    <>
+                      {getValues(`${field.name}.filterType`) === "minMax" && (
+                        <>
+                          <Input
+                            type="number"
+                            label="Minimum"
+                            {...register(`${field.name}.min`)}
+                          />
+                          <Input
+                            type="number"
+                            label="Maximum"
+                            {...register(`${field.name}.max`)}
+                          />
+                        </>
+                      )}
+                      {getValues(`${field.name}.filterType`) === "match" && (
+                        <Input
+                          type="number"
+                          label="Value"
+                          {...register(`${field.name}.value`)}
+                        />
+                      )}
+                    </>
+                  )}
                 </div>
               );
             }
@@ -477,16 +843,40 @@ const SidebarFilters = ({ fields = [], value = [], onSuccess }) => {
                 <p className="mb_5">
                   <strong>{field.label}:</strong>
                 </p>
-                <Combobox
-                  control={control}
-                  name={`${field.name}.filterStyle`}
-                  label="Filter Style"
-                  options={[
-                    { label: "List", value: "list" },
-                    { label: "Dropdown", value: "dropdown" },
-                  ]}
-                  formOptions={{ required: "Select an option" }}
-                />
+
+                {includeValue ? (
+                  <Select
+                    label="Value"
+                    multiple
+                    control={control}
+                    name={`${field.name}.value`}
+                    {...(field.optionType === "predefined" && {
+                      options: field.options,
+                    })}
+                    {...(field.optionType === "collection" && {
+                      url: `${endpoints.dynamic}/${field.collection}`,
+                    })}
+                    getQuery={(inputValue, selected) => ({
+                      ...(inputValue && { [field.optionLabel]: inputValue }),
+                      ...(selected && { [field.optionValue]: selected }),
+                    })}
+                    handleData={(item) => ({
+                      label: item[field.optionLabel],
+                      value: item[field.optionValue],
+                    })}
+                  />
+                ) : (
+                  <Combobox
+                    control={control}
+                    name={`${field.name}.filterStyle`}
+                    label="Filter Style"
+                    options={[
+                      { label: "List", value: "list" },
+                      { label: "Dropdown", value: "dropdown" },
+                    ]}
+                    formOptions={{ required: "Select an option" }}
+                  />
+                )}
               </div>
             );
           }
@@ -539,6 +929,7 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
           const data = [];
           values.fields.forEach((f) => {
             const field = fields.find((field) => field.name === f);
+            if (!field) return;
             data.push({
               fieldName: f,
               ...(["input"].includes(field.fieldType) &&
@@ -589,6 +980,7 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
 
         {selectedFields?.map((f, i) => {
           const field = fields.find((field) => field.name === f);
+          if (!field) return null;
           if (["input"].includes(field.fieldType)) {
             if (field.dataType === "number") {
               return (

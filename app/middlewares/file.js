@@ -14,16 +14,23 @@ const getPath = (str) =>
     .replace(new RegExp(`.*(?=${appConfig.uploadDir})`, "gi"), "");
 
 const upload = (fields, uploadPath, options) => {
-  const multiple = typeof fields === "object";
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+      Object.entries(req.body).forEach(([key, value]) => {
+        if (typeof value === "string" && value.isJSON()) {
+          req.body[key] = JSON.parse(value);
+        }
+      });
       cb(null, uploadDir + uploadPath);
     },
     filename: (req, file, cb) => {
       const ext = path.extname(file.originalname);
+      const multiple =
+        fields.length &&
+        fields.find((item) => item.name === file.fieldname)?.multiple;
       const fileName = `${req.authUser?._id || Date.now()}_${file.fieldname}${
-        options.override ? ".png" : ext
-      }`;
+        multiple ? `_${Math.random().toString(36).substr(-8)}_` : ""
+      }${options.override ? ".png" : ext}`;
 
       cb(null, fileName);
     },
@@ -50,18 +57,67 @@ const upload = (fields, uploadPath, options) => {
     },
   });
 
-  upload = multiple ? upload.fields(fields) : upload.single(fields);
+  upload = upload.fields(Array.isArray(fields) ? fields : [fields]);
 
   return (req, res, next) => {
     upload(req, res, (err) => {
-      if (req.files) {
-        Object.entries(req.files).forEach(([fieldname, [file]]) => {
-          req.body[fieldname] = getPath(file.path);
+      if (Object.entries(req.files || {}).length) {
+        Object.entries(req.files).forEach(([fieldname, files]) => {
+          files.forEach((file) => {
+            const multiple =
+              fields.length &&
+              fields.find((item) => item.name === fieldname).multiple;
+            if (fieldname.includes(".")) {
+              fieldname.split(".").reduce((p, c, i, arr) => {
+                if (i < arr.length - 1) {
+                  p[c] = { ...p[c] };
+                } else {
+                  p[c] = multiple
+                    ? [
+                        ...(req.body[fieldname] || []),
+                        ...(p[c] || []),
+                        getPath(file.path),
+                      ]
+                    : getPath(file.path);
+                }
+                return p[c];
+              }, req.body);
+            } else {
+              req.body[fieldname] = multiple
+                ? [...(req.body[fieldname] || []), getPath(file.path)]
+                : getPath(file.path);
+            }
+          });
+
+          if (fieldname.includes(".")) {
+            delete req.body[fieldname];
+          }
         });
       }
-      if (req.file) {
-        req.body[req.file.fieldname] = getPath(req.file.path);
-      }
+
+      Object.entries(req.body).forEach(([key, value]) => {
+        if (typeof value === "string" && value.isJSON()) {
+          req.body[key] = JSON.parse(value);
+        }
+      });
+
+      Object.entries(req.body).forEach(([key, value]) => {
+        if (key.includes(".")) {
+          const multiple =
+            fields.length && fields.find((item) => item.name === key)?.multiple;
+          key.split(".").reduce((p, c, i, arr) => {
+            if (i < arr.length - 1) {
+              p[c] = { ...p[c] };
+            } else {
+              p[c] = multiple && typeof value === "string" ? [value] : value;
+            }
+            return p[c];
+          }, req.body);
+
+          delete req.body[key];
+        }
+      });
+
       if (err) {
         if (err.code === "LIMIT_FILE_SIZE")
           return responseFn.error(

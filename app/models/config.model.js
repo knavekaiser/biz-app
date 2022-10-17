@@ -30,16 +30,25 @@ module.exports = mongoose.model(
           }),
         ],
         landingPage: {
+          viewLandingPage: { type: Schema.Types.Boolean, default: false },
           hero: {
+            viewHeroSection: { type: Schema.Types.Boolean, default: false },
             background: { type: Schema.Types.String },
             slideLabel: { type: Schema.Types.String },
             slides: [
-              new Schema({
-                title: { type: Schema.Types.String },
-                images: [{ type: Schema.Types.String }],
-              }),
+              // new Schema({
+              //   title: { type: Schema.Types.String },
+              //   images: [{ type: Schema.Types.String }],
+              // }),
             ],
           },
+          shelves: [
+            new Schema({
+              title: { type: Schema.Types.String },
+              productFilters: [],
+              productCount: { type: Schema.Types.Number },
+            }),
+          ],
         },
         browsePage: {
           sidebarFilters: [],

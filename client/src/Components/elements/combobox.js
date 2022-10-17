@@ -100,14 +100,6 @@ export const Combobox = ({
           // clearErrors?.(name);
           compOnChange && compOnChange({ label, value, ...rest });
         };
-        if (name === "viewWhatsApp") {
-          // console.log(
-          //   "selected",
-          //   selected !== undefined,
-          //   typeof selected,
-          //   selected
-          // );
-        }
         return (
           <section
             data-testid="combobox-container"
@@ -372,7 +364,13 @@ export const Select = ({
               let _selectedOptions;
               if (firstRender.current) {
                 _selectedOptions = _data.filter((item) =>
-                  (control._formValues[name] || []).includes(item.value)
+                  (
+                    (name.includes(".")
+                      ? name
+                          .split(".")
+                          .reduce((p, c) => p[c], control._formValues)
+                      : control._formValues[name]) || []
+                  ).includes(item.value)
                 );
                 setSelectedOptions(_selectedOptions);
               }
@@ -402,8 +400,10 @@ export const Select = ({
   }, [inputValue]);
 
   useEffect(() => {
-    const _value = control._formValues[name];
-    if (_value && !options) {
+    const _value = name.includes(".")
+      ? name.split(".").reduce((p, c) => p[c], control._formValues)
+      : control._formValues[name];
+    if (_value && !options.length) {
       getOptions(null, _value);
     }
   }, []);
@@ -446,6 +446,7 @@ export const Select = ({
               isDisabled={url ? false : !options || !options?.length}
               inputRef={ref}
               menuPortalTarget={document.querySelector("#portal")}
+              menuPosition="fixed"
               menuPlacement="auto"
               options={options || []}
               value={

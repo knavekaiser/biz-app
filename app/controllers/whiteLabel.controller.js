@@ -12,7 +12,7 @@ const { User, Config, Collection } = require("../models");
 exports.getSiteConfig = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
     const productCollection = await Collection.findOne({ name: "Product" });
@@ -68,16 +68,17 @@ exports.getSiteConfig = async (req, res) => {
 exports.browse = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
     const business = await User.findOne({ domain });
-    if (!business) return responseFn.error(res, responseStr.record_not_found);
+    if (!business)
+      return responseFn.error(res, {}, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
       business._id + "_" + "Product"
     );
-    if (!Model) return responseFn.error(res, responseStr.record_not_found);
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const query = {};
     if (req.params._id) {
@@ -149,12 +150,12 @@ exports.browse = async (req, res) => {
           if (data.data.length > 0) {
             return responseFn.success(res, { data: data.data[0] });
           }
-          return responseFn.error(res, responseStr.record_not_found);
+          return responseFn.error(res, {}, responseStr.record_not_found);
         }
         responseFn.success(res, data);
       })
       .catch((err) => {
-        responseFn.error(res, err.message || responseStr.error_occurred);
+        responseFn.error(res, {}, err.message || responseStr.error_occurred);
       });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -164,20 +165,21 @@ exports.browse = async (req, res) => {
 exports.getRelatedProducts = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
     const business = await User.findOne({ domain });
-    if (!business) return responseFn.error(res, responseStr.record_not_found);
+    if (!business)
+      return responseFn.error(res, {}, responseStr.record_not_found);
     const config = await Config.findOne({ user: business._id });
 
     const { Model, collection } = await dbHelper.getModel(
       business._id + "_" + "Product"
     );
-    if (!Model) return responseFn.error(res, responseStr.record_not_found);
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     if (!mongoose.isValidObjectId(req.params._id)) {
-      return responseFn.error(res, responseStr.record_not_found);
+      return responseFn.error(res, {}, responseStr.record_not_found);
     }
     const product = await Model.findOne({ _id: ObjectId(req.params._id) });
     if (!product) {
@@ -212,7 +214,6 @@ exports.getRelatedProducts = async (req, res) => {
     const limit =
       config?.siteConfig?.productViewPage?.recommendationLimit || 10;
 
-    console.log(query);
     Model.aggregate([
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
@@ -237,7 +238,7 @@ exports.getRelatedProducts = async (req, res) => {
         responseFn.success(res, { data });
       })
       .catch((err) =>
-        responseFn.error(res, err.message || responseStr.error_occurred)
+        responseFn.error(res, {}, err.message || responseStr.error_occurred)
       );
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -247,16 +248,17 @@ exports.getRelatedProducts = async (req, res) => {
 exports.getElements = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, responseStr.record_not_found);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
     const business = await User.findOne({ domain });
-    if (!business) return responseFn.error(res, responseStr.record_not_found);
+    if (!business)
+      return responseFn.error(res, {}, responseStr.record_not_found);
 
     const { Model, collection } = await dbHelper.getModel(
       business._id + "_" + req.params.table
     );
-    if (!Model) return responseFn.error(res, responseStr.record_not_found);
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const queries = {};
     Model.find()
@@ -264,9 +266,83 @@ exports.getElements = async (req, res) => {
         responseFn.success(res, { data });
       })
       .catch((err) =>
-        responseFn.error(res, err.message || responseStr.error_occurred)
+        responseFn.error(res, {}, err.message || responseStr.error_occurred)
       );
   } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getLandingPageShelves = async (req, res) => {
+  try {
+    let domain = normalizeDomain(req.headers["origin"]);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+
+    const business = await User.findOne({ domain });
+    if (!business)
+      return responseFn.error(res, {}, responseStr.record_not_found);
+
+    const { Model, collection } = await dbHelper.getModel(
+      business._id + "_Product"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    const shelves = await Config.findOne({ user: business._id }).then(
+      (config) => config?.siteConfig?.landingPage?.shelves
+    );
+    if (!shelves || shelves.length === 0)
+      return responseFn.error(
+        res,
+        {},
+        responseStr.record_not_found.replace("record", "Shelves")
+      );
+
+    const facet = {};
+
+    shelves.forEach((shelf) => {
+      const query = {};
+      shelf.productFilters.forEach((filter) => {
+        const field = collection.fields.find(
+          (field) => field.name === filter.fieldName
+        );
+        if (!field) return;
+        if (filter.filterType === "minMax") {
+          query[filter.fieldName] = { $gte: filter.min, $lte: filter.max };
+        } else if (
+          filter.filterType === "match" &&
+          filter.dataType === "number"
+        ) {
+          query[filter.fieldName] = +filter.value;
+        } else if (filter.filterType === "textMatch") {
+          query[filter.fieldName] = new RegExp(filter.value, "i");
+        } else if (
+          ["select", "combobox"].includes(field.fieldType) &&
+          filter.value?.length
+        ) {
+          query[filter.fieldName] = {
+            $in: filter.value.map((item) =>
+              field.dataType === "objectId" ? ObjectId(item) : item
+            ),
+          };
+        }
+      });
+      facet[shelf.title] = [{ $match: query }, { $limit: shelf.productCount }];
+    });
+    Model.aggregate([{ $facet: facet }])
+      .then((data) => {
+        responseFn.success(res, {
+          data: Object.entries(data[0] || {})
+            .map(([key, value]) => ({
+              title: key,
+              products: value,
+            }))
+            .filter((item) => item.products.length),
+        });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
