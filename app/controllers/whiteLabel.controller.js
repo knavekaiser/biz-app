@@ -308,7 +308,7 @@ exports.getLandingPageShelves = async (req, res) => {
         );
         if (!field) return;
         if (filter.filterType === "minMax") {
-          query[filter.fieldName] = { $gte: filter.min, $lte: filter.max };
+          query[filter.fieldName] = { $gte: +filter.min, $lte: +filter.max };
         } else if (
           filter.filterType === "match" &&
           filter.dataType === "number"
