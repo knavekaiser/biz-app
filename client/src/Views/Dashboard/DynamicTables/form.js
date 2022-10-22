@@ -79,6 +79,9 @@ const Form = ({ edit, collections, onSuccess }) => {
         if (!fields.find((item) => item.name === "price")) {
           return setErr('"price" is a required field');
         }
+        if (!fields.find((item) => item.name === "whatsappNumber")) {
+          return setErr('"whatsappNumber" is a required field');
+        }
       }
 
       (edit ? updateCollection : saveCollection)({
