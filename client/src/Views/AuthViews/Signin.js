@@ -50,7 +50,7 @@ const Form = () => {
     >
       <img className={s.illustration} src="/assets/comify.png" />
       <div className={`grid gap-1`}>
-        <h1 className="text-center">Comify</h1>
+        <h1 className="text-center">Comify Studio</h1>
         <h2>Sign In</h2>
         {invalidCred && <p className="error">Invalid credentials</p>}
         <Input
