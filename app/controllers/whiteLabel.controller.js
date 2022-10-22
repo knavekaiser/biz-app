@@ -333,10 +333,24 @@ exports.getLandingPageShelves = async (req, res) => {
       .then((data) => {
         responseFn.success(res, {
           data: Object.entries(data[0] || {})
-            .map(([key, value]) => ({
-              title: key,
-              products: value,
-            }))
+            .map(([key, value]) => {
+              const query = {};
+              const shelf = shelves.find((item) => item.title === key) || [];
+              shelf?.productFilters.forEach((filter) => {
+                if (filter.filterType === "minMax") {
+                  query[`${filter.fieldName}-min`] = filter.min;
+                  query[`${filter.fieldName}-max`] = filter.max;
+                  return;
+                }
+                query[filter.fieldName] = filter.value;
+              });
+              return {
+                title: key,
+                products: value,
+                horizontalSlide: shelf.horizontalSlide || false,
+                query,
+              };
+            })
             .filter((item) => item.products.length),
         });
       })

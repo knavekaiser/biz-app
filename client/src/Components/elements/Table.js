@@ -196,6 +196,18 @@ export const DynamicTable = ({
       {data.map((item, i) => (
         <tr key={i}>
           {fields.map((field, j) => {
+            if (field.dataType === "boolean") {
+              return (
+                <td key={j}>
+                  {field.options?.find(
+                    (opt) =>
+                      opt.value.toString() === item[field.name]?.toString()
+                  )?.label ||
+                    (item[field.name] === true && "True") ||
+                    (item[field.name] === false && "False")}
+                </td>
+              );
+            }
             if (field.dataType === "object" && item[field.name]) {
               return (
                 <td key={j}>
@@ -250,15 +262,14 @@ export const DynamicTable = ({
                     <span className="value">{values[0]}</span>
 
                     {values.length > 1 && (
-                      <span className="icon">+{values.length - 1}</span>
-                    )}
-
-                    {values.length > 1 && (
-                      <div className="allItems">
-                        {values.map((u, i) =>
-                          i === 0 ? null : <p key={u}>{values[i]}</p>
-                        )}
-                      </div>
+                      <span className="icon">
+                        +{values.length - 1}
+                        <div className="allItems">
+                          {values.map((u, i) =>
+                            i === 0 ? null : <p key={u}>{values[i]}</p>
+                          )}
+                        </div>
+                      </span>
                     )}
                   </div>
                 </td>

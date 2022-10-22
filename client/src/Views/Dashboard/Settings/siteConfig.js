@@ -12,6 +12,7 @@ import {
   Combobox,
   Select,
   CustomRadio,
+  Checkbox,
   Table,
   TableActions,
   FileInputNew,
@@ -61,15 +62,12 @@ const SiteConfig = () => {
         config?.siteConfig?.productViewPage?.recommendationFilters || [],
       recommendationLimit:
         config?.siteConfig?.productViewPage?.recommendationLimit,
-      viewWhatsApp:
-        config?.siteConfig?.productViewPage?.viewWhatsApp?.toString() ||
-        "false",
+      viewWhatsApp: config?.siteConfig?.productViewPage?.viewWhatsApp || false,
       viewLandingPage:
-        config?.siteConfig?.landingPage?.viewLandingPage?.toString() || "false",
+        config?.siteConfig?.landingPage?.viewLandingPage || false,
       heroImages: config?.siteConfig?.landingPage?.hero?.slides || [],
       viewHeroSection:
-        config?.siteConfig?.landingPage?.hero?.viewHeroSection?.toString() ||
-        "false",
+        config?.siteConfig?.landingPage?.hero?.viewHeroSection || false,
       landingPageShelves: config?.siteConfig?.landingPage?.shelves || [],
     });
   }, [config]);
@@ -77,6 +75,7 @@ const SiteConfig = () => {
   const sidebarFilters = watch("sidebarFilters");
   const recommendationFilters = watch("recommendationFilters");
   const viewLandingPage = watch("viewLandingPage");
+  const viewHeroSection = watch("viewHeroSection");
   const whatsapp = watch("viewWhatsApp");
   const landingPageShelves = watch("landingPageShelves");
 
@@ -160,7 +159,7 @@ const SiteConfig = () => {
               sidebarFilters: values.sidebarFilters,
             },
             productViewPage: {
-              viewWhatsApp: whatsapp === "true",
+              viewWhatsApp: whatsapp,
               productElements: values.productViewElements.filter((item) =>
                 productPageEelementOptions.find((opt) => opt.value === item)
               ),
@@ -168,9 +167,9 @@ const SiteConfig = () => {
               recommendationLimit: values.recommendationLimit,
             },
             landingPage: {
-              viewLandingPage: viewLandingPage === "true",
+              viewLandingPage: viewLandingPage,
               hero: {
-                viewHeroSection: values.viewHeroSection === "true",
+                viewHeroSection: values.viewHeroSection,
               },
               shelves: values.landingPageShelves,
             },
@@ -272,8 +271,8 @@ const SiteConfig = () => {
         name="viewLandingPage"
         control={control}
         options={[
-          { label: "Yes", value: "true" },
-          { label: "No", value: "false" },
+          { label: "Yes", value: true },
+          { label: "No", value: false },
         ]}
       />
 
@@ -286,18 +285,20 @@ const SiteConfig = () => {
             name="viewHeroSection"
             control={control}
             options={[
-              { label: "Yes", value: "true" },
-              { label: "No", value: "false" },
+              { label: "Yes", value: true },
+              { label: "No", value: false },
             ]}
           />
 
-          <FileInputNew
-            thumbnail
-            multiple
-            control={control}
-            name="heroImages"
-            label="Hero Images"
-          />
+          {viewHeroSection && (
+            <FileInputNew
+              thumbnail
+              multiple
+              control={control}
+              name="heroImages"
+              label="Hero Images"
+            />
+          )}
 
           <LandingPageShelves
             fields={productCollection?.fields?.filter(
@@ -312,18 +313,18 @@ const SiteConfig = () => {
         </>
       )}
 
-      <h2>Produc View Page</h2>
+      <h2>Product View Page</h2>
 
       <Combobox
         label="Show WhatsApp Chat Button"
         name="viewWhatsApp"
         control={control}
         options={[
-          { label: "Yes", value: "true" },
-          { label: "No", value: "false" },
+          { label: "Yes", value: true },
+          { label: "No", value: false },
         ]}
       />
-      {whatsapp === "true" && (
+      {whatsapp && (
         <p className="subtitle1">
           Make sure to put a WhatsApp number in Business Information.
         </p>
@@ -627,6 +628,8 @@ const ShelfForm = ({ fields = [], edit, onSubmit }) => {
           {...register("productCount")}
           error={errors.productCount}
         />
+
+        <Checkbox label="Horizontal" {...register("horizontalSlide")} />
 
         <div className="flex justify-space-between align-center">
           <h5>Product Filters</h5>

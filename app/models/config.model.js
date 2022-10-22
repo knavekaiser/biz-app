@@ -45,6 +45,7 @@ module.exports = mongoose.model(
           shelves: [
             new Schema({
               title: { type: Schema.Types.String },
+              horizontalSlide: { type: Schema.Types.Boolean },
               productFilters: [],
               productCount: { type: Schema.Types.Number },
             }),

@@ -69,6 +69,17 @@ const Form = ({ edit, collections, onSuccess }) => {
       if (fields.length < 1) {
         return setErr("Add at least one field");
       }
+      if (values.name === "Product") {
+        if (!fields.find((item) => item.name === "images")) {
+          return setErr('"images" is a required field');
+        }
+        if (!fields.find((item) => item.name === "title")) {
+          return setErr('"title" is a required field');
+        }
+        if (!fields.find((item) => item.name === "price")) {
+          return setErr('"price" is a required field');
+        }
+      }
 
       (edit ? updateCollection : saveCollection)({
         name: values.name,
@@ -565,6 +576,7 @@ const FieldForm = ({
           <>
             <h3>{label} Options</h3>
             <Options
+              dataType={dataType}
               options={options}
               setOptions={(newOptions) => setValue("options", newOptions)}
             />
@@ -818,7 +830,7 @@ const NestedObjectFields = ({
   );
 };
 
-const Options = ({ options, setOptions }) => {
+const Options = ({ dataType, options, setOptions }) => {
   const [edit, setEdit] = useState(null);
   return (
     <section className={s.optionsWrapper}>
@@ -829,6 +841,7 @@ const Options = ({ options, setOptions }) => {
         <tr className="inlineForm">
           <td>
             <OptionsForm
+              dataType={dataType}
               edit={edit}
               onSuccess={(newOption) => {
                 if (edit) {
@@ -849,7 +862,7 @@ const Options = ({ options, setOptions }) => {
         {options?.map((item, i) => (
           <tr key={i}>
             <td>{item.label}</td>
-            <td>{item.value}</td>
+            <td>{item.value?.toString()}</td>
             <TableActions
               actions={[
                 {
@@ -883,7 +896,7 @@ const Options = ({ options, setOptions }) => {
     </section>
   );
 };
-const OptionsForm = ({ edit, onSuccess, clearForm }) => {
+const OptionsForm = ({ dataType, edit, onSuccess, clearForm }) => {
   const {
     handleSubmit,
     register,
@@ -901,6 +914,11 @@ const OptionsForm = ({ edit, onSuccess, clearForm }) => {
   return (
     <form
       onSubmit={handleSubmit((values) => {
+        if (dataType === "boolean") {
+          values.value = ["1", 1, "true"].includes(values.value.toLowerCase());
+        } else if (dataType === "number") {
+          values.value = +values.value;
+        }
         onSuccess({
           ...values,
           _id: edit?._id || Math.random().toString(36).substr(-8),

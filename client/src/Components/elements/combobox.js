@@ -16,10 +16,6 @@ import { Controller } from "react-hook-form";
 
 import ReactSelect, { components } from "react-select";
 
-// update placeholder style  ✅
-// add boolean to type check ✅
-// update showing placeholder on boolean  🟠
-
 export const Combobox = ({
   control,
   formOptions,
@@ -78,7 +74,11 @@ export const Combobox = ({
         field: { onChange, onBlur, value, name, ref },
         fieldState: { invalid, isTouched, isDirty, error },
       }) => {
-        const selected = value ? value : multiple ? [] : "";
+        const selected = ![undefined, null].includes(value)
+          ? value
+          : multiple
+          ? []
+          : "";
         const select = ({ label, value, ...rest }) => {
           const _selectedItem = selected?.find?.((item) => item === value);
           if (_selectedItem !== undefined) {
