@@ -6,5 +6,6 @@ module.exports = {
   authJwt,
   file,
   validate,
+  whitelabel: require("./whitelabel"),
   dynamic: require("./dynamic"),
 };

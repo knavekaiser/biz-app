@@ -1,4 +1,5 @@
 const yup = require("yup");
+const { phone } = require("phone");
 
 module.exports = {
   location: {
@@ -19,3 +20,46 @@ module.exports = {
   password: yup.string().min(8),
   amount: yup.number().typeError("Invalid amount").min(1),
 };
+
+yup.addMethod(yup.string, "noneOf", function (arr, message) {
+  return this.test("noneOf", message, function (value) {
+    const { path, createError } = this;
+    return (
+      !arr.includes(value) ||
+      createError({
+        path,
+        message: message?.replace(`{value}`, value) || message,
+      })
+    );
+  });
+});
+
+yup.addMethod(yup.string, "phone", function (
+  message = "Phone number is invalid. Make sure to include country code"
+) {
+  return this.test("phone", message, function (value) {
+    const { path, createError } = this;
+    return (
+      !value ||
+      phone(value)?.isValid ||
+      createError({
+        path,
+        message,
+      })
+    );
+  });
+});
+
+yup.addMethod(yup.string, "objectId", function (message) {
+  return this.test("phone", message, function (value) {
+    const { path, createError } = this;
+    return (
+      !value ||
+      mongoose.isValidObjectId(value) ||
+      createError({
+        path,
+        message: message || `"${value}" is not a valid ObjectId`,
+      })
+    );
+  });
+});

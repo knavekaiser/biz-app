@@ -49,6 +49,10 @@ exports.getModel = async (table) => {
           type: getType(field),
           required: field.required,
           ...(field.dataType === "objectId" && { ref: field.collection }),
+          ...(field.unique && {
+            unique: true,
+            ...(!field.required && { sparse: true }),
+          }),
         };
       }
     });

@@ -149,7 +149,7 @@ const Collections = () => {
             } else {
               setCollections((prev) => [...prev, newCollection]);
             }
-            setAddCollection(false);
+            // setAddCollection(false);
           }}
         />
       </Modal>

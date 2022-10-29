@@ -1,3 +1,6 @@
+Customer table ---->
+Review table ------>
+
 Product table must be called "Product"
 
 Campaign table must be called "Campaign"

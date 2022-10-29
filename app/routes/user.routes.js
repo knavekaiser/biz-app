@@ -21,17 +21,15 @@ module.exports = function (app) {
   router.post("/logout", controller.logout);
 
   //-------------------------- Profile
-  router.get("/profile", [authJwt.verifyToken], controller.profile);
+  router.get("/profile", authJwt.verifyToken, controller.profile);
   router.put(
     "/profile",
-    [
-      authJwt.verifyToken,
-      file.upload([{ name: "logo" }, { name: "ownerSignature" }], "/", {
-        fileSize: appConfig.supportedImageSizes,
-        fileTypes: appConfig.supportedImageTypes,
-        override: true,
-      }),
-    ],
+    authJwt.verifyToken,
+    file.upload([{ name: "logo" }, { name: "ownerSignature" }], "/", {
+      fileSize: appConfig.supportedImageSizes,
+      fileTypes: appConfig.supportedImageTypes,
+      override: true,
+    }),
     validate(schema.update),
     controller.update
   );

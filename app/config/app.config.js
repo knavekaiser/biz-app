@@ -45,6 +45,11 @@ module.exports = {
     records_updated: "{num} record updated successfully",
     records_deleted: "{num} records has been deleted successfully",
 
+    field_required: "{field} is required",
+    fields_required: "{fields} are required",
+
+    domain_not_specified: "Domain not specified",
+
     file_too_large:
       "File is too large. Please provide files that are less that {maxSize}",
     unsupported_file_type: "Only {fileTypes} are supported",

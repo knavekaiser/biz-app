@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   Input,
@@ -47,6 +47,7 @@ const optionsSchema = yup.object({
 });
 
 const Form = ({ edit, collections, onSuccess }) => {
+  const firstRender = useRef(true);
   const [fields, setFields] = useState(edit?.fields || []);
   const [editField, setEditField] = useState(null);
   const [err, setErr] = useState(null);
@@ -58,6 +59,7 @@ const Form = ({ edit, collections, onSuccess }) => {
     setValue,
     watch,
     formState: { errors },
+    setError,
   } = useForm({
     resolver: useYup(mainSchema),
   });
@@ -66,6 +68,13 @@ const Form = ({ edit, collections, onSuccess }) => {
   );
   const onSubmit = useCallback(
     (values) => {
+      if (!values.name) {
+        setError("name", {
+          type: "required",
+          message: "Table name is required",
+        });
+        return;
+      }
       if (fields.length < 1) {
         return setErr("Add at least one field");
       }
@@ -97,6 +106,16 @@ const Form = ({ edit, collections, onSuccess }) => {
     },
     [fields]
   );
+
+  useEffect(() => {
+    console.log("fields changed", fields, firstRender.current);
+    if (
+      fields.length > 0 &&
+      JSON.stringify(fields) !== JSON.stringify(edit?.fields || [])
+    ) {
+      onSubmit({ name: edit?.name || "" });
+    }
+  }, [fields]);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -113,6 +132,7 @@ const Form = ({ edit, collections, onSuccess }) => {
           type="text"
           {...register("name")}
           required
+          readOnly={edit}
           error={errors.name}
         />
       </form>
@@ -197,11 +217,13 @@ const Form = ({ edit, collections, onSuccess }) => {
         onSubmit={handleSubmit(onSubmit)}
         className={`${s.mainForm} grid gap-1`}
       >
-        <div className="btns mt-1">
-          <button className="btn" disabled={editField || loading}>
-            {edit ? "Update" : "Submit"}
-          </button>
-        </div>
+        {
+          //   <div className="btns mt-1">
+          //   <button className="btn" disabled={editField || loading}>
+          //     {edit ? "Update" : "Submit"}
+          //   </button>
+          // </div>
+        }
       </form>
     </div>
   );
@@ -273,6 +295,7 @@ const FieldForm = ({
         label: "",
         required: "",
         decimalPlaces: "",
+        unique: "",
       });
     },
     [edit]
@@ -288,7 +311,10 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`${s.fieldForm} grid gap-1`}
         >
-          <h3 className="all-columns">Data</h3>
+          <div className="flex all-columns justify-space-between align-center">
+            <h3 className="all-columns">Data</h3>
+            <Checkbox {...register("unique")} label="Unique" />
+          </div>
 
           <Input
             label="Field Name"
@@ -474,6 +500,7 @@ const FieldForm = ({
                             { label: "Date", value: "date" },
                             { label: "File", value: "file" },
                             { label: "Calendar", value: "calendar" },
+                            { label: "Password", value: "password" },
                           ]
                         : []),
                     ]
@@ -639,7 +666,7 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`flex gap-1 justify-center`}
         >
-          <button className="btn">Add Field</button>
+          <button className="btn">{edit ? "Update" : "Add"} Field</button>
         </form>
       </div>
     </div>

@@ -3,7 +3,7 @@ const {
 } = require("../config");
 const {
   dbHelper,
-  appHelper: { normalizeDomain },
+  appHelper: { normalizeDomain, ...appHelper },
 } = require("../helpers");
 const { ObjectId } = require("mongodb");
 
@@ -67,16 +67,8 @@ exports.getSiteConfig = async (req, res) => {
 
 exports.browse = async (req, res) => {
   try {
-    let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
-
-    const business = await User.findOne({ domain });
-    if (!business)
-      return responseFn.error(res, {}, responseStr.record_not_found);
-
     const { Model, collection } = await dbHelper.getModel(
-      business._id + "_" + "Product"
+      req.business._id + "_" + "Product"
     );
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
@@ -126,11 +118,58 @@ exports.browse = async (req, res) => {
     Model.aggregate([
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
-        business_id: business._id,
+        business_id: req.business._id,
         table: "Product",
       }),
       { $match: query },
-      { $set: { seller: { name: business.name, logo: business.logo } } },
+      {
+        $set: { seller: { name: req.business.name, logo: req.business.logo } },
+      },
+      {
+        $lookup: {
+          from: `${req.business._id}_Review`,
+          let: { p_id: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$product", "$$p_id"],
+                },
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalRating: { $sum: "$rating" },
+                totalReview: { $sum: 1 },
+              },
+            },
+            {
+              $set: {
+                rating: {
+                  $multiply: [
+                    5,
+                    {
+                      $divide: [
+                        "$totalRating",
+                        { $multiply: ["$totalReview", 5] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "reviews",
+        },
+      },
+      { $set: { rating: { $first: "$reviews" } } },
+      {
+        $set: {
+          rating: "$rating.rating",
+          totalReview: "$rating.totalReview",
+        },
+      },
       { $unset: ["__v"] },
       { $sort: sort },
       // { $set: {
@@ -164,17 +203,10 @@ exports.browse = async (req, res) => {
 
 exports.getRelatedProducts = async (req, res) => {
   try {
-    let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
-
-    const business = await User.findOne({ domain });
-    if (!business)
-      return responseFn.error(res, {}, responseStr.record_not_found);
-    const config = await Config.findOne({ user: business._id });
+    const config = await Config.findOne({ user: req.business._id });
 
     const { Model, collection } = await dbHelper.getModel(
-      business._id + "_" + "Product"
+      req.business._id + "_" + "Product"
     );
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
@@ -217,7 +249,7 @@ exports.getRelatedProducts = async (req, res) => {
     Model.aggregate([
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
-        business_id: business._id,
+        business_id: req.business._id,
         table: "Product",
       }),
       { $match: query },
@@ -247,16 +279,8 @@ exports.getRelatedProducts = async (req, res) => {
 
 exports.getElements = async (req, res) => {
   try {
-    let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
-
-    const business = await User.findOne({ domain });
-    if (!business)
-      return responseFn.error(res, {}, responseStr.record_not_found);
-
     const { Model, collection } = await dbHelper.getModel(
-      business._id + "_" + req.params.table
+      req.business._id + "_" + req.params.table
     );
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
@@ -275,20 +299,12 @@ exports.getElements = async (req, res) => {
 
 exports.getLandingPageShelves = async (req, res) => {
   try {
-    let domain = normalizeDomain(req.headers["origin"]);
-    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
-
-    const business = await User.findOne({ domain });
-    if (!business)
-      return responseFn.error(res, {}, responseStr.record_not_found);
-
     const { Model, collection } = await dbHelper.getModel(
-      business._id + "_Product"
+      req.business._id + "_Product"
     );
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
-    const shelves = await Config.findOne({ user: business._id }).then(
+    const shelves = await Config.findOne({ user: req.business._id }).then(
       (config) => config?.siteConfig?.landingPage?.shelves
     );
     if (!shelves || shelves.length === 0)
@@ -299,7 +315,6 @@ exports.getLandingPageShelves = async (req, res) => {
       );
 
     const facet = {};
-
     shelves.forEach((shelf) => {
       const query = {};
       shelf.productFilters.forEach((filter) => {
@@ -314,7 +329,7 @@ exports.getLandingPageShelves = async (req, res) => {
           filter.dataType === "number"
         ) {
           query[filter.fieldName] = +filter.value;
-        } else if (filter.filterType === "textMatch") {
+        } else if (filter.filterType === "textSearch") {
           query[filter.fieldName] = new RegExp(filter.value, "i");
         } else if (
           ["select", "combobox"].includes(field.fieldType) &&
@@ -357,6 +372,197 @@ exports.getLandingPageShelves = async (req, res) => {
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     console.log(error);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.validateAccount = async (req, res) => {
+  try {
+    if (!(req.body.phone || req.body.email)) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.field_required.replace("{field}", "Phone or Email")
+      );
+    }
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Customer"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.findOne(req.body).then((customer) => {
+      if (customer) {
+        responseFn.success(res, { data: { newUser: false } });
+      } else {
+        responseFn.success(res, { data: { newUser: true } });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.signup = async (req, res) => {
+  if (!(req.body.phone || req.body.email)) {
+    return responseFn.error(
+      res,
+      {},
+      responseStr.field_required.replace("{field}", "Phone or Email")
+    );
+  }
+
+  const { Model, collection } = await dbHelper.getModel(
+    req.business._id + "_Customer"
+  );
+  if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+  const customer = await Model.findOne({
+    ...(req.body.phone && { phone: req.body.phone }),
+    ...(req.body.email && { email: req.body.email }),
+  });
+  if (customer) {
+    return responseFn.error(
+      res,
+      {},
+      `${req.body.phone ? "Phone" : "Email"} Already registered`
+    );
+  }
+
+  req.body.password = appHelper.generateHash(req.body.password);
+  new Model(req.body)
+    .save()
+    .then((customer) => {
+      return appHelper.signIn(res, customer._doc, "customer");
+    })
+    .catch((err) => responseFn.error(res, {}, err.message));
+};
+
+exports.login = async (req, res) => {
+  try {
+    if (!(req.body.phone || req.body.email)) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.field_required.replace("{field}", "Phone or Email")
+      );
+    }
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Customer"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    const user = await Model.findOne({
+      ...(req.body.phone && { phone: req.body.phone }),
+      ...(req.body.email && { email: req.body.email }),
+    });
+
+    if (user && appHelper.compareHash(req.body.password, user.password)) {
+      return appHelper.signIn(res, user._doc, "customer");
+    } else {
+      return responseFn.error(res, {}, responseStr.invalid_cred);
+    }
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    res.clearCookie("access_token");
+    return responseFn.success(res, {});
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.profile = async (req, res) => {
+  try {
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Customer"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+    Model.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
+      .then(async (data) => responseFn.success(res, { data }))
+      .catch((error) => responseFn.error(res, {}, error.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.addReview = async (req, res) => {
+  try {
+    const { Model: Product } = await dbHelper.getModel(
+      req.business._id + "_Product"
+    );
+    const product = await Product.findOne({ _id: req.body.product });
+    if (!product) {
+      return responseFn.error(res, {}, responseStr.record_not_found);
+    }
+
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Review"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    console.log({
+      ...req.body,
+      rating: Math.round(req.body.rating),
+      customer: req.authUser._id,
+    });
+    new Model({
+      ...req.body,
+      rating: Math.round(req.body.rating),
+      customer: req.authUser._id,
+    })
+      .save()
+      .then((review) => {
+        responseFn.success(res, { data: review });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getReviews = async (req, res) => {
+  try {
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Review"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.aggregate([
+      { $match: { product: ObjectId(req.params._id) } },
+      {
+        $lookup: {
+          from: `${req.business._id}_Customer`,
+          localField: "customer",
+          foreignField: "_id",
+          as: "_customer",
+        },
+      },
+      {
+        $unwind: {
+          path: "$_customer",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $set: {
+          "customer.name": "$_customer.name",
+          "customer.image": "$_customer.image",
+        },
+      },
+      {
+        $unset: "_customer",
+      },
+    ])
+      .then((reviews) => {
+        responseFn.success(res, { data: reviews });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
 };

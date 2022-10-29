@@ -797,6 +797,7 @@ export const CustomRadio = ({
                   </label>
                 ))}
             </div>
+            {error && <span className={s.errMsg}>{error.message}</span>}
           </section>
         );
       }}
@@ -910,6 +911,7 @@ export const Toggle = ({ name, control, formOptions, disabled }) => {
               id={id.current}
             />
             <label className={s.ball} htmlFor={id.current} />
+            {error && <span className={s.errMsg}>{error.message}</span>}
           </section>
         );
       }}

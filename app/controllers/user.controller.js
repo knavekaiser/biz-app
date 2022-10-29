@@ -9,7 +9,267 @@ const {
   appHelper: { genId },
 } = require("../helpers");
 
-const { User, Otp, Config } = require("../models");
+const { User, Otp, Config, Collection } = require("../models");
+
+const defaultSchemas = [
+  {
+    name: "Product",
+    fields: [
+      {
+        name: "title",
+        required: true,
+        label: "Title",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        name: "description",
+        inputType: "text",
+        dataType: "string",
+        fieldType: "textarea",
+        label: "Description",
+        required: true,
+      },
+      {
+        name: "images",
+        required: true,
+        label: "Images",
+        dataType: "array",
+        fieldType: "input",
+        inputType: "file",
+        dataElementType: "string",
+        multiple: true,
+      },
+      {
+        name: "price",
+        inputType: "number",
+        dataType: "number",
+        fieldType: "input",
+        label: "Price",
+        required: true,
+        decimalPlaces: "0.00",
+      },
+      {
+        name: "whatsappNumber",
+        required: true,
+        label: "WhatsApp",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+    ],
+  },
+  {
+    name: "Campaign",
+    fields: [
+      {
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+        name: "title",
+        label: "Title",
+        required: true,
+      },
+      {
+        name: "description",
+        label: "Description",
+        required: true,
+        dataType: "string",
+        fieldType: "textarea",
+        inputType: "text",
+      },
+      {
+        name: "startDate",
+        label: "Start Date",
+        required: true,
+        dataType: "date",
+        fieldType: "input",
+        inputType: "date",
+      },
+      {
+        name: "endDate",
+        label: "End Date",
+        required: true,
+        dataType: "date",
+        fieldType: "input",
+        inputType: "date",
+      },
+      {
+        name: "status",
+        label: "Status",
+        required: true,
+        dataType: "string",
+        fieldType: "combobox",
+        inputType: "",
+        optionType: "array",
+        options: [
+          {
+            label: "Inactive",
+            value: "inactive",
+            _id: "ushaw7fp",
+          },
+          {
+            label: "Active",
+            value: "active",
+            _id: "4uk2shs5",
+          },
+        ],
+      },
+      {
+        name: "amountTable",
+        required: false,
+        label: "Amount Table",
+        dataType: "array",
+        fieldType: "input",
+        dataElementType: "object",
+        fields: [
+          {
+            name: "startDate",
+            required: true,
+            label: "Start Date",
+            dataType: "date",
+            fieldType: "input",
+            inputType: "date",
+            _id: "56797722",
+          },
+          {
+            name: "endDate",
+            required: true,
+            label: "End Date",
+            dataType: "date",
+            fieldType: "input",
+            inputType: "date",
+            _id: "17165027",
+          },
+          {
+            name: "amount",
+            required: true,
+            label: "Amount",
+            dataType: "number",
+            fieldType: "input",
+            inputType: "number",
+            _id: "81099445",
+          },
+          {
+            name: "amountType",
+            required: true,
+            label: "Amount Type",
+            dataType: "string",
+            fieldType: "combobox",
+            optionType: "array",
+            options: [
+              {
+                label: "Flat",
+                value: "flat",
+                _id: "bd76kiee",
+              },
+              {
+                label: "Percent",
+                value: "percent",
+                _id: "dvmblh8a",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "includeProducts",
+        required: false,
+        label: "Include Products",
+        dataType: "object",
+        fieldType: "collectionFilter",
+      },
+      {
+        name: "excludeProducts",
+        required: false,
+        label: "Exclude Products",
+        dataType: "object",
+        fieldType: "collectionFilter",
+      },
+    ],
+  },
+  {
+    name: "Customer",
+    fields: [
+      {
+        unique: false,
+        name: "name",
+        required: true,
+        label: "Name",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        unique: true,
+        name: "email",
+        required: false,
+        label: "Email",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        unique: true,
+        name: "phone",
+        required: false,
+        label: "phone",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        unique: false,
+        name: "password",
+        required: true,
+        label: "password",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "password",
+      },
+    ],
+  },
+  {
+    name: "Review",
+    fields: [
+      {
+        unique: false,
+        name: "product",
+        required: false,
+        label: "Product",
+        dataType: "objectId",
+        collection: "Product",
+        foreignField: "_id",
+      },
+      {
+        name: "rating",
+        inputType: "",
+        dataType: "number",
+        fieldType: "none",
+        label: "Rating",
+        required: false,
+      },
+      {
+        name: "review",
+        inputType: "",
+        dataType: "string",
+        fieldType: "textarea",
+        label: "Review",
+        required: false,
+      },
+      {
+        name: "customer",
+        dataType: "objectId",
+        collection: "Customer",
+        fieldType: "none",
+        label: "Customer",
+        required: false,
+        foreignField: "_id",
+      },
+    ],
+  },
+];
 
 exports.signup = async (req, res) => {
   try {
@@ -19,7 +279,10 @@ exports.signup = async (req, res) => {
       .save()
       .then(async (user) => {
         await new Config({ user: user._id }).save();
-        return appHelper.signIn(res, user._doc);
+        await Collection.insertMany(
+          defaultSchemas.map((item) => ({ ...item, user: user._id }))
+        );
+        return appHelper.signIn(res, user._doc, "business");
       })
       .catch((err) => {
         return responseFn.error(res, {}, err.message);
@@ -34,7 +297,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ phone: req.body.phone });
 
     if (user && appHelper.compareHash(req.body.password, user.password)) {
-      return appHelper.signIn(res, user._doc);
+      return appHelper.signIn(res, user._doc, "business");
     } else {
       return responseFn.error(res, {}, responseStr.invalid_cred);
     }

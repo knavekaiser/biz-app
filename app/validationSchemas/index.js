@@ -6,4 +6,5 @@ module.exports = {
   payment: require("./payment"),
   config: require("./config"),
   collection: require("./collection"),
+  whitelabel: require("./whitelabel"),
 };
