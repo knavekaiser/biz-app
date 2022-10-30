@@ -339,3 +339,53 @@ exports.getDynamicPipeline = ({
 
   return pipeline;
 };
+
+exports.getRatingPipeline = ({ business }) => {
+  return [
+    {
+      $lookup: {
+        from: `${business._id}_Review`,
+        let: { p_id: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$product", "$$p_id"],
+              },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalRating: { $sum: "$rating" },
+              totalReview: { $sum: 1 },
+            },
+          },
+          {
+            $set: {
+              rating: {
+                $multiply: [
+                  5,
+                  {
+                    $divide: [
+                      "$totalRating",
+                      { $multiply: ["$totalReview", 5] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "reviews",
+      },
+    },
+    { $set: { rating: { $first: "$reviews" } } },
+    {
+      $set: {
+        rating: "$rating.rating" || 0,
+        totalReview: "$rating.totalReview" || 0,
+      },
+    },
+  ];
+};

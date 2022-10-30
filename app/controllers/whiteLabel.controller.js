@@ -125,51 +125,7 @@ exports.browse = async (req, res) => {
       {
         $set: { seller: { name: req.business.name, logo: req.business.logo } },
       },
-      {
-        $lookup: {
-          from: `${req.business._id}_Review`,
-          let: { p_id: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$product", "$$p_id"],
-                },
-              },
-            },
-            {
-              $group: {
-                _id: null,
-                totalRating: { $sum: "$rating" },
-                totalReview: { $sum: 1 },
-              },
-            },
-            {
-              $set: {
-                rating: {
-                  $multiply: [
-                    5,
-                    {
-                      $divide: [
-                        "$totalRating",
-                        { $multiply: ["$totalReview", 5] },
-                      ],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "reviews",
-        },
-      },
-      { $set: { rating: { $first: "$reviews" } } },
-      {
-        $set: {
-          rating: "$rating.rating",
-          totalReview: "$rating.totalReview",
-        },
-      },
+      ...dbHelper.getRatingPipeline({ business: req.business }),
       { $unset: ["__v"] },
       { $sort: sort },
       // { $set: {
@@ -254,6 +210,7 @@ exports.getRelatedProducts = async (req, res) => {
       }),
       { $match: query },
       { $limit: limit },
+      ...dbHelper.getRatingPipeline({ business: req.business }),
       {
         $lookup: {
           from: "users",
@@ -342,7 +299,16 @@ exports.getLandingPageShelves = async (req, res) => {
           };
         }
       });
-      facet[shelf.title] = [{ $match: query }, { $limit: shelf.productCount }];
+      facet[shelf.title] = [
+        ...dbHelper.getDynamicPipeline({
+          fields: collection.fields,
+          business_id: req.business._id,
+          table: "Product",
+        }),
+        { $match: query },
+        { $limit: shelf.productCount },
+        ...dbHelper.getRatingPipeline({ business: req.business }),
+      ];
     });
     Model.aggregate([{ $facet: facet }])
       .then((data) => {
@@ -505,11 +471,6 @@ exports.addReview = async (req, res) => {
     );
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
-    console.log({
-      ...req.body,
-      rating: Math.round(req.body.rating),
-      customer: req.authUser._id,
-    });
     new Model({
       ...req.body,
       rating: Math.round(req.body.rating),

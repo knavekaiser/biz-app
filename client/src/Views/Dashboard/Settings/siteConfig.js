@@ -95,6 +95,7 @@ const SiteConfig = () => {
                   value: item.name,
                 };
               });
+            fields.push({ value: "review", label: "Review" });
             setProductCollection(data.data);
             setProductElementOptions(
               fields
@@ -480,9 +481,9 @@ const LandingPageShelves = ({
   // const [shelves, setShelves] = useState([]);
   const [edit, setEdit] = useState(null);
   const [addShelf, setAddShelf] = useState(false);
-  useEffect(() => {
-    onChange(shelves);
-  }, [shelves]);
+  // useEffect(() => {
+  // onChange(shelves);
+  // }, [shelves]);
 
   // useEffect(() => {
   //   console.log(JSON.stringify(defaultShelves), JSON.stringify(shelves));
