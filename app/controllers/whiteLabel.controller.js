@@ -30,6 +30,7 @@ exports.getSiteConfig = async (req, res) => {
       {
         $project: {
           siteTitle: "$name",
+          favicon: "$favicon",
           slogan: "$motto",
           logo: "$logo",
           whatsappNumber: "$whatsappNumber",

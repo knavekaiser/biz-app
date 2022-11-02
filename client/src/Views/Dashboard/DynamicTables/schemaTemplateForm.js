@@ -14,19 +14,6 @@ import * as yup from "yup";
 import s from "./payments.module.scss";
 import { endpoints } from "config";
 
-yup.addMethod(yup.string, "noneOf", function (arr, message) {
-  return this.test("noneOf", message, function (value) {
-    const { path, createError } = this;
-    return (
-      !arr.includes(value) ||
-      createError({
-        path,
-        message: message?.replace(`{value}`, value) || message,
-      })
-    );
-  });
-});
-
 const mainSchema = yup.object({
   schema_id: yup.string().required(),
 });

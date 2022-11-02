@@ -302,7 +302,7 @@ export const FileInput = ({
               );
             }
 
-            if (new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file?.name)) {
+            if (new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file?.name)) {
               const url = URL.createObjectURL(file);
               return (
                 <li className={s.file} key={i}>
@@ -481,7 +481,7 @@ export const FileInputNew = ({
 
                 if (
                   !file.size &&
-                  new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file.name)
+                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.name)
                 ) {
                   return (
                     <li className={s.file} key={i}>
@@ -491,7 +491,9 @@ export const FileInputNew = ({
                   );
                 }
 
-                if (new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file?.name)) {
+                if (
+                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file?.name)
+                ) {
                   const url = URL.createObjectURL(file);
                   return (
                     <li className={s.file} key={i}>
@@ -923,19 +925,38 @@ export const MobileNumberInput = ({
   label,
   className,
   name,
-  register,
-  required,
-  error,
-  clearErrors,
-  setValue,
-  watch,
+  control,
+  formOptions,
   icon,
   ...rest
 }) => {
   const { control: cControl, setValue: cSetValue } = useForm();
-  const _id = useRef(Math.random().toString(32).substr(-8));
   const [country, setCountry] = useState(null);
-  const phoneNumber = watch(name);
+  const change = useCallback(
+    (_value, onChange) => {
+      const _number = _value?.trim().startsWith("+") && phone(_value);
+      if (_number?.isValid) {
+        const country = countries.find((c) => c.iso2 === _number.countryIso2);
+        cSetValue("country", country.code);
+        setCountry({
+          value: country.code,
+          label: country.name,
+          iso2: country.iso2,
+        });
+        onChange(_number.phoneNumber);
+      } else if (country) {
+        const _number = phone(_value, { country: country.iso2 });
+        if (_number.isValid) {
+          onChange(_number.phoneNumber);
+        } else {
+          onChange(_value);
+        }
+      } else {
+        onChange(_value);
+      }
+    },
+    [country]
+  );
   useEffect(() => {
     const preferredCountry = countries.find((c) => c.iso2 === "IN");
     cSetValue("country", preferredCountry.code);
@@ -945,117 +966,108 @@ export const MobileNumberInput = ({
       iso2: preferredCountry.iso2,
     });
   }, []);
-  useEffect(() => {
-    const _number = phoneNumber?.trim().startsWith("+") && phone(phoneNumber);
-    if (_number?.isValid) {
-      const country = countries.find((c) => c.iso2 === _number.countryIso2);
-      cSetValue("country", country.code);
-      setCountry({
-        value: country.code,
-        label: country.name,
-        iso2: country.iso2,
-      });
-    } else if (country) {
-      const _number = phone(phoneNumber, { country: country.iso2 });
-      if (_number.isValid) {
-        setValue(name, _number.phoneNumber);
-      }
-    } else {
-      const _number = phone(phoneNumber);
-      if (_number.isValid) {
-        setValue(name, _number.phoneNumber);
-      }
-    }
-  }, [phoneNumber]);
   return (
-    <section
-      data-testid="mobileNumberInput"
-      className={`${s.input} ${s.mobileNumberInput} ${className || ""} ${
-        error ? s.err : ""
-      }`}
-    >
-      {label && (
-        <label>
-          {label} {required && "*"}
-        </label>
-      )}
-      <div className={s.wrapper}>
-        <span className={s.field}>
-          <div className={s.country}>
-            <Combobox
-              className={s.countryFlags}
-              options={countries.map((c) => ({
-                value: c.code,
-                label: c.name,
-                iso2: c.iso2,
-              }))}
-              item={(option) => {
-                return (
-                  <>
-                    <img
-                      src={`https://flagcdn.com/w20/${option.iso2.toLowerCase()}.webp`}
-                    />
-                    <p style={{ marginLeft: "6px", display: "inline" }}>
-                      {option.label}
-                    </p>
-                  </>
-                );
-              }}
-              renderValue={(selected) => {
-                return selected ? (
-                  <img
-                    src={`https://flagcdn.com/w20/${countries
-                      .find((c) => c.code === selected)
-                      ?.iso2.toLowerCase()}.webp`}
-                  />
-                ) : (
-                  "No"
-                );
-              }}
-              control={cControl}
-              name="country"
-              // onChange={(option) => {
-              //   setCountry(option);
-              //   clearErrors?.(name);
-              //   const _number =
-              //     phoneNumber && phone(phoneNumber, { country: option.iso2 });
-              //   if (_number?.isValid) {
-              //     setValue(name, _number.phoneNumber);
-              //   }
-              // }}
-            />
-          </div>
-          <input
-            type={"text"}
-            {...register(name, {
-              validate: (value) => {
-                if (value) {
-                  return (
-                    phone(value, { country: country.iso2 }).isValid ||
-                    "Phone Number is not valid"
-                  );
-                }
-                if (required) {
-                  return "Please provide a valid Phone Number";
-                }
-                return true;
-              },
-            })}
-            id={rest.id || _id.current}
-            placeholder={"#"}
-            maxLength="15"
-            {...rest}
-          />
-          {error && (
-            <span className={s.errIcon}>
-              <BsFillExclamationTriangleFill />
-            </span>
+    <Controller
+      control={control}
+      name={name}
+      rules={{ ...formOptions }}
+      render={({
+        field: { onChange, onBlur, value, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => (
+        <section
+          data-testid="mobileNumberInput"
+          className={`${s.input} ${s.mobileNumberInput} ${className || ""} ${
+            error ? s.err : ""
+          }`}
+        >
+          {label && (
+            <label>
+              {label} {formOptions.required && "*"}
+            </label>
           )}
-          {icon && icon}
-        </span>
-        {error && <span className={s.errMsg}>{error.message}</span>}
-      </div>
-    </section>
+          <div className={s.wrapper}>
+            <span className={s.field}>
+              <div className={s.country}>
+                <Combobox
+                  className={s.countryFlags}
+                  options={countries.map((c) => ({
+                    value: c.code,
+                    label: c.name,
+                    iso2: c.iso2,
+                  }))}
+                  item={(option) => {
+                    return (
+                      <>
+                        <img
+                          src={`https://flagcdn.com/w20/${option.iso2.toLowerCase()}.webp`}
+                        />
+                        <p style={{ marginLeft: "6px", display: "inline" }}>
+                          {option.label}
+                        </p>
+                      </>
+                    );
+                  }}
+                  renderValue={(selected) => {
+                    return selected ? (
+                      <img
+                        src={`https://flagcdn.com/w20/${countries
+                          .find((c) => c.code === selected)
+                          ?.iso2.toLowerCase()}.webp`}
+                      />
+                    ) : (
+                      "No"
+                    );
+                  }}
+                  control={cControl}
+                  name="country"
+                  onChange={(option) => {
+                    setCountry(option);
+                    // clearErrors?.(name);
+                    const _number =
+                      value && phone(value, { country: option.iso2 });
+                    if (_number?.isValid) {
+                      onChange(_number.phoneNumber);
+                    }
+                  }}
+                />
+              </div>
+              <input
+                type="text"
+                onChange={(e) => {
+                  change(e.target.value, onChange);
+                }}
+                onPaste={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  let _value = (
+                    e.clipboardData || window.clipboardData
+                  ).getData("Text");
+                  if (_value.replace(/[^0-9]/gi, "")) {
+                    _value = `${
+                      _value.startsWith("+") ? "+" : ""
+                    }${_value.replace(/[^0-9]/gi, "")}`;
+                  }
+                  change(_value, onChange);
+                }}
+                name={name}
+                value={value || ""}
+                ref={ref}
+                maxLength="15"
+                {...rest}
+              />
+              {error && (
+                <span className={s.errIcon}>
+                  <BsFillExclamationTriangleFill />
+                </span>
+              )}
+              {icon && icon}
+            </span>
+            {error && <span className={s.errMsg}>{error.message}</span>}
+          </div>
+        </section>
+      )}
+    />
   );
 };
 export const Checkbox = forwardRef(({ label, readOnly, ...rest }, ref) => {

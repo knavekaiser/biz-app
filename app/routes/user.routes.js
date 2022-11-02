@@ -25,11 +25,15 @@ module.exports = function (app) {
   router.put(
     "/profile",
     authJwt.verifyToken,
-    file.upload([{ name: "logo" }, { name: "ownerSignature" }], "/", {
-      fileSize: appConfig.supportedImageSizes,
-      fileTypes: appConfig.supportedImageTypes,
-      override: true,
-    }),
+    file.upload(
+      [{ name: "logo" }, { name: "ownerSignature" }, { name: "favicon" }],
+      "/",
+      {
+        fileSize: appConfig.supportedImageSizes,
+        fileTypes: appConfig.supportedImageTypes,
+        override: true,
+      }
+    ),
     validate(schema.update),
     controller.update
   );

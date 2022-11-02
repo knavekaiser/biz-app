@@ -145,7 +145,7 @@ const Collections = () => {
                     : t
                 )
               );
-              setEdit(null);
+              setEdit(newCollection);
             } else {
               setCollections((prev) => [...prev, newCollection]);
             }

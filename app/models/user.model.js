@@ -48,6 +48,7 @@ module.exports = mongoose.model(
         signature: { type: Schema.Types.String },
       },
 
+      favicon: { type: Schema.Types.String },
       logo: { type: Schema.Types.String },
       gstin: { type: Schema.Types.String },
       pan: { type: Schema.Types.String },

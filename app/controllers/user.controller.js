@@ -56,7 +56,7 @@ const defaultSchemas = [
         label: "WhatsApp",
         dataType: "string",
         fieldType: "input",
-        inputType: "text",
+        inputType: "phone",
       },
     ],
   },

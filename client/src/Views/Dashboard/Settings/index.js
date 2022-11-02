@@ -5,6 +5,7 @@ import {
   Input,
   Textarea,
   FileInput,
+  FileInputNew,
   Table,
   Tabs,
   CustomRadio,
@@ -66,6 +67,7 @@ const BusinessInformation = () => {
     register,
     reset,
     watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm({
@@ -86,6 +88,7 @@ const BusinessInformation = () => {
       pan: user.pan || "",
       ifsc: user.ifsc || "",
       domain: user.domain || "",
+      favicon: user.favicon ? [user.favicon] : [],
     });
   }, [user]);
   return (
@@ -93,6 +96,7 @@ const BusinessInformation = () => {
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
         let logo = values.logo[0];
+        let favicon = values.favicon[0];
 
         const formData = new FormData();
 
@@ -100,6 +104,11 @@ const BusinessInformation = () => {
           formData.append(`logo`, logo);
         } else if (!logo) {
           formData.append(`logo`, "");
+        }
+        if (favicon?.type) {
+          formData.append(`favicon`, favicon);
+        } else if (!favicon) {
+          formData.append(`favicon`, "");
         }
 
         formData.append(`name`, values.name);
@@ -137,6 +146,13 @@ const BusinessInformation = () => {
         onChange={(files) => {
           setValue("logo", files);
         }}
+      />
+      <FileInputNew
+        thumbnail
+        label="Favicon"
+        control={control}
+        name="favicon"
+        accept=".ico"
       />
       <Input label="Name" {...register("name")} error={errors.name} />
       <Input

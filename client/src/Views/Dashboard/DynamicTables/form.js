@@ -108,14 +108,13 @@ const Form = ({ edit, collections, onSuccess }) => {
   );
 
   useEffect(() => {
-    console.log("fields changed", fields, firstRender.current);
     if (
       fields.length > 0 &&
       JSON.stringify(fields) !== JSON.stringify(edit?.fields || [])
     ) {
       onSubmit({ name: edit?.name || "" });
     }
-  }, [fields]);
+  }, [fields, edit]);
   useEffect(() => {
     reset({ ...edit });
   }, [edit]);
@@ -497,6 +496,7 @@ const FieldForm = ({
                       { label: "Number", value: "number" },
                       ...(fieldType !== "select"
                         ? [
+                            { label: "Phone Number", value: "phone" },
                             { label: "Date", value: "date" },
                             { label: "File", value: "file" },
                             { label: "Calendar", value: "calendar" },

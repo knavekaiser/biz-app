@@ -128,7 +128,7 @@ const upload = (fields, uploadPath, options) => {
               `${options.fileSize || 10}MB`
             )
           );
-        return responseFn.error(res, {}, err?.message);
+        return responseFn.error(res, {}, err?.message || err);
       }
       next();
     });

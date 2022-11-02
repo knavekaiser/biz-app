@@ -13,6 +13,7 @@ import {
   Checkbox,
   Select,
   CustomRadio,
+  MobileNumberInput,
   moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
@@ -112,6 +113,9 @@ const DynamicForm = ({
             if (f.dataType === "number") {
               field = yup.number().typeError("Please enter a valid number");
             }
+            if (f.inputType === "phone") {
+              field = yup.string().phone("Please enter a valid phone number");
+            }
             if (f.dataType === "array") {
               field = yup.array();
               if (f.min) {
@@ -187,6 +191,17 @@ const DynamicForm = ({
       }
     }
     if (field.fieldType === "input") {
+      if (field.inputType === "phone") {
+        return (
+          <MobileNumberInput
+            label={field.label}
+            key={field.name}
+            name={field.name}
+            formOptions={{ required: field.required }}
+            control={control}
+          />
+        );
+      }
       return (
         <Input
           key={field.name}
