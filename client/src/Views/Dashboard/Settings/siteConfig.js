@@ -116,7 +116,10 @@ const SiteConfig = () => {
             );
             setProductPageElementOptions(
               fields
-                .filter((item) => item.value !== "description")
+                .filter(
+                  (item) =>
+                    !["description", "whatsappNumber"].includes(item.value)
+                )
                 .sort((a, b, i) => {
                   if (
                     !config.siteConfig.productViewPage?.productElements.includes(
@@ -702,12 +705,12 @@ const SidebarFilters = ({
     formState: { errors },
   } = useForm();
   const selectedFields = watch("fields");
-  if (includeValue) {
-    for (var i = 0; i < fields.length; i++) {
-      const field = fields[i];
-      const value = watch(`${field.name}.filterType`);
-    }
+  // if (includeValue) {
+  for (var i = 0; i < fields.length; i++) {
+    const field = fields[i];
+    const value = watch(`${field.name}.filterType`);
   }
+  // }
   useEffect(() => {
     const data = {
       fields: value.map((item) => item.fieldName),
@@ -744,6 +747,10 @@ const SidebarFilters = ({
                     max: values[f]?.max,
                   }),
                 }),
+              }),
+              ...(["slider", "range"].includes(values[f]?.filterType) && {
+                min: values[f]?.min,
+                max: values[f]?.max,
               }),
               ...(["select", "combobox"].includes(field.fieldType) && {
                 filterStyle: values[f]?.filterStyle,
@@ -810,9 +817,34 @@ const SidebarFilters = ({
                     options={[
                       { label: "Min-Max", value: "minMax" },
                       { label: "Exact Match", value: "match" },
+                      { label: "Range", value: "range" },
+                      // { label: "Slider", value: "slider" },
                     ]}
                     formOptions={{ required: "Select an option" }}
                   />
+                  {!includeValue &&
+                    ["slider", "range"].includes(
+                      getValues(`${field.name}.filterType`)
+                    ) && (
+                      <>
+                        <Input
+                          type="number"
+                          label="Min"
+                          {...register(`${field.name}.min`, {
+                            required: "Please enter a value",
+                          })}
+                          error={errors[field.name]?.min}
+                        />
+                        <Input
+                          type="number"
+                          label="Max"
+                          {...register(`${field.name}.max`, {
+                            required: "Please enter a value",
+                          })}
+                          error={errors[field.name]?.max}
+                        />
+                      </>
+                    )}
                   {includeValue && (
                     <>
                       {getValues(`${field.name}.filterType`) === "minMax" && (

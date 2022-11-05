@@ -107,7 +107,7 @@ exports.browse = async (req, res) => {
         }
       } else if (
         field.dataType === "number" &&
-        +req.query[field.name + "-min"] < +req.query[field.name + "-max"]
+        +req.query[field.name + "-min"] <= +req.query[field.name + "-max"]
       ) {
         query[field.name] = {
           $gte: +req.query[field.name + "-min"],
