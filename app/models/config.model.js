@@ -53,6 +53,10 @@ module.exports = mongoose.model(
         },
         browsePage: {
           sidebarFilters: [],
+          sidebarFiltersDefaultState: {
+            type: Schema.Types.String,
+            default: "collapsed",
+          },
         },
         productViewPage: {
           viewWhatsApp: { type: Schema.Types.Boolean, default: false },

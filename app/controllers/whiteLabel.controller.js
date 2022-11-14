@@ -126,14 +126,10 @@ exports.browse = async (req, res) => {
       {
         $set: { seller: { name: req.business.name, logo: req.business.logo } },
       },
-      ...dbHelper.getRatingPipeline({ business: req.business }),
+      ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
       { $unset: ["__v"] },
       { $sort: sort },
-      // { $set: {
-      //   images: {
-      //     $map: {}
-      //   }
-      // } },
+      // { $set: { images: { $map: {} } } },
       {
         $facet: {
           data: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
@@ -211,7 +207,7 @@ exports.getRelatedProducts = async (req, res) => {
       }),
       { $match: query },
       { $limit: limit },
-      ...dbHelper.getRatingPipeline({ business: req.business }),
+      ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
       {
         $lookup: {
           from: "users",
@@ -336,7 +332,10 @@ exports.getLandingPageShelves = async (req, res) => {
             .filter((item) => item.products.length),
         });
       })
-      .catch((err) => responseFn.error(res, {}, err.message));
+      .catch((err) => {
+        console.log(err);
+        responseFn.error(res, {}, err.message);
+      });
   } catch (error) {
     console.log(error);
     return responseFn.error(res, {}, error.message, 500);

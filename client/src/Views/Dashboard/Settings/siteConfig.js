@@ -69,6 +69,9 @@ const SiteConfig = () => {
       viewHeroSection:
         config?.siteConfig?.landingPage?.hero?.viewHeroSection || false,
       landingPageShelves: config?.siteConfig?.landingPage?.shelves || [],
+      sidebarFiltersDefaultState:
+        config?.siteConfig?.browsePage?.sidebarFiltersDefaultState ||
+        "collapsed",
     });
   }, [config]);
 
@@ -161,6 +164,7 @@ const SiteConfig = () => {
             browsePage: {
               ...config.siteConfig.browsePage,
               sidebarFilters: values.sidebarFilters,
+              sidebarFiltersDefaultState: values.sidebarFiltersDefaultState,
             },
             productViewPage: {
               viewWhatsApp: whatsapp,
@@ -367,8 +371,9 @@ const SiteConfig = () => {
       />
 
       <div>
-        <div className="flex justify-space-between align-center mb-1">
+        <div className="flex gap-1 justify-start align-center mb-1">
           <h5>Sidebar filters</h5>
+
           <button
             className="btn"
             type="button"
@@ -376,6 +381,16 @@ const SiteConfig = () => {
           >
             Update Sidebar Filters
           </button>
+
+          <Combobox
+            label="Sidebar filters default state"
+            name="sidebarFiltersDefaultState"
+            control={control}
+            options={[
+              { label: "Open", value: "open" },
+              { label: "Collapsed", value: "collapsed" },
+            ]}
+          />
         </div>
         <Table
           columns={[

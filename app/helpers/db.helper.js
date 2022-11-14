@@ -389,3 +389,84 @@ exports.getRatingPipeline = ({ business }) => {
     },
   ];
 };
+
+exports.getRatingBreakdownPipeline = ({ business }) => {
+  return [
+    {
+      $lookup: {
+        from: `${business._id}_Review`,
+        let: { p_id: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $eq: ["$product", "$$p_id"],
+              },
+            },
+          },
+          {
+            $facet: {
+              rating: [
+                {
+                  $group: {
+                    _id: null,
+                    totalRating: { $sum: "$rating" },
+                    totalReview: { $sum: 1 },
+                  },
+                },
+                {
+                  $set: {
+                    rating: {
+                      $multiply: [
+                        5,
+                        {
+                          $divide: [
+                            "$totalRating",
+                            { $multiply: ["$totalReview", 5] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+              breakdown: [
+                {
+                  $group: {
+                    _id: "$rating",
+                    totalReview: { $sum: 1 },
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        as: "reviews",
+      },
+    },
+    { $set: { reviews: { $first: "$reviews" } } },
+    {
+      $set: {
+        rating: { $first: "$reviews.rating" },
+        ratingBreakdown: {
+          $map: {
+            input: "$reviews.breakdown",
+            in: {
+              rating: "$$this._id",
+              total: "$$this.totalReview",
+            },
+          },
+        },
+      },
+    },
+    {
+      $set: {
+        rating: "$rating.rating",
+        totalReview: "$rating.totalReview",
+      },
+    },
+    {
+      $unset: "reviews",
+    },
+  ];
+};
