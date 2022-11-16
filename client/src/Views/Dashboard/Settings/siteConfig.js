@@ -27,6 +27,7 @@ const SiteConfig = () => {
   );
   const [updateSidebarFilters, setUpdateSidebarFilters] = useState(false);
   const [updateShelves, setUpdateShelves] = useState(false);
+  const [updateFooterElements, setUpdateFooterElements] = useState(false);
   const [
     updateRecommendationFilters,
     setUpdateRecommendationFilters,
@@ -43,6 +44,7 @@ const SiteConfig = () => {
   } = useForm();
 
   const { put: updateConfig, loading } = useFetch(endpoints.userConfig);
+  const [editSection, setEditSection] = useState(null);
   const {
     get: getProductCollection,
     loading: gettingProductCollection,
@@ -72,6 +74,7 @@ const SiteConfig = () => {
       sidebarFiltersDefaultState:
         config?.siteConfig?.browsePage?.sidebarFiltersDefaultState ||
         "collapsed",
+      footerElements: config?.siteConfig?.footer?.sections,
     });
   }, [config]);
 
@@ -81,6 +84,7 @@ const SiteConfig = () => {
   const viewHeroSection = watch("viewHeroSection");
   const whatsapp = watch("viewWhatsApp");
   const landingPageShelves = watch("landingPageShelves");
+  const footerElements = watch("footerElements");
 
   useEffect(() => {
     if (
@@ -181,6 +185,7 @@ const SiteConfig = () => {
               },
               shelves: values.landingPageShelves,
             },
+            footer: { sections: values.footerElements },
           },
         };
         findProperties("_id", payload).forEach((item) => {
@@ -191,6 +196,7 @@ const SiteConfig = () => {
             return obj[key];
           }, payload);
         });
+        console.log(payload);
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
           formData.append(key, JSON.stringify(value));
@@ -442,6 +448,87 @@ const SiteConfig = () => {
         ]}
       />
 
+      <div>
+        <div className="flex justify-space-between align-center mb-1">
+          <h5>Footer Elements</h5>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setUpdateFooterElements(true)}
+          >
+            Add Footer Section
+          </button>
+        </div>
+        <Table
+          columns={[
+            { label: "Section Title" },
+            { label: "Elements" },
+            { label: "Actions" },
+          ]}
+        >
+          {footerElements?.map((section, i) => (
+            <tr key={section.title}>
+              <td>{section.title}</td>
+              <td>{section.items?.length}</td>
+              <TableActions
+                actions={[
+                  {
+                    icon: <FaPencilAlt />,
+                    label: "Edit",
+                    callBack: () => {
+                      setEditSection(section);
+                      setUpdateFooterElements(true);
+                    },
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "Delete",
+                    callBack: () =>
+                      Prompt({
+                        type: "confirmation",
+                        message: `Are you sure you want to remove this section?`,
+                        callback: () => {
+                          setValue(
+                            "footerElements",
+                            footerElements.filter((i) => i._id !== section._id)
+                          );
+                        },
+                      }),
+                  },
+                ]}
+              />
+            </tr>
+          ))}
+        </Table>
+      </div>
+
+      <Modal
+        open={updateFooterElements}
+        head
+        label={`${editSection ? "Update" : "Add"} Section`}
+        className={s.recFilterModal}
+        setOpen={() => {
+          setUpdateFooterElements(false);
+          setEditSection(null);
+        }}
+      >
+        <FooterElements
+          edit={editSection}
+          onSuccess={(value) => {
+            setValue(
+              "footerElements",
+              editSection
+                ? footerElements.map((item) =>
+                    item._id === value._id ? value : item
+                  )
+                : [...footerElements, value]
+            );
+            setUpdateFooterElements(false);
+            setEditSection(null);
+          }}
+        />
+      </Modal>
+
       <Modal
         open={updateRecommendationFilters}
         head
@@ -511,12 +598,7 @@ const LandingPageShelves = ({
   // }, [defaultShelves]);
 
   return (
-    <div
-      onSubmit={(e) => {
-        e.stopPropagation();
-      }}
-      className="grid gap-1"
-    >
+    <div className="grid gap-1">
       <div className="flex justify-space-between align-center">
         <h5>Shelves</h5>
         <button className="btn" type="button" onClick={() => setAddShelf(true)}>
@@ -637,7 +719,10 @@ const ShelfForm = ({ fields = [], edit, onSubmit }) => {
     reset({ ...edit });
   }, [edit]);
   return (
-    <div onSubmit={(e) => e.stopPropagation()} className={`p-1 grid gap-1`}>
+    <div
+      // onSubmit={(e) => e.stopPropagation()}
+      className={`p-1 grid gap-1`}
+    >
       <form onSubmit={handleSubmit(submit)} className="grid gap-1">
         <Input label="Title" {...register("title")} error={errors.title} />
 
@@ -742,202 +827,200 @@ const SidebarFilters = ({
     reset(data);
   }, []);
   return (
-    <div onSubmit={(e) => e.stopPropagation()}>
-      <form
-        onSubmit={handleSubmit((values) => {
-          const data = [];
-          values.fields.forEach((f) => {
-            const field = fields.find((field) => field.name === f);
-            if (!field) return;
-            data.push({
-              fieldName: f,
-              ...(["input", "textarea"].includes(field.fieldType) && {
-                filterType: values[f]?.filterType || "textSearch",
-                ...(includeValue && {
-                  ...(values[f]?.filterType !== "minMax" && {
-                    value: values[f]?.value,
-                  }),
-                  ...(values[f]?.filterType === "minMax" && {
-                    min: values[f]?.min,
-                    max: values[f]?.max,
-                  }),
+    <form
+      onSubmit={handleSubmit((values) => {
+        const data = [];
+        values.fields.forEach((f) => {
+          const field = fields.find((field) => field.name === f);
+          if (!field) return;
+          data.push({
+            fieldName: f,
+            ...(["input", "textarea"].includes(field.fieldType) && {
+              filterType: values[f]?.filterType || "textSearch",
+              ...(includeValue && {
+                ...(values[f]?.filterType !== "minMax" && {
+                  value: values[f]?.value,
+                }),
+                ...(values[f]?.filterType === "minMax" && {
+                  min: values[f]?.min,
+                  max: values[f]?.max,
                 }),
               }),
-              ...(["slider", "range"].includes(values[f]?.filterType) && {
-                min: values[f]?.min,
-                max: values[f]?.max,
-              }),
-              ...(["select", "combobox"].includes(field.fieldType) && {
-                filterStyle: values[f]?.filterStyle,
-                ...(includeValue && { value: values[f]?.value }),
-              }),
-            });
+            }),
+            ...(["slider", "range"].includes(values[f]?.filterType) && {
+              min: values[f]?.min,
+              max: values[f]?.max,
+            }),
+            ...(["select", "combobox"].includes(field.fieldType) && {
+              filterStyle: values[f]?.filterStyle,
+              ...(includeValue && { value: values[f]?.value }),
+            }),
           });
-          onSuccess(data);
-        })}
-        className="p-1 grid gap-1"
-      >
-        <CustomRadio
-          control={control}
-          name="fields"
-          multiple
-          label="Filter Fields"
-          sortable
-          options={(value.length
-            ? fields
-                .sort((a, b, i) => {
-                  if (!value.includes(a.value)) {
-                    return 1;
-                  }
-                  return value.findIndex((i) => i === a.value) >
-                    value.findIndex((i) => i === b.value)
-                    ? 1
-                    : -1;
-                })
-                .reverse()
-                .map((item, i, arr) => ({ ...item, order: arr.length - i }))
-            : fields
-          ).map((item) => ({
-            label: item.label,
-            value: item.name,
-            data: item,
-          }))}
-        />
+        });
+        onSuccess(data);
+      })}
+      className="p-1 grid gap-1"
+    >
+      <CustomRadio
+        control={control}
+        name="fields"
+        multiple
+        label="Filter Fields"
+        sortable
+        options={(value.length
+          ? fields
+              .sort((a, b, i) => {
+                if (!value.includes(a.value)) {
+                  return 1;
+                }
+                return value.findIndex((i) => i === a.value) >
+                  value.findIndex((i) => i === b.value)
+                  ? 1
+                  : -1;
+              })
+              .reverse()
+              .map((item, i, arr) => ({ ...item, order: arr.length - i }))
+          : fields
+        ).map((item) => ({
+          label: item.label,
+          value: item.name,
+          data: item,
+        }))}
+      />
 
-        {selectedFields?.map((f, i) => {
-          const field = fields.find((field) => field.name === f);
-          if (!field) return null;
-          if (["input", "textarea"].includes(field.fieldType)) {
-            if (field.dataType === "string") {
-              return (
-                <div key={i}>
-                  <p>
-                    <strong>{field.label}:</strong> Text Search
-                  </p>
-                  {includeValue && (
-                    <Input label="Value" {...register(`${field.name}.value`)} />
-                  )}
-                </div>
-              );
-            } else if (field.dataType === "number") {
-              return (
-                <div key={i}>
-                  <p className="mb_5">
-                    <strong>{field.label}:</strong>{" "}
-                  </p>
-                  <Combobox
-                    control={control}
-                    name={`${field.name}.filterType`}
-                    label="Filter Style"
-                    options={[
-                      { label: "Min-Max", value: "minMax" },
-                      { label: "Exact Match", value: "match" },
-                      { label: "Range", value: "range" },
-                      // { label: "Slider", value: "slider" },
-                    ]}
-                    formOptions={{ required: "Select an option" }}
-                  />
-                  {!includeValue &&
-                    ["slider", "range"].includes(
-                      getValues(`${field.name}.filterType`)
-                    ) && (
-                      <>
-                        <Input
-                          type="number"
-                          label="Min"
-                          {...register(`${field.name}.min`, {
-                            required: "Please enter a value",
-                          })}
-                          error={errors[field.name]?.min}
-                        />
-                        <Input
-                          type="number"
-                          label="Max"
-                          {...register(`${field.name}.max`, {
-                            required: "Please enter a value",
-                          })}
-                          error={errors[field.name]?.max}
-                        />
-                      </>
-                    )}
-                  {includeValue && (
-                    <>
-                      {getValues(`${field.name}.filterType`) === "minMax" && (
-                        <>
-                          <Input
-                            type="number"
-                            label="Minimum"
-                            {...register(`${field.name}.min`)}
-                          />
-                          <Input
-                            type="number"
-                            label="Maximum"
-                            {...register(`${field.name}.max`)}
-                          />
-                        </>
-                      )}
-                      {getValues(`${field.name}.filterType`) === "match" && (
-                        <Input
-                          type="number"
-                          label="Value"
-                          {...register(`${field.name}.value`)}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            }
-          } else if (["select", "combobox"].includes(field.fieldType)) {
+      {selectedFields?.map((f, i) => {
+        const field = fields.find((field) => field.name === f);
+        if (!field) return null;
+        if (["input", "textarea"].includes(field.fieldType)) {
+          if (field.dataType === "string") {
+            return (
+              <div key={i}>
+                <p>
+                  <strong>{field.label}:</strong> Text Search
+                </p>
+                {includeValue && (
+                  <Input label="Value" {...register(`${field.name}.value`)} />
+                )}
+              </div>
+            );
+          } else if (field.dataType === "number") {
             return (
               <div key={i}>
                 <p className="mb_5">
-                  <strong>{field.label}:</strong>
+                  <strong>{field.label}:</strong>{" "}
                 </p>
-
-                {includeValue ? (
-                  <Select
-                    label="Value"
-                    multiple
-                    control={control}
-                    name={`${field.name}.value`}
-                    {...(field.optionType === "predefined" && {
-                      options: field.options,
-                    })}
-                    {...(field.optionType === "collection" && {
-                      url: `${endpoints.dynamic}/${field.collection}`,
-                    })}
-                    getQuery={(inputValue, selected) => ({
-                      ...(inputValue && { [field.optionLabel]: inputValue }),
-                      ...(selected && { [field.optionValue]: selected }),
-                    })}
-                    handleData={(item) => ({
-                      label: item[field.optionLabel],
-                      value: item[field.optionValue],
-                    })}
-                  />
-                ) : (
-                  <Combobox
-                    control={control}
-                    name={`${field.name}.filterStyle`}
-                    label="Filter Style"
-                    options={[
-                      { label: "List", value: "list" },
-                      { label: "Dropdown", value: "dropdown" },
-                    ]}
-                    formOptions={{ required: "Select an option" }}
-                  />
+                <Combobox
+                  control={control}
+                  name={`${field.name}.filterType`}
+                  label="Filter Style"
+                  options={[
+                    { label: "Min-Max", value: "minMax" },
+                    { label: "Exact Match", value: "match" },
+                    { label: "Range", value: "range" },
+                    // { label: "Slider", value: "slider" },
+                  ]}
+                  formOptions={{ required: "Select an option" }}
+                />
+                {!includeValue &&
+                  ["slider", "range"].includes(
+                    getValues(`${field.name}.filterType`)
+                  ) && (
+                    <>
+                      <Input
+                        type="number"
+                        label="Min"
+                        {...register(`${field.name}.min`, {
+                          required: "Please enter a value",
+                        })}
+                        error={errors[field.name]?.min}
+                      />
+                      <Input
+                        type="number"
+                        label="Max"
+                        {...register(`${field.name}.max`, {
+                          required: "Please enter a value",
+                        })}
+                        error={errors[field.name]?.max}
+                      />
+                    </>
+                  )}
+                {includeValue && (
+                  <>
+                    {getValues(`${field.name}.filterType`) === "minMax" && (
+                      <>
+                        <Input
+                          type="number"
+                          label="Minimum"
+                          {...register(`${field.name}.min`)}
+                        />
+                        <Input
+                          type="number"
+                          label="Maximum"
+                          {...register(`${field.name}.max`)}
+                        />
+                      </>
+                    )}
+                    {getValues(`${field.name}.filterType`) === "match" && (
+                      <Input
+                        type="number"
+                        label="Value"
+                        {...register(`${field.name}.value`)}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             );
           }
-        })}
+        } else if (["select", "combobox"].includes(field.fieldType)) {
+          return (
+            <div key={i}>
+              <p className="mb_5">
+                <strong>{field.label}:</strong>
+              </p>
 
-        <div className="flex justify-center">
-          <button className="btn">Update</button>
-        </div>
-      </form>
-    </div>
+              {includeValue ? (
+                <Select
+                  label="Value"
+                  multiple
+                  control={control}
+                  name={`${field.name}.value`}
+                  {...(field.optionType === "predefined" && {
+                    options: field.options,
+                  })}
+                  {...(field.optionType === "collection" && {
+                    url: `${endpoints.dynamic}/${field.collection}`,
+                  })}
+                  getQuery={(inputValue, selected) => ({
+                    ...(inputValue && { [field.optionLabel]: inputValue }),
+                    ...(selected && { [field.optionValue]: selected }),
+                  })}
+                  handleData={(item) => ({
+                    label: item[field.optionLabel],
+                    value: item[field.optionValue],
+                  })}
+                />
+              ) : (
+                <Combobox
+                  control={control}
+                  name={`${field.name}.filterStyle`}
+                  label="Filter Style"
+                  options={[
+                    { label: "List", value: "list" },
+                    { label: "Dropdown", value: "dropdown" },
+                  ]}
+                  formOptions={{ required: "Select an option" }}
+                />
+              )}
+            </div>
+          );
+        }
+      })}
+
+      <div className="flex justify-center">
+        <button className="btn">Update</button>
+      </div>
+    </form>
   );
 };
 
@@ -974,119 +1057,308 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
   }, []);
 
   return (
-    <div onSubmit={(e) => e.stopPropagation()}>
-      <form
-        onSubmit={handleSubmit((values) => {
-          const data = [];
-          values.fields.forEach((f) => {
-            const field = fields.find((field) => field.name === f);
-            if (!field) return;
-            data.push({
-              fieldName: f,
-              ...(["input"].includes(field.fieldType) &&
-                field.dataType === "number" && {
-                  oparator: values[f]?.oparator,
-                }),
-              ...(["select", "combobox"].includes(field.fieldType) && {
-                oparator: values[f]?.oparator,
-                includes: Object.entries(values[f])
-                  .filter(([key, value]) => value?.length > 0)
-                  .reduce((p, [k, v]) => {
-                    p[k] = v;
-                    return p;
-                  }, {}),
-              }),
-            });
-          });
-          onSuccess(data);
-        })}
-        className={`p-1 grid gap-1`}
-      >
-        <CustomRadio
-          control={control}
-          name="fields"
-          multiple
-          label="Filter Fields"
-          sortable
-          options={(value.length
-            ? fields
-                .sort((a, b, i) => {
-                  if (!value.includes(a.value)) {
-                    return 1;
-                  }
-                  return value.findIndex((i) => i === a.value) >
-                    value.findIndex((i) => i === b.value)
-                    ? 1
-                    : -1;
-                })
-                .reverse()
-                .map((item, i, arr) => ({ ...item, order: arr.length - i }))
-            : fields
-          ).map((item) => ({
-            label: item.label,
-            value: item.name,
-            data: item,
-          }))}
-        />
-
-        {selectedFields?.map((f, i) => {
+    <form
+      onSubmit={handleSubmit((values) => {
+        const data = [];
+        values.fields.forEach((f) => {
           const field = fields.find((field) => field.name === f);
-          if (!field) return null;
-          if (["input"].includes(field.fieldType)) {
-            if (field.dataType === "number") {
-              return (
-                <div key={i}>
-                  <p className="mb_5">
-                    <strong>{field.label}:</strong>{" "}
-                  </p>
-                  <Combobox
-                    control={control}
-                    name={`${field.name}.oparator`}
-                    label="Oparator"
-                    options={[
-                      { label: "Greater than", value: "greaterThan" },
-                      { label: "Less than", value: "lessThan" },
-                    ]}
-                    formOptions={{ required: "Select an option" }}
-                  />
-                </div>
-              );
-            }
-          } else if (["select", "combobox"].includes(field.fieldType)) {
+          if (!field) return;
+          data.push({
+            fieldName: f,
+            ...(["input"].includes(field.fieldType) &&
+              field.dataType === "number" && {
+                oparator: values[f]?.oparator,
+              }),
+            ...(["select", "combobox"].includes(field.fieldType) && {
+              oparator: values[f]?.oparator,
+              includes: Object.entries(values[f])
+                .filter(([key, value]) => value?.length > 0)
+                .reduce((p, [k, v]) => {
+                  p[k] = v;
+                  return p;
+                }, {}),
+            }),
+          });
+        });
+        onSuccess(data);
+      })}
+      className={`p-1 grid gap-1`}
+    >
+      <CustomRadio
+        control={control}
+        name="fields"
+        multiple
+        label="Filter Fields"
+        sortable
+        options={(value.length
+          ? fields
+              .sort((a, b, i) => {
+                if (!value.includes(a.value)) {
+                  return 1;
+                }
+                return value.findIndex((i) => i === a.value) >
+                  value.findIndex((i) => i === b.value)
+                  ? 1
+                  : -1;
+              })
+              .reverse()
+              .map((item, i, arr) => ({ ...item, order: arr.length - i }))
+          : fields
+        ).map((item) => ({
+          label: item.label,
+          value: item.name,
+          data: item,
+        }))}
+      />
+
+      {selectedFields?.map((f, i) => {
+        const field = fields.find((field) => field.name === f);
+        if (!field) return null;
+        if (["input"].includes(field.fieldType)) {
+          if (field.dataType === "number") {
             return (
               <div key={i}>
                 <p className="mb_5">
-                  <strong>{field.label} Mapping:</strong>
+                  <strong>{field.label}:</strong>{" "}
                 </p>
-
                 <Combobox
-                  className="mb_5"
                   control={control}
                   name={`${field.name}.oparator`}
                   label="Oparator"
                   options={[
-                    { label: `Match ${field.label}`, value: "match" },
-                    { label: "Custom Mapping", value: "customMapping" },
+                    { label: "Greater than", value: "greaterThan" },
+                    { label: "Less than", value: "lessThan" },
                   ]}
                   formOptions={{ required: "Select an option" }}
-                  onChange={() => {
-                    setForceRender(Math.random());
-                  }}
                 />
-
-                {getValues(`${field.name}.oparator`) === "customMapping" && (
-                  <FieldMapper field={field} control={control} />
-                )}
               </div>
             );
           }
-        })}
+        } else if (["select", "combobox"].includes(field.fieldType)) {
+          return (
+            <div key={i}>
+              <p className="mb_5">
+                <strong>{field.label} Mapping:</strong>
+              </p>
 
-        <div className="flex justify-center">
-          <button className="btn">Update</button>
+              <Combobox
+                className="mb_5"
+                control={control}
+                name={`${field.name}.oparator`}
+                label="Oparator"
+                options={[
+                  { label: `Match ${field.label}`, value: "match" },
+                  { label: "Custom Mapping", value: "customMapping" },
+                ]}
+                formOptions={{ required: "Select an option" }}
+                onChange={() => {
+                  setForceRender(Math.random());
+                }}
+              />
+
+              {getValues(`${field.name}.oparator`) === "customMapping" && (
+                <FieldMapper field={field} control={control} />
+              )}
+            </div>
+          );
+        }
+      })}
+
+      <div className="flex justify-center">
+        <button className="btn">Update</button>
+      </div>
+    </form>
+  );
+};
+
+const FooterElements = ({ edit, onSuccess }) => {
+  const [updateItems, setUpdateItems] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [err, setErr] = useState(null);
+  const {
+    handleSubmit,
+    register,
+    control,
+    watch,
+    reset,
+    getValues,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: useYup(
+      yup.object({
+        title: yup.string().required("Section Title is required"),
+        viewStyle: yup.string().required("Select a view style"),
+      })
+    ),
+  });
+
+  const items = watch("items");
+  useEffect(() => {
+    reset({
+      title: edit?.title || "",
+      viewStyle: edit?.viewStyle || "list",
+      items: edit?.items || [],
+    });
+  }, [edit]);
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        if (items.length <= 0) {
+          return setErr("Add at least one item");
+        }
+        onSuccess({
+          ...values,
+          _id: edit?._id || Math.random().toString(36).substr(-8),
+        });
+      })}
+      className={`p-1 grid gap-1`}
+    >
+      {err && <p className="error">{err}</p>}
+      <Input
+        {...register("title")}
+        label="Section Title"
+        error={errors.title}
+      />
+
+      <Combobox
+        label="View Style"
+        name="viewStyle"
+        control={control}
+        options={[
+          { label: "List", value: "list" },
+          { label: "Grid", value: "grid" },
+        ]}
+        error={errors.viewStyle}
+      />
+
+      <div>
+        <div className="flex justify-space-between align-center mb-1">
+          <h5>Items</h5>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setUpdateItems(true)}
+          >
+            Add Item
+          </button>
         </div>
-      </form>
-    </div>
+        <Table
+          columns={[{ label: "Field" }, { label: "URL" }, { label: "Actions" }]}
+        >
+          {items?.map((item, i) => (
+            <tr key={item.label}>
+              <td>{item.label}</td>
+              <td>{item.href}</td>
+              <TableActions
+                actions={[
+                  {
+                    icon: <FaPencilAlt />,
+                    label: "Edit",
+                    callBack: () => {
+                      setEditItem(item);
+                      setUpdateItems(true);
+                    },
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "Delete",
+                    callBack: () =>
+                      Prompt({
+                        type: "confirmation",
+                        message: `Are you sure you want to remove this item?`,
+                        callback: () => {
+                          setValue(
+                            "items",
+                            items.filter((i) => i._id !== item._id)
+                          );
+                        },
+                      }),
+                  },
+                ]}
+              />
+            </tr>
+          ))}
+        </Table>
+      </div>
+
+      <Modal
+        open={updateItems}
+        head
+        label={`${editItem ? "Update" : "Add"} Element`}
+        className={s.recFilterModal}
+        setOpen={() => {
+          setUpdateItems(false);
+          setEditItem(null);
+        }}
+      >
+        <FooterElementForm
+          edit={editItem}
+          onSuccess={(value) => {
+            setValue(
+              "items",
+              editItem
+                ? items.map((item) => (item._id === value._id ? value : item))
+                : [...items, value]
+            );
+            setUpdateItems(false);
+            setEditItem(null);
+            setErr(null);
+          }}
+        />
+      </Modal>
+
+      <div className="flex justify-center">
+        <button className="btn">
+          {edit ? "Update Section" : "Add Section"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const FooterElementForm = ({ edit, onSuccess }) => {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: useYup(
+      yup.object({
+        label: yup.string().required("Label is required"),
+        href: yup.string().required("URL is required"),
+      })
+    ),
+  });
+
+  useEffect(() => {
+    reset({
+      label: edit?.label || "",
+      href: edit?.href || "",
+    });
+  }, [edit]);
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        onSuccess({
+          ...values,
+          type: "link",
+          _id: edit?._id || Math.random().toString(36).substr(-8),
+        });
+      })}
+      className={`p-1 grid gap-1`}
+    >
+      <Input {...register("label")} label="Label" error={errors.label} />
+      <Input {...register("href")} label="URL" error={errors.href} />
+
+      <div className="flex justify-center">
+        <button className="btn">
+          {edit ? "Update Element" : "Add Element"}
+        </button>
+      </div>
+    </form>
   );
 };
 

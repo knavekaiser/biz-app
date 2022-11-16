@@ -40,6 +40,7 @@ exports.getSiteConfig = async (req, res) => {
             landingPage: "$config.siteConfig.landingPage",
             browsePage: "$config.siteConfig.browsePage",
             productViewPage: "$config.siteConfig.productViewPage",
+            footer: "$config.siteConfig.footer",
           },
         },
       },

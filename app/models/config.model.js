@@ -65,6 +65,21 @@ module.exports = mongoose.model(
           recommendationLimit: { type: Schema.Types.Number, default: false },
         },
         productCard: [],
+        footer: {
+          sections: [
+            new Schema({
+              title: { type: Schema.Types.String, required: true },
+              viewStyle: { type: Schema.Types.String, default: "list" },
+              items: [
+                new Schema({
+                  type: { type: Schema.Types.String, required: true },
+                  label: { type: Schema.Types.String, required: true },
+                  href: { type: Schema.Types.String },
+                }),
+              ],
+            }),
+          ],
+        },
       },
     },
     { timestamps: true }

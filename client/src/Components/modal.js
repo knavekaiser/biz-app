@@ -37,6 +37,7 @@ export const Modal = forwardRef(
             style={{ ...style }}
             ref={ref}
             className={`modal ${className || ""} ${head ? "withHead" : ""}`}
+            onSubmit={(e) => e.stopPropagation()}
           >
             {head && (
               <div className="head">
