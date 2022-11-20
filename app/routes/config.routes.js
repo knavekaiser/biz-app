@@ -9,7 +9,10 @@ module.exports = function (app) {
     "/",
     authJwt.verifyToken,
     file.upload(
-      [{ name: "siteConfig.landingPage.hero.slides", multiple: true }],
+      [
+        { name: "siteConfig.landingPage.hero.slides", multiple: true },
+        { name: "dynamicPageFiles", multiple: true },
+      ],
       "/",
       {
         fileSize: appConfig.supportedImageSizes,

@@ -2,6 +2,7 @@ import React, { forwardRef, useRef } from "react";
 import { FaCheck } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import ReactDOM, { createPortal } from "react-dom";
+import * as ReactDOMClient from "react-dom/client";
 
 export const Modal = forwardRef(
   (
@@ -62,8 +63,12 @@ export const Modal = forwardRef(
 );
 
 export const Prompt = ({ className, type, message, btns, callback }) => {
-  const cleanup = () =>
-    ReactDOM.render(<></>, document.querySelector("#prompt"));
+  if (type === "error") {
+    // console.trace(message);
+  }
+  const container = document.querySelector("#prompt");
+  const root = ReactDOMClient.createRoot(container);
+  const cleanup = () => root.render(<></>);
   const confirm = () => {
     callback();
     cleanup();
@@ -77,14 +82,10 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
   if (type === "error") {
     // console.trace(message);
   }
-  ReactDOM.render(
+  root.render(
     <>
       <div className={`promptBackdrop`} />
-      <div
-        data-testid="prompt"
-        className={`prompt ${className || ""}`}
-        onSubmit={(e) => e.stopPropagation()}
-      >
+      <div data-testid="prompt" className={`prompt ${className || ""}`}>
         <div className="content">
           <button className="clear close" onClick={decline}>
             <IoClose />
@@ -157,7 +158,6 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
           </div>
         </div>
       </div>
-    </>,
-    document.querySelector("#prompt") || document.createElement("div")
+    </>
   );
 };

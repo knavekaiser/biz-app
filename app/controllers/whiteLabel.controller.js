@@ -15,7 +15,10 @@ exports.getSiteConfig = async (req, res) => {
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     if (domain === "localhost:3000") domain = "infinai.loca.lt";
 
-    const productCollection = await Collection.findOne({ name: "Product" });
+    const productCollection = await Collection.findOne({
+      name: "Product",
+      user: req.business._id,
+    });
     User.aggregate([
       { $match: { domain } },
       {
@@ -62,6 +65,39 @@ exports.getSiteConfig = async (req, res) => {
         })
       )
       .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getDynamicPageFiles = async (req, res) => {
+  try {
+    let domain = normalizeDomain(req.headers["origin"]);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+
+    const config = await Config.findOne({ user: req.business._id });
+
+    let files = null;
+    config.siteConfig.footer.sections.some((section) => {
+      const item = section.items.find(
+        (item) =>
+          item.href.replace("/", "") === req.params.pageId && item.files?.length
+      );
+      if (item) {
+        files = item.files;
+        return true;
+      }
+    });
+    if (files?.length) {
+      return responseFn.success(res, { data: files }, responseStr.success);
+    }
+    return responseFn.error(
+      res,
+      {},
+      responseStr.record_not_found.replace("Record", "Page"),
+      400
+    );
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

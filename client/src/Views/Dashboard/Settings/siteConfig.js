@@ -185,7 +185,23 @@ const SiteConfig = () => {
               },
               shelves: values.landingPageShelves,
             },
-            footer: { sections: values.footerElements },
+            footer: {
+              sections: values.footerElements.map((section) => ({
+                ...section,
+                items: section.items.map((item) => ({
+                  ...item,
+                  condition: item.type === "dynamicPage",
+                  ...(item.type === "dynamicPage" && {
+                    files: (item.files || [])
+                      .filter(
+                        (item) =>
+                          item.uploadFilePath || typeof item === "string"
+                      )
+                      .map((file) => file.uploadFilePath || file),
+                  }),
+                })),
+              })),
+            },
           },
         };
         findProperties("_id", payload).forEach((item) => {
@@ -196,7 +212,6 @@ const SiteConfig = () => {
             return obj[key];
           }, payload);
         });
-        console.log(payload);
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
           formData.append(key, JSON.stringify(value));
@@ -210,6 +225,24 @@ const SiteConfig = () => {
               file.uploadFilePath || file
             );
           }
+        });
+        values.footerElements.forEach((section, i) => {
+          section.items.forEach((item, j) => {
+            item.files.forEach((file) => {
+              if (file.type) {
+                formData.append(
+                  `dynamicPageFiles`,
+                  file,
+                  `siteConfig.footer.${section.title}.${item.label}.files___${file.name}`
+                );
+              } else {
+                // formData.append(
+                //   `siteConfig.footer.${section.title}.${item.label}.files`,
+                //   file.uploadFilePath || file
+                // );
+              }
+            });
+          });
         });
 
         updateConfig(formData)
@@ -1321,6 +1354,8 @@ const FooterElements = ({ edit, onSuccess }) => {
 const FooterElementForm = ({ edit, onSuccess }) => {
   const {
     handleSubmit,
+    control,
+    watch,
     register,
     reset,
     formState: { errors },
@@ -1337,21 +1372,51 @@ const FooterElementForm = ({ edit, onSuccess }) => {
     reset({
       label: edit?.label || "",
       href: edit?.href || "",
+      type: edit?.type || "dynamicPage",
+      files: edit?.files || [],
     });
   }, [edit]);
+
+  const linkType = watch("type");
   return (
     <form
       onSubmit={handleSubmit((values) => {
         onSuccess({
           ...values,
-          type: "link",
           _id: edit?._id || Math.random().toString(36).substr(-8),
         });
       })}
       className={`p-1 grid gap-1`}
     >
       <Input {...register("label")} label="Label" error={errors.label} />
+      <Combobox
+        label="URL Type"
+        name="type"
+        control={control}
+        options={[
+          { label: "Dynamic", value: "dynamicPage" },
+          { label: "Internal Link", value: "internalLink" },
+          { label: "External Link", value: "externalLink" },
+        ]}
+      />
       <Input {...register("href")} label="URL" error={errors.href} />
+
+      {linkType === "dynamicPage" && (
+        <div>
+          <FileInputNew
+            label="Page Files"
+            control={control}
+            name="files"
+            multiple
+            accept=".docx,.css"
+          />
+          <span>
+            <small>
+              <i>Please add one .docx file and one .css file</i>
+            </small>
+          </span>
+        </div>
+      )}
 
       <div className="flex justify-center">
         <button className="btn">

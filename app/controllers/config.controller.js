@@ -17,6 +17,39 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const config = await Config.findOne({ user: req.authUser._id });
+    req.files?.dynamicPageFiles?.forEach((file) => {
+      const [paths, fileName] = file.originalname.split("___");
+      const [siteConfig, footer, section, item, files] = paths.split(".");
+      req.body.siteConfig.footer.sections = req.body.siteConfig.footer.sections.map(
+        (sec) => {
+          if (sec.title === section) {
+            return {
+              ...sec,
+              items: sec.items.map((itm) => {
+                if (itm.label === item) {
+                  return {
+                    ...itm,
+                    files:
+                      itm.type === "dynamicPage"
+                        ? [
+                            ...(itm.files || []),
+                            req.body.dynamicPageFiles.find((path) =>
+                              path.includes(file.filename)
+                            ),
+                          ]
+                        : [],
+                  };
+                } else {
+                  return itm;
+                }
+              }),
+            };
+          } else {
+            return sec;
+          }
+        }
+      );
+    });
     if (req.body.siteConfig) {
       const oldSlides = config.siteConfig.landingPage?.hero?.slides || [];
       const reqSlides = req.body.siteConfig.landingPage?.hero?.slides || [];
@@ -26,7 +59,27 @@ exports.update = async (req, res) => {
       if (filesToRemove?.length) {
         fileHelper.deleteFiles(filesToRemove);
       }
+
+      const oldDynamicPageFiles = [];
+      config.siteConfig.footer?.sections?.forEach((section) => {
+        section.items.forEach((item) => {
+          oldDynamicPageFiles.push(...item.files);
+        });
+      });
+      const reqDynamicPageFiles = [];
+      req.body.siteConfig.footer?.sections?.forEach((section) => {
+        section.items.forEach((item) => {
+          reqDynamicPageFiles.push(...item.files);
+        });
+      });
+      const dynamicPagesToRemove = oldDynamicPageFiles.filter(
+        (url) => !reqDynamicPageFiles.some((u) => u === url)
+      );
+      if (dynamicPagesToRemove?.length) {
+        fileHelper.deleteFiles(dynamicPagesToRemove);
+      }
     }
+
     Config.findOneAndUpdate({ user: req.authUser._id }, req.body, { new: true })
       .then((data) => {
         if (data) {

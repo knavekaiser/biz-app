@@ -75,6 +75,7 @@ module.exports = mongoose.model(
                   type: { type: Schema.Types.String, required: true },
                   label: { type: Schema.Types.String, required: true },
                   href: { type: Schema.Types.String },
+                  files: [],
                 }),
               ],
             }),

@@ -4,7 +4,12 @@ const { whitelabel: schema } = require("../validationSchemas");
 var router = require("express").Router();
 
 module.exports = function (app) {
-  router.get("/site-config", controller.getSiteConfig);
+  router.get("/site-config", whitelabel.getBusiness, controller.getSiteConfig);
+  router.get(
+    "/dynamic-page-files/:pageId",
+    whitelabel.getBusiness,
+    controller.getDynamicPageFiles
+  );
   router.get(
     "/elements/:table",
     whitelabel.getBusiness,

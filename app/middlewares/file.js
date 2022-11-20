@@ -30,7 +30,7 @@ const upload = (fields, uploadPath, options) => {
         fields.find((item) => item.name === file.fieldname)?.multiple;
       const fileName = `${req.authUser?._id || Date.now()}_${file.fieldname}${
         multiple ? `_${Math.random().toString(36).substr(-8)}_` : ""
-      }${options.override ? ".png" : ext}`;
+      }${ext}`;
 
       cb(null, fileName);
     },
