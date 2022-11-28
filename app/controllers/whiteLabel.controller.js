@@ -33,6 +33,7 @@ exports.getSiteConfig = async (req, res) => {
       {
         $project: {
           siteTitle: "$name",
+          siteDescription: "$description",
           favicon: "$favicon",
           slogan: "$motto",
           logo: "$logo",
@@ -70,6 +71,37 @@ exports.getSiteConfig = async (req, res) => {
   }
 };
 
+exports.sitemapUrls = async (req, res) => {
+  try {
+    let domain = normalizeDomain(req.headers["origin"]);
+    if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
+    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+
+    const { Model: Product } = await dbHelper.getModel(
+      req.business._id + "_" + "Product"
+    );
+
+    const product_ids = await Product.find().select("_id");
+    const defaultUrls = [
+      `${req.protocol}://${domain}`,
+      `${req.protocol}://${domain}/browse`,
+    ];
+    const dynamicUrls = [];
+
+    return responseFn.success(res, {
+      data: [
+        ...defaultUrls,
+        ...product_ids.map(
+          ({ _id }) => `${req.protocol}://${domain}/item/${_id}`
+        ),
+        ...dynamicUrls,
+      ],
+    });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.getDynamicPageFiles = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
@@ -90,7 +122,7 @@ exports.getDynamicPageFiles = async (req, res) => {
       }
     });
     if (files?.length) {
-      return responseFn.success(res, { data: files }, responseStr.success);
+      return responseFn.success(res, { data: files });
     }
     return responseFn.error(
       res,

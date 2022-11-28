@@ -28,10 +28,8 @@ const SiteConfig = () => {
   const [updateSidebarFilters, setUpdateSidebarFilters] = useState(false);
   const [updateShelves, setUpdateShelves] = useState(false);
   const [updateFooterElements, setUpdateFooterElements] = useState(false);
-  const [
-    updateRecommendationFilters,
-    setUpdateRecommendationFilters,
-  ] = useState(false);
+  const [updateRecommendationFilters, setUpdateRecommendationFilters] =
+    useState(false);
   const { user, setUser, config, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -45,10 +43,8 @@ const SiteConfig = () => {
 
   const { put: updateConfig, loading } = useFetch(endpoints.userConfig);
   const [editSection, setEditSection] = useState(null);
-  const {
-    get: getProductCollection,
-    loading: gettingProductCollection,
-  } = useFetch(endpoints.collections + "/Product");
+  const { get: getProductCollection, loading: gettingProductCollection } =
+    useFetch(endpoints.collections + "/Product");
 
   useEffect(() => {
     reset({
@@ -78,6 +74,7 @@ const SiteConfig = () => {
     });
   }, [config]);
 
+  const businessType = watch("businessType");
   const sidebarFilters = watch("sidebarFilters");
   const recommendationFilters = watch("recommendationFilters");
   const viewLandingPage = watch("viewLandingPage");
@@ -103,6 +100,9 @@ const SiteConfig = () => {
                 };
               });
             fields.push({ value: "review", label: "Review" });
+            if (config.businessType === "service") {
+              fields.push({ value: "dateRange", label: "Date Range" });
+            }
             setProductCollection(data.data);
             setProductElementOptions(
               fields
@@ -127,7 +127,7 @@ const SiteConfig = () => {
                   (item) =>
                     !["description", "whatsappNumber"].includes(item.value)
                 )
-                .sort((a, b, i) => {
+                .sort((a, b) => {
                   if (
                     !config.siteConfig.productViewPage?.productElements.includes(
                       a.value

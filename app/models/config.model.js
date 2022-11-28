@@ -57,6 +57,11 @@ module.exports = mongoose.model(
             type: Schema.Types.String,
             default: "collapsed",
           },
+          topFilters: [],
+          topFiltersDefaultState: {
+            type: Schema.Types.String,
+            default: "collapsed",
+          },
         },
         productViewPage: {
           viewWhatsApp: { type: Schema.Types.Boolean, default: false },

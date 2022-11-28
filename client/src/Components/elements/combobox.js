@@ -353,7 +353,7 @@ export const Select = ({
     (inputValue, selected) => {
       fetchData(null, {
         query: {
-          ...getQuery(inputValue, selected),
+          ...(getQuery && getQuery(inputValue, selected)),
           pageSize: 10 + (selectedOptions.length || 0),
         },
       })

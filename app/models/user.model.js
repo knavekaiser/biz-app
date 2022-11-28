@@ -53,6 +53,7 @@ module.exports = mongoose.model(
       gstin: { type: Schema.Types.String },
       pan: { type: Schema.Types.String },
       ifsc: { type: Schema.Types.String },
+      description: { type: Schema.Types.String },
       terms: [],
     },
     { timestamps: true }

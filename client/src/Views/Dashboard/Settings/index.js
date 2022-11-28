@@ -25,6 +25,7 @@ import SiteConfig from "./siteConfig";
 const businessInformationSchema = yup.object({
   name: yup.string().required(),
   phone: yup.string().required(),
+  description: yup.string(),
   // email: yup.string().required(),
   // address: yup.string().required(),
 });
@@ -84,6 +85,7 @@ const BusinessInformation = () => {
       whatsappNumber: user.whatsappNumber || "",
       email: user.email || "",
       address: user.address || "",
+      description: user.description || "",
       gstin: user.gstin || "",
       pan: user.pan || "",
       ifsc: user.ifsc || "",
@@ -121,6 +123,7 @@ const BusinessInformation = () => {
         formData.append(`ifsc`, values.ifsc);
         formData.append(`domain`, values.domain);
         formData.append(`whatsappNumber`, values.whatsappNumber);
+        formData.append("description", values.description);
 
         updateOwnerDetails(formData).then(({ data }) => {
           if (data.success) {
@@ -171,6 +174,11 @@ const BusinessInformation = () => {
         label="Address"
         {...register("address")}
         error={errors.address}
+      />
+      <Textarea
+        label="Description"
+        {...register("description")}
+        error={errors.description}
       />
       <Input label="Domain" {...register("domain")} error={errors.domain} />
       <Input label="GSTIN" {...register("gstin")} error={errors.gstin} />
@@ -371,9 +379,11 @@ const Config = () => {
 
   const [unitsOfMeasure, setUnitOfMeasure] = useState([]);
 
-  const { get: getConfig, put: updateConfig, loading } = useFetch(
-    endpoints.userConfig
-  );
+  const {
+    get: getConfig,
+    put: updateConfig,
+    loading,
+  } = useFetch(endpoints.userConfig);
 
   useEffect(() => {
     if (config) {

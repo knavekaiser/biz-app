@@ -5,6 +5,7 @@ var router = require("express").Router();
 
 module.exports = function (app) {
   router.get("/site-config", whitelabel.getBusiness, controller.getSiteConfig);
+  router.get("/sitemap-urls", whitelabel.getBusiness, controller.sitemapUrls);
   router.get(
     "/dynamic-page-files/:pageId",
     whitelabel.getBusiness,

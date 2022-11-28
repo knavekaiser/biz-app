@@ -63,11 +63,17 @@ const Form = ({ edit, collections, onSuccess }) => {
   } = useForm({
     resolver: useYup(mainSchema),
   });
-  const { post: saveCollection, put: updateCollection, loading } = useFetch(
-    endpoints.collections + `/${edit?._id || ""}`
-  );
+  const {
+    post: saveCollection,
+    put: updateCollection,
+    loading,
+  } = useFetch(endpoints.collections + `/${edit?._id || ""}`);
+  const tableName = watch("name");
   const onSubmit = useCallback(
     (values) => {
+      if (!values.name && tableName) {
+        values.name = tableName;
+      }
       if (!values.name) {
         setError("name", {
           type: "required",
@@ -104,7 +110,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         }
       });
     },
-    [fields]
+    [fields, tableName]
   );
 
   useEffect(() => {
@@ -233,7 +239,6 @@ const FieldForm = ({
   fields,
   editCollection,
   collections,
-  productCollection,
   onSuccess,
 }) => {
   const {
@@ -274,7 +279,6 @@ const FieldForm = ({
   const fieldType = watch("fieldType");
   const optionType = watch("optionType");
   const options = watch("options");
-  const multiRange = watch("multipleRanges");
   const label = watch("label");
 
   const onSubmit = useCallback(
