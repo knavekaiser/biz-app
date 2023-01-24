@@ -107,7 +107,7 @@ const SiteConfig = () => {
             setProductElementOptions(
               fields
                 .sort((a, b, i) => {
-                  if (!config.siteConfig.productCard.includes(a.value)) {
+                  if (!config.siteConfig.productCard?.includes(a.value)) {
                     return 1;
                   }
                   return config.siteConfig.productCard.findIndex(
@@ -129,7 +129,7 @@ const SiteConfig = () => {
                 )
                 .sort((a, b) => {
                   if (
-                    !config.siteConfig.productViewPage?.productElements.includes(
+                    !config.siteConfig.productViewPage?.productElements?.includes(
                       a.value
                     )
                   ) {
@@ -290,7 +290,7 @@ const SiteConfig = () => {
           config?.siteConfig?.productCard?.length
             ? productEelementOptions
                 .sort((a, b, i) => {
-                  if (!config.siteConfig.productCard.includes(a.value)) {
+                  if (!config.siteConfig.productCard?.includes(a.value)) {
                     return 1;
                   }
                   return config.siteConfig.productCard.findIndex(
@@ -388,7 +388,7 @@ const SiteConfig = () => {
             ? productPageEelementOptions
                 .sort((a, b, i) => {
                   if (
-                    !config.siteConfig.productViewPage?.productElements.includes(
+                    !config.siteConfig.productViewPage?.productElements?.includes(
                       a.value
                     )
                   ) {
@@ -903,7 +903,7 @@ const SidebarFilters = ({
         options={(value.length
           ? fields
               .sort((a, b, i) => {
-                if (!value.includes(a.value)) {
+                if (!value?.includes(a.value)) {
                   return 1;
                 }
                 return value.findIndex((i) => i === a.value) >
@@ -1126,7 +1126,7 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
         options={(value.length
           ? fields
               .sort((a, b, i) => {
-                if (!value.includes(a.value)) {
+                if (!value?.includes(a.value)) {
                   return 1;
                 }
                 return value.findIndex((i) => i === a.value) >
@@ -1433,11 +1433,20 @@ const FieldMapper = ({ field, control }) => {
     endpoints.dynamic + `/${field.collection || ""}`
   );
   useEffect(() => {
-    getOptions().then(({ data }) => {
-      if (data?.success) {
-        setOptions(data.data);
-      }
-    });
+    if (field.optionType === "collection") {
+      getOptions().then(({ data }) => {
+        if (data?.success) {
+          setOptions(
+            data.data.map((item) => ({
+              label: item[field.optionLabel],
+              value: item[field.optionValue],
+            }))
+          );
+        }
+      });
+    } else if (field.optionType === "array") {
+      setOptions(field.options);
+    }
   }, []);
   return (
     <div>
@@ -1448,17 +1457,14 @@ const FieldMapper = ({ field, control }) => {
         ]}
       >
         {options.map((opt) => (
-          <tr key={opt._id}>
-            <td>{opt[field.optionLabel]}</td>
+          <tr key={opt.value}>
+            <td>{opt.label}</td>
             <td>
               <Select
                 control={control}
-                name={`${field.name}.${opt[field.optionValue]}`}
+                name={`${field.name}.${opt.value}`}
                 multiple
-                options={options.map((item) => ({
-                  label: item[field.optionLabel],
-                  value: item[field.optionValue],
-                }))}
+                options={options}
               />
             </td>
           </tr>

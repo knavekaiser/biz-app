@@ -280,9 +280,10 @@ exports.getRelatedProducts = async (req, res) => {
       {
         $lookup: {
           from: "users",
-          localField: "user",
-          foreignField: "_id",
           as: "user",
+          // localField: "user",
+          // foreignField: "_id",
+          pipeline: [{ $match: { _id: req.business._id } }],
         },
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
@@ -596,3 +597,261 @@ exports.getReviews = async (req, res) => {
     return responseFn.error(res, {}, error.message, 500);
   }
 };
+
+const query = [
+  {
+    $lookup: {
+      from: "63c9154fa7041e92b06202ef_Campaign",
+      let: { product: "$$ROOT" },
+      pipeline: [
+        {
+          $match: {
+            startDate: { $lt: "2023-01-23T04:18:46.258Z" },
+            endDate: { $gt: "2023-01-23T04:18:46.258Z" },
+            status: "active",
+          },
+        },
+        {
+          $unwind: { path: "$amountTable", preserveNullAndEmptyArrays: false },
+        },
+        {
+          $match: {
+            "amountTable.startDate": { $lt: "2023-01-23T04:18:46.258Z" },
+            "amountTable.endDate": { $gt: "2023-01-23T04:18:46.258Z" },
+          },
+        },
+        {
+          $set: {
+            includeProductExpr: {
+              $map: {
+                input: { $objectToArray: "$includeProducts" },
+                as: "filter",
+                in: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$$filter.v.filterType", "minMax"] },
+                        then: {
+                          $reduce: {
+                            input: {
+                              $filter: {
+                                input: { $objectToArray: "$$product" },
+                                cond: { $eq: ["$$this.k", "$$filter.k"] },
+                              },
+                            },
+                            initialValue: null,
+                            in: {
+                              $cond: {
+                                if: { $eq: ["$$this.k", "$$filter.k"] },
+                                then: {
+                                  $cond: [
+                                    {
+                                      $and: [
+                                        {
+                                          $gte: ["$$this.v", "$$filter.v.min"],
+                                        },
+                                        {
+                                          $lte: ["$$this.v", "$$filter.v.max"],
+                                        },
+                                      ],
+                                    },
+                                    true,
+                                    false,
+                                  ],
+                                },
+                                else: false,
+                              },
+                            },
+                          },
+                        },
+                      },
+                      {
+                        case: {
+                          $eq: ["$$filter.v.filterType", "stringContains"],
+                        },
+                        then: {
+                          $reduce: {
+                            input: {
+                              $filter: {
+                                input: { $objectToArray: "$$product" },
+                                cond: { $eq: ["$$this.k", "$$filter.k"] },
+                              },
+                            },
+                            initialValue: null,
+                            in: {
+                              $cond: {
+                                if: { $eq: ["$$this.k", "$$filter.k"] },
+                                then: {
+                                  $regexMatch: {
+                                    input: "$$this.v",
+                                    regex: "$$filter.v.text",
+                                  },
+                                },
+                                else: false,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    ],
+                    default: false,
+                  },
+                },
+              },
+            },
+          },
+        },
+        {
+          $match: {
+            includeProductExpr: { $not: { $elemMatch: { $eq: false } } },
+          },
+        },
+      ],
+      as: "campaign",
+    },
+  },
+  { $set: { campaign: { $first: "$campaign" } } },
+  {
+    $set: {
+      currentPrice: {
+        $switch: {
+          branches: [
+            {
+              case: { $eq: ["$campaign.amountTable.amountType", "flat"] },
+              then: { $add: ["$price", "$campaign.amountTable.amount"] },
+            },
+            {
+              case: { $eq: ["$campaign.amountTable.amountType", "percent"] },
+              then: {
+                $add: [
+                  "$price",
+                  {
+                    $multiply: [
+                      "$campaign.amountTable.amount",
+                      { $divide: ["$price", 100] },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+          default: "$price",
+        },
+      },
+    },
+  },
+  {
+    $set: {
+      price: {
+        $cond: {
+          if: { $not: { $eq: ["$price", "$currentPrice"] } },
+          then: "$currentPrice",
+          else: "$price",
+        },
+      },
+      originalPrice: {
+        $cond: {
+          if: { $lt: ["$currentPrice", "$price"] },
+          then: "$price",
+          else: "$$REMOVE",
+        },
+      },
+      campaign: {
+        $cond: {
+          if: { $lt: ["$currentPrice", "$price"] },
+          then: "$campaign",
+          else: "$$REMOVE",
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      __v: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      currentPrice: 0,
+      "campaign.__v": 0,
+      "campaign.user": 0,
+      "campaign.currentAmount": 0,
+      "campaign.includeProducts": 0,
+      "campaign.excludeProducts": 0,
+      "campaign.includeProductsExpr": 0,
+      "campaign.createdAt": 0,
+      "campaign.updatedAt": 0,
+      "campaign.amountTable": 0,
+      "campaign.startDate": 0,
+      "campaign.endDate": 0,
+      "campaign.campaignType": 0,
+      "campaign.status": 0,
+    },
+  },
+  { $match: { _id: { $ne: "63cbba84a7041e92b062038a" }, fabric: "Silk" } },
+  { $limit: 10 },
+  {
+    $lookup: {
+      from: "63c9154fa7041e92b06202ef_Review",
+      let: { p_id: "$_id" },
+      pipeline: [
+        { $match: { $expr: { $eq: ["$product", "$$p_id"] } } },
+        {
+          $facet: {
+            rating: [
+              {
+                $group: {
+                  _id: null,
+                  totalRating: { $sum: "$rating" },
+                  totalReview: { $sum: 1 },
+                },
+              },
+              {
+                $set: {
+                  rating: {
+                    $multiply: [
+                      5,
+                      {
+                        $divide: [
+                          "$totalRating",
+                          { $multiply: ["$totalReview", 5] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+            breakdown: [
+              { $group: { _id: "$rating", totalReview: { $sum: 1 } } },
+            ],
+          },
+        },
+      ],
+      as: "reviews",
+    },
+  },
+  { $set: { reviews: { $first: "$reviews" } } },
+  {
+    $set: {
+      rating: { $first: "$reviews.rating" },
+      ratingBreakdown: {
+        $map: {
+          input: "$reviews.breakdown",
+          in: { rating: "$$this._id", total: "$$this.totalReview" },
+        },
+      },
+    },
+  },
+  { $set: { rating: "$rating.rating", totalReview: "$rating.totalReview" } },
+  { $unset: "reviews" },
+  {
+    $lookup: {
+      from: "users",
+      localField: "user",
+      foreignField: "_id",
+      as: "user",
+    },
+  },
+  { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
+  { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
+  { $unset: ["__v", "user"] },
+];
