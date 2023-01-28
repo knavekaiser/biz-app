@@ -1,6 +1,6 @@
 import { useContext, useEffect } from "react";
 import { SiteContext } from "SiteContext";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { Tabs } from "Components/elements";
 import Settings from "./Settings";
 import { paths, endpoints } from "config";
@@ -11,6 +11,8 @@ import { FaPowerOff } from "react-icons/fa";
 import s from "./dashboard.module.scss";
 
 import Sales from "./Sales";
+import Orders from "./Orders";
+import Quotes from "./Quotes";
 import Purchases from "./Purchases";
 import Receipts from "./Receipts";
 import Payments from "./Payments";
@@ -56,6 +58,8 @@ const Dashboard = () => {
           tabs={[
             { label: "Sales", path: paths.sales },
             { label: "Purchases", path: paths.purchases },
+            { label: "Orders", path: paths.orders },
+            { label: "Quotes", path: paths.quotes },
             { label: "Receipts", path: paths.receipts },
             { label: "Payments", path: paths.payments },
             {
@@ -72,9 +76,13 @@ const Dashboard = () => {
         <Route path={paths.receipts} element={<Receipts />} />
         <Route path={paths.payments} element={<Payments />} />
         <Route path={paths.dynamicTables} element={<DynamicTables />} />
+        <Route path={paths.orders} element={<Orders />} />
+        <Route path={paths.quotes} element={<Quotes />} />
         <Route path={paths.settings.baseUrl} element={<Settings />} />
       </Routes>
-      <footer>© 2022 InfinAI Technologies, All Rights Reserved.</footer>
+      <footer>
+        © {new Date().getFullYear()} Comify Technologies, All Rights Reserved.
+      </footer>
     </div>
   );
 };

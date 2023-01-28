@@ -18,4 +18,6 @@ module.exports = {
   Purchase: require("./purchase.model"),
   Payment: require("./payment.model"),
   Collection: require("./collection.model"),
+  Order: require("./order.model"),
+  Quote: require("./quote.model"),
 };

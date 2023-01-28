@@ -7,4 +7,6 @@ module.exports = {
   config: require("./config"),
   collection: require("./collection"),
   whitelabel: require("./whitelabel"),
+  order: require("./order"),
+  quote: require("./quote"),
 };

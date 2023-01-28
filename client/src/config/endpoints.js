@@ -8,6 +8,8 @@ const endpoints = {
 
   invoices: `${baseApiUrl}/api/invoices`,
   purchases: `${baseApiUrl}/api/purchases`,
+  orders: `${baseApiUrl}/api/orders`,
+  quotes: `${baseApiUrl}/api/quotes`,
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
 

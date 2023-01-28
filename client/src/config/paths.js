@@ -6,6 +6,8 @@ const paths = {
   purchases: "/purchases",
   receipts: "/receipts",
   payments: "/payments",
+  orders: "/orders",
+  quotes: "/quotes",
   dynamicTables: "/dynamic-tables/*",
   dynamicTable: "/dynamic-tables/:table",
   settings: {

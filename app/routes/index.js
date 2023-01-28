@@ -8,4 +8,6 @@ module.exports = function (app) {
   require("./collection.routes")(app);
   require("./dynamic.routes")(app);
   require("./whiteLabel.routes")(app);
+  require("./order.routes")(app);
+  require("./quote.routes")(app);
 };
