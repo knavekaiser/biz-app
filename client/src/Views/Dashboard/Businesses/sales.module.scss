@@ -1,0 +1,43 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin: 1rem auto;
+  border-radius: 1rem;
+  max-width: 60rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .sales {
+    tr {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+  }
+  .addSaleForm {
+    .itemForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+      .itemName {
+        grid-column: 1 / -1;
+      }
+      & > button {
+        grid-column: 1 / -1;
+      }
+    }
+    .mainForm {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media print {
+  .print {
+    padding-bottom: 0;
+  }
+}

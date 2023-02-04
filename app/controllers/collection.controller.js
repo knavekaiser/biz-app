@@ -2,23 +2,43 @@ const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 
-const { User, Collection, Config } = require("../models");
+const { User, Collection, Config, Role } = require("../models");
 const { ObjectId } = require("mongodb");
 
 exports.findAll = async (req, res) => {
   try {
-    const id = req.params.id;
-    const conditions = { user: req.authUser._id };
-    if (id) {
-      if (mongoose.isValidObjectId(id)) {
-        conditions._id = id;
+    const _id =
+      req.params.id && mongoose.isValidObjectId(req.params.id)
+        ? ObjectId(req.params.id)
+        : null;
+    let tableName =
+      req.params.id && !mongoose.isValidObjectId(req.params.id)
+        ? req.params.id
+        : null;
+    const conditions = { user: req.business?._id || req.authUser._id };
+    if (_id) {
+      conditions._id = _id;
+    }
+    if (req.authToken.userType === "staff") {
+      const dynamicTables = req.permissions
+        .filter(
+          (item) =>
+            item.startsWith(req.business._id.toString()) &&
+            item.endsWith("_read")
+        )
+        .map((item) =>
+          item.replace("_read", "").replace(`${req.business._id}_`, "")
+        );
+      if (tableName && dynamicTables.includes(tableName)) {
+        conditions.name = tableName;
       } else {
-        conditions.name = id;
+        tableName = null;
+        conditions.name = { $in: dynamicTables };
       }
     }
     Collection.find(conditions)
       .then((data) => {
-        if (id) {
+        if (_id || tableName) {
           if (data.length) {
             responseFn.success(res, { data: data[0] });
           } else {
@@ -38,7 +58,7 @@ exports.create = async (req, res) => {
   try {
     new Collection({
       ...req.body,
-      user: req.authUser._id,
+      user: req.business?._id || req.authUser._id,
     })
       .save()
       .then(async (data) => {
@@ -54,7 +74,7 @@ exports.update = async (req, res) => {
   try {
     delete req.body.name;
     Collection.findOneAndUpdate(
-      { _id: req.params.id, user: req.authUser._id },
+      { _id: req.params.id, user: req.business?._id || req.authUser._id },
       req.body,
       { new: true }
     )
@@ -74,7 +94,7 @@ exports.delete = async (req, res) => {
     }
     Collection.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.authUser._id,
+      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));
@@ -97,7 +117,7 @@ exports.getSchemaTemplates = async (req, res) => {
       {
         $match: {
           $expr: { $gt: [{ $size: "$schemas" }, 0] },
-          _id: { $ne: req.authUser._id },
+          _id: { $ne: req.business?._id || req.authUser._id },
         },
       },
       { $project: { name: 1, _id: 1 } },
@@ -117,13 +137,13 @@ exports.addSchemaTemplates = async (req, res) => {
       data.map((item) => ({
         name: item.name,
         fields: item.fields,
-        user: req.authUser._id,
+        user: req.business?._id || req.authUser._id,
       }))
     );
 
     await Collection.deleteMany({
       name: { $in: schemas.map((item) => item.name) },
-      user: req.authUser._id,
+      user: req.business?._id || req.authUser._id,
     });
 
     Collection.insertMany(schemas, { ordered: 1 })

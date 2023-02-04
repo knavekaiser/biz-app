@@ -1,0 +1,73 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin: 1rem auto;
+  border-radius: 1rem;
+  max-width: 60rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .roles {
+    tr {
+      grid-template-columns: 1fr 3rem;
+    }
+  }
+}
+
+.addRoleForm {
+  .roleDetail {
+    .box {
+      min-width: 10rem;
+      flex: 1;
+    }
+  }
+  .noContent {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+  }
+  .permissions {
+    min-height: 10rem;
+    .name {
+      max-width: 15rem;
+    }
+    tr {
+      grid-template-columns: 1fr 3.5rem 3.5rem 3.5rem 3.5rem;
+    }
+  }
+  .mainForm {
+    grid-template-columns: 1fr 1fr;
+  }
+  p.detail {
+    font-size: 1rem;
+    .label {
+      font-weight: bold;
+      font-size: 0.8em;
+    }
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+  }
+  .addRoleForm {
+    .itemForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+      .itemName {
+        grid-column: 1 / -1;
+      }
+      & > button {
+        grid-column: 1 / -1;
+      }
+    }
+    .mainForm {
+      grid-template-columns: 1fr;
+    }
+  }
+}

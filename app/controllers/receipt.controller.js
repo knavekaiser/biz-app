@@ -6,7 +6,7 @@ const { Receipt, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    Receipt.find({ user: req.authUser._id })
+    Receipt.find({ user: req.business?._id || req.authUser._id })
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -17,17 +17,18 @@ exports.findAll = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { nextReceiptNo } =
-      (await Config.findOne({ user: req.authUser._id })) || {};
+      (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
+      {};
 
     new Receipt({
       ...req.body,
-      user: req.authUser._id,
+      user: req.business?._id || req.authUser._id,
       no: nextReceiptNo || 1,
     })
       .save()
       .then(async (data) => {
         await Config.findOneAndUpdate(
-          { user: req.authUser._id },
+          { user: req.business?._id || req.authUser._id },
           { $inc: { nextReceiptNo: 1 } },
           { new: true }
         );
@@ -42,7 +43,11 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     delete req.body.no;
-    Receipt.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+    Receipt.findOneAndUpdate(
+      { _id: req.params.id, user: req.business?._id || req.authUser._id },
+      req.body,
+      { new: true }
+    )
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -59,6 +64,7 @@ exports.delete = async (req, res) => {
     }
     Receipt.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
+      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

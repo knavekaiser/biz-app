@@ -1,5 +1,4 @@
-import { useContext, useState, useEffect } from "react";
-import { SiteContext } from "SiteContext";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input, Countdown } from "Components/elements";
 import { Link, useNavigate } from "react-router-dom";
@@ -62,7 +61,7 @@ const Form = () => {
 };
 
 const SendOtpForm = ({ onSuccess }) => {
-  const { post: sendOtp } = useFetch(endpoints.forgotPassword);
+  const { post: sendOtp, loading } = useFetch(endpoints.forgotPassword);
   const {
     handleSubmit,
     register,
@@ -100,7 +99,9 @@ const SendOtpForm = ({ onSuccess }) => {
           {...register("phone")}
           error={errors.phone}
         />
-        <button className="btn">Next</button>
+        <button className="btn" disabled={loading}>
+          Next
+        </button>
         <Link to={paths.signIn}>Back to Login</Link>
       </div>
     </form>
@@ -115,8 +116,12 @@ const PasswordResetForm = ({
   setTimeout,
   onSuccess,
 }) => {
-  const { post: resendOtp } = useFetch(endpoints.forgotPassword);
-  const { post: resetPassword } = useFetch(endpoints.resetPassword);
+  const { post: resendOtp, loading: resendingOtp } = useFetch(
+    endpoints.forgotPassword
+  );
+  const { post: resetPassword, loading: resettingPass } = useFetch(
+    endpoints.resetPassword
+  );
   const {
     handleSubmit,
     register,
@@ -147,72 +152,80 @@ const PasswordResetForm = ({
         });
       })}
     >
-      <img className={s.illustration} src="/assets/infinAI.png" />
-      <h1 className="text-center">Comify</h1>
-      <h2>Reset Password</h2>
+      <img className={s.illustration} src="/assets/comify.png" />
+      <div className={"grid gap-1"}>
+        <h1 className="text-center">Comify</h1>
+        <h2>Reset Password</h2>
 
-      <p>Please enter the 6 digit code sent to {phone}.</p>
+        <p>Please enter the 6 digit code sent to {phone}.</p>
 
-      <Input
-        type="number"
-        label="Code"
-        required
-        {...register("code")}
-        error={errors.code}
-      />
-      <p className={s.resend}>
-        Didn't recieve the Code?{" "}
-        {timeout ? (
-          <>
-            Please wait{" "}
-            <Countdown
-              time={new Date().setSeconds(new Date().getSeconds() + timeout)}
-              format={"mm:ss"}
-              onEnd={() => setTimeout(null)}
-            />
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              resendOtp({ phone }).then(({ data }) => {
-                if (data.success) {
-                  setPhone(data.data.phone);
-                  setTimeout(data.data.timeout);
-                } else {
-                  Prompt({
-                    type: "error",
-                    message: data.message,
-                  });
-                }
-              });
-            }}
-          >
-            Resend
-          </button>
-        )}
-      </p>
+        <Input
+          type="number"
+          label="Code"
+          required
+          {...register("code")}
+          error={errors.code}
+        />
+        <p className={s.resend}>
+          Didn't recieve the Code?{" "}
+          {timeout ? (
+            <>
+              Please wait{" "}
+              <Countdown
+                time={new Date().setSeconds(new Date().getSeconds() + timeout)}
+                format={"mm:ss"}
+                onEnd={() => setTimeout(null)}
+              />
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                resendOtp({ phone }).then(({ data }) => {
+                  if (data.success) {
+                    setPhone(data.data.phone);
+                    setTimeout(data.data.timeout);
+                  } else {
+                    Prompt({
+                      type: "error",
+                      message: data.message,
+                    });
+                  }
+                });
+              }}
+              disabled={resendingOtp}
+            >
+              Resend
+            </button>
+          )}
+        </p>
 
-      <p>Please enter a new password.</p>
+        <hr />
 
-      <Input
-        label="New Password"
-        type="password"
-        required
-        {...register("password")}
-        error={errors.password}
-      />
+        <Input
+          label="New Password"
+          type="password"
+          required
+          {...register("password")}
+          error={errors.password}
+        />
+        <Input
+          label="Config Password"
+          type="password"
+          required
+          {...register("confirmPassword")}
+          error={errors.confirmPassword}
+        />
 
-      <Input
-        label="Config Password"
-        type="password"
-        required
-        {...register("confirmPassword")}
-        error={errors.confirmPassword}
-      />
-
-      <button className="btn">Next</button>
-      <Link to={paths.signIn}>Back to Login</Link>
+        <button
+          className="btn"
+          type="submit"
+          disabled={resendingOtp || resettingPass}
+        >
+          Submit
+        </button>
+        <Link to={paths.signIn}>Back to Login</Link>
+      </div>
     </form>
   );
 };

@@ -9,8 +9,6 @@ import {
   DynamicTable,
   Combobox,
   Table,
-  TableActions,
-  Checkbox,
   Select,
   CustomRadio,
   MobileNumberInput,
@@ -24,16 +22,12 @@ import * as yup from "yup";
 import s from "./payments.module.scss";
 import { endpoints } from "config";
 
-const mainSchema = yup.object({
-  name: yup.string().required(),
-});
-
 const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
-  const { config, setConfig } = useContext(SiteContext);
-
-  const { post: saveData, put: updateData, loading } = useFetch(
-    `${endpoints.dynamic}/${collection.name}/${edit?._id || ""}`
-  );
+  const {
+    post: saveData,
+    put: updateData,
+    loading,
+  } = useFetch(`${endpoints.dynamic}/${collection.name}/${edit?._id || ""}`);
 
   return (
     <div className={`grid gap-1`}>
@@ -155,7 +149,6 @@ const DynamicForm = ({
       return (
         <NestedObjectTable
           key={field.name}
-          values={control._formValues[field.name]}
           values={values}
           field={field}
           setValue={setValue}

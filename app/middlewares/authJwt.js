@@ -3,14 +3,10 @@ const {
   appConfig: { responseFn },
 } = require("../config");
 
-const { User } = require("../models");
-const { appHelper, dbHelper } = require("../helpers");
-
-var bcrypt = require("bcryptjs");
+const { User, Staff, Role } = require("../models");
+const { dbHelper } = require("../helpers");
 
 verifyToken = async (req, res, next) => {
-  const requestType = req.headers["request-type"];
-
   // let token = req.cookies.access_token;
   const token = req.headers["x-access-token"];
 
@@ -33,13 +29,29 @@ verifyToken = async (req, res, next) => {
       } else {
         return responseFn.error(res, {}, "Unauthorized!", 401);
       }
+    } else if (decoded.userType === "staff") {
+      Model = Staff;
     }
     const user = await Model.findOne({ _id: decoded.sub });
 
     if (!user) {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
+    if (decoded.userType === "staff" && req.headers.business_id) {
+      req.business = await User.findOne({ _id: req.headers.business_id });
+      if (req.business) {
+        const business = user.businesses.find(
+          (item) => item.business.toString() === req.business._id.toString()
+        );
+        if (business) {
+          req.permissions = await Role.find({
+            _id: { $in: business.roles },
+          }).then((data) => data.map((item) => item.permissions).flat());
+        }
+      }
+    }
     req.authUser = user;
+    req.authToken = decoded;
     next();
   });
 };

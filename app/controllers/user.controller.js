@@ -415,7 +415,11 @@ exports.logout = async (req, res) => {
 exports.profile = (req, res) => {
   try {
     User.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
-      .then(async (data) => responseFn.success(res, { data }))
+      .then(async (data) =>
+        responseFn.success(res, {
+          data: { ...data._doc, userType: "business" },
+        })
+      )
       .catch((error) => responseFn.error(res, {}, error.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

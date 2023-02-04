@@ -19,11 +19,20 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { get: getProfile } = useFetch(endpoints.profile);
+  const { get: getProfile } = useFetch(
+    localStorage.getItem("userType") === "staff"
+      ? endpoints.staffProfile
+      : endpoints.profile
+  );
 
   useEffect(() => {
     if (!user) {
-      navigate("/signin", { replace: true });
+      navigate(
+        localStorage.getItem("userType") === "staff"
+          ? paths.staffSignIn
+          : paths.signIn,
+        { replace: true }
+      );
     } else if (
       [paths.signIn, paths.signUp, paths.resetPassword].includes(
         location.pathname
@@ -37,9 +46,14 @@ function App() {
     window.addEventListener("resize", () => resizeWindow());
     resizeWindow();
 
+    if (!sessionStorage.getItem("access_token")) {
+      return;
+    }
+
     getProfile()
       .then(({ data }) => {
         if (data.success) {
+          localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
           navigate(location.pathname || "/", { replace: true });
         }

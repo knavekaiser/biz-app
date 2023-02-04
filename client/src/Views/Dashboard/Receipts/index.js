@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import ReceiptForm from "./ReceiptForm";
 
 const Receipts = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [receipts, setReceipts] = useState([]);
   const [receipt, setReceipt] = useState(null);
   const [addReceipt, setAddReceipt] = useState(false);
@@ -31,9 +31,11 @@ const Receipts = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Receipts</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddReceipt(true)}>
-          Add Receipt
-        </button>
+        {checkPermission("reciept_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddReceipt(true)}>
+            Add Receipt
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -77,29 +79,38 @@ const Receipts = () => {
                     setAddReceipt(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this receipt?`,
-                      callback: () => {
-                        deleteReceipt(
-                          {},
-                          { params: { "{ID}": item._id } }
-                        ).then(({ data }) => {
-                          if (data.success) {
-                            setReceipts((prev) =>
-                              prev.filter((receipt) => receipt._id !== item._id)
-                            );
-                          } else {
-                            Prompt({ type: "error", message: data.message });
-                          }
-                        });
+                ...(checkPermission("reciept_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this receipt?`,
+                            callback: () => {
+                              deleteReceipt(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setReceipts((prev) =>
+                                    prev.filter(
+                                      (receipt) => receipt._id !== item._id
+                                    )
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

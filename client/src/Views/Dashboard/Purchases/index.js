@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import PurchaseForm from "./PurchaseForm";
 
 const Purchases = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [purchases, setPurchases] = useState([]);
   const [purchase, setPurchase] = useState(null);
   const [addPurchase, setAddPurchase] = useState(false);
@@ -31,9 +31,11 @@ const Purchases = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Purchases</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddPurchase(true)}>
-          Add Purchase
-        </button>
+        {checkPermission("purchase_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddPurchase(true)}>
+            Add Purchase
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -82,31 +84,38 @@ const Purchases = () => {
                     setAddPurchase(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this purchase?`,
-                      callback: () => {
-                        deletePurchase(
-                          {},
-                          { params: { "{ID}": item._id } }
-                        ).then(({ data }) => {
-                          if (data.success) {
-                            setPurchases((prev) =>
-                              prev.filter(
-                                (purchase) => purchase._id !== item._id
-                              )
-                            );
-                          } else {
-                            Prompt({ type: "error", message: data.message });
-                          }
-                        });
+                ...(checkPermission("purchase_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this purchase?`,
+                            callback: () => {
+                              deletePurchase(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setPurchases((prev) =>
+                                    prev.filter(
+                                      (purchase) => purchase._id !== item._id
+                                    )
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

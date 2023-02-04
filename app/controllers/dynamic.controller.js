@@ -4,8 +4,6 @@ const {
 const { dbHelper } = require("../helpers");
 const { ObjectId } = require("mongodb");
 
-const { Collection, Config } = require("../models");
-
 exports.findAll = async (req, res) => {
   try {
     const { Model, collection } = req;
@@ -48,7 +46,7 @@ exports.findAll = async (req, res) => {
     // pipeline = dbHelper.getDynamicPipeline({
     //   fields: collection.fields,
     //   pipeline,
-    //   business_id: req.authUser._id,
+    //   business_id: req.business?._id || req.authUser._id,
     //   table: req.params.table,
     // });
 
@@ -70,7 +68,7 @@ exports.create = async (req, res) => {
           dbHelper.getDynamicPipeline({
             fields: collection.fields,
             pipeline: [{ $match: { _id: data._id } }],
-            business_id: req.authUser._id,
+            business_id: req.business?._id || req.authUser._id,
             table: req.params.table,
           })
         );

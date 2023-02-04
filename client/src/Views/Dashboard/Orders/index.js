@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import OrderForm from "./OrderForm";
 
 const Orders = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [orders, setOrders] = useState([]);
   const [order, setOrder] = useState(null);
   const [addOrder, setAddOrder] = useState(false);
@@ -31,9 +31,11 @@ const Orders = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Orders</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddOrder(true)}>
-          Add Order
-        </button>
+        {checkPermission("order_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddOrder(true)}>
+            Add Order
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -75,28 +77,38 @@ const Orders = () => {
                     setAddOrder(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this order?`,
-                      callback: () => {
-                        deleteOrders({}, { params: { "{ID}": item._id } }).then(
-                          ({ data }) => {
-                            if (data.success) {
-                              setOrders((prev) =>
-                                prev.filter((order) => order._id !== item._id)
-                              );
-                            } else {
-                              Prompt({ type: "error", message: data.message });
-                            }
-                          }
-                        );
+                ...(checkPermission("order_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this order?`,
+                            callback: () => {
+                              deleteOrders(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setOrders((prev) =>
+                                    prev.filter(
+                                      (order) => order._id !== item._id
+                                    )
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

@@ -1,13 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { createCipheriv, createDecipheriv } = require("crypto");
 const {
   authConfig,
   appConfig,
-  appConfig: { responseFn, responseStr },
+  appConfig: { responseFn },
 } = require("../config");
-const User = require("../models/user.model");
 
 exports.generateHash = (string) => bcrypt.hashSync(string, 8);
 

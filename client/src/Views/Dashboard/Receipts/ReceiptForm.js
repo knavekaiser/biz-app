@@ -56,7 +56,7 @@ const Detail = ({ label, value, className }) => {
 };
 
 const Form = ({ edit, receipts, onSuccess }) => {
-  const { user, config } = useContext(SiteContext);
+  const { user, config, checkPermission } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.invoices || []);
   const [err, setErr] = useState(null);
@@ -94,9 +94,11 @@ const Form = ({ edit, receipts, onSuccess }) => {
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.receiptDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
-            <button className="btn" onClick={() => setViewOnly(false)}>
-              Edit
-            </button>
+            {checkPermission("receipt_update") && (
+              <button className="btn" onClick={() => setViewOnly(false)}>
+                Edit
+              </button>
+            )}
             {
               //   <button className="btn" onClick={handlePrint}>
               //   Print
@@ -294,9 +296,11 @@ const MainForm = ({
     resolver: useYup(mainSchema),
   });
 
-  const { post: saveInvoice, put: updateInvoice, loading } = useFetch(
-    endpoints.receipts + `/${edit?._id || ""}`
-  );
+  const {
+    post: saveInvoice,
+    put: updateInvoice,
+    loading,
+  } = useFetch(endpoints.receipts + `/${edit?._id || ""}`);
 
   const submitForm = useCallback(
     (values) => {

@@ -7,7 +7,9 @@ const { Purchase, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    const conditions = { user: ObjectId(req.authUser._id) };
+    const conditions = {
+      user: ObjectId(req.business?._id || req.authUser._id),
+    };
     if (+req.query.no) {
       conditions.no = +req.query.no;
     }
@@ -21,7 +23,7 @@ exports.findAll = async (req, res) => {
           pipeline: [
             {
               $match: {
-                user: ObjectId(req.authUser._id),
+                user: ObjectId(req.business?._id || req.authUser._id),
                 ...(conditions.no && { "purchases.no": conditions.no }),
               },
             },
@@ -111,17 +113,18 @@ exports.findAll = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { nextPurchaseNo } =
-      (await Config.findOne({ user: req.authUser._id })) || {};
+      (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
+      {};
 
     new Purchase({
       ...req.body,
-      user: req.authUser._id,
+      user: req.business?._id || req.authUser._id,
       no: nextPurchaseNo || 1,
     })
       .save()
       .then(async (data) => {
         await Config.findOneAndUpdate(
-          { user: req.authUser._id },
+          { user: req.business?._id || req.authUser._id },
           { $inc: { nextPurchaseNo: 1 } },
           { new: true }
         );

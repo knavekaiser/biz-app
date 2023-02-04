@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import QuoteForm from "./QuoteForm";
 
 const Quotes = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [quotes, setQuotes] = useState([]);
   const [quote, setQuote] = useState(null);
   const [addQuote, setAddQuote] = useState(false);
@@ -31,9 +31,11 @@ const Quotes = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Quotes</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddQuote(true)}>
-          Add Quote
-        </button>
+        {checkPermission("qoute_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddQuote(true)}>
+            Add Quote
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -75,28 +77,38 @@ const Quotes = () => {
                     setAddQuote(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this quote?`,
-                      callback: () => {
-                        deleteQuote({}, { params: { "{ID}": item._id } }).then(
-                          ({ data }) => {
-                            if (data.success) {
-                              setQuotes((prev) =>
-                                prev.filter((quote) => quote._id !== item._id)
-                              );
-                            } else {
-                              Prompt({ type: "error", message: data.message });
-                            }
-                          }
-                        );
+                ...(checkPermission("quote_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this quote?`,
+                            callback: () => {
+                              deleteQuote(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setQuotes((prev) =>
+                                    prev.filter(
+                                      (quote) => quote._id !== item._id
+                                    )
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

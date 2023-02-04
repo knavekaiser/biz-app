@@ -4,6 +4,9 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import Signup from "./Signup";
 import SignIn from "./Signin";
 import ResetPassword from "./ResetPassword";
+import StaffSignup from "./StaffSignup";
+import StaffSignin from "./StaffSignin";
+import StaffResetPassword from "./StaffResetPassword";
 import { paths } from "config";
 
 import s from "./auth.module.scss";
@@ -23,6 +26,12 @@ const Auth = () => {
         <Route path={paths.signUp} element={<Signup />} />
         <Route path={paths.signIn} element={<SignIn />} />
         <Route path={paths.resetPassword} element={<ResetPassword />} />
+        <Route path={paths.staffSignIn} element={<StaffSignin />} />
+        <Route path={paths.staffSignUp} element={<StaffSignup />} />
+        <Route
+          path={paths.staffResetPassword}
+          element={<StaffResetPassword />}
+        />
       </Routes>
       <img
         className={s.background}

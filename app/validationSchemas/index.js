@@ -1,5 +1,6 @@
 module.exports = {
   users: require("./users"),
+  staffs: require("./staffs"),
   invoice: require("./invoice"),
   receipt: require("./receipts"),
   purchase: require("./purchase"),
@@ -9,4 +10,6 @@ module.exports = {
   whitelabel: require("./whitelabel"),
   order: require("./order"),
   quote: require("./quote"),
+  role: require("./role"),
+  employee: require("./employee"),
 };

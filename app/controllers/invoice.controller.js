@@ -7,7 +7,9 @@ const { Invoice, Config } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    const conditions = { user: ObjectId(req.authUser._id) };
+    const conditions = {
+      user: ObjectId(req.business?._id || req.authUser._id),
+    };
     if (+req.query.no) {
       conditions.no = +req.query.no;
     }
@@ -21,7 +23,7 @@ exports.findAll = async (req, res) => {
           pipeline: [
             {
               $match: {
-                user: ObjectId(req.authUser._id),
+                user: ObjectId(req.business?._id || req.authUser._id),
                 ...(conditions.no && { "invoices.no": conditions.no }),
               },
             },
@@ -113,13 +115,18 @@ exports.findAll = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { nextInvoiceNo } =
-      (await Config.findOne({ user: req.authUser._id })) || {};
+      (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
+      {};
 
-    new Invoice({ ...req.body, user: req.authUser._id, no: nextInvoiceNo || 1 })
+    new Invoice({
+      ...req.body,
+      user: req.business?._id || req.authUser._id,
+      no: nextInvoiceNo || 1,
+    })
       .save()
       .then(async (data) => {
         await Config.findOneAndUpdate(
-          { user: req.authUser._id },
+          { user: req.business?._id || req.authUser._id },
           { $inc: { nextInvoiceNo: 1 } },
           { new: true }
         );
@@ -134,7 +141,11 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     delete req.body.no;
-    Invoice.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
+    Invoice.findOneAndUpdate(
+      { _id: req.params.id, user: req.business?._id || req.authUser._id },
+      req.body,
+      { new: true }
+    )
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -151,6 +162,7 @@ exports.delete = async (req, res) => {
     }
     Invoice.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
+      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

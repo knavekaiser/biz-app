@@ -1098,10 +1098,10 @@ export const Tabs = ({
     if (
       !onChange &&
       !tabs.some((tab) =>
-        location.pathname.includes(tab.path.replace("/*", ""))
+        location.pathname.includes(tab?.path?.replace("/*", ""))
       )
     ) {
-      navigate(tabs[0].path, { replace: true });
+      navigate(tabs[0]?.path, { replace: true });
     }
   }, []);
   return (

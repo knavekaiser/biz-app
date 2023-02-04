@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import PaymentForm from "./PaymentForm";
 
 const Payments = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [payments, setPayments] = useState([]);
   const [payment, setPayment] = useState(null);
   const [addPayment, setAddPayment] = useState(false);
@@ -31,9 +31,11 @@ const Payments = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Payments</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddPayment(true)}>
-          Add Payment
-        </button>
+        {checkPermission("payment_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddPayment(true)}>
+            Add Payment
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -77,29 +79,38 @@ const Payments = () => {
                     setAddPayment(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this payment?`,
-                      callback: () => {
-                        deletePayment(
-                          {},
-                          { params: { "{ID}": item._id } }
-                        ).then(({ data }) => {
-                          if (data.success) {
-                            setPayments((prev) =>
-                              prev.filter((payment) => payment._id !== item._id)
-                            );
-                          } else {
-                            Prompt({ type: "error", message: data.message });
-                          }
-                        });
+                ...(checkPermission("payment_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this payment?`,
+                            callback: () => {
+                              deletePayment(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setPayments((prev) =>
+                                    prev.filter(
+                                      (payment) => payment._id !== item._id
+                                    )
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

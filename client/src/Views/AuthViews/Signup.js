@@ -27,7 +27,7 @@ const Form = () => {
   } = useForm({
     resolver: useYup(validationSchema),
   });
-  const { post: signup } = useFetch(endpoints.signUp);
+  const { post: signup, loading } = useFetch(endpoints.signUp);
 
   const navigate = useNavigate();
   return (
@@ -56,7 +56,16 @@ const Form = () => {
       <img className={s.illustration} src="/assets/comify.png" />
       <div className={"grid gap-1"}>
         <h1 className="text-center">Comify Studio</h1>
-        <h2>Sign Up</h2>
+        <div className="flex justify-space-between align-center">
+          <h2>Sign Up as Admin</h2>
+          <Link
+            to={paths.staffSignUp}
+            className="underline"
+            onClick={() => localStorage.setItem("userType", "staff")}
+          >
+            switch to staff
+          </Link>
+        </div>
         <Input
           label="Phone"
           required
@@ -76,7 +85,9 @@ const Form = () => {
           {...register("password")}
           error={errors.password}
         />
-        <button className="btn">Sign Up</button>
+        <button className="btn" disabled={loading}>
+          Sign Up
+        </button>
         <Link to={paths.signIn}>Already have an account</Link>
       </div>
     </form>

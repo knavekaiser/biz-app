@@ -1,11 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Prompt } from "Components/modal";
-import { endpoints as defaultEndpoints } from "../config";
 
-export const useFetch = (
-  url,
-  { headers: hookHeaders, defaultHeaders, noDbSchema } = {}
-) => {
+export const useFetch = (url, { headers: hookHeaders } = {}) => {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const controller = useRef();
@@ -40,6 +35,9 @@ export const useFetch = (
             "Content-Type": "application/json",
           }),
           "x-access-token": sessionStorage.getItem("access_token"),
+          ...(sessionStorage.getItem("business_id") && {
+            business_id: sessionStorage.getItem("business_id"),
+          }),
           ...hookHeaders,
           ...headers,
         },

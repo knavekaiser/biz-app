@@ -10,7 +10,7 @@ import { endpoints } from "config";
 import SaleForm from "./SaleForm";
 
 const Sales = () => {
-  const { config } = useContext(SiteContext);
+  const { config, checkPermission } = useContext(SiteContext);
   const [sales, setSales] = useState([]);
   const [sale, setSale] = useState(null);
   const [addSale, setAddSale] = useState(false);
@@ -34,9 +34,11 @@ const Sales = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Sales</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddSale(true)}>
-          Add Sale
-        </button>
+        {checkPermission("invoice_create") && (
+          <button className="btn m-a mr-0" onClick={() => setAddSale(true)}>
+            Add Sale
+          </button>
+        )}
       </div>
       <Table
         loading={loading}
@@ -85,28 +87,36 @@ const Sales = () => {
                     setAddSale(true);
                   },
                 },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this sale?`,
-                      callback: () => {
-                        deleteSale({}, { params: { "{ID}": item._id } }).then(
-                          ({ data }) => {
-                            if (data.success) {
-                              setSales((prev) =>
-                                prev.filter((sale) => sale._id !== item._id)
-                              );
-                            } else {
-                              Prompt({ type: "error", message: data.message });
-                            }
-                          }
-                        );
+                ...(checkPermission("invoice_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this sale?`,
+                            callback: () => {
+                              deleteSale(
+                                {},
+                                { params: { "{ID}": item._id } }
+                              ).then(({ data }) => {
+                                if (data.success) {
+                                  setSales((prev) =>
+                                    prev.filter((sale) => sale._id !== item._id)
+                                  );
+                                } else {
+                                  Prompt({
+                                    type: "error",
+                                    message: data.message,
+                                  });
+                                }
+                              });
+                            },
+                          }),
                       },
-                    }),
-                },
+                    ]
+                  : []),
               ]}
             />
           </tr>

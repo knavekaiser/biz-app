@@ -51,7 +51,16 @@ const Form = () => {
       <img className={s.illustration} src="/assets/comify.png" />
       <div className={`grid gap-1`}>
         <h1 className="text-center">Comify Studio</h1>
-        <h2>Sign In</h2>
+        <div className="flex justify-space-between align-center">
+          <h2>Sign In as Admin</h2>
+          <Link
+            to={paths.staffSignIn}
+            className="underline"
+            onClick={() => localStorage.setItem("userType", "staff")}
+          >
+            switch to staff
+          </Link>
+        </div>
         {invalidCred && <p className="error">Invalid credentials</p>}
         <Input
           required
@@ -69,7 +78,9 @@ const Form = () => {
         <Link className={s.resetPasswordLink} to={paths.resetPassword}>
           Forgot Password?
         </Link>
-        <button className="btn">Sign In</button>
+        <button className="btn" disabled={loading}>
+          Sign In
+        </button>
         <Link to={paths.signUp}>Create New Account</Link>
       </div>
     </form>

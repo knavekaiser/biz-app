@@ -2,6 +2,12 @@ const paths = {
   signIn: "/signin",
   signUp: "/signup",
   resetPassword: "/reset-password",
+  staffSignUp: "/staff-signup",
+  staffSignIn: "/staff-signin",
+  staffResetPassword: "/staff-reset-password",
+
+  businesses: "/businesses",
+
   sales: "/sales",
   purchases: "/purchases",
   receipts: "/receipts",
@@ -10,6 +16,9 @@ const paths = {
   quotes: "/quotes",
   dynamicTables: "/dynamic-tables/*",
   dynamicTable: "/dynamic-tables/:table",
+  roles: "/roles",
+  employees: "/employees",
+
   settings: {
     baseUrl: "/settings/*",
     businessInformation: "business-information",

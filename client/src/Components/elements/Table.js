@@ -358,8 +358,8 @@ export const VirtualTable = ({
           rows.map((row, i, arr) => {
             const buffer = 10;
             const containerHeight = tbodyRef.current.clientHeight;
-            const theadHeight = tbodyRef.current.querySelector("thead")
-              .clientHeight;
+            const theadHeight =
+              tbodyRef.current.querySelector("thead").clientHeight;
             const x =
               (getRowHeight
                 ? arr.slice(0, i).reduce((p, a) => p + getRowHeight(a), 0)
@@ -391,19 +391,27 @@ export const ImportExport = ({ importUrl, exportUrl }) => {
   const [importOpen, setImportOpen] = useState(false);
   return (
     <div className="flex gap-1">
-      <button className="btn m-a mr-0" onClick={() => setImportOpen(true)}>
-        Import Data
-      </button>
-      <Export url={exportUrl} />
-
-      <Modal open={importOpen} head label="Import Data" setOpen={setImportOpen}>
-        <ImportForm
-          url={importUrl}
-          onSuccess={() => {
-            setImportOpen(false);
-          }}
-        />
-      </Modal>
+      {importUrl && (
+        <>
+          <button className="btn m-a mr-0" onClick={() => setImportOpen(true)}>
+            Import Data
+          </button>
+          <Modal
+            open={importOpen}
+            head
+            label="Import Data"
+            setOpen={setImportOpen}
+          >
+            <ImportForm
+              url={importUrl}
+              onSuccess={() => {
+                setImportOpen(false);
+              }}
+            />
+          </Modal>
+        </>
+      )}
+      {exportUrl && <Export url={exportUrl} />}
     </div>
   );
 };

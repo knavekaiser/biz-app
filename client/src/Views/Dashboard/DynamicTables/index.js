@@ -1,10 +1,9 @@
-import { useContext, useEffect, useState, useRef, useCallback } from "react";
-import { SiteContext } from "SiteContext";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useYup, useFetch } from "hooks";
+import { useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
 import { paths, endpoints } from "config";
-import { Textarea, Table, TableActions } from "Components/elements";
+import { Table, TableActions } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import s from "./payments.module.scss";
 

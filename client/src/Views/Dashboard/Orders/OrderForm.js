@@ -60,7 +60,7 @@ const Detail = ({ label, value, className }) => {
 };
 
 const Form = ({ edit, orders, onSuccess }) => {
-  const { user, config } = useContext(SiteContext);
+  const { user, config, checkPermission } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
@@ -76,9 +76,11 @@ const Form = ({ edit, orders, onSuccess }) => {
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.orderDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
-            <button className="btn" onClick={() => setViewOnly(false)}>
-              Edit
-            </button>
+            {checkPermission("order_update") && (
+              <button className="btn" onClick={() => setViewOnly(false)}>
+                Edit
+              </button>
+            )}
             {/* <button className="btn" onClick={handlePrint}>
               Print
             </button> */}

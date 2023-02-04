@@ -1,22 +1,17 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SiteContext } from "SiteContext";
 import { useNavigate, useParams } from "react-router-dom";
-import { useYup, useFetch } from "hooks";
+import { useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
 import { paths, endpoints } from "config";
-import {
-  Textarea,
-  Table,
-  DynamicTable,
-  TableActions,
-  ImportExport,
-} from "Components/elements";
+import { DynamicTable, ImportExport } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import s from "./payments.module.scss";
 
 import DynamicForm from "./dynamicForm";
 
 const DynamicTablePage = () => {
+  const { business, checkPermission } = useContext(SiteContext);
   const [edit, setEdit] = useState(null);
   const [addData, setAddData] = useState(false);
   const [data, setData] = useState([]);
@@ -27,10 +22,8 @@ const DynamicTablePage = () => {
   const { get: getCollection, loading: gettingCollection } = useFetch(
     `${endpoints.collections}/${table}`
   );
-  const {
-    get: getProductCollection,
-    loading: gettingProductCollection,
-  } = useFetch(`${endpoints.collections}/Product`);
+  const { get: getProductCollection, loading: gettingProductCollection } =
+    useFetch(`${endpoints.collections}/Product`);
   const { get: getData, loading } = useFetch(`${endpoints.dynamic}/${table}`);
   const { remove: deleteData } = useFetch(`${endpoints.dynamic}/${table}/{ID}`);
 
@@ -66,10 +59,11 @@ const DynamicTablePage = () => {
         <div className="flex gap-1">
           <ImportExport
             exportUrl={`${endpoints.dynamic}/${table}`}
-            importUrl={`${endpoints.dynamicBulkCreate.replace(
-              ":table",
-              table
-            )}`}
+            importUrl={
+              checkPermission(`${business.business._id}_${table}_create`)
+                ? `${endpoints.dynamicBulkCreate.replace(":table", table)}`
+                : null
+            }
           />
           <button
             className="btn m-a mr-0"
@@ -77,9 +71,11 @@ const DynamicTablePage = () => {
           >
             Back
           </button>
-          <button className="btn m-a mr-0" onClick={() => setAddData(true)}>
-            Add {table}
-          </button>
+          {checkPermission(`${business.business._id}_${table}_create`) && (
+            <button className="btn m-a mr-0" onClick={() => setAddData(true)}>
+              Add {table}
+            </button>
+          )}
         </div>
       </div>
       <DynamicTable
@@ -87,36 +83,44 @@ const DynamicTablePage = () => {
         loading={gettingCollection || loading}
         data={data}
         actions={(item) => [
-          {
-            icon: <FaPencilAlt />,
-            label: "Edit",
-            callBack: () => {
-              setEdit(item);
-              setAddData(true);
-            },
-          },
-          {
-            icon: <FaRegTrashAlt />,
-            label: "Delete",
-            callBack: () =>
-              Prompt({
-                type: "confirmation",
-                message: `Are you sure you want to remove this Collection?`,
-                callback: () => {
-                  deleteData({}, { params: { "{ID}": item._id } }).then(
-                    ({ data }) => {
-                      if (data.success) {
-                        setData((prev) =>
-                          prev.filter((data) => data._id !== item._id)
-                        );
-                      } else {
-                        Prompt({ type: "error", message: data.message });
-                      }
-                    }
-                  );
+          ...(checkPermission(`${business.business._id}_${table}_update`)
+            ? [
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(item);
+                    setAddData(true);
+                  },
                 },
-              }),
-          },
+              ]
+            : []),
+          ...(checkPermission(`${business.business._id}_${table}_delete`)
+            ? [
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Collection?`,
+                      callback: () => {
+                        deleteData({}, { params: { "{ID}": item._id } }).then(
+                          ({ data }) => {
+                            if (data.success) {
+                              setData((prev) =>
+                                prev.filter((data) => data._id !== item._id)
+                              );
+                            } else {
+                              Prompt({ type: "error", message: data.message });
+                            }
+                          }
+                        );
+                      },
+                    }),
+                },
+              ]
+            : []),
         ]}
       />
       <Modal

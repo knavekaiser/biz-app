@@ -60,7 +60,7 @@ const Detail = ({ label, value, className }) => {
 };
 
 const Form = ({ edit, quotes, onSuccess }) => {
-  const { user, config } = useContext(SiteContext);
+  const { user, config, checkPermission } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
@@ -76,12 +76,14 @@ const Form = ({ edit, quotes, onSuccess }) => {
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.quoteDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
-            <button className="btn" onClick={() => setViewOnly(false)}>
-              Edit
-            </button>
-            {/* <button className="btn" onClick={handlePrint}>
+            {checkPermission("qoute_update") && (
+              <button className="btn" onClick={() => setViewOnly(false)}>
+                Edit
+              </button>
+            )}
+            <button className="btn" onClick={handlePrint}>
               Print
-            </button> */}
+            </button>
           </div>
           <div className={s.box}>
             <h3>Customer Information</h3>

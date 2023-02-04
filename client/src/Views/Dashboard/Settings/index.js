@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
 import {
@@ -6,7 +6,6 @@ import {
   Textarea,
   FileInput,
   FileInputNew,
-  Table,
   Tabs,
   CustomRadio,
   Combobox,
@@ -14,7 +13,7 @@ import {
 import * as yup from "yup";
 import s from "./settings.module.scss";
 import { useYup, useFetch } from "hooks";
-import { FaPencilAlt, FaRegTrashAlt, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import { Prompt } from "Components/modal";
 import { paths, endpoints } from "config";
 import { Routes, Route } from "react-router-dom";
@@ -198,8 +197,6 @@ const BankDetail = () => {
     handleSubmit,
     register,
     reset,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm();
   const [activeTab, setActiveTab] = useState("business-information");
@@ -369,8 +366,6 @@ const Config = () => {
     handleSubmit,
     register,
     reset,
-    watch,
-    setValue,
     control,
     formState: { errors },
   } = useForm({
