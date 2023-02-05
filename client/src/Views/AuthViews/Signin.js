@@ -31,6 +31,7 @@ const Form = () => {
         setInvalidCred(false);
         login({ phone: values.phone, password: values.password }).then(
           ({ error, data }) => {
+            localStorage.setItem("userType", "business");
             if (error) {
               return Prompt({
                 type: "error",

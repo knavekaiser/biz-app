@@ -76,7 +76,7 @@ const Form = ({ edit, quotes, onSuccess }) => {
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.quoteDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
-            {checkPermission("qoute_update") && (
+            {checkPermission("quote_update") && (
               <button className="btn" onClick={() => setViewOnly(false)}>
                 Edit
               </button>

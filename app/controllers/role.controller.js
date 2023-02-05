@@ -36,7 +36,6 @@ exports.update = async (req, res) => {
       { new: true }
     )
       .then((data) => {
-        console.log(data);
         responseFn.success(res, { data }, responseStr.record_updated);
       })
       .catch((err) => responseFn.error(res, {}, err.message));

@@ -114,7 +114,7 @@ const Dashboard = () => {
         <Tabs
           className={s.tab}
           tabs={[
-            ...(checkPermission("qoute_read")
+            ...(checkPermission("quote_read")
               ? [{ label: "Quotes", path: paths.quotes }]
               : []),
             ...(checkPermission("order_read")
@@ -156,7 +156,7 @@ const Dashboard = () => {
         />
       </div>
       <Routes>
-        {checkPermission("qoute_read") && (
+        {checkPermission("quote_read") && (
           <Route path={paths.quotes} element={<Quotes />} />
         )}
         {checkPermission("order_read") && (

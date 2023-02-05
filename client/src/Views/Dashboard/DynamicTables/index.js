@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
@@ -10,8 +10,10 @@ import s from "./payments.module.scss";
 import CollectionForm from "./form";
 import DynamicTable from "./dynamicTable";
 import SchemaForm from "./schemaTemplateForm";
+import { SiteContext } from "SiteContext";
 
 const Collections = () => {
+  const { checkPermission } = useContext(SiteContext);
   const [edit, setEdit] = useState(null);
   const [addCollection, setAddCollection] = useState(false);
   const [importSchema, setImportSchema] = useState(false);
@@ -76,46 +78,57 @@ const Collections = () => {
             <td>{item.name}</td>
             <TableActions
               actions={[
-                {
-                  icon: <FaPencilAlt />,
-                  label: "Edit",
-                  callBack: () => {
-                    setEdit(item);
-                    setAddCollection(true);
-                  },
-                },
-                {
-                  icon: <FaRegTrashAlt />,
-                  label: "Delete",
-                  disabled: deleting,
-                  callBack: () =>
-                    Prompt({
-                      type: "confirmation",
-                      message: `Are you sure you want to remove this Collection?`,
-                      callback: () => {
-                        deleteCollection(
-                          {},
-                          {
-                            params: {
-                              "{ID}": item._id,
-                            },
-                          }
-                        )
-                          .then(({ data }) => {
-                            if (data?.success) {
-                              setCollections((prev) =>
-                                prev.filter(
-                                  (product) => product._id !== item._id
-                                )
-                              );
-                            }
-                          })
-                          .catch((err) =>
-                            Prompt({ type: "error", message: err.message })
-                          );
+                ...(checkPermission("dynamic_table_update")
+                  ? [
+                      {
+                        icon: <FaPencilAlt />,
+                        label: "Edit",
+                        callBack: () => {
+                          setEdit(item);
+                          setAddCollection(true);
+                        },
                       },
-                    }),
-                },
+                    ]
+                  : []),
+                ...(checkPermission("dynamic_table_delete")
+                  ? [
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        disabled: deleting,
+                        callBack: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this Collection?`,
+                            callback: () => {
+                              deleteCollection(
+                                {},
+                                {
+                                  params: {
+                                    "{ID}": item._id,
+                                  },
+                                }
+                              )
+                                .then(({ data }) => {
+                                  if (data?.success) {
+                                    setCollections((prev) =>
+                                      prev.filter(
+                                        (product) => product._id !== item._id
+                                      )
+                                    );
+                                  }
+                                })
+                                .catch((err) =>
+                                  Prompt({
+                                    type: "error",
+                                    message: err.message,
+                                  })
+                                );
+                            },
+                          }),
+                      },
+                    ]
+                  : []),
               ]}
             />
           </tr>

@@ -5,6 +5,7 @@ const {
 
 const { User, Staff, Role } = require("../models");
 const { dbHelper } = require("../helpers");
+const { responseStr } = require("../config/app.config");
 
 verifyToken = async (req, res, next) => {
   // let token = req.cookies.access_token;
@@ -56,5 +57,18 @@ verifyToken = async (req, res, next) => {
   });
 };
 
-const authJwt = { verifyToken };
+checkPermission = (permission) => {
+  return (req, res, next) => {
+    if (req.authToken?.userType === "business") {
+      return next();
+    } else if (req.authToken?.userType === "staff") {
+      if (req.permissions.includes(permission)) {
+        return next();
+      }
+    }
+    return responseFn.error(res, {}, responseStr.forbidden, 403);
+  };
+};
+
+const authJwt = { verifyToken, checkPermission };
 module.exports = authJwt;

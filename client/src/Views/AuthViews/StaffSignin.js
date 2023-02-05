@@ -31,6 +31,7 @@ const Form = () => {
         setInvalidCred(false);
         login({ phone: values.phone, password: values.password }).then(
           ({ error, data }) => {
+            localStorage.setItem("userType", "staff");
             if (error) {
               return Prompt({
                 type: "error",
@@ -56,7 +57,7 @@ const Form = () => {
           <Link
             to={paths.signIn}
             className="underline"
-            onClick={() => localStorage.setItem("userType", "admin")}
+            onClick={() => localStorage.setItem("userType", "business")}
           >
             switch to admin
           </Link>

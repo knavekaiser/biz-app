@@ -28,10 +28,30 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const staff = await Staff.findOne({ phone: req.body.phone });
+    const staff = await Staff.findOne({ phone: req.body.phone })
+      .populate("businesses.business", "name email phone profile logo")
+      .populate("businesses.roles", "name permissions");
 
     if (staff && appHelper.compareHash(req.body.password, staff.password)) {
-      return appHelper.signIn(res, staff._doc, "staff");
+      let businesses = null;
+      if (staff.businesses.length) {
+        businesses = await Config.find({
+          user: { $in: staff.businesses.map((item) => item.business._id) },
+        }).then((configs) => {
+          return staff.businesses.map((item) => ({
+            ...item._doc,
+            config: configs.find(
+              (config) =>
+                config.user.toString() === item.business._id.toString()
+            ),
+          }));
+        });
+      }
+      return appHelper.signIn(
+        res,
+        { ...staff._doc, businesses: businesses || staff.businesses },
+        "staff"
+      );
     } else {
       return responseFn.error(res, {}, responseStr.invalid_cred);
     }

@@ -61,7 +61,7 @@ const Form = () => {
           <Link
             to={paths.signUp}
             className="underline"
-            onClick={() => localStorage.setItem("userType", "admin")}
+            onClick={() => localStorage.setItem("userType", "business")}
           >
             switch to admin
           </Link>

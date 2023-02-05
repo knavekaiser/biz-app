@@ -17,9 +17,7 @@ const Form = ({ edit, onSuccess }) => {
     resolver: useYup(mainSchema),
   });
 
-  const { put: updateEmp, loading } = useFetch(
-    endpoints.employees + `/${edit?._id || ""}`
-  );
+  const { put: updateEmp, loading } = useFetch(endpoints.employees);
 
   useEffect(() => {
     reset({

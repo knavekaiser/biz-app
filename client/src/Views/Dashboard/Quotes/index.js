@@ -31,7 +31,7 @@ const Quotes = () => {
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
         <h2>All Quotes</h2>
-        {checkPermission("qoute_create") && (
+        {checkPermission("quote_create") && (
           <button className="btn m-a mr-0" onClick={() => setAddQuote(true)}>
             Add Quote
           </button>

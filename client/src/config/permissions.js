@@ -1,7 +1,7 @@
 const paths = [
   {
-    label: "Qoute",
-    value: "qoute",
+    label: "Quote",
+    value: "quote",
     actions: ["read", "create", "update", "delete"],
   },
   {
