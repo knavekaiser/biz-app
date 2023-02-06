@@ -1,5 +1,4 @@
 const yup = require("yup");
-const commonYup = require("./commonYup");
 
 module.exports = {
   create: yup.object({
@@ -43,6 +42,11 @@ module.exports = {
         name: yup.string().required(),
         detail: yup.string().required(),
       }),
+    }),
+  }),
+  generateFromQuote: yup.object({
+    body: yup.object({
+      quote_id: yup.string().required(),
     }),
   }),
 };

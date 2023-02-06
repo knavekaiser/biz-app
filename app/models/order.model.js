@@ -16,6 +16,7 @@ module.exports = mongoose.model(
         name: { type: String },
         detail: { type: String },
       },
+      status: { type: Schema.Types.String, default: "pending", required: true },
     },
     { timestamps: true }
   )

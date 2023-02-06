@@ -1,17 +1,9 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useLayoutEffect,
-  forwardRef,
-} from "react";
+import { useState, useEffect, useRef, useCallback, forwardRef } from "react";
 import { useFetch } from "hooks";
 import s from "./elements.module.scss";
 
 import { FaSortDown, FaSearch } from "react-icons/fa";
 import { Modal, Prompt } from "../modal";
-import { Input, Chip } from "./elements";
 import { Controller } from "react-hook-form";
 
 import ReactSelect, { components } from "react-select";
@@ -36,7 +28,6 @@ export const Combobox = ({
   const clickHandlerAdded = useState(false);
   useEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
-    const top = window.innerHeight - y;
     setStyle({
       position: "absolute",
       left: x,
@@ -59,10 +50,10 @@ export const Combobox = ({
     };
     if (!clickHandlerAdded.current) {
       document.addEventListener("click", clickHandler);
+      clickHandlerAdded.current = true;
       return () => {
         document.removeEventListener("click", clickHandler);
       };
-      clickHandlerAdded.current = true;
     }
   }, [open]);
   return (
@@ -72,7 +63,7 @@ export const Combobox = ({
       rules={formOptions}
       render={({
         field: { onChange, onBlur, value, name, ref },
-        fieldState: { invalid, isTouched, isDirty, error },
+        fieldState: { error },
       }) => {
         const selected = ![undefined, null].includes(value)
           ? value

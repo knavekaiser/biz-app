@@ -31,5 +31,13 @@ module.exports = function (app) {
     controller.delete
   );
 
+  router.post(
+    "/generate-from-quote",
+    authJwt.verifyToken,
+    authJwt.checkPermission("order_create"),
+    validate(schema.generateFromQuote),
+    controller.generateFromQuote
+  );
+
   app.use("/api/orders", router);
 };

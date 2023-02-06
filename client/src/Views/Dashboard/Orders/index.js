@@ -43,6 +43,7 @@ const Orders = () => {
         columns={[
           { label: "Date" },
           { label: "Customer" },
+          { label: "Status" },
           { label: "Net Amount", className: "text-right" },
           { label: "Action" },
         ]}
@@ -57,9 +58,10 @@ const Orders = () => {
             key={item._id}
           >
             <td className={s.date}>
-              <Moment format="DD/MM/YYYY">{item.date}</Moment>
+              <Moment format="DD/MM/YYYY">{item.dateTime}</Moment>
             </td>
             <td className={s.customer}>{item.customer?.name}</td>
+            <td>{item.status}</td>
             <td className={`text-right ${s.net}`}>
               {(
                 item.items.reduce((p, c) => p + c.qty * c.price, 0) +

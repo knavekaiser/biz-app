@@ -1,7 +1,7 @@
 import React, { forwardRef, useRef } from "react";
 import { FaCheck } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
-import ReactDOM, { createPortal } from "react-dom";
+import { createPortal } from "react-dom";
 import * as ReactDOMClient from "react-dom/client";
 
 export const Modal = forwardRef(

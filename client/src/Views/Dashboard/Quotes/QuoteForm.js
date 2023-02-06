@@ -67,6 +67,9 @@ const Form = ({ edit, quotes, onSuccess }) => {
   const [err, setErr] = useState(null);
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
+  const { post: generateOrder, loading } = useFetch(
+    endpoints.generateOrderFromQuote
+  );
   return (
     <div
       className={`grid gap-1 p-1 ${s.addQuoteForm} ${
@@ -76,8 +79,54 @@ const Form = ({ edit, quotes, onSuccess }) => {
       {viewOnly && (
         <div className={`flex wrap gap-1 ${s.quoteDetail}`}>
           <div className="flex gap-1 all-columns justify-end align-center">
+            {edit?._id &&
+              checkPermission("order_create") &&
+              edit?.status === "pending" && (
+                <button
+                  className="btn"
+                  disabled={loading}
+                  onClick={() =>
+                    Prompt({
+                      type: "confirmation",
+                      message:
+                        "Are you sure want to generate an order from this quote?",
+                      callback: () => {
+                        generateOrder({
+                          quote_id: edit?._id,
+                        })
+                          .then(({ data }) => {
+                            if (data.success) {
+                              onSuccess({
+                                ...edit,
+                                status: "ordered",
+                              });
+                              Prompt({
+                                type: "success",
+                                message: "Order has been generated",
+                              });
+                            } else {
+                              Prompt({
+                                type: "error",
+                                message: data.message,
+                              });
+                            }
+                          })
+                          .catch((err) =>
+                            Prompt({ type: "error", message: err.message })
+                          );
+                      },
+                    })
+                  }
+                >
+                  Generate Order
+                </button>
+              )}
             {checkPermission("quote_update") && (
-              <button className="btn" onClick={() => setViewOnly(false)}>
+              <button
+                disabled={loading}
+                className="btn"
+                onClick={() => setViewOnly(false)}
+              >
                 Edit
               </button>
             )}
@@ -102,14 +151,16 @@ const Form = ({ edit, quotes, onSuccess }) => {
           </div>
           <div className={s.box}>
             <h3>Quote Information</h3>
-            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
-            {/* <Detail
-              label="Gross"
-              value={edit.items
-                .reduce((p, c) => p + c.qty * c.price, 0)
-                .fix(2, config?.numberSeparator)}
+            <Detail
+              label="Status"
+              value={edit?.status}
               className="flex justify-space-between"
-            /> */}
+            />
+            <Detail
+              label="Date"
+              value={moment(edit?.date, "DD-MM-YYYY")}
+              className="flex justify-space-between"
+            />
             <Detail
               label="Total"
               value={(
@@ -311,22 +362,14 @@ const ItemForm = ({ edit, quotes, onSuccess }) => {
   );
 };
 
-const MainForm = ({
-  disabled,
-  edit,
-  items,
-  quotes,
-  setErr,
-  onSuccess,
-  setViewOnly,
-}) => {
-  const { config, setConfig } = useContext(SiteContext);
+const MainForm = ({ disabled, edit, items, quotes, setErr, onSuccess }) => {
   const {
     handleSubmit,
     register,
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
@@ -341,6 +384,7 @@ const MainForm = ({
   useEffect(() => {
     reset({
       ...edit,
+      status: edit?.status || "pending",
       date: moment(edit?.date, "YYYY-MM-DD"),
       customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
@@ -355,6 +399,7 @@ const MainForm = ({
 
         (edit ? updateInvoice : saveInvoice)({
           dateTime: values.date,
+          status: values.status,
           customer: {
             name: values.customerName,
             detail: values.customerDetail,
@@ -376,6 +421,16 @@ const MainForm = ({
         {...register("date")}
         required
         error={errors.date}
+      />
+
+      <Combobox
+        label="Status"
+        name="status"
+        control={control}
+        options={[
+          { label: "Pending", value: "pending" },
+          { label: "Ordered", value: "ordered" },
+        ]}
       />
 
       <div className="all-columns">

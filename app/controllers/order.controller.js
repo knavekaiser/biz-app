@@ -3,7 +3,7 @@ const {
 } = require("../config");
 const { ObjectId } = require("mongodb");
 
-const { Order, Config } = require("../models");
+const { Order, Quote } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
@@ -26,6 +26,35 @@ exports.create = async (req, res) => {
     })
       .save()
       .then(async (data) => {
+        return responseFn.success(res, { data });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.generateFromQuote = async (req, res) => {
+  try {
+    const quote = await Quote.findOne({
+      _id: req.body.quote_id,
+      user: ObjectId(req.business?._id || req.authUser._id),
+    });
+    if (!quote) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.record_not_found.replace("Record", "Quote"),
+        400
+      );
+    }
+    new Order({
+      ...quote._doc,
+      status: "pending",
+    })
+      .save()
+      .then(async (data) => {
+        await Quote.updateOne({ _id: quote._id }, { status: "ordered" });
         return responseFn.success(res, { data });
       })
       .catch((err) => responseFn.error(res, {}, err.message));

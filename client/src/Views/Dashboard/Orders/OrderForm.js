@@ -21,7 +21,7 @@ import { endpoints } from "config";
 import PrintInvoice from "./printInvoice";
 
 const mainSchema = yup.object({
-  date: yup.string().required(),
+  dateTime: yup.string().required(),
   customerName: yup.string().required(),
   customerDetail: yup.string().required(),
 });
@@ -102,7 +102,16 @@ const Form = ({ edit, orders, onSuccess }) => {
           </div>
           <div className={s.box}>
             <h3>Order Information</h3>
-            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
+            <Detail
+              label="Status"
+              value={edit.status}
+              className="flex justify-space-between"
+            />
+            <Detail
+              label="Date"
+              value={moment(edit?.dateTime, "DD-MM-YYYY")}
+              className="flex justify-space-between"
+            />
             {/* <Detail
               label="Gross"
               value={edit.items
@@ -311,22 +320,14 @@ const ItemForm = ({ edit, orders, onSuccess }) => {
   );
 };
 
-const MainForm = ({
-  disabled,
-  edit,
-  items,
-  orders,
-  setErr,
-  onSuccess,
-  setViewOnly,
-}) => {
-  const { config, setConfig } = useContext(SiteContext);
+const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
   const {
     handleSubmit,
     register,
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
@@ -341,7 +342,8 @@ const MainForm = ({
   useEffect(() => {
     reset({
       ...edit,
-      date: moment(edit?.date, "YYYY-MM-DD"),
+      status: edit?.status || "pending",
+      dateTime: moment(edit?.dateTime, "YYYY-MM-DD"),
       customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
     });
@@ -354,7 +356,8 @@ const MainForm = ({
         }
 
         (edit ? updateInvoice : saveInvoice)({
-          dateTime: values.date,
+          dateTime: values.dateTime,
+          status: values.status,
           customer: {
             name: values.customerName,
             detail: values.customerDetail,
@@ -373,9 +376,20 @@ const MainForm = ({
       <Input
         label="Date"
         type="date"
-        {...register("date")}
+        {...register("dateTime")}
         required
-        error={errors.date}
+        error={errors.dateTime}
+      />
+
+      <Combobox
+        label="Status"
+        name="status"
+        control={control}
+        options={[
+          { label: "Pending", value: "pending" },
+          { label: "Complete", value: "complete" },
+          { label: "Cancelled", value: "cancelled" },
+        ]}
       />
 
       <div className="all-columns">

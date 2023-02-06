@@ -23,6 +23,7 @@ const endpoints = {
   invoices: `${baseApiUrl}/api/invoices`,
   purchases: `${baseApiUrl}/api/purchases`,
   orders: `${baseApiUrl}/api/orders`,
+  generateOrderFromQuote: `${baseApiUrl}/api/orders/generate-from-quote`,
   quotes: `${baseApiUrl}/api/quotes`,
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
