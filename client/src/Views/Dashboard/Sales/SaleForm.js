@@ -102,12 +102,18 @@ const Form = ({ edit, sales, onSuccess }) => {
             />
           </div>
           <div className={s.box}>
-            <h3>Sale Information</h3>
+            <h3>Invoice Information</h3>
+            <Detail label="Status" value={edit.status} />
             <Detail
               label="Inv No"
               value={`${edit.no}${config.print?.invoiceNoSuffix || ""}`}
+              className="flex justify-space-between"
             />
-            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
+            <Detail
+              label="Date"
+              value={moment(edit?.date, "DD-MM-YYYY")}
+              className="flex justify-space-between"
+            />
             <Detail
               label="Gross"
               value={edit.items
@@ -326,22 +332,14 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
   );
 };
 
-const MainForm = ({
-  disabled,
-  edit,
-  items,
-  sales,
-  setErr,
-  onSuccess,
-  setViewOnly,
-}) => {
-  const { config, setConfig } = useContext(SiteContext);
+const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
   const {
     handleSubmit,
     register,
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
@@ -356,6 +354,7 @@ const MainForm = ({
   useEffect(() => {
     reset({
       ...edit,
+      // status: edit?.status || "pending",
       date: moment(edit?.date, "YYYY-MM-DD"),
       customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
@@ -371,6 +370,7 @@ const MainForm = ({
         (edit ? updateInvoice : saveInvoice)({
           dateTime: values.date,
           gst: values.gst,
+          // status: values.status,
           customer: {
             name: values.customerName,
             detail: values.customerDetail,
@@ -393,6 +393,18 @@ const MainForm = ({
         required
         error={errors.date}
       />
+
+      {/* <Combobox
+        label="Status"
+        name="status"
+        control={control}
+        options={[
+          { label: "Pending", value: "pending" },
+          { label: "Due", value: "due" },
+          { label: "Cancelled", value: "cancelled" },
+        ]}
+      /> */}
+
       <Input
         label="GST %"
         type="number"

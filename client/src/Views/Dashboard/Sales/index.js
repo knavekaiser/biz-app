@@ -9,7 +9,7 @@ import { endpoints } from "config";
 
 import SaleForm from "./SaleForm";
 
-const Sales = () => {
+const Invoices = () => {
   const { config, checkPermission } = useContext(SiteContext);
   const [sales, setSales] = useState([]);
   const [sale, setSale] = useState(null);
@@ -33,10 +33,10 @@ const Sales = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
-        <h2>All Sales</h2>
+        <h2>All Invoices</h2>
         {checkPermission("invoice_create") && (
           <button className="btn m-a mr-0" onClick={() => setAddSale(true)}>
-            Add Sale
+            Add Invoice
           </button>
         )}
       </div>
@@ -47,7 +47,9 @@ const Sales = () => {
           { label: "No." },
           { label: "Date" },
           { label: "Customer" },
+          { label: "Status" },
           { label: "Net Amount", className: "text-right" },
+          { label: "Due", className: "text-right" },
           { label: "Action" },
         ]}
       >
@@ -68,6 +70,7 @@ const Sales = () => {
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
             </td>
             <td className={s.customer}>{item.customer?.name}</td>
+            <td>{item.status}</td>
             <td className={`text-right ${s.net}`}>
               {(
                 item.items.reduce((p, c) => p + c.qty * c.price, 0) +
@@ -75,6 +78,9 @@ const Sales = () => {
                   .reduce((p, c) => p + c.qty * c.price, 0)
                   .percent(item.gst)
               ).fix(2, config?.numberSeparator)}
+            </td>
+            <td className={`text-right ${s.net}`}>
+              {(item.due || 0).fix(2, config?.numberSeparator)}
             </td>
             <TableActions
               className={s.actions}
@@ -152,4 +158,4 @@ const Sales = () => {
   );
 };
 
-export default Sales;
+export default Invoices;

@@ -11,7 +11,7 @@ import { FaPowerOff } from "react-icons/fa";
 import s from "./dashboard.module.scss";
 
 import Businesses from "./Businesses";
-import Sales from "./Sales";
+import Invoices from "./Sales";
 import Orders from "./Orders";
 import Quotes from "./Quotes";
 import Purchases from "./Purchases";
@@ -163,7 +163,7 @@ const Dashboard = () => {
           <Route path={paths.orders} element={<Orders />} />
         )}
         {checkPermission("invoice_read") && (
-          <Route path={paths.sales} element={<Sales />} />
+          <Route path={paths.sales} element={<Invoices />} />
         )}
         {checkPermission("purchase_read") && (
           <Route path={paths.purchases} element={<Purchases />} />
