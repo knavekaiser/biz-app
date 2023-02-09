@@ -108,7 +108,7 @@ exports.findAll = async (req, res) => {
               branches: [
                 { case: { $eq: ["$paid", 0] }, then: "pending" },
                 { case: { $eq: ["$due", 0] }, then: "complete" },
-                { case: { $gt: ["$paid", "$due"] }, then: "due" },
+                { case: { $gt: ["$paid", 0] }, then: "due" },
               ],
               default: "pending",
             },
