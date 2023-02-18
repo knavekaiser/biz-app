@@ -386,6 +386,11 @@ const Config = () => {
         nextInvoiceNo: config.nextInvoiceNo,
         nextPurchaseNo: config.nextPurchaseNo,
         nextReceiptNo: config.nextReceiptNo,
+        printQuoteCurrency:
+          config.printQuote?.currency || config.print.currency,
+        printQuoteItemColumns:
+          config.printQuote?.itemColumns || config.print.itemColumns,
+        printQuoteBusinessInfo: config.printQuote.businessInfo,
         printCurrency: config.print.currency,
         printItemColumns: config.print.itemColumns,
         printInvoiceNoSuffix: config.print.invoiceNoSuffix,
@@ -424,6 +429,11 @@ const Config = () => {
             currency: values.printCurrency,
             invoiceNoSuffix: values.printInvoiceNoSuffix,
             purchaseNoSuffix: values.printPurchaseNoSuffix,
+          },
+          printQuote: {
+            itemColumns: values.printItemColumns,
+            currency: values.printCurrency,
+            businessInfo: values.printQuoteBusinessInfo,
           },
         }).then(({ data }) => {
           if (data.success) {
@@ -521,11 +531,51 @@ const Config = () => {
         multiple
         label="Print Items Columns"
         options={[
-          { label: "Invoice No", value: "no" },
+          { label: "No", value: "no" },
           { label: "Product", value: "product" },
           { label: "Qty", value: "qty" },
           { label: "Unit", value: "unit" },
           { label: "Total", value: "total" },
+        ]}
+      />
+
+      <Input
+        label="Print Quote Currency"
+        {...register("printQuoteCurrency")}
+        error={errors.printQuoteCurrency}
+      />
+
+      <CustomRadio
+        control={control}
+        name="printQuoteItemColumns"
+        className={s.itemColumnsRadio}
+        multiple
+        label="Print Quote Items Columns"
+        options={[
+          { label: "No", value: "no" },
+          { label: "Product", value: "product" },
+          { label: "Qty", value: "qty" },
+          { label: "Unit", value: "unit" },
+          { label: "Total", value: "total" },
+        ]}
+      />
+
+      <CustomRadio
+        control={control}
+        name="printQuoteBusinessInfo"
+        className={s.itemColumnsRadio}
+        multiple
+        label="Print Quote Business Information"
+        options={[
+          { label: "GSTIN", value: "gstin" },
+          { label: "PAN", value: "pan" },
+          { label: "IFSC", value: "ifsc" },
+          { label: "Bank Name", value: "bank" },
+          { label: "Branch Name", value: "branch" },
+          { label: "Account Number", value: "accountNumber" },
+          { label: "Address", value: "address" },
+          { label: "phone", value: "phone" },
+          { label: "email", value: "email" },
         ]}
       />
 

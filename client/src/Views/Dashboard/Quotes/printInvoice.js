@@ -20,7 +20,7 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
   useEffect(() => {
     const itemColumnSort = ["no", "product", "qty", "unit", "total"];
     const columns = [
-      ...config.print.itemColumns
+      ...config.printQuote.itemColumns
         .sort((a, b) =>
           itemColumnSort.indexOf(a) > itemColumnSort.indexOf(b) ? 1 : -1
         )
@@ -28,9 +28,9 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
     ];
     setItemsStyle({
       gridTemplateColumns: `${
-        config.print.itemColumns.includes("no") ? "3rem" : ""
+        config.printQuote.itemColumns.includes("no") ? "3rem" : ""
       } ${
-        config.print.itemColumns.includes("product")
+        config.printQuote.itemColumns.includes("product")
           ? 42 - 6 * columns.length + "rem"
           : ""
       } repeat(auto-fit, minmax(86px, 1fr))`,
@@ -44,17 +44,17 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
           <h2>{user.name}</h2>
           {user.motto && <p>{user.motto}</p>}
         </div>
-        <h4>Invoice</h4>
+        <h4>Quote</h4>
       </header>
 
       <div className={`${s.info} flex wrap gap-1 mt-1`}>
         <div className={`${s.box} flex-1`}>
           <p>To:</p>
-          <Detail label="Name" value={quote.vendor?.name} />
+          <Detail label="Name" value={quote.customer?.name} />
           <Detail
             label="Detail"
             value={
-              quote.vendor?.detail?.split("\n").map((line, i, arr) => (
+              quote.customer?.detail?.split("\n").map((line, i, arr) => (
                 <span key={i}>
                   {line}
                   {arr[i + 1] && <br />}
@@ -65,27 +65,45 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
         </div>
         <div className={`${s.box} flex-1`}>
           <Detail label="Date" value={moment(quote?.date, "DD-MM-YYYY")} />
-          <Detail label="GSTIN" value={user.gstin} />
-          <Detail label="PAN" value={user.pan} />
+          {config.printQuote.businessInfo.includes("gstin") && (
+            <Detail label="GSTIN" value={user.gstin} />
+          )}
+          {config.printQuote.businessInfo.includes("pan") && (
+            <Detail label="PAN" value={user.pan} />
+          )}
           {user.bankDetails && (
             <>
-              <Detail label="Bank" value={user.bankDetails.bankName} />
-              <Detail label="Branch" value={user.bankDetails.branch} />
-              <Detail label="A/C No." value={user.bankDetails.accNo} />
+              {config.printQuote.businessInfo.includes("bank") && (
+                <Detail label="Bank" value={user.bankDetails.bankName} />
+              )}
+              {config.printQuote.businessInfo.includes("branch") && (
+                <Detail label="Branch" value={user.bankDetails.branch} />
+              )}
+              {config.printQuote.businessInfo.includes("accountNumber") && (
+                <Detail label="A/C No." value={user.bankDetails.accNo} />
+              )}
             </>
           )}
-          <Detail label="IFSC" value={user.ifsc} />
-          <Detail label="Address" value={user.address} />
-          <Detail label="Phone" value={user.phone} />
-          <Detail label="Email" value={user.email} />
+          {config.printQuote.businessInfo.includes("ifsc") && (
+            <Detail label="IFSC" value={user.ifsc} />
+          )}
+          {config.printQuote.businessInfo.includes("address") && (
+            <Detail label="Address" value={user.address} />
+          )}
+          {config.printQuote.businessInfo.includes("phone") && (
+            <Detail label="Phone" value={user.phone} />
+          )}
+          {config.printQuote.businessInfo.includes("email") && (
+            <Detail label="Email" value={user.email} />
+          )}
         </div>
       </div>
 
-      {config.print.itemColumns.length > 0 && (
+      {config.printQuote.itemColumns.length > 0 && (
         <Table
           className={`${s.items} mt-1`}
           theadTrStyle={{ ...itemsStyle }}
-          columns={config.print.itemColumns.map((key) => {
+          columns={config.printQuote.itemColumns.map((key) => {
             if (key === "no") return { label: "No" };
             if (key === "product") return { label: "Product" };
             if (key === "price")
@@ -94,31 +112,31 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
             if (key === "unit") return { label: "Unit" };
             if (key === "total")
               return {
-                label: `Total (${config.print.currency})`,
+                label: `Total (${config.printQuote.currency})`,
                 className: "text-right",
               };
           })}
         >
           {quote.items.map((item, i) => (
             <tr key={i} style={{ ...itemsStyle }}>
-              {config.print.itemColumns.includes("no") && <td>{i + 1}</td>}
-              {config.print.itemColumns.includes("product") && (
+              {config.printQuote.itemColumns.includes("no") && <td>{i + 1}</td>}
+              {config.printQuote.itemColumns.includes("product") && (
                 <td>
                   <span className="ellipsis">{item.name}</span>
                 </td>
               )}
-              {config.print.itemColumns.includes("price") && (
+              {config.printQuote.itemColumns.includes("price") && (
                 <td className="text-right">
                   {item.price.fix(2, config?.numberSeparator)}
                 </td>
               )}
-              {config.print.itemColumns.includes("qty") && (
+              {config.printQuote.itemColumns.includes("qty") && (
                 <td className="text-right">{item.qty}</td>
               )}
-              {config.print.itemColumns.includes("unit") && (
+              {config.printQuote.itemColumns.includes("unit") && (
                 <td>{item.unit}</td>
               )}
-              {config.print.itemColumns.includes("total") && (
+              {config.printQuote.itemColumns.includes("total") && (
                 <td className="text-right">
                   {(item.price * item.qty).fix(2, config?.numberSeparator)}
                 </td>
@@ -136,11 +154,11 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
             { label: "Description of Tax" },
             { label: "Rate of Tax", className: "text-right" },
             {
-              label: `Taxable Amount (${config.print.currency})`,
+              label: `Taxable Amount (${config.printQuote.currency})`,
               className: "text-right",
             },
             {
-              label: `Tax Amount (${config.print.currency})`,
+              label: `Tax Amount (${config.printQuote.currency})`,
               className: "text-right",
             },
           ]}

@@ -16,6 +16,17 @@ module.exports = mongoose.model(
           default: ["no", "product", "total"],
         },
       },
+      printQuote: {
+        currency: { type: Schema.Types.String, max: 3, default: "INR" },
+        itemColumns: {
+          type: Schema.Types.Array,
+          default: ["no", "product", "total"],
+        },
+        businessInfo: {
+          type: Schema.Types.Array,
+          default: ["address", "phone", "email"],
+        },
+      },
       numberSeparator: { type: Schema.Types.String, default: "en-US" },
       nextInvoiceNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextPurchaseNo: { type: Schema.Types.Number, min: 0, default: 1 },
