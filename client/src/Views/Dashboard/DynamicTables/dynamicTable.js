@@ -60,7 +60,7 @@ const DynamicTablePage = () => {
           <ImportExport
             exportUrl={`${endpoints.dynamic}/${table}`}
             importUrl={
-              checkPermission(`${business.business._id}_${table}_create`)
+              checkPermission(`${business?.business._id}_${table}_create`)
                 ? `${endpoints.dynamicBulkCreate.replace(":table", table)}`
                 : null
             }
@@ -71,7 +71,7 @@ const DynamicTablePage = () => {
           >
             Back
           </button>
-          {checkPermission(`${business.business._id}_${table}_create`) && (
+          {checkPermission(`${business?.business._id}_${table}_create`) && (
             <button className="btn m-a mr-0" onClick={() => setAddData(true)}>
               Add {table}
             </button>
@@ -83,7 +83,7 @@ const DynamicTablePage = () => {
         loading={gettingCollection || loading}
         data={data}
         actions={(item) => [
-          ...(checkPermission(`${business.business._id}_${table}_update`)
+          ...(checkPermission(`${business?.business._id}_${table}_update`)
             ? [
                 {
                   icon: <FaPencilAlt />,
@@ -95,7 +95,7 @@ const DynamicTablePage = () => {
                 },
               ]
             : []),
-          ...(checkPermission(`${business.business._id}_${table}_delete`)
+          ...(checkPermission(`${business?.business._id}_${table}_delete`)
             ? [
                 {
                   icon: <FaRegTrashAlt />,

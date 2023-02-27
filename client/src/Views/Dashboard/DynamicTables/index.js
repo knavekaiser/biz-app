@@ -64,7 +64,11 @@ const Collections = () => {
       <Table
         loading={loading}
         className={s.collections}
-        columns={[{ label: "Name" }, { label: "Action" }]}
+        columns={[
+          { label: "Name" },
+          { label: "Another one" },
+          { label: "Action" },
+        ]}
       >
         {collections.map((item, i) => (
           <tr

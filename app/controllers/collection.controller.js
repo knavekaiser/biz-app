@@ -35,6 +35,10 @@ exports.findAll = async (req, res) => {
         tableName = null;
         conditions.name = { $in: dynamicTables };
       }
+    } else {
+      if (tableName) {
+        conditions.name = tableName;
+      }
     }
     Collection.find(conditions)
       .then((data) => {
