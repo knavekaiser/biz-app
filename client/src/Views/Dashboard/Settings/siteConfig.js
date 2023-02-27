@@ -1088,7 +1088,6 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
     });
     reset(data);
   }, []);
-
   return (
     <form
       onSubmit={handleSubmit((values) => {
@@ -1173,7 +1172,6 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
               <p className="mb_5">
                 <strong>{field.label} Mapping:</strong>
               </p>
-
               <Combobox
                 className="mb_5"
                 control={control}
@@ -1188,7 +1186,6 @@ const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
                   setForceRender(Math.random());
                 }}
               />
-
               {getValues(`${field.name}.oparator`) === "customMapping" && (
                 <FieldMapper field={field} control={control} />
               )}

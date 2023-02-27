@@ -356,7 +356,7 @@ export const Select = ({
               if (firstRender.current) {
                 _selectedOptions = _data.filter((item) =>
                   (
-                    (name.includes(".")
+                    (name?.includes(".")
                       ? name
                           .split(".")
                           .reduce((p, c) => p[c], control._formValues)
@@ -379,22 +379,26 @@ export const Select = ({
             Prompt({ type: "error", message: data.message });
           }
         })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
+        .catch((err) => {
+          console.log(err);
+          Prompt({ type: "error", message: err.message });
+        });
     },
     [control._formValues[name], selectedOptions]
   );
 
   useEffect(() => {
-    if (inputValue) {
+    if (url && inputValue) {
       getOptions(inputValue);
     }
   }, [inputValue]);
 
   useEffect(() => {
-    const _value = name.includes(".")
-      ? name.split(".").reduce((p, c) => p[c], control._formValues)
-      : control._formValues[name];
-    if (_value && !options.length) {
+    const _value =
+      name && name.includes(".")
+        ? name.split(".").reduce((p, c) => p[c], control._formValues)
+        : control._formValues[name];
+    if (_value && !options.length && url) {
       getOptions(null, _value);
     }
   }, []);
