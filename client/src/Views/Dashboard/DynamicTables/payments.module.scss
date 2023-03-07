@@ -4,7 +4,7 @@
   background: white;
   margin: 1rem auto;
   border-radius: 1rem;
-  max-width: 60rem;
+  // max-width: 80rem;
   width: 100%;
   grid-template-rows: min-content 1fr;
 }
@@ -70,7 +70,43 @@
 }
 
 .dynamicForm {
-  // padding:
+  .productVariants {
+    tr {
+      // grid-template-columns: 8rem 5rem 1fr;
+    }
+    .images {
+      // background: red;
+      label {
+        padding: 0;
+        &.selected {
+          border: 3px solid $comp-color;
+        }
+        height: 3rem;
+        width: 3rem;
+      }
+      img {
+        height: 100%;
+        width: 100%;
+      }
+    }
+  }
+}
+
+.variantForm {
+  .variantImages {
+    label {
+      padding: 0 !important;
+      &.selected {
+        border: 3px solid $comp-color;
+      }
+      height: 4rem;
+      width: 4rem;
+    }
+    img {
+      height: 100%;
+      width: 100%;
+    }
+  }
 }
 
 .fieldFormWrapper {

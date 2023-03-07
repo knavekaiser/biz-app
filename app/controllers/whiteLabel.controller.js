@@ -19,6 +19,10 @@ exports.getSiteConfig = async (req, res) => {
       name: "Product",
       user: req.business._id,
     });
+    const orderCollection = await Collection.findOne({
+      name: "Order",
+      user: req.business._id,
+    });
     User.aggregate([
       { $match: { domain } },
       {
@@ -56,6 +60,7 @@ exports.getSiteConfig = async (req, res) => {
             siteConfig: {
               currency: "USD",
               productFields: productCollection?.fields || null,
+              orderFields: orderCollection?.fields || null,
               ...data[0].siteConfig,
               currencies: [
                 { currency: "USD", symbol: "$" },
@@ -259,7 +264,7 @@ exports.getRelatedProducts = async (req, res) => {
         query[filter.fieldName] = product[filter.fieldName];
       } else if (filter.oparator === "customMapping") {
         query[filter.fieldName] = {
-          $in: filter.includes[product[filter.fieldName]].map((item) =>
+          $in: filter.includes[product[filter.fieldName]]?.map((item) =>
             field?.dataType === "objectId" ? ObjectId(item) : item
           ),
         };
@@ -297,6 +302,7 @@ exports.getRelatedProducts = async (req, res) => {
         responseFn.error(res, {}, err.message || responseStr.error_occurred)
       );
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -377,7 +383,10 @@ exports.getLandingPageShelves = async (req, res) => {
         ...dbHelper.getRatingPipeline({ business: req.business }),
       ];
     });
-    Model.aggregate([{ $facet: facet }])
+    Model.aggregate([
+      ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
+      { $facet: facet },
+    ])
       .then((data) => {
         responseFn.success(res, {
           data: Object.entries(data[0] || {})
@@ -558,9 +567,7 @@ exports.addReview = async (req, res) => {
 
 exports.getReviews = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Review"
-    );
+    const { Model } = await dbHelper.getModel(req.business._id + "_Review");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.aggregate([
@@ -591,6 +598,84 @@ exports.getReviews = async (req, res) => {
     ])
       .then((reviews) => {
         responseFn.success(res, { data: reviews });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.getCart = async (req, res) => {
+  try {
+    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.findOne({ customer: req.authUser._id, status: "cart" })
+      .then((data) => responseFn.success(res, { data: data.products }))
+      .catch((err) => responseFn.error(res, {}, err.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.updateCart = async (req, res) => {
+  try {
+    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    let cart = await Model.findOne({
+      customer: req.authUser._id,
+      status: "cart",
+    });
+    if (!cart) {
+      cart = await new Model({
+        products: req.body.products,
+        customer: req.authUser._id,
+        status: "cart",
+      }).save();
+    } else {
+      cart = await Model.findOneAndUpdate(
+        { _id: cart._id },
+        {
+          products: req.body.products,
+          price: req.body.products.reduce(
+            (p, c) => p + (c.product.price + (c.variant?.price || 0)) * c.qty,
+            0
+          ),
+        },
+        { new: true }
+      );
+    }
+
+    return responseFn.success(res, { data: cart.products });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.placeOrder = async (req, res) => {
+  try {
+    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.findOneAndUpdate(
+      {
+        customer: req.authUser._id,
+        status: "cart",
+      },
+      { status: "pending" },
+      { new: true }
+    )
+      .then((data) => {
+        if (data) {
+          return responseFn.success(res, { data });
+        }
+        return responseFn.error(
+          res,
+          {},
+          responseStr.record_not_found.replace("Record", "Cart"),
+          400
+        );
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {

@@ -43,7 +43,11 @@ exports.getModel = async (table) => {
     fields.forEach((field) => {
       // add nested fields type if field is an object
       if (field.dataType === "array" && field.dataElementType === "object") {
-        _fields[field.name] = [new Schema(getFields(field.fields))];
+        if (Array.isArray(field.fields) && field.fields.length) {
+          _fields[field.name] = [new Schema(getFields(field.fields))];
+        } else {
+          _fields[field.name] = [];
+        }
       } else {
         _fields[field.name] = {
           type: getType(field),

@@ -21,6 +21,8 @@ import { Modal } from "../modal";
 import { DateRangePicker } from "react-date-range";
 import Sortable from "sortablejs";
 import { moment, getAllDates } from "./moment";
+import { Editor } from "react-draft-wysiwyg";
+import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -30,6 +32,8 @@ import countries from "countries";
 import { useFetch } from "hooks";
 import { phone } from "phone";
 import { Table, TableActions } from "./Table";
+
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 import { Combobox } from "./combobox";
 
@@ -689,6 +693,7 @@ export const CustomRadio = ({
   className,
   selectedClassName,
   sortable,
+  renderItem,
 }) => {
   const onChangeRef = useRef();
   const containerRef = useRef();
@@ -795,7 +800,7 @@ export const CustomRadio = ({
                         );
                       }}
                     />
-                    {label}
+                    {renderItem?.({ label, value: v, disabled }) || label}
                   </label>
                 ))}
             </div>
@@ -1293,6 +1298,64 @@ export const CalendarInput = ({
                 </div>
               )}
             </div>
+          </section>
+        );
+      }}
+    />
+  );
+};
+
+export const RichText = ({ control, name, label, required }) => {
+  const pastValue = useRef();
+  const key = useRef(Math.random());
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({
+        field: { onChange, onBlur, value, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        if (value === undefined) {
+          pastValue.current = undefined;
+        } else if (typeof value === "object" && "blocks" in value) {
+          if (pastValue.current === undefined) {
+            key.current = Math.random();
+            pastValue.current = value;
+          }
+        }
+
+        if (
+          typeof value === "object" &&
+          "blocks" in value &&
+          !("entityMap" in value)
+        ) {
+          value.entityMap = {};
+        }
+
+        const contentState =
+          typeof value === "object" && "blocks" in value
+            ? value
+            : convertToRaw(EditorState.createEmpty().getCurrentContent());
+
+        return (
+          <section className={s.richText}>
+            {label && (
+              <label>
+                {label} {required && "*"}
+              </label>
+            )}
+            <Editor
+              key={key.current}
+              initialContentState={contentState}
+              wrapperClassName={s.richTextWrapper}
+              editorClassName={s.richTextEditor}
+              toolbarClassName={s.richTextToolbar}
+              onContentStateChange={(v) => {
+                onChange(v);
+              }}
+            />
+            {error && <span className={s.errMsg}>{error.message}</span>}
           </section>
         );
       }}

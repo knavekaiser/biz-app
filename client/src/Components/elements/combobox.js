@@ -25,7 +25,7 @@ export const Combobox = ({
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
   const [hover, setHover] = useState();
-  const clickHandlerAdded = useState(false);
+  // const clickHandlerAdded = useState(false);
   useEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
     setStyle({
@@ -42,20 +42,21 @@ export const Combobox = ({
       maxHeight: Math.min(window.innerHeight - 16, 300),
     });
   }, [open, options]);
-  useEffect(() => {
-    const clickHandler = (e) => {
-      if (e.path && !e.path.includes(container.current)) {
-        setOpen(false);
-      }
-    };
-    if (!clickHandlerAdded.current) {
-      document.addEventListener("click", clickHandler);
-      clickHandlerAdded.current = true;
-      return () => {
-        document.removeEventListener("click", clickHandler);
-      };
-    }
-  }, [open]);
+  // useEffect(() => {
+  //   const clickHandler = (e) => {
+  //     console.log("clicked");
+  //     if (e.path && !e.path.includes(container.current)) {
+  //       setOpen(false);
+  //     }
+  //   };
+  //   if (!clickHandlerAdded.current) {
+  //     document.addEventListener("click", clickHandler);
+  //     clickHandlerAdded.current = true;
+  //     return () => {
+  //       document.removeEventListener("click", clickHandler);
+  //     };
+  //   }
+  // }, [open]);
   return (
     <Controller
       control={control}
@@ -221,10 +222,9 @@ export const Combobox = ({
               open={open}
               className={s.comboboxModal}
               backdropClass={s.comboboxBackdrop}
-              open={open}
               setOpen={setOpen}
               onBackdropClick={() => setOpen(false)}
-              clickThroughBackdrop={true}
+              // clickThroughBackdrop
               style={style}
             >
               <ComboboxList

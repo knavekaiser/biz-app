@@ -63,5 +63,25 @@ module.exports = function (app) {
   );
   router.get("/reviews/:_id", whitelabel.getBusiness, controller.getReviews);
 
+  router.get(
+    "/cart",
+    whitelabel.getBusiness,
+    authJwt.verifyToken,
+    controller.getCart
+  );
+  router.post(
+    "/cart",
+    whitelabel.getBusiness,
+    authJwt.verifyToken,
+    validate(schema.updateCart),
+    controller.updateCart
+  );
+  router.post(
+    "/place-order",
+    whitelabel.getBusiness,
+    authJwt.verifyToken,
+    controller.placeOrder
+  );
+
   app.use("/api", router);
 };

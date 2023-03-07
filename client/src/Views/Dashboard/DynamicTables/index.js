@@ -64,11 +64,7 @@ const Collections = () => {
       <Table
         loading={loading}
         className={s.collections}
-        columns={[
-          { label: "Name" },
-          { label: "Another one" },
-          { label: "Action" },
-        ]}
+        columns={[{ label: "Name" }, { label: "Action" }]}
       >
         {collections.map((item, i) => (
           <tr
@@ -163,6 +159,7 @@ const Collections = () => {
               );
               setEdit(newCollection);
             } else {
+              setEdit(newCollection);
               setCollections((prev) => [...prev, newCollection]);
             }
             // setAddCollection(false);

@@ -2,14 +2,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import {
   Input,
-  Textarea,
   Combobox,
   Table,
   TableActions,
   Checkbox,
   Select,
   CustomRadio,
-  moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
@@ -47,7 +45,6 @@ const optionsSchema = yup.object({
 });
 
 const Form = ({ edit, collections, onSuccess }) => {
-  const firstRender = useRef(true);
   const [fields, setFields] = useState(edit?.fields || []);
   const [editField, setEditField] = useState(null);
   const [err, setErr] = useState(null);
@@ -293,7 +290,7 @@ const FieldForm = ({
         collection: "",
         fieldType: "",
         optionType: "",
-        options: "",
+        options: [],
         multiRange: "",
         label: "",
         required: "",
@@ -471,6 +468,7 @@ const FieldForm = ({
               options={[
                 { label: "Input", value: "input" },
                 { label: "Textarea", value: "textarea" },
+                { label: "Rich Text", value: "richText" },
                 { label: "Combobox", value: "combobox" },
                 { label: "Autocomplete", value: "select" },
                 { label: "Date Range", value: "dateRange" },
@@ -481,9 +479,13 @@ const FieldForm = ({
           )}
 
           {!(
-            ["combobox", "textarea", "collectionFilter", "none"].includes(
-              fieldType
-            ) ||
+            [
+              "combobox",
+              "textarea",
+              "richText",
+              "collectionFilter",
+              "none",
+            ].includes(fieldType) ||
             (dataType === "array" && dataElementType === "object") ||
             (["includeProducts", "excludeProducts"].includes(name) &&
               dataType === "object")
@@ -606,16 +608,17 @@ const FieldForm = ({
           )}
         </form>
 
-        {["combobox", "select"].includes(fieldType) && optionType === "array" && (
-          <>
-            <h3>{label} Options</h3>
-            <Options
-              dataType={dataType}
-              options={options}
-              setOptions={(newOptions) => setValue("options", newOptions)}
-            />
-          </>
-        )}
+        {["combobox", "select"].includes(fieldType) &&
+          optionType === "array" && (
+            <>
+              <h3>{label} Options</h3>
+              <Options
+                dataType={dataType}
+                options={options}
+                setOptions={(newOptions) => setValue("options", newOptions)}
+              />
+            </>
+          )}
 
         <form
           onSubmit={handleSubmit(onSubmit)}

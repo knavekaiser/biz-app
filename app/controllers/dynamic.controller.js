@@ -54,6 +54,7 @@ exports.findAll = async (req, res) => {
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -61,6 +62,21 @@ exports.findAll = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { Model, collection } = req;
+
+    if (collection.fields.some((item) => item.dataType === "object")) {
+      collection.fields
+        .filter((item) => item.dataType === "object")
+        .forEach((field) => {
+          if (req.body[field.name]) {
+            try {
+              req.body[field.name] = JSON.parse(req.body[field.name]);
+            } catch (err) {
+              req.body[field.name] = {};
+            }
+          }
+        });
+    }
+
     new Model({ ...req.body })
       .save()
       .then(async (data) => {
@@ -83,6 +99,24 @@ exports.create = async (req, res) => {
 exports.bulkCreate = async (req, res) => {
   try {
     const { Model, collection } = req;
+
+    if (collection.fields.some((item) => item.dataType === "object")) {
+      const fields = collection.fields.filter(
+        (item) => item.dataType === "object"
+      );
+      req.body.data.forEach((item, i) => {
+        fields.forEach((field) => {
+          if (req.body[i][field.name]) {
+            try {
+              req.body[i][field.name] = JSON.parse(req.body[i][field.name]);
+            } catch (err) {
+              req.body[i][field.name] = {};
+            }
+          }
+        });
+      });
+    }
+
     Model.insertMany(req.body.data, { ordered: false })
       .then(async (data) => {
         return responseFn.success(
@@ -100,6 +134,24 @@ exports.bulkCreate = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { Model, collection } = req;
+
+    if (collection.fields.some((item) => item.dataType === "object")) {
+      collection.fields
+        .filter((item) => item.dataType === "object")
+        .forEach((field) => {
+          if (req.body[field.name]) {
+            try {
+              req.body[field.name] = JSON.parse(req.body[field.name]);
+            } catch (err) {
+              req.body[field.name] = {};
+            }
+          }
+        });
+    }
+    if (collection.name === "Product" && "variants" in req.body) {
+      req.body.variants = JSON.parse(req.body.variants);
+    }
+
     Model.findOneAndUpdate(
       { _id: req.params.id },
       { ...req.body },

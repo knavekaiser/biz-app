@@ -106,6 +106,9 @@ const SiteConfig = () => {
             setProductCollection(data.data);
             setProductElementOptions(
               fields
+                .filter(
+                  (item) => !["description", "dateRange"].includes(item.value)
+                )
                 .sort((a, b, i) => {
                   if (!config.siteConfig.productCard?.includes(a.value)) {
                     return 1;

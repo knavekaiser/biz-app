@@ -1183,6 +1183,34 @@ $branch-angle: 35deg;
   }
 }
 
+.richText {
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+  }
+  .richTextWrapper {
+    border: 1px solid #b7b7b7;
+    border-radius: 4px;
+    height: max-content;
+  }
+  .richTextEditor {
+    border-top: 1px solid #b7b7b7;
+    padding: 0 1rem;
+  }
+  .richTextToolbar {
+    margin-bottom: 0 !important;
+    border: none;
+  }
+  .errMsg {
+    font-size: 10pt;
+    color: red;
+    text-align: left;
+    display: block;
+  }
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);

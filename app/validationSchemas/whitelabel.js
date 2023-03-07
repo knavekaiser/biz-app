@@ -39,6 +39,20 @@ module.exports = {
     }),
   }),
 
+  updateCart: yup.object({
+    body: yup.object({
+      products: yup.array().of(
+        yup.object({
+          product: yup.object({
+            _id: yup.string().objectId().required(),
+            title: yup.string().required(),
+          }),
+          qty: yup.number().min(1, "Qty can't be less that 1"),
+        })
+      ),
+    }),
+  }),
+
   // ------------------------------------------------ Not applied
 
   forgotPassword: yup.object({

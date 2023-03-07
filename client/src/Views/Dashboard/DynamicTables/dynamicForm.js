@@ -1,5 +1,4 @@
-import { useState, useEffect, useContext, useRef } from "react";
-import { SiteContext } from "SiteContext";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   Input,
@@ -13,6 +12,9 @@ import {
   CustomRadio,
   MobileNumberInput,
   moment,
+  RichText,
+  Checkbox,
+  TableActions,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
@@ -32,12 +34,27 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
   return (
     <div className={`grid gap-1`}>
       <DynamicForm
+        collection={collection}
         fields={collection.fields}
         productCollection={productCollection}
         edit={edit}
         loading={loading}
         onSubmit={(values) => {
           let payload = { ...values };
+
+          if (collection.name === "Product" && "variants" in payload) {
+            payload.variants = JSON.stringify(payload.variants);
+          }
+
+          if (collection.fields.some((field) => field.dataType === "object")) {
+            collection.fields
+              .filter((item) => item.dataType === "object")
+              .forEach((field) => {
+                if (values[field.name]) {
+                  payload[field.name] = JSON.stringify(values[field.name]);
+                }
+              });
+          }
 
           findProperties("_id", payload).forEach((item) => {
             item.path.reduce((obj, key, i, arr) => {
@@ -51,6 +68,9 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
           if (collection.fields.some((field) => field.inputType === "file")) {
             payload = new FormData();
             collection.fields.forEach((field) => {
+              if (collection.name === "Product" && field.name === "variants") {
+                return;
+              }
               const value = values[field.name];
               if (field.inputType === "file" && value.length) {
                 for (const file of value) {
@@ -64,8 +84,16 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
                 }
                 return;
               }
+              if (field.dataType === "object") {
+                payload.append(`${field.name}`, JSON.stringify(value));
+                return;
+              }
+
               return payload.append(field.name, value);
             });
+            if (collection.name === "Product" && "variants" in values) {
+              payload.append("variants", JSON.stringify(values.variants));
+            }
           }
           (edit ? updateData : saveData)(payload).then(({ data }) => {
             if (data.errors) {
@@ -81,6 +109,7 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
 };
 
 const DynamicForm = ({
+  collection,
   fields: collectionFields,
   productCollection,
   edit,
@@ -94,6 +123,7 @@ const DynamicForm = ({
     setValue,
     watch,
     control,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: useYup(
@@ -132,6 +162,9 @@ const DynamicForm = ({
   });
 
   const fields = collectionFields.map((field, i) => {
+    if (collection?.name === "Product" && field.name === "variants") {
+      return null;
+    }
     if (field.dataType === "object" && field.fieldType === "collectionFilter") {
       const value = watch(field.name);
       return (
@@ -219,6 +252,18 @@ const DynamicForm = ({
         />
       );
     }
+    if (field.fieldType === "richText") {
+      return (
+        <RichText
+          key={field.name}
+          control={control}
+          name={field.name}
+          autoFocus={i === 0}
+          label={field.label}
+          required={field.required}
+        />
+      );
+    }
     if (field.fieldType === "combobox") {
       return (
         <Combobox
@@ -227,6 +272,228 @@ const DynamicForm = ({
           control={control}
           name={field.name}
           multiple={field.multiple}
+          formOptions={{ required: field.required }}
+          options={field.options || []}
+        />
+      );
+    }
+    if (field.fieldType === "select") {
+      return (
+        <Select
+          key={field.name}
+          control={control}
+          label={field.label}
+          {...(field.optionType === "predefined" && {
+            options: field.options || [],
+          })}
+          {...(field.optionType === "collection" && {
+            url: `${endpoints.dynamic}/${field.collection}`,
+          })}
+          getQuery={(inputValue, selected) => ({
+            ...(inputValue && { [field.optionLabel]: inputValue }),
+            ...(selected && { [field.optionValue]: selected }),
+          })}
+          handleData={(item) => ({
+            label: item[field.optionLabel],
+            value: item[field.optionValue],
+          })}
+          multiple={field.multiple}
+          name={field.name}
+          formOptions={{ required: field.required }}
+          className={s.itemName}
+        />
+      );
+    }
+  });
+
+  const addVariant = watch("addVariant");
+
+  useEffect(() => {
+    const _edit = { ...edit };
+    if (edit) {
+      collectionFields.forEach((field) => {
+        if (field.inputType === "date") {
+          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD");
+        } else if (field.inputType === "datetime-local") {
+          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
+        } else if (
+          field.name === "variants" &&
+          collection?.name === "Product"
+        ) {
+          _edit.addVariant = !!edit.variants?.length;
+        }
+      });
+    }
+    reset(_edit);
+  }, [edit]);
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        onSubmit({
+          ...values,
+          _id: edit?._id || Math.random().toString(36).substr(-8),
+        });
+      })}
+      className={`${s.dynamicForm} grid gap-1 p-1`}
+    >
+      {fields}
+
+      {collection?.name === "Product" &&
+        collection?.fields.some(
+          (item) =>
+            item.dataType === "array" &&
+            ["select", "combobox"].includes(item.fieldType)
+        ) && <Checkbox {...register("addVariant")} label="Add Variant" />}
+
+      {addVariant && (
+        <Variants
+          collection={collection}
+          setValue={setValue}
+          getValues={getValues}
+        />
+      )}
+
+      <div className="btns">
+        <button className="btn" disabled={loading}>
+          {edit ? "Update" : "Submit"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const Variants = ({ collection, setValue, getValues }) => {
+  const [formOpen, setFormOpen] = useState(false);
+  const [edit, setEdit] = useState(null);
+  const [variants, setVariants] = useState(getValues("variants") || []);
+  const [fields, setFields] = useState(
+    collection.fields.filter(
+      (item) =>
+        item.dataType === "array" &&
+        ["select", "combobox"].includes(item.fieldType)
+    )
+  );
+
+  return (
+    <div className={s.productVariants}>
+      <div className="flex justify-space-between mb-1">
+        <h3>Product Variants</h3>
+        <button className="btn" type="button" onClick={() => setFormOpen(true)}>
+          Add Variant
+        </button>
+      </div>
+
+      <Table
+        columns={[
+          ...fields.map((item) => ({ label: item.label })),
+          { label: "Price" },
+          { label: "Images" },
+          { label: "Actions" },
+        ]}
+      >
+        {variants.map((item, i) => (
+          <tr key={i}>
+            <td>{item[fields[0]?.name]}</td>
+            <td>{item[fields[1]?.name]}</td>
+            <td>{item.price}</td>
+            <td>{(item.images || []).length}</td>
+            <TableActions
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setEdit(item);
+                    setFormOpen(true);
+                  },
+                },
+                {
+                  icon: <FaRegTrashAlt />,
+                  label: "Delete",
+                  callBack: () =>
+                    Prompt({
+                      type: "confirmation",
+                      message: `Are you sure you want to remove this Variant?`,
+                      callback: () => {
+                        setVariants(variants.filter((i) => i._id !== item._id));
+                        setValue(
+                          "variants",
+                          variants.filter((i) => i._id !== item._id)
+                        );
+                      },
+                    }),
+                },
+              ]}
+            />
+          </tr>
+        ))}
+      </Table>
+
+      <Modal
+        head
+        label={`${edit ? "Update" : "Add"} Item`}
+        open={formOpen}
+        setOpen={() => {
+          setFormOpen(false);
+          setEdit(null);
+        }}
+        className={s.nestedObjectFormModal}
+      >
+        <VariantForm
+          edit={edit}
+          fields={fields}
+          images={getValues("images")}
+          onSubmit={(newObj) => {
+            if (edit) {
+              setVariants(
+                variants.map((item) =>
+                  item._id === newObj._id ? newObj : item
+                )
+              );
+              setValue(
+                "variants",
+                variants.map((item) =>
+                  item._id === newObj._id ? newObj : item
+                )
+              );
+              setEdit(null);
+            } else {
+              setVariants([...variants, newObj]);
+              setValue("variants", [...variants, newObj]);
+            }
+            // setValues
+            setFormOpen(false);
+          }}
+        />
+      </Modal>
+    </div>
+  );
+};
+const VariantForm = ({ edit, fields, images, onSubmit }) => {
+  const { handleSubmit, control, register, reset, errors } = useForm({
+    resolver: useYup(
+      yup.object({
+        price: yup.number().typeError("Please enter a valid number"),
+        // yup.string()
+      })
+    ),
+  });
+  useEffect(() => {
+    if (edit) {
+      reset({ ...edit });
+    }
+  }, []);
+
+  const _fields = fields.map((field, i) => {
+    if (field.fieldType === "combobox") {
+      return (
+        <Combobox
+          key={field.name}
+          label={field.label}
+          control={control}
+          name={field.name}
+          // multiple={field.multiple}
           formOptions={{ required: field.required }}
           options={field.options || []}
         />
@@ -252,7 +519,7 @@ const DynamicForm = ({
             label: item[field.optionLabel],
             value: item[field.optionValue],
           })}
-          multiple={field.multiple}
+          // multiple={field.multiple}
           name={field.name}
           formOptions={{ required: field.required }}
           className={s.itemName}
@@ -260,37 +527,48 @@ const DynamicForm = ({
       );
     }
   });
-
-  useEffect(() => {
-    const _edit = { ...edit };
-    if (edit) {
-      collectionFields.forEach((field) => {
-        if (field.inputType === "date") {
-          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD");
-        } else if (field.inputType === "datetime-local") {
-          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
-        }
-      });
-    }
-    reset(_edit);
-  }, [edit]);
-
   return (
     <form
-      onSubmit={handleSubmit((values) =>
+      className={`${s.variantForm} p-1 grid gap-1`}
+      onSubmit={handleSubmit((values) => {
         onSubmit({
           ...values,
           _id: edit?._id || Math.random().toString(36).substr(-8),
-        })
-      )}
-      className={`${s.dynamicForm} grid gap-1 p-1`}
+        });
+      })}
     >
-      {fields}
+      <CustomRadio
+        control={control}
+        label="Images"
+        name={`images`}
+        className={s.variantImages}
+        multiple
+        selectedClassName={s.selected}
+        options={images
+          .filter(
+            (item) => typeof item === "string" || "uploadFilePath" in item
+          )
+          .map((item) => {
+            if (typeof item === "string") {
+              return { value: item };
+            }
+            if ("uploadFilePath" in item) {
+              return { value: item.uploadFilePath };
+            }
+            if ("type" in item && item.type.startsWith("image")) {
+              const url = URL.createObjectURL(item);
+              return { value: url };
+            }
+          })}
+        renderItem={(opt) => <img src={opt.value} />}
+      />
+
+      {_fields}
+
+      <Input label="Price" type="number" {...register("price")} />
 
       <div className="btns">
-        <button className="btn" disabled={loading}>
-          {edit ? "Update" : "Submit"}
-        </button>
+        <button className="btn">{edit ? "Update" : "Submit"}</button>
       </div>
     </form>
   );

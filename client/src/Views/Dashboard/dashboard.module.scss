@@ -42,7 +42,7 @@
   .tabs {
     padding: 1rem;
     padding-bottom: 0;
-    max-width: 63rem;
+    max-width: 83rem;
     margin: auto;
     .tab {
       justify-content: center;
@@ -51,7 +51,7 @@
   .content {
     background: red !important;
     width: 100%;
-    max-width: 60rem;
+    max-width: 80rem;
     grid-template-rows: min-content 1fr;
   }
   footer {
@@ -64,7 +64,7 @@
   .container {
     .tabs {
       padding: 0.5rem;
-      max-width: 60rem;
+      max-width: 80rem;
       margin: auto;
     }
   }
