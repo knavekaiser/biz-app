@@ -136,7 +136,9 @@ const DynamicTablePage = () => {
         <DynamicForm
           edit={edit}
           collection={collection}
-          {...(collection?.name === "Campaign" && { productCollection })}
+          {...(["Campaign", "Order"].includes(collection?.name) && {
+            productCollection,
+          })}
           onSuccess={(newData) => {
             if (edit) {
               setData((prev) =>

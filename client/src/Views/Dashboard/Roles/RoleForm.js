@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input, Table, Checkbox } from "Components/elements";
 import { useYup, useFetch } from "hooks";
@@ -6,6 +6,7 @@ import { Prompt } from "Components/modal";
 import * as yup from "yup";
 import s from "./roles.module.scss";
 import { endpoints, tables } from "config";
+import { SiteContext } from "SiteContext";
 
 const mainSchema = yup.object({
   name: yup.string().required(),
@@ -13,6 +14,7 @@ const mainSchema = yup.object({
 });
 
 const Form = ({ edit, dynamicTables, onSuccess }) => {
+  const { user } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -80,6 +82,18 @@ const Form = ({ edit, dynamicTables, onSuccess }) => {
                     <td className="align-center" key={value}>
                       <Checkbox
                         checked={(permissions || []).includes(value)}
+                        disabled={
+                          (value === "dynamic_table_read" &&
+                            (permissions || []).some((item) =>
+                              item.startsWith(user._id)
+                            )) ||
+                          (value.endsWith("_read") &&
+                            (permissions || []).some(
+                              (item) =>
+                                item !== value &&
+                                item.startsWith(value.replace("_read", ""))
+                            ))
+                        }
                         onChange={(e) => {
                           if ((permissions || []).includes(value)) {
                             setValue(
@@ -88,7 +102,21 @@ const Form = ({ edit, dynamicTables, onSuccess }) => {
                             );
                           } else {
                             setValue("permissions", [
-                              ...new Set([...(permissions || []), value]),
+                              ...new Set([
+                                ...(permissions || []),
+                                ...(value.startsWith(user._id)
+                                  ? ["dynamic_table_read"]
+                                  : []),
+                                ...(/^(.*)(create|update|delete)$/.test(value)
+                                  ? [
+                                      value.replace(
+                                        /(create|update|delete)$/,
+                                        "read"
+                                      ),
+                                    ]
+                                  : []),
+                                value,
+                              ]),
                             ]);
                           }
                         }}

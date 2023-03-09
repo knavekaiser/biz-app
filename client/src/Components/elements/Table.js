@@ -4,6 +4,7 @@ import {
   useEffect,
   useLayoutEffect,
   useCallback,
+  useContext,
 } from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
@@ -16,6 +17,7 @@ import { useFetch, useYup } from "hooks";
 import { toCSV, parseXLSXtoJSON } from "helpers";
 import * as yup from "yup";
 import { Modal, Prompt } from "../modal";
+import { SiteContext } from "SiteContext";
 
 export const Table = ({
   columns,
@@ -184,6 +186,7 @@ export const DynamicTable = ({
   actions,
   className = "",
 }) => {
+  const { config } = useContext(SiteContext);
   return (
     <Table
       loading={loading}
@@ -207,6 +210,12 @@ export const DynamicTable = ({
                     (item[field.name] === false && "False")}
                 </td>
               );
+            }
+            if (
+              field.dataType === "objectId" &&
+              typeof item[field.name] === "object"
+            ) {
+              // console.log(item, field)
             }
             if (field.dataType === "object" && item[field.name]) {
               return (
@@ -272,6 +281,15 @@ export const DynamicTable = ({
                       </span>
                     )}
                   </div>
+                </td>
+              );
+            }
+            if (field.dataType === "number") {
+              return (
+                <td key={j} className="ellipsis l-1">
+                  {item[field.name]
+                    ? item[field.name].toLocaleString(config.numberSeparator)
+                    : item[field.name]}
                 </td>
               );
             }

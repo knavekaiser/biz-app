@@ -335,10 +335,11 @@ const FieldForm = ({
               { label: "Date", value: "date" },
               { label: "Boolean", value: "boolean" },
               { label: "Array", value: "array" },
+              { label: "Variant Array", value: "variantArray" },
               { label: "Object", value: "object" },
               { label: "Object ID", value: "objectId" },
             ]}
-            disabled={edit}
+            disabled={edit || fieldType === "richText"}
           />
 
           {dataType === "objectId" && (
@@ -380,7 +381,7 @@ const FieldForm = ({
             </>
           )}
 
-          {dataType === "array" && (
+          {["array", "variantArray"].includes(dataType) && (
             <Combobox
               label="Data Element Type"
               name="dataElementType"
@@ -431,15 +432,16 @@ const FieldForm = ({
           // ))
         }
 
-        {dataType === "array" && dataElementType === "object" && (
-          <NestedObjectFields
-            name={label || name}
-            value={dataElements}
-            setValue={(newValue) => setValue("fields", newValue)}
-            collection={editCollection}
-            collections={collections}
-          />
-        )}
+        {["array", "variantArray"].includes(dataType) &&
+          dataElementType === "object" && (
+            <NestedObjectFields
+              name={label || name}
+              value={dataElements}
+              setValue={(newValue) => setValue("fields", newValue)}
+              collection={editCollection}
+              collections={collections}
+            />
+          )}
       </div>
 
       <div className={s.inputDetail}>
@@ -459,7 +461,10 @@ const FieldForm = ({
             error={errors.label}
           />
 
-          {!(dataType === "array" && dataElementType === "object") && (
+          {!(
+            ["array", "variantArray"].includes(dataType) &&
+            dataElementType === "object"
+          ) && (
             <Combobox
               label="Field Type"
               name="fieldType"
@@ -475,6 +480,11 @@ const FieldForm = ({
                 { label: "Collection Filter", value: "collectionFilter" },
                 { label: "None", value: "none" },
               ]}
+              onChange={(opt) => {
+                if (opt?.value === "richText") {
+                  setValue("dataType", "object");
+                }
+              }}
             />
           )}
 
@@ -486,7 +496,8 @@ const FieldForm = ({
               "collectionFilter",
               "none",
             ].includes(fieldType) ||
-            (dataType === "array" && dataElementType === "object") ||
+            (["array", "variantArray"].includes(dataType) &&
+              dataElementType === "object") ||
             (["includeProducts", "excludeProducts"].includes(name) &&
               dataType === "object")
           ) && (

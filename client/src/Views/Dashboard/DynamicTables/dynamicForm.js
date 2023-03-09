@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useForm } from "react-hook-form";
 import {
   Input,
@@ -23,6 +23,7 @@ import { findProperties } from "helpers";
 import * as yup from "yup";
 import s from "./payments.module.scss";
 import { endpoints } from "config";
+import { SiteContext } from "SiteContext";
 
 const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
   const {
@@ -78,7 +79,7 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
                 }
                 return;
               }
-              if (field.dataType === "array") {
+              if (["array", "variantArray"].includes(field.dataType)) {
                 for (const item of value) {
                   payload.append(`${field.name}`, item);
                 }
@@ -140,7 +141,7 @@ const DynamicForm = ({
             if (f.inputType === "phone") {
               field = yup.string().phone("Please enter a valid phone number");
             }
-            if (f.dataType === "array") {
+            if (["array", "variantArray"].includes(f.dataType)) {
               field = yup.array();
               if (f.min) {
                 field = field.min(f.min, `At least ${f.min} items required`);
@@ -177,10 +178,14 @@ const DynamicForm = ({
         />
       );
     }
-    if (field.dataType === "array" && field.dataElementType === "object") {
+    if (
+      ["array", "variantArray"].includes(field.dataType) &&
+      field.dataElementType === "object"
+    ) {
       const values = watch(field.name);
       return (
         <NestedObjectTable
+          collection={collection}
           key={field.name}
           values={values}
           field={field}
@@ -317,6 +322,18 @@ const DynamicForm = ({
         } else if (field.inputType === "datetime-local") {
           _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
         } else if (
+          field.dataType === "objectId" &&
+          typeof edit[field.name] === "object"
+        ) {
+          _edit[field.name] = edit[field.name][field.optionValue];
+        } else if (
+          field.dataElementType === "objectId" &&
+          typeof (edit[field.name] || [])[0] === "object"
+        ) {
+          _edit[field.name] = edit[field.name].map(
+            (item) => item[field.optionValue]
+          );
+        } else if (
           field.name === "variants" &&
           collection?.name === "Product"
         ) {
@@ -340,11 +357,9 @@ const DynamicForm = ({
       {fields}
 
       {collection?.name === "Product" &&
-        collection?.fields.some(
-          (item) =>
-            item.dataType === "array" &&
-            ["select", "combobox"].includes(item.fieldType)
-        ) && <Checkbox {...register("addVariant")} label="Add Variant" />}
+        collection?.fields.some((item) => "variantArray" === item.dataType) && (
+          <Checkbox {...register("addVariant")} label="Add Variant" />
+        )}
 
       {addVariant && (
         <Variants
@@ -368,11 +383,7 @@ const Variants = ({ collection, setValue, getValues }) => {
   const [edit, setEdit] = useState(null);
   const [variants, setVariants] = useState(getValues("variants") || []);
   const [fields, setFields] = useState(
-    collection.fields.filter(
-      (item) =>
-        item.dataType === "array" &&
-        ["select", "combobox"].includes(item.fieldType)
-    )
+    collection.fields.filter((item) => item.dataType === "variantArray")
   );
 
   return (
@@ -565,7 +576,7 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
 
       {_fields}
 
-      <Input label="Price" type="number" {...register("price")} />
+      <Input label="Price Difference" type="number" {...register("price")} />
 
       <div className="btns">
         <button className="btn">{edit ? "Update" : "Submit"}</button>
@@ -574,46 +585,110 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
   );
 };
 
-const NestedObjectTable = ({ field, values = [], setValue }) => {
+const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
   const [formOpen, setFormOpen] = useState(false);
   const [edit, setEdit] = useState(null);
+  const {
+    config: { siteConfig },
+  } = useContext(SiteContext);
+  const orderFields =
+    collection.name === "Order"
+      ? collection.fields
+          .find((item) => item.name === "products")
+          .fields.filter((item) => !["product", "variant"].includes(item.name))
+      : null;
+  console.log(orderFields, values);
   return (
     <section className={s.nestedTable} onSubmit={(e) => e.stopPropagation()}>
       <div className="flex justify-space-between align-center mb-1">
         <h3>{field.label}</h3>
-        <button className="btn" type="button" onClick={() => setFormOpen(true)}>
-          Add
-        </button>
+        {!(collection.name === "Order" && field.name === "products") && (
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setFormOpen(true)}
+          >
+            Add
+          </button>
+        )}
       </div>
-      <DynamicTable
-        fields={field.fields}
-        data={values}
-        actions={(item) => [
-          {
-            icon: <FaPencilAlt />,
-            label: "Edit",
-            callBack: () => {
-              setEdit(item);
-              setFormOpen(true);
+      {collection.name === "Order" && field.name === "products" ? (
+        <>
+          <ul className={s.products}>
+            {(values || []).map((item, i) => (
+              <li key={i} className={s.product}>
+                <div className={s.thumbnail}>
+                  <img src={(item.variant?.images || item.product.images)[0]} />
+                </div>
+                <div className={s.productDetail}>
+                  <h3>{item.product?.title}</h3>
+                  {(orderFields || []).map((field) => (
+                    <p key={field.name}>
+                      <strong>{field.label}</strong>:{" "}
+                      <span>{item[field.name]}</span>
+                    </p>
+                  ))}
+                </div>
+                <span className={s.price}>
+                  {siteConfig?.currency}{" "}
+                  {(
+                    (item.product.price + (item.variant?.price || 0)) *
+                    (item.qty || 1)
+                  ).toLocaleString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <hr />
+          <p className={s.subtotal}>
+            Subtotal ({values.reduce((p, c) => p + (c.qty || 1), 0)} item):{" "}
+            <strong>
+              {siteConfig.currency +
+                " " +
+                values
+                  .reduce(
+                    (p, c) =>
+                      p +
+                      (c.product.price + (c.variant?.price || 0)) *
+                        (c.qty || 1),
+                    0
+                  )
+                  .toLocaleString()}
+            </strong>
+          </p>
+        </>
+      ) : (
+        <DynamicTable
+          fields={field.fields}
+          data={values}
+          actions={(item) => [
+            {
+              icon: <FaPencilAlt />,
+              label: "Edit",
+              callBack: () => {
+                setEdit(item);
+                setFormOpen(true);
+              },
             },
-          },
-          {
-            icon: <FaRegTrashAlt />,
-            label: "Delete",
-            callBack: () =>
-              Prompt({
-                type: "confirmation",
-                message: `Are you sure you want to remove this Collection?`,
-                callback: () => {
-                  setValue(
-                    field.name,
-                    values.filter((i) => i._id !== item._id)
-                  );
-                },
-              }),
-          },
-        ]}
-      />
+            {
+              icon: <FaRegTrashAlt />,
+              label: "Delete",
+              callBack: () =>
+                Prompt({
+                  type: "confirmation",
+                  message: `Are you sure you want to remove this Collection?`,
+                  callback: () => {
+                    setValue(
+                      field.name,
+                      values.filter((i) => i._id !== item._id)
+                    );
+                  },
+                }),
+            },
+          ]}
+        />
+      )}
+
       <Modal
         head
         label={`${edit ? "Update" : "Add"} Item`}

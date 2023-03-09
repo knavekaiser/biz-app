@@ -17,6 +17,7 @@ export const Combobox = ({
   options,
   multiple,
   className,
+  disabled,
   onChange: compOnChange,
   item,
   renderValue,
@@ -72,6 +73,9 @@ export const Combobox = ({
           ? []
           : "";
         const select = ({ label, value, ...rest }) => {
+          if (disabled) {
+            return;
+          }
           const _selectedItem = selected?.find?.((item) => item === value);
           if (_selectedItem !== undefined) {
             onChange(selected.filter((item) => item !== value));
@@ -99,13 +103,14 @@ export const Combobox = ({
               open ? s.open : ""
             } ${
               !(Array.isArray(options) && options.length) ? s.noOptions : ""
-            } ${error ? s.err : ""}`}
+            } ${error ? s.err : ""} ${disabled ? s.disabled : ""}`}
           >
             {label && (
               <label data-testid="combobox-label">
                 {label} {formOptions?.required && "*"}
               </label>
             )}
+
             <div
               className={s.field}
               onClick={() => {
@@ -114,8 +119,11 @@ export const Combobox = ({
                 }
               }}
               ref={container}
-              tabIndex={0}
+              tabIndex={disabled ? 1 : 0}
               onKeyDown={(e) => {
+                if (disabled) {
+                  return;
+                }
                 if ([32, 38, 40].includes(e.keyCode)) {
                   e.preventDefault();
                   e.stopPropagation();

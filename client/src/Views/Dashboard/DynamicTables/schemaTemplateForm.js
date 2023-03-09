@@ -2,14 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { Select } from "Components/elements";
 import { useYup, useFetch } from "hooks";
-import { Prompt, Modal } from "Components/modal";
-import {
-  FaPencilAlt,
-  FaRegTrashAlt,
-  FaTimes,
-  FaCheck,
-  FaPlus,
-} from "react-icons/fa";
+import { Prompt } from "Components/modal";
 import * as yup from "yup";
 import s from "./payments.module.scss";
 import { endpoints } from "config";
@@ -19,12 +12,7 @@ const mainSchema = yup.object({
 });
 
 const Form = ({ onSuccess }) => {
-  const {
-    handleSubmit,
-    reset,
-    control,
-    formState: { errors },
-  } = useForm({
+  const { handleSubmit, control } = useForm({
     resolver: useYup(mainSchema),
   });
   const [schemas, setSchemas] = useState([]);

@@ -90,6 +90,41 @@
       }
     }
   }
+  .products {
+    display: grid;
+    grid-gap: 0.5rem;
+    .product {
+      display: flex;
+      grid-gap: 0.5rem;
+      .thumbnail {
+        height: 5rem;
+        width: 5rem;
+        img {
+          height: 100%;
+          width: 100%;
+          object-fit: center;
+        }
+      }
+      .productDetail {
+        flex: 1;
+        h3 {
+          font-weight: 500;
+        }
+        p {
+          font-size: 0.8rem;
+        }
+      }
+      .price {
+        font-weight: 600;
+      }
+    }
+    ~ hr {
+      margin-top: 1rem;
+    }
+  }
+  .subtotal {
+    text-align: right;
+  }
 }
 
 .variantForm {

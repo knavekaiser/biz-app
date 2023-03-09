@@ -43,6 +43,44 @@ exports.findAll = async (req, res) => {
     });
 
     let pipeline = [{ $match: conditions }];
+    collection.fields
+      .filter(
+        (item) =>
+          (item.dataType === "objectId" ||
+            item.dataElementType === "objectId") &&
+          item.optionType === "collection"
+      )
+      .forEach((field) => {
+        pipeline.push({
+          $lookup: {
+            from: `${req.authUser._id}_${field.collection}`,
+            let: { fieldName: `$${field.name}` },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: [`$${field.optionValue}`, `$$fieldName`],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1,
+                },
+              },
+            ],
+            as: field.name,
+          },
+        });
+        if (!field.multiple) {
+          pipeline.push({
+            $set: {
+              [field.name]: { $first: `$${field.name}` },
+            },
+          });
+        }
+      });
     // pipeline = dbHelper.getDynamicPipeline({
     //   fields: collection.fields,
     //   pipeline,

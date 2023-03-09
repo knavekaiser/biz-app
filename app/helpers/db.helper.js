@@ -1,8 +1,3 @@
-const {
-  authConfig,
-  appConfig,
-  appConfig: { responseFn, responseStr },
-} = require("../config");
 const Collection = require("../models/collection.model");
 
 const getType = (field) => {
@@ -24,6 +19,9 @@ const getType = (field) => {
     case "array":
       t = Schema.Types.Array;
       break;
+    case "variantArray":
+      t = Schema.Types.Array;
+      break;
     case "objectId":
       t = Schema.Types.ObjectId;
       break;
@@ -42,7 +40,10 @@ exports.getModel = async (table) => {
     const _fields = {};
     fields.forEach((field) => {
       // add nested fields type if field is an object
-      if (field.dataType === "array" && field.dataElementType === "object") {
+      if (
+        ["array", "variantArray"].includes(field.dataType) &&
+        field.dataElementType === "object"
+      ) {
         if (Array.isArray(field.fields) && field.fields.length) {
           _fields[field.name] = [new Schema(getFields(field.fields))];
         } else {
@@ -122,8 +123,6 @@ exports.getDynamicPipeline = ({
     });
 
   if (table === "Product") {
-    const expr = [];
-
     pipeline.push(
       ...[
         {
