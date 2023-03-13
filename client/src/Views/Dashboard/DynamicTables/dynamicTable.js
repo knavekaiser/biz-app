@@ -12,6 +12,7 @@ import DynamicForm from "./dynamicForm";
 
 const DynamicTablePage = () => {
   const { business, checkPermission } = useContext(SiteContext);
+  const [templateData, setTemplateData] = useState([]);
   const [edit, setEdit] = useState(null);
   const [addData, setAddData] = useState(false);
   const [data, setData] = useState([]);
@@ -38,6 +39,38 @@ const DynamicTablePage = () => {
     getCollection()
       .then(({ data }) => {
         if (data.success) {
+          const _template = [];
+          for (let i = 0; i < 5; i++) {
+            const item = {};
+            data.data.fields.forEach((field) => {
+              if (field.dataType === "date") {
+                return (item[field.name] = new Date()
+                  .toISOString()
+                  .substring(0, 10));
+              }
+              if (field.dataType === "number") {
+                return (item[field.name] =
+                  +(Math.random() * 1000).toFixed(0) + 1000);
+              }
+              if (field.dataType === "objectId") {
+                return (item[field.name] =
+                  new Date().getTime().toString(16) +
+                  (+(Math.random() * 10000000000000000000).toFixed(0)).toString(
+                    16
+                  ));
+              }
+              if (
+                ["combobox", "select"].includes(field.fieldType) &&
+                field.options?.length
+              ) {
+                return (item[field.name] =
+                  field.options[i]?.value || field.options[0]?.value);
+              }
+              item[field.name] = `${field.label} ${i}`;
+            });
+            _template.push(item);
+          }
+          setTemplateData(_template);
           return setCollection(data.data);
         }
       })
@@ -64,6 +97,7 @@ const DynamicTablePage = () => {
                 ? `${endpoints.dynamicBulkCreate.replace(":table", table)}`
                 : null
             }
+            templateData={templateData}
           />
           <button
             className="btn m-a mr-0"

@@ -405,7 +405,7 @@ export const VirtualTable = ({
   );
 };
 
-export const ImportExport = ({ importUrl, exportUrl }) => {
+export const ImportExport = ({ importUrl, exportUrl, templateData }) => {
   const [importOpen, setImportOpen] = useState(false);
   return (
     <div className="flex gap-1">
@@ -430,6 +430,9 @@ export const ImportExport = ({ importUrl, exportUrl }) => {
         </>
       )}
       {exportUrl && <Export url={exportUrl} />}
+      {templateData?.length ? (
+        <Export label="Download Template" data={templateData} />
+      ) : null}
     </div>
   );
 };
@@ -490,36 +493,47 @@ const ImportForm = ({ url, onSuccess }) => {
   );
 };
 
-const Export = ({ url }) => {
-  const [data, setData] = useState(null);
+const Export = ({ label, url, data: staticData }) => {
   const { get: getData, loading } = useFetch(url);
+  const processData = useCallback((data) => {
+    const keys = Object.keys(data[0]).filter((key) => key !== "__V");
+    const rawCSV = toCSV(
+      keys,
+      data.map((data) => keys.map((key) => data[key]))
+    );
+
+    const link = encodeURI(rawCSV);
+
+    const a = document.createElement("a");
+    a.setAttribute("id", "export-user-link");
+    a.setAttribute("href", link);
+    a.setAttribute("download", "data.csv");
+    document.body.appendChild(a);
+    a.click();
+    document.querySelector("#export-user-link").remove();
+  }, []);
+
   const fetchData = useCallback(() => {
-    getData()
-      .then(({ data }) => {
-        if (data?.success) {
-          if (!data.data.length) {
-            return Prompt({ type: "error", message: "There are no data" });
+    if (url) {
+      getData()
+        .then(({ data }) => {
+          if (data?.success) {
+            if (!data.data.length) {
+              return Prompt({ type: "error", message: "There are no data" });
+            }
+            processData(data.data);
           }
-          const keys = Object.keys(data.data[0]).filter((key) => key !== "__V");
-          const rawCSV = toCSV(
-            keys,
-            data.data.map((data) => keys.map((key) => data[key]))
-          );
-
-          const link = encodeURI(rawCSV);
-
-          const a = document.createElement("a");
-          a.setAttribute("id", "export-user-link");
-          a.setAttribute("href", link);
-          a.setAttribute("download", "data.csv");
-          document.body.appendChild(a);
-          a.click();
-          document.querySelector("#export-user-link").remove();
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    } else if (staticData) {
+      processData(staticData);
+    }
   }, [url]);
-  return (
+  return staticData ? (
+    <button disabled={loading} className="btn" onClick={fetchData}>
+      {label}
+    </button>
+  ) : (
     <button disabled={loading} className="btn" onClick={fetchData}>
       {loading ? "Exporting..." : "Export Data"}
     </button>
