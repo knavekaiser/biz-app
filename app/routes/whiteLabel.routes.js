@@ -76,6 +76,12 @@ module.exports = function (app) {
     validate(schema.updateCart),
     controller.updateCart
   );
+  router.get(
+    "/customers/orders",
+    whitelabel.getBusiness,
+    authJwt.verifyToken,
+    controller.orders
+  );
   router.post(
     "/place-order",
     whitelabel.getBusiness,

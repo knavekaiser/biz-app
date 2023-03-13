@@ -45,6 +45,8 @@ module.exports = {
     records_updated: "{num} record updated successfully",
     records_deleted: "{num} records has been deleted successfully",
 
+    order_placed: "Order has been placed succesfully",
+
     field_required: "{field} is required",
     fields_required: "{fields} are required",
 
@@ -63,7 +65,9 @@ module.exports = {
   otpTimeout: 120, //in seconds
   passwordResetOtpAttepts: 5,
   supportedImageSizes: 5, // 5MB
-  supportedImageTypes: /jpeg|jpg|png|svg|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
+  supportedImageTypes:
+    /jpeg|jpg|png|svg|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
   supportedFileSizes: 10, // 10MB
-  supportedFileTypes: /jpeg|jpg|png|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
+  supportedFileTypes:
+    /jpeg|jpg|png|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
 };

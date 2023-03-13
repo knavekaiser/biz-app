@@ -653,6 +653,22 @@ exports.updateCart = async (req, res) => {
   }
 };
 
+exports.orders = async (req, res) => {
+  try {
+    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.find({
+      customer: req.authUser._id,
+      status: { $ne: "cart" },
+    })
+      .then((data) => responseFn.success(res, { data }))
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.placeOrder = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
@@ -663,12 +679,15 @@ exports.placeOrder = async (req, res) => {
         customer: req.authUser._id,
         status: "cart",
       },
-      { status: "pending" },
+      {
+        status:
+          req.body.payment_method === "cod" ? "orderedCod" : "orderedPaid",
+      },
       { new: true }
     )
       .then((data) => {
         if (data) {
-          return responseFn.success(res, { data });
+          return responseFn.success(res, { data }, responseStr.order_placed);
         }
         return responseFn.error(
           res,
