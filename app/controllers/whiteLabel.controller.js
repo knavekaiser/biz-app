@@ -535,6 +535,35 @@ exports.profile = async (req, res) => {
   }
 };
 
+exports.updateProfile = async (req, res) => {
+  try {
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Customer"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+    const update = {};
+    ["name"].forEach((key) => {
+      if (key in req.body) {
+        update[key] = req.body[key];
+      }
+    });
+    Model.findOneAndUpdate({ _id: req.authUser.id }, update, { new: true })
+      .then(async (data) =>
+        responseFn.success(res, {
+          data: {
+            ...data._doc,
+            password: undefined,
+            __v: undefined,
+            updatedAt: undefined,
+          },
+        })
+      )
+      .catch((error) => responseFn.error(res, {}, error.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.addReview = async (req, res) => {
   try {
     const { Model: Product } = await dbHelper.getModel(

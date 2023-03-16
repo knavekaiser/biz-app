@@ -53,6 +53,12 @@ module.exports = function (app) {
     authJwt.verifyToken,
     controller.profile
   );
+  router.put(
+    "/customers/profile",
+    whitelabel.getBusiness,
+    authJwt.verifyToken,
+    controller.updateProfile
+  );
 
   router.post(
     "/reviews",
