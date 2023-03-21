@@ -1,4 +1,5 @@
 import { moment } from "Components/elements/moment";
+import { Prompt } from "Components/modal";
 const XLSX = require("xlsx");
 
 export const findProperties = function (prop, obj) {
@@ -32,7 +33,7 @@ export const toCSV = (columns, data) => {
   return "data:text/csv;charset=utf-8," + headers + "\r\n" + body;
 };
 
-export const parseXLSXtoJSON = (file, cb) => {
+export const parseXLSXtoJSON = (file, collection, cb) => {
   var name = file.name;
   const reader = new FileReader();
   reader.onload = async (evt) => {
@@ -44,35 +45,51 @@ export const parseXLSXtoJSON = (file, cb) => {
     const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
     const arr = [];
     const cols = data.shift();
-    data.forEach((row, i) => {
-      const item = {};
-      cols.forEach((col, j) => {
-        if (col.includes("amount") && row[j]) {
-          item[col] = +row[j].trim().replace(/[^0-9.]/g, "");
-          return;
-        }
-        if (col.includes("date") && row[j]) {
-          const dateString = row[j].trim();
-          item[col] =
-            dateString.length > 10
-              ? moment(dateString, "YYYY-MM-DD")
-              : moment(dateString, "YYYY-MM-DD hh:mm");
-          return;
-        }
-        if (typeof row[j] === "string") {
-          row[j] = row[j]?.trim();
-          if (row[j].startsWith("[") && row[j].endsWith("]")) {
-            item[col] = row[j].slice(1).slice(0, -1).split(",");
-          } else {
-            item[col] = row[j];
+    try {
+      data.forEach((row, rowIndex) => {
+        const item = {};
+        cols.forEach((col, j) => {
+          const field = collection.fields.find((f) => f.name === col);
+          if (field.required && !row[j]) {
+            throw `${
+              field.name
+            } is a mandetory field, and it is missing on row ${rowIndex + 2}`;
           }
-          return;
-        }
-        item[col] = row[j];
+          if (field.dataType === "number" && row[j]) {
+            item[col] =
+              typeof row[j] === "string"
+                ? +row[j].trim().replace(/[^0-9.]/g, "")
+                : row[j];
+            return;
+          }
+          if (field.dataType === "date" && row[j]) {
+            const dateString = row[j].trim();
+            item[col] =
+              dateString.length > 10
+                ? moment(dateString, "YYYY-MM-DD")
+                : moment(dateString, "YYYY-MM-DD hh:mm");
+            return;
+          }
+          if (field.dataType === "array") {
+            let arr = row[j]?.split(",") || [];
+            if (field.dataElementType === "number") {
+              arr = arr.map((item) => +item.trim());
+            }
+            item[col] = arr;
+            return;
+          }
+          if (typeof row[j] === "string") {
+            item[col] = row[j]?.trim();
+            return;
+          }
+          item[col] = row[j];
+        });
+        arr.push(item);
       });
-      arr.push(item);
-    });
-    cb(arr);
+      cb(arr);
+    } catch (err) {
+      return Prompt({ type: "error", message: err });
+    }
   };
   reader.readAsBinaryString(file);
 };

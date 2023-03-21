@@ -97,6 +97,7 @@ const DynamicTablePage = () => {
                 ? `${endpoints.dynamicBulkCreate.replace(":table", table)}`
                 : null
             }
+            collection={collection}
             templateData={templateData}
           />
           <button
@@ -115,7 +116,9 @@ const DynamicTablePage = () => {
       <DynamicTable
         fields={collection?.fields}
         loading={gettingCollection || loading}
-        data={data}
+        url={`${endpoints.dynamic}/${table}`}
+        pagination
+        // data={data}
         actions={(item) => [
           ...(checkPermission(`${business?.business._id}_${table}_update`)
             ? [

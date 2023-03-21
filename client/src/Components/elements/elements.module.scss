@@ -691,6 +691,7 @@
 .table {
   display: grid;
   grid-auto-rows: max-content;
+  grid-template-rows: max-content 1fr max-content;
   overflow-x: auto !important;
   width: 100%;
   border: 1px solid #b7b7b7;
@@ -737,6 +738,17 @@
         right: 0;
         margin-left: -10px;
         padding-left: 10px !important;
+      }
+    }
+    .filters {
+      background: white;
+      padding-bottom: 1rem;
+      td {
+        form {
+          display: grid;
+          grid-gap: 0.5rem;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 270px));
+        }
       }
     }
   }
@@ -818,6 +830,24 @@
   &.virtual {
     tbody {
       min-height: 60vh;
+    }
+  }
+  tfoot {
+    .pagination {
+      border-top: 1px solid $grey2;
+      padding: 0.5rem;
+      td {
+        .perPage {
+          width: 7rem;
+          display: flex;
+          align-items: center;
+          grid-gap: 0.5rem;
+        }
+        justify-content: flex-end;
+        align-items: center;
+        display: flex;
+        grid-gap: 1rem;
+      }
     }
   }
 }
@@ -1028,164 +1058,6 @@
 }
 
 $branch-angle: 35deg;
-
-.fishboneDiagram {
-  padding: 1rem;
-  min-width: max-content;
-  min-height: max-content;
-  overflow: auto;
-  display: flex;
-  align-items: center;
-  .data {
-    flex: 1;
-    flex-shrink: 0;
-    display: grid;
-    // grid-gap: 1rem;
-    grid-auto-flow: column;
-    text-align: right;
-    grid-template-rows: 1fr 1fr;
-    .branch {
-      min-height: 150px;
-      min-width: 150px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      &.top {
-        border-bottom: 2px solid black;
-        padding-right: 0rem;
-        & > ul {
-          padding-bottom: 1rem;
-          // background: rgba(0, 0, 0, 0.07);
-          position: relative;
-          & > li {
-            .cause {
-              display: inline-block;
-              padding: 0 1.5rem;
-              padding-left: 0;
-              border-bottom: 2px solid black;
-              margin-top: 0.5rem;
-            }
-            & > ul {
-              display: grid;
-              margin-right: 1.5rem;
-              position: relative;
-              & > li {
-                margin: auto;
-                margin-top: 0.5rem;
-                width: max-content;
-                padding: 0 0.5rem;
-                padding-left: 0;
-                border-bottom: 2px solid black;
-                font-size: 0.9em;
-                // max-width: 15rem;
-              }
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                height: 122%;
-                width: 2px;
-                background: black;
-                top: 0;
-                right: 0;
-                transform-origin: top;
-                transform: rotate($branch-angle);
-              }
-            }
-          }
-          &::after {
-            content: "";
-            display: block;
-            position: absolute;
-            height: 122%;
-            width: 2px;
-            background: black;
-            bottom: 0;
-            right: 1.2rem;
-            transform-origin: bottom;
-            transform: rotate(-$branch-angle);
-          }
-        }
-      }
-      &.bottom {
-        padding-right: 3rem;
-        flex-direction: column-reverse;
-        & > ul {
-          padding-top: 1rem;
-          // background: rgba(0, 0, 0, 0.07);
-          position: relative;
-          & > li {
-            &:not(:first-child) {
-              .cause {
-                margin-top: 0.5rem;
-              }
-            }
-            .cause {
-              display: inline-block;
-              padding: 0 1.5rem;
-              padding-left: 0;
-              border-bottom: 2px solid black;
-            }
-            & > ul {
-              display: grid;
-              margin-right: 1.5rem;
-              position: relative;
-              & > li {
-                margin: auto;
-                margin-top: 0.5rem;
-                width: max-content;
-                padding: 0 0.5rem;
-                padding-left: 0;
-                border-bottom: 2px solid black;
-                font-size: 0.9em;
-                // max-width: 15rem;
-              }
-              &::after {
-                content: "";
-                display: block;
-                position: absolute;
-                height: 122%;
-                width: 2px;
-                background: black;
-                top: 0;
-                right: 0;
-                transform-origin: top;
-                transform: rotate($branch-angle);
-              }
-            }
-            &::after {
-              content: "";
-              display: block;
-              position: absolute;
-              height: 122%;
-              width: 2px;
-              background: black;
-              top: 0;
-              right: -1.8rem;
-              transform-origin: top;
-              transform: rotate($branch-angle);
-            }
-          }
-        }
-      }
-      &:last-child:not(:nth-child(even)),
-      &:nth-last-child(2):nth-child(odd) {
-        // background: red;
-        // padding-right: 3rem;
-        & > ul {
-        }
-      }
-    }
-    .bottom {
-      grid-row: 2 / 3;
-    }
-  }
-  .conclusion {
-    flex-shrink: 0;
-    padding: 1rem;
-    border: 2px solid black;
-  }
-}
 
 .richText {
   label {

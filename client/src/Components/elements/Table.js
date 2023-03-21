@@ -8,9 +8,21 @@ import {
 } from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
-import { FaSortDown, FaCircleNotch } from "react-icons/fa";
+import {
+  FaSortDown,
+  FaCircleNotch,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { Moment } from "./moment";
-import { Images, FileInputNew } from "Components/elements";
+import {
+  Images,
+  FileInputNew,
+  Combobox,
+  MobileNumberInput,
+  Input,
+  Select,
+} from "Components/elements";
 import { BsFillGearFill } from "react-icons/bs";
 import { useForm } from "react-hook-form";
 import { useFetch, useYup } from "hooks";
@@ -18,6 +30,7 @@ import { toCSV, parseXLSXtoJSON } from "helpers";
 import * as yup from "yup";
 import { Modal, Prompt } from "../modal";
 import { SiteContext } from "SiteContext";
+import { endpoints } from "config";
 
 export const Table = ({
   columns,
@@ -28,10 +41,59 @@ export const Table = ({
   actions,
   loading,
   placeholder,
+  renderRow,
+  pagination,
+  url,
+  filters: filterFields,
+  tfoot,
 }) => {
+  const [filters, setFilters] = useState({});
+  const { control, reset } = useForm();
+  const [metadata, setMetadata] = useState({
+    total: 0,
+    page: 1,
+    pageSize: 20,
+  });
+  const [dynamicData, setDynamicData] = useState([]);
+  const { get: fetchData, loading: loadingData } = useFetch(url);
+
   const tbody = useRef();
   const table = useRef();
-  const [style, setStyle] = useState({});
+
+  const getData = useCallback(
+    (newMetadata) => {
+      fetchData({
+        query: {
+          ...(pagination && {
+            page: metadata.page,
+            pageSize: metadata.pageSize,
+            ...newMetadata,
+          }),
+          ...filters,
+        },
+      })
+        .then(({ data }) => {
+          if (data.success) {
+            setDynamicData(data.data);
+            setMetadata(data.metadata);
+          } else {
+            Prompt({ type: "error", message: data.message });
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    },
+    [metadata, filters]
+  );
+  useEffect(() => {
+    reset({ pageSize: metadata.pageSize });
+  }, []);
+
+  useEffect(() => {
+    if (url) {
+      getData({ page: 1 });
+    }
+  }, [filters]);
+
   useEffect(() => {
     if (sortable) {
       Sortable.create(tbody.current, {
@@ -49,8 +111,19 @@ export const Table = ({
       cellPadding={0}
       cellSpacing={0}
     >
-      {columns && (
+      {(columns || filterFields?.length) && (
         <thead>
+          {filterFields?.length ? (
+            <tr className={s.filters}>
+              <td>
+                <Filters
+                  filterFields={filterFields}
+                  filters={filters}
+                  setFilters={setFilters}
+                />
+              </td>
+            </tr>
+          ) : null}
           <tr style={{ ...theadTrStyle }}>
             {columns.map((column, i) => (
               <th
@@ -67,7 +140,7 @@ export const Table = ({
         </thead>
       )}
       <tbody ref={tbody}>
-        {loading ? (
+        {loading || loadingData ? (
           <tr className={s.loading}>
             <td>
               <span className={s.icon}>
@@ -75,23 +148,223 @@ export const Table = ({
               </span>
             </td>
           </tr>
-        ) : children?.length > 0 ? (
-          <>
-            {children}
-            {children.flat().filter((item) => item).length === 1 &&
-              children[0]?.props?.className?.includes("inlineForm") && (
-                <tr className={s.placeholder}>
-                  <td>{placeholder || "Nothing yet..."}</td>
-                </tr>
-              )}
-          </>
+        ) : (children || dynamicData).length > 0 ? (
+          <>{children || dynamicData.map((item, i) => renderRow(item, i))}</>
         ) : (
           <tr className={s.placeholder}>
             <td>{placeholder || "Nothing yet..."}</td>
           </tr>
         )}
       </tbody>
+      {tfoot}
+      {pagination && (
+        <tfoot>
+          <tr className={s.pagination}>
+            <td>
+              <Combobox
+                control={control}
+                name="pageSize"
+                label="Per Page"
+                className={s.perPage}
+                options={[
+                  { label: "10", value: 10 },
+                  { label: "20", value: 20 },
+                  { label: "30", value: 30 },
+                  { label: "50", value: 50 },
+                  { label: "100", value: 100 },
+                ]}
+                onChange={(v) => {
+                  getData({ pageSize: v.value });
+                }}
+              />
+              <span className={s.pageSummary}>
+                {metadata.pageSize * (metadata.page - 1) + 1}-
+                {metadata.pageSize * (metadata.page - 1) + dynamicData.length}{" "}
+                of {metadata.total}
+              </span>
+              <button
+                title="Previous Page"
+                className="btn"
+                disabled={metadata.page <= 1}
+                onClick={() => {
+                  getData({ page: metadata.page - 1 });
+                }}
+              >
+                <FaChevronLeft />
+              </button>
+              <span className={s.currentPage}>{metadata.page}</span>
+              <button
+                title="Next Page"
+                className="btn"
+                disabled={metadata.page * metadata.pageSize >= metadata.total}
+                onClick={() => {
+                  getData({ page: metadata.page + 1 });
+                }}
+              >
+                <FaChevronRight />
+              </button>
+            </td>
+          </tr>
+        </tfoot>
+      )}
     </table>
+  );
+};
+
+const Filters = ({ filterFields, filters, setFilters }) => {
+  const { handleSubmit, register, control, reset, watch } = useForm();
+
+  const fields = filterFields.map((field, i) => {
+    if (field.name === "variants" || field.inputType === "file") {
+      return null;
+    }
+    // if (field.dataType === "object" && field.fieldType === "collectionFilter") {
+    //   const value = watch(field.name);
+    //   return (
+    //     <ProductFilterForm
+    //       key={field.name}
+    //       field={field}
+    //       value={value}
+    //       productCollection={productCollection}
+    //       setValue={setValue}
+    //     />
+    //   );
+    // }
+    // if (
+    //   ["array", "variantArray"].includes(field.dataType) &&
+    //   field.dataElementType === "object"
+    // ) {
+    //   const values = watch(field.name);
+    //   return (
+    //     <NestedObjectTable
+    //       collection={collection}
+    //       key={field.name}
+    //       values={values}
+    //       field={field}
+    //       setValue={setValue}
+    //     />
+    //   );
+    // }
+    // if (field.fieldType === "dateRange") {
+    //   if (field.inputType === "calendar") {
+    //     return (
+    //       <CalendarInput
+    //         key={field.name}
+    //         control={control}
+    //         label={field.label}
+    //         name={field.name}
+    //         dateWindow={field.dateWindow}
+    //         required={field.required}
+    //         disabledDates={field.disabledDates || []}
+    //         multipleRanges={field.multipleRanges}
+    //       />
+    //     );
+    //   }
+    // }
+    if (field.fieldType === "input") {
+      if (field.inputType === "phone") {
+        return (
+          <MobileNumberInput
+            label={field.label}
+            key={field.name}
+            name={field.name}
+            control={control}
+          />
+        );
+      }
+      return (
+        <Input
+          key={field.name}
+          {...register(field.name)}
+          type={field.inputType || "text"}
+          label={field.label}
+        />
+      );
+    }
+    if (field.fieldType === "textarea") {
+      return (
+        <Input key={field.name} {...register(field.name)} label={field.label} />
+      );
+    }
+    // if (field.fieldType === "richText") {
+    //   return (
+    //     <Input
+    //       key={field.name}
+    //       control={control}
+    //       name={field.name}
+    //       label={field.label}
+    //     />
+    //   );
+    // }
+    if (field.fieldType === "combobox") {
+      return (
+        <Combobox
+          key={field.name}
+          label={field.label}
+          control={control}
+          name={field.name}
+          multiple={field.multiple}
+          options={field.options || []}
+        />
+      );
+    }
+    if (field.fieldType === "select") {
+      return (
+        <Select
+          key={field.name}
+          control={control}
+          label={field.label}
+          {...(field.optionType === "predefined" && {
+            options: field.options || [],
+          })}
+          {...(field.optionType === "collection" && {
+            url: `${endpoints.dynamic}/${field.collection}`,
+          })}
+          getQuery={(inputValue, selected) => ({
+            ...(inputValue && { [field.optionLabel]: inputValue }),
+            ...(selected && { [field.optionValue]: selected }),
+          })}
+          handleData={(item) => ({
+            label: item[field.optionLabel],
+            value: item[field.optionValue],
+          })}
+          multiple={field.multiple}
+          name={field.name}
+          className={s.itemName}
+        />
+      );
+    }
+  });
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        // getValues -> setFilters(values)
+        setFilters(
+          Object.entries(values).reduce((p, [key, value]) => {
+            if (value) {
+              p[key] = value;
+            }
+            return p;
+          }, {})
+        );
+      })}
+    >
+      {fields}
+      <div className="btns">
+        <button className={"btn"}>Search</button>
+        <button
+          className={"btn"}
+          type="button"
+          onClick={() => {
+            reset();
+            setFilters({});
+          }}
+        >
+          Clear
+        </button>
+      </div>
+    </form>
   );
 };
 
@@ -182,22 +455,19 @@ export const TableActions = ({ actions, className }) => {
 export const DynamicTable = ({
   fields = [],
   data = [],
+  url,
+  pagination,
   loading,
+  filters,
   actions,
   className = "",
 }) => {
   const { config } = useContext(SiteContext);
-  return (
-    <Table
-      loading={loading}
-      className={className}
-      columns={[
-        ...(fields.map((field) => ({ label: field.label })) || []),
-        ...(actions ? [{ label: "Action" }] : []),
-      ]}
-    >
-      {data.map((item, i) => (
-        <tr key={i}>
+
+  const renderRow = useCallback(
+    (item, i) => {
+      return (
+        <tr key={item._id || i}>
           {fields.map((field, j) => {
             if (field.dataType === "boolean") {
               return (
@@ -301,7 +571,34 @@ export const DynamicTable = ({
           })}
           <TableActions actions={actions(item)} />
         </tr>
-      ))}
+      );
+    },
+    [fields]
+  );
+
+  return url ? (
+    <Table
+      loading={loading}
+      url={url}
+      pagination={pagination}
+      className={className}
+      columns={[
+        ...(fields.map((field) => ({ label: field.label })) || []),
+        ...(actions ? [{ label: "Action" }] : []),
+      ]}
+      filters={filters || fields}
+      renderRow={renderRow}
+    />
+  ) : (
+    <Table
+      loading={loading}
+      className={className}
+      columns={[
+        ...(fields.map((field) => ({ label: field.label })) || []),
+        ...(actions ? [{ label: "Action" }] : []),
+      ]}
+    >
+      {data.map((item, i) => renderRow(item, i))}
     </Table>
   );
 };
@@ -405,7 +702,12 @@ export const VirtualTable = ({
   );
 };
 
-export const ImportExport = ({ importUrl, exportUrl, templateData }) => {
+export const ImportExport = ({
+  importUrl,
+  exportUrl,
+  collection,
+  templateData,
+}) => {
   const [importOpen, setImportOpen] = useState(false);
   return (
     <div className="flex gap-1">
@@ -422,6 +724,7 @@ export const ImportExport = ({ importUrl, exportUrl, templateData }) => {
           >
             <ImportForm
               url={importUrl}
+              collection={collection}
               onSuccess={() => {
                 setImportOpen(false);
               }}
@@ -437,7 +740,7 @@ export const ImportExport = ({ importUrl, exportUrl, templateData }) => {
   );
 };
 
-const ImportForm = ({ url, onSuccess }) => {
+const ImportForm = ({ url, onSuccess, collection }) => {
   const {
     handleSubmit,
     control,
@@ -454,7 +757,7 @@ const ImportForm = ({ url, onSuccess }) => {
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        parseXLSXtoJSON(values.file[0], (data) => {
+        parseXLSXtoJSON(values.file[0], collection, (data) => {
           postData({ data })
             .then(({ data }) => {
               if (data?.message) {

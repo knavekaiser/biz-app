@@ -13,10 +13,6 @@ const TermsAndConditions = () => {
   const { user, setUser } = useContext(SiteContext);
   const {
     handleSubmit,
-    register,
-    reset,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm();
   const [terms, setTerms] = useState([]);

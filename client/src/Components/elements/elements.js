@@ -137,7 +137,7 @@ export const SearchField = ({
   useEffect(() => {
     if (value) {
       if (url) {
-        getData(null, { query: getQuery(value) || {} }).then(({ data }) => {
+        getData({ query: getQuery(value) || {} }).then(({ data }) => {
           const _data = processData(data, value);
           setData(_data);
         });
@@ -818,9 +818,6 @@ export const SwitchInput = ({
   setValue = () => {},
   watch = () => {},
   label,
-  readOnly,
-  defaultValue,
-  onChange,
   onLabel,
   offLabel,
   required,
@@ -988,7 +985,7 @@ export const MobileNumberInput = ({
         >
           {label && (
             <label>
-              {label} {formOptions.required && "*"}
+              {label} {formOptions?.required && "*"}
             </label>
           )}
           <div className={s.wrapper}>

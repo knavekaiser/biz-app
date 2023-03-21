@@ -28,11 +28,14 @@ exports.findAll = async (req, res) => {
       const field = collection.fields.find((item) => item.name === key);
       if (!field) return;
 
-      if (field.dataType === "string") {
+      if (field.dataType === "string" || field.dataElementType === "string") {
         conditions[field.name] = {
           $in: value.split(",").map((i) => new RegExp(i, "gi")),
         };
-      } else if (field.dataType === "number") {
+      } else if (
+        field.dataType === "number" ||
+        field.dataElementType === "number"
+      ) {
         conditions[field.name] = {
           $in: value
             .split(",")
@@ -81,6 +84,19 @@ exports.findAll = async (req, res) => {
           });
         }
       });
+    if (page && pageSize) {
+      pipeline.push(
+        ...[
+          { $sort: { createdAt: -1 } },
+          {
+            $facet: {
+              data: [{ $skip: +pageSize * (+page - 1) }, { $limit: +pageSize }],
+              metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
+            },
+          },
+        ]
+      );
+    }
     // pipeline = dbHelper.getDynamicPipeline({
     //   fields: collection.fields,
     //   pipeline,
@@ -89,7 +105,21 @@ exports.findAll = async (req, res) => {
     // });
 
     Model.aggregate(pipeline)
-      .then((data) => responseFn.success(res, { data }))
+      .then((data) => {
+        responseFn.success(
+          res,
+          page && pageSize
+            ? {
+                metadata: {
+                  total: data[0].metadata[0]?.total || 0,
+                  page: +page,
+                  pageSize: +pageSize,
+                },
+                data: data[0].data,
+              }
+            : { data }
+        );
+      })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     console.log(error);
@@ -137,25 +167,26 @@ exports.create = async (req, res) => {
 exports.bulkCreate = async (req, res) => {
   try {
     const { Model, collection } = req;
+    const data = req.body.data || req.body;
 
     if (collection.fields.some((item) => item.dataType === "object")) {
       const fields = collection.fields.filter(
         (item) => item.dataType === "object"
       );
-      req.body.data.forEach((item, i) => {
+      data.forEach((item, i) => {
         fields.forEach((field) => {
-          if (req.body[i][field.name]) {
+          if (data[i][field.name]) {
             try {
-              req.body[i][field.name] = JSON.parse(req.body[i][field.name]);
+              data[i][field.name] = JSON.parse(data[i][field.name]);
             } catch (err) {
-              req.body[i][field.name] = {};
+              data[i][field.name] = {};
             }
           }
         });
       });
     }
 
-    Model.insertMany(req.body.data, { ordered: false })
+    Model.insertMany(data, { ordered: false })
       .then(async (data) => {
         return responseFn.success(
           res,
@@ -165,6 +196,7 @@ exports.bulkCreate = async (req, res) => {
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };

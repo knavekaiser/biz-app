@@ -28,47 +28,50 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
         ).toString()}`;
       }
       setLoading(true);
-      return fetch(_url, {
-        method: method,
-        headers: {
-          ...(!(typeof payload?.append === "function") && {
-            "Content-Type": "application/json",
+      return new Promise((resolve, reject) => {
+        fetch(_url, {
+          method,
+          headers: {
+            ...(!(typeof payload?.append === "function") && {
+              "Content-Type": "application/json",
+            }),
+            "x-access-token": sessionStorage.getItem("access_token"),
+            ...(sessionStorage.getItem("business_id") && {
+              business_id: sessionStorage.getItem("business_id"),
+            }),
+            ...hookHeaders,
+            ...headers,
+          },
+          ...(["POST", "PUT", "PATCH", "DELETE"].includes(method) && {
+            body:
+              typeof payload?.append === "function"
+                ? payload
+                : JSON.stringify(payload),
           }),
-          "x-access-token": sessionStorage.getItem("access_token"),
-          ...(sessionStorage.getItem("business_id") && {
-            business_id: sessionStorage.getItem("business_id"),
-          }),
-          ...hookHeaders,
-          ...headers,
-        },
-        ...(["POST", "PUT", "PATCH", "DELETE"].includes(method) && {
-          body:
-            typeof payload?.append === "function"
-              ? payload
-              : JSON.stringify(payload),
-        }),
-        signal: controller.current.signal,
-      })
-        .then(async (res) => {
-          let data = await res.json();
-          setLoading(false);
-          return { res, data };
+          signal: controller.current.signal,
         })
-        .catch((err) => {
-          setLoading(false);
-          if (["The user aborted a request."].includes(err?.message)) {
-            return { data: {} };
-          }
-          setError(err);
-          throw err;
-        });
+          .then(async (res) => {
+            let data = await res.json();
+            setLoading(false);
+            resolve({ res, data });
+          })
+          .catch((err) => {
+            setLoading(false);
+            if (["The user aborted a request."].includes(err?.message)) {
+              // user aborted
+            } else {
+              setError(err);
+              reject(err);
+            }
+          });
+      });
     },
     [url]
   );
 
   const post = (payload, options) => onSubmit(payload, "POST", options);
 
-  const get = (payload, options) => onSubmit(payload, "GET", options);
+  const get = (options) => onSubmit(null, "GET", options);
 
   const remove = (payload, options) => onSubmit(payload, "DELETE", options);
 

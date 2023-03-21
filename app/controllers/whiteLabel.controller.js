@@ -164,14 +164,17 @@ exports.browse = async (req, res) => {
     const pageSize = +req.query.pageSize || 10;
 
     collection.fields.forEach((field) => {
-      if (req.query[field.name]) {
-        if (field.dataType === "string") {
+      if (field.name in req.query) {
+        if (field.dataType === "string" || field.dataElementType === "string") {
           query[field.name] = {
             $in: req.query[field.name]
               .split(",")
               .map((i) => new RegExp(i, "gi")),
           };
-        } else if (field.dataType === "number") {
+        } else if (
+          field.dataType === "number" ||
+          field.dataElementType === "number"
+        ) {
           query[field.name] = {
             $in: req.query[field.name]
               .split(",")
@@ -189,7 +192,6 @@ exports.browse = async (req, res) => {
         };
       }
     });
-
     Model.aggregate([
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
