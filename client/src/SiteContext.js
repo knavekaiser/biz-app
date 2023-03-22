@@ -7,6 +7,9 @@ export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [config, setConfig] = useState({});
   const [business, setBusiness] = useState(null);
+  const [userType, setUserType] = useState(
+    localStorage.getItem("userType") || "business"
+  );
 
   const checkPermission = useCallback(
     (permission) => {
@@ -47,6 +50,16 @@ export const Provider = ({ children }) => {
       setConfig(null);
     }
   }, [user, config]);
+
+  useEffect(() => {
+    if (
+      !["business", "admin", "staff"].includes(localStorage.getItem("userType"))
+    ) {
+      localStorage.setItem("userType", "business");
+      setUserType("business");
+    }
+  }, []);
+
   return (
     <SiteContext.Provider
       value={{
@@ -57,6 +70,8 @@ export const Provider = ({ children }) => {
         business,
         setBusiness,
         checkPermission,
+        userType,
+        setUserType,
       }}
     >
       {children}

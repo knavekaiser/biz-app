@@ -1,0 +1,42 @@
+@import "Components/variables";
+
+.landingPage {
+  height: 100%;
+  min-height: 86vh;
+  background: white;
+  .stores {
+    padding: 1rem;
+    max-width: 1400px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-gap: 1rem;
+    .store {
+      overflow: hidden;
+      img {
+        aspect-ratio: 1;
+        width: 100%;
+        object-fit: cover;
+      }
+      &.featured {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        grid-gap: 1rem;
+        h2 {
+          grid-column: 1 / -1;
+        }
+        .products {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: repeat(5, 320px);
+          overflow: auto;
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  //
+}

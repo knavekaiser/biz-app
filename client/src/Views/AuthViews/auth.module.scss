@@ -30,9 +30,26 @@
     background: white;
     border-radius: 0.5rem;
     grid-gap: 2rem;
-    // box-shadow: 0 0 1rem rgba($primary-color-dark3, 0.75);
     h1 {
       // color: $primary-color;
+    }
+    .userTypes {
+      display: flex;
+      border: 1px solid $grey2;
+      border-radius: 6px;
+      overflow: hidden;
+      li {
+        padding: 0.5rem;
+        flex: 1;
+        text-align: center;
+        cursor: pointer;
+        color: $grey2;
+        &.active {
+          color: black;
+          font-weight: 600;
+          background: $primary-color;
+        }
+      }
     }
     .resetPasswordLink {
       margin-top: -0.75rem;

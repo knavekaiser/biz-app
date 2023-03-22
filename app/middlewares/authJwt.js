@@ -3,7 +3,7 @@ const {
   appConfig: { responseFn },
 } = require("../config");
 
-const { User, Staff, Role } = require("../models");
+const { User, Staff, Role, Admin } = require("../models");
 const { dbHelper } = require("../helpers");
 const { responseStr } = require("../config/app.config");
 
@@ -32,6 +32,8 @@ verifyToken = async (req, res, next) => {
       }
     } else if (decoded.userType === "staff") {
       Model = Staff;
+    } else if (decoded.userType === "admin") {
+      Model = Admin;
     }
     const user = await Model.findOne({ _id: decoded.sub });
 

@@ -1133,7 +1133,7 @@ export const Tabs = ({
             }}
             className={
               // location?.pathname.endsWith(path) ? s.active : ""
-              location?.pathname.includes("/" + tab.path.replace("/*", ""))
+              location?.pathname?.includes("/" + tab.path.replace("/*", ""))
                 ? s.active
                 : ""
             }

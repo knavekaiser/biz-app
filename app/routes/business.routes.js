@@ -1,30 +1,29 @@
 const { authJwt, file, validate } = require("../middlewares");
 const { appConfig } = require("../config");
-const controller = require("../controllers/staff.controller");
-const { staffs: schema } = require("../validationSchemas");
-var router = require("express").Router();
+const controller = require("../controllers/business.controller");
+const { users: schema } = require("../validationSchemas");
+const routerExcl = require("express").Router();
+const router = require("express").Router();
 
 module.exports = function (app) {
-  router.get("/", controller.findAll);
-
   //-------------------------- Auth
-  router.post("/signup", validate(schema.signup), controller.signup);
-  router.post("/signin", validate(schema.login), controller.login);
-  router.post(
+  routerExcl.post("/signup", validate(schema.signup), controller.signup);
+  routerExcl.post("/signin", validate(schema.login), controller.login);
+  routerExcl.post(
     "/forgot-password",
     validate(schema.forgotPassword),
     controller.forgotPassword
   );
-  router.post(
+  routerExcl.post(
     "/reset-password",
     validate(schema.resetPassword),
     controller.resetPassword
   );
-  router.post("/logout", controller.logout);
+  routerExcl.post("/logout", controller.logout);
 
   //-------------------------- Profile
-  router.get("/profile", authJwt.verifyToken, controller.profile);
-  router.put(
+  routerExcl.get("/profile", authJwt.verifyToken, controller.profile);
+  routerExcl.put(
     "/profile",
     authJwt.verifyToken,
     file.upload(
@@ -40,5 +39,8 @@ module.exports = function (app) {
     controller.update
   );
 
-  app.use("/api/staff", router);
+  app.use("/api/business", routerExcl);
+
+  router.get("/find", authJwt.verifyToken, controller.find);
+  app.use("/api/businesses", router);
 };

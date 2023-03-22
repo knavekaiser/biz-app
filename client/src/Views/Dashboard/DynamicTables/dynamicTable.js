@@ -102,7 +102,12 @@ const DynamicTablePage = () => {
           />
           <button
             className="btn m-a mr-0"
-            onClick={() => navigate(paths.dynamicTables.replace("/*", ""))}
+            onClick={() =>
+              navigate(
+                paths.dashboard.replace("*", "") +
+                  paths.dynamicTables.replace("/*", "")
+              )
+            }
           >
             Back
           </button>

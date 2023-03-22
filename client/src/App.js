@@ -1,13 +1,14 @@
 import "./App.scss";
 import { useEffect, useContext } from "react";
 import { SiteContext } from "SiteContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { paths, endpoints } from "config";
 import { Prompt } from "Components/modal";
 import { useFetch } from "hooks";
 
-import AuthView from "Views/AuthViews";
 import Dashboard from "Views/Dashboard";
+import Home from "Views/Home";
+import AuthView from "Views/AuthViews";
 
 function resizeWindow() {
   let vh = window.innerHeight * 0.01;
@@ -15,32 +16,11 @@ function resizeWindow() {
 }
 
 function App() {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, userType } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { get: getProfile } = useFetch(
-    localStorage.getItem("userType") === "staff"
-      ? endpoints.staffProfile
-      : endpoints.profile
-  );
-
-  useEffect(() => {
-    if (!user) {
-      navigate(
-        localStorage.getItem("userType") === "staff"
-          ? paths.staffSignIn
-          : paths.signIn,
-        { replace: true }
-      );
-    } else if (
-      [paths.signIn, paths.signUp, paths.resetPassword].includes(
-        location.pathname
-      )
-    ) {
-      navigate("/", { replace: true });
-    }
-  }, [user]);
+  const { get: getProfile } = useFetch(endpoints[`${userType}Profile`]);
 
   useEffect(() => {
     window.addEventListener("resize", () => resizeWindow());
@@ -55,22 +35,19 @@ function App() {
         if (data.success) {
           localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
-          navigate(location.pathname || "/", { replace: true });
+          // navigate(location.pathname || paths.home, { replace: true });
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
-  if (!user) {
-    return (
-      <div className="App">
-        <AuthView />
-      </div>
-    );
-  }
   return (
     <div className={"App"}>
-      <Dashboard />
+      <Routes>
+        <Route path={paths.home} element={<Home />} />
+        <Route path={paths.dashboard} element={<Dashboard />} />
+        <Route path="*" element={<AuthView />} />
+      </Routes>
     </div>
   );
 }

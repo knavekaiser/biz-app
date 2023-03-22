@@ -12,4 +12,5 @@ module.exports = {
   quote: require("./quote"),
   role: require("./role"),
   employee: require("./employee"),
+  store: require("./store"),
 };

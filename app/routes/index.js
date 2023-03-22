@@ -1,5 +1,6 @@
 module.exports = function (app) {
-  require("./user.routes")(app);
+  require("./admin.routes")(app);
+  require("./business.routes")(app);
   require("./staffs.routes")(app);
   require("./invoice.routes")(app);
   require("./purchase.routes")(app);
@@ -13,4 +14,5 @@ module.exports = function (app) {
   require("./quote.routes")(app);
   require("./role.routes")(app);
   require("./employees.routes")(app);
+  require("./store.routes")(app);
 };

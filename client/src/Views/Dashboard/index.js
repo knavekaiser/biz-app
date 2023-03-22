@@ -3,10 +3,8 @@ import { SiteContext } from "SiteContext";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Tabs } from "Components/elements";
 import Settings from "./Settings";
-import { paths, endpoints } from "config";
-import { useFetch } from "hooks";
-
-import { FaPowerOff } from "react-icons/fa";
+import { paths } from "config";
+import { Header, Footer } from "Components/ui";
 
 import s from "./dashboard.module.scss";
 
@@ -20,52 +18,39 @@ import Payments from "./Payments";
 import DynamicTables from "./DynamicTables";
 import Roles from "./Roles";
 import Employees from "./Employees";
+import Stores from "./Stores";
 
 const Dashboard = () => {
-  const { user, setUser, setConfig, business, checkPermission } =
-    useContext(SiteContext);
+  const { user, business, userType, checkPermission } = useContext(SiteContext);
   const navigate = useNavigate();
-
-  const { post: logout } = useFetch(
-    localStorage.getItem("userType") === "staff"
-      ? endpoints.staffLogout
-      : endpoints.logout
-  );
 
   useEffect(() => {
     if (!user) {
-      navigate(
-        localStorage.getItem("userType") === "staff"
-          ? paths.staffSignIn
-          : paths.signIn
-      );
+      navigate(paths.signIn);
     }
   }, []);
 
+  if (userType === "admin") {
+    return (
+      <div className={s.container}>
+        <Header />
+        <div className={s.tabs}>
+          <Tabs
+            className={s.tab}
+            tabs={[{ label: "Stores", path: paths.stores }]}
+          />
+        </div>
+        <Routes>
+          <Route path={paths.stores} element={<Stores />} />
+        </Routes>
+        <Footer />
+      </div>
+    );
+  }
   if (localStorage.getItem("userType") === "staff" && !business) {
     return (
       <div className={s.container}>
-        <div className={s.header}>
-          <div className={s.siteName}>
-            {user.logo && <img className={s.logo} src={user.logo} />}
-            <h2>{user.name}</h2>
-          </div>
-          <button
-            className={`clear ${s.logoutBtn}`}
-            title="Log out"
-            onClick={() => {
-              logout().then(({ data }) => {
-                if (data.success) {
-                  setUser(null);
-                  setConfig(null);
-                  sessionStorage.removeItem("access_token");
-                }
-              });
-            }}
-          >
-            <FaPowerOff />
-          </button>
-        </div>
+        <Header />
         <div className={s.tabs}>
           <Tabs
             className={s.tab}
@@ -78,38 +63,13 @@ const Dashboard = () => {
         <Routes>
           <Route path={paths.businesses} element={<Businesses />} />
         </Routes>
-        <footer>
-          © {new Date().getFullYear()} Comify Technologies, All Rights Reserved.
-        </footer>
+        <Footer />
       </div>
     );
   }
   return (
     <div className={s.container}>
-      <div className={s.header}>
-        <div className={s.siteName}>
-          {user.logo && <img className={s.logo} src={user.logo} />}
-          {business?.business?.logo && (
-            <img className={s.logo} src={business.business.logo} />
-          )}
-          <h2>{business?.business?.name || user.name}</h2>
-        </div>
-        <button
-          className={`clear ${s.logoutBtn}`}
-          title="Log out"
-          onClick={() => {
-            logout().then(({ data }) => {
-              if (data.success) {
-                setUser(null);
-                setConfig(null);
-                sessionStorage.removeItem("access_token");
-              }
-            });
-          }}
-        >
-          <FaPowerOff />
-        </button>
-      </div>
+      <Header />
       <div className={s.tabs}>
         <Tabs
           className={s.tab}
@@ -190,9 +150,7 @@ const Dashboard = () => {
           <Route path={paths.settings.baseUrl} element={<Settings />} />
         )}
       </Routes>
-      <footer>
-        © {new Date().getFullYear()} Comify Technologies, All Rights Reserved.
-      </footer>
+      <Footer />
     </div>
   );
 };

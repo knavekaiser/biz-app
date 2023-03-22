@@ -15,7 +15,7 @@ const validationSchema = yup.object({
 });
 
 const Form = () => {
-  const { setUser } = useContext(SiteContext);
+  const { setUser, userType, setUserType } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -23,45 +23,61 @@ const Form = () => {
   } = useForm({ resolver: useYup(validationSchema) });
   const navigate = useNavigate();
   const [invalidCred, setInvalidCred] = useState(false);
-  const { post: login, loading } = useFetch(endpoints.signIn);
+  const { post: login, loading } = useFetch(endpoints[`${userType}SignIn`]);
   return (
     <form
       className="grid gap-1 p-1 m-a"
       onSubmit={handleSubmit((values) => {
         setInvalidCred(false);
-        login({ phone: values.phone, password: values.password }).then(
-          ({ error, data }) => {
-            localStorage.setItem("userType", "business");
-            if (error) {
-              return Prompt({
-                type: "error",
-                message: error.message || error,
-              });
-            }
+        login({ phone: values.phone, password: values.password })
+          .then(({ data }) => {
+            localStorage.setItem("userType", data.userType);
             if (data.success) {
               setUser(data.data);
               sessionStorage.setItem("access_token", data.token);
-              navigate("/", { replace: true });
+              navigate(paths.dashboard, { replace: true });
             } else {
               setInvalidCred(true);
             }
-          }
-        );
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <img className={s.illustration} src="/assets/comify.png" />
       <div className={`grid gap-1`}>
         <h1 className="text-center">Comify Studio</h1>
         <div className="flex justify-space-between align-center">
-          <h2>Sign In as Admin</h2>
-          <Link
-            to={paths.staffSignIn}
-            className="underline"
-            onClick={() => localStorage.setItem("userType", "staff")}
-          >
-            switch to staff
-          </Link>
+          <h2>Sign In as</h2>
         </div>
+        <ul className={s.userTypes}>
+          <li
+            className={userType === "business" ? s.active : ""}
+            onClick={() => {
+              setUserType("business");
+              localStorage.setItem("userType", "business");
+            }}
+          >
+            Business
+          </li>
+          <li
+            className={userType === "admin" ? s.active : ""}
+            onClick={() => {
+              setUserType("admin");
+              localStorage.setItem("userType", "admin");
+            }}
+          >
+            Admin
+          </li>
+          <li
+            className={userType === "staff" ? s.active : ""}
+            onClick={() => {
+              setUserType("staff");
+              localStorage.setItem("userType", "staff");
+            }}
+          >
+            Staff
+          </li>
+        </ul>
         {invalidCred && <p className="error">Invalid credentials</p>}
         <Input
           required

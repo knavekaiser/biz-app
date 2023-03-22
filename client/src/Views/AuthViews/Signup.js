@@ -19,7 +19,7 @@ const validationSchema = yup.object({
 });
 
 const Form = () => {
-  const { setUser } = useContext(SiteContext);
+  const { setUser, userType, setUserType } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -27,7 +27,7 @@ const Form = () => {
   } = useForm({
     resolver: useYup(validationSchema),
   });
-  const { post: signup, loading } = useFetch(endpoints.signUp);
+  const { post: signup, loading } = useFetch(endpoints[`${userType}SignUp`]);
 
   const navigate = useNavigate();
   return (
@@ -43,7 +43,7 @@ const Form = () => {
           if (data.success) {
             setUser(data.data);
             sessionStorage.setItem("access_token", data.token);
-            navigate("/", { replace: true });
+            navigate(paths.dashboard, { replace: true });
           } else {
             Prompt({
               type: "error",
@@ -57,15 +57,37 @@ const Form = () => {
       <div className={"grid gap-1"}>
         <h1 className="text-center">Comify Studio</h1>
         <div className="flex justify-space-between align-center">
-          <h2>Sign Up as Admin</h2>
-          <Link
-            to={paths.staffSignUp}
-            className="underline"
-            onClick={() => localStorage.setItem("userType", "staff")}
-          >
-            switch to staff
-          </Link>
+          <h2>Sign Up</h2>
         </div>
+        <ul className={s.userTypes}>
+          <li
+            className={userType === "business" ? s.active : ""}
+            onClick={() => {
+              setUserType("business");
+              localStorage.setItem("userType", "business");
+            }}
+          >
+            Business
+          </li>
+          <li
+            className={userType === "admin" ? s.active : ""}
+            onClick={() => {
+              setUserType("admin");
+              localStorage.setItem("userType", "admin");
+            }}
+          >
+            Admin
+          </li>
+          <li
+            className={userType === "staff" ? s.active : ""}
+            onClick={() => {
+              setUserType("staff");
+              localStorage.setItem("userType", "staff");
+            }}
+          >
+            Staff
+          </li>
+        </ul>
         <Input
           label="Phone"
           required
@@ -73,7 +95,7 @@ const Form = () => {
           error={errors.phone}
         />
         <Input
-          label="Business Name"
+          label="Name"
           required
           {...register("name")}
           error={errors.name}

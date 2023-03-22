@@ -10,6 +10,7 @@ mongoose
   .catch((err) => console.log("could not connect to db, here's why: " + err));
 
 module.exports = {
+  Admin: require("./admin.model"),
   Config: require("./config.model"),
   User: require("./user.model"),
   Staff: require("./staff.model"),
@@ -22,4 +23,5 @@ module.exports = {
   Order: require("./order.model"),
   Quote: require("./quote.model"),
   Role: require("./role.model"),
+  Store: require("./store.model"),
 };

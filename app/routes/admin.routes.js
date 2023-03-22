@@ -1,6 +1,6 @@
 const { authJwt, file, validate } = require("../middlewares");
 const { appConfig } = require("../config");
-const controller = require("../controllers/user.controller");
+const controller = require("../controllers/admin.controller");
 const { users: schema } = require("../validationSchemas");
 var router = require("express").Router();
 
@@ -38,5 +38,5 @@ module.exports = function (app) {
     controller.update
   );
 
-  app.use("/api/users", router);
+  app.use("/api/admin", router);
 };

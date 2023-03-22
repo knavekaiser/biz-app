@@ -2,23 +2,33 @@ const baseApiUrl = "";
 
 const endpoints = {
   baseApiUrl,
-  signUp: `${baseApiUrl}/api/users/signup`,
-  signIn: `${baseApiUrl}/api/users/signin`,
-  profile: `${baseApiUrl}/api/users/profile`,
 
-  forgotPassword: `${baseApiUrl}/api/users/forgot-password`,
-  resetPassword: `${baseApiUrl}/api/users/reset-password`,
-  logout: `${baseApiUrl}/api/users/logout`,
+  adminSignUp: `${baseApiUrl}/api/admin/signup`,
+  adminSignIn: `${baseApiUrl}/api/admin/signin`,
+  adminProfile: `${baseApiUrl}/api/admin/profile`,
 
-  staffSignUp: `${baseApiUrl}/api/staffs/signup`,
-  staffSignIn: `${baseApiUrl}/api/staffs/signin`,
-  staffProfile: `${baseApiUrl}/api/staffs/profile`,
+  adminForgotPassword: `${baseApiUrl}/api/admin/forgot-password`,
+  adminResetPassword: `${baseApiUrl}/api/admin/reset-password`,
+  adminLogout: `${baseApiUrl}/api/admin/logout`,
 
-  staffForgotPassword: `${baseApiUrl}/api/staffs/forgot-password`,
-  staffResetPassword: `${baseApiUrl}/api/staffs/reset-password`,
-  staffLogout: `${baseApiUrl}/api/staffs/logout`,
+  businessSignUp: `${baseApiUrl}/api/business/signup`,
+  businessSignIn: `${baseApiUrl}/api/business/signin`,
+  businessProfile: `${baseApiUrl}/api/business/profile`,
+
+  businessForgotPassword: `${baseApiUrl}/api/business/forgot-password`,
+  businessResetPassword: `${baseApiUrl}/api/business/reset-password`,
+  businessLogout: `${baseApiUrl}/api/business/logout`,
+
+  staffSignUp: `${baseApiUrl}/api/staff/signup`,
+  staffSignIn: `${baseApiUrl}/api/staff/signin`,
+  staffProfile: `${baseApiUrl}/api/staff/profile`,
+
+  staffForgotPassword: `${baseApiUrl}/api/staff/forgot-password`,
+  staffResetPassword: `${baseApiUrl}/api/staff/reset-password`,
+  staffLogout: `${baseApiUrl}/api/staff/logout`,
 
   businesses: `${baseApiUrl}/api/businesses`,
+  findBusinesses: `${baseApiUrl}/api/businesses/find`,
 
   invoices: `${baseApiUrl}/api/invoices`,
   purchases: `${baseApiUrl}/api/purchases`,
@@ -27,6 +37,8 @@ const endpoints = {
   quotes: `${baseApiUrl}/api/quotes`,
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
+  stores: `${baseApiUrl}/api/stores`,
+  landingPageStores: `${baseApiUrl}/api/stores/landing-page`,
 
   userConfig: `${baseApiUrl}/api/user-config`,
   collections: `${baseApiUrl}/api/collections`,
