@@ -26,9 +26,11 @@ const Home = () => {
       <Header />
       <div className={s.landingPage}>
         <div className={s.stores}>
-          {stores.map((store) => (
-            <Store key={store._id} store={store} />
-          ))}
+          {stores.length ? (
+            stores.map((store) => <Store key={store._id} store={store} />)
+          ) : (
+            <h2>No store added yet.</h2>
+          )}
         </div>
       </div>
       <Footer />

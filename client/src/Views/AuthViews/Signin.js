@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Input } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { paths, endpoints } from "config";
@@ -21,6 +21,7 @@ const Form = () => {
     register,
     formState: { errors },
   } = useForm({ resolver: useYup(validationSchema) });
+  const location = useLocation();
   const navigate = useNavigate();
   const [invalidCred, setInvalidCred] = useState(false);
   const { post: login, loading } = useFetch(endpoints[`${userType}SignIn`]);
@@ -35,7 +36,11 @@ const Form = () => {
             if (data.success) {
               setUser(data.data);
               sessionStorage.setItem("access_token", data.token);
-              navigate(paths.dashboard, { replace: true });
+              const path = ["/signin", "/signup"].includes(location.pathname)
+                ? paths.home
+                : location.pathname || paths.home;
+              // console.log(path);
+              navigate(path, { replace: true });
             } else {
               setInvalidCred(true);
             }

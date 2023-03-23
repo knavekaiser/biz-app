@@ -35,7 +35,10 @@ function App() {
         if (data.success) {
           localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
-          // navigate(location.pathname || paths.home, { replace: true });
+          const path = ["/signin", "/signup"].includes(location.pathname)
+            ? paths.home
+            : location.pathname || paths.home;
+          navigate(path, { replace: true });
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));

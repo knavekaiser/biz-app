@@ -1113,35 +1113,37 @@ export const Tabs = ({
       } ${tertiary ? s.tertiary : ""}`}
       data-testid="tabs"
     >
-      {tabs.map((tab) =>
-        onChange ? (
-          <a
-            key={tab.value}
-            className={tab.value === activeTab ? s.active : ""}
-            onClick={() => onChange(tab)}
-          >
-            {tab.label}
-          </a>
-        ) : (
-          <Link
-            key={tab.path}
-            to={{
-              pathname: tab.path,
-              ...(tab.search && {
-                search: `?${createSearchParams(tab.search)}`,
-              }),
-            }}
-            className={
-              // location?.pathname.endsWith(path) ? s.active : ""
-              location?.pathname?.includes("/" + tab.path.replace("/*", ""))
-                ? s.active
-                : ""
-            }
-          >
-            {tab.label}
-          </Link>
-        )
-      )}
+      {tabs
+        .filter((item) => onChange || item.path)
+        .map((tab) =>
+          onChange ? (
+            <a
+              key={tab.value}
+              className={tab.value === activeTab ? s.active : ""}
+              onClick={() => onChange(tab)}
+            >
+              {tab.label}
+            </a>
+          ) : (
+            <Link
+              key={tab.path}
+              to={{
+                pathname: tab.path,
+                ...(tab.search && {
+                  search: `?${createSearchParams(tab.search)}`,
+                }),
+              }}
+              className={
+                // location?.pathname.endsWith(path) ? s.active : ""
+                location?.pathname?.includes("/" + tab.path.replace("/*", ""))
+                  ? s.active
+                  : ""
+              }
+            >
+              {tab.label}
+            </Link>
+          )
+        )}
       <span className={s.fill} />
     </div>
   );

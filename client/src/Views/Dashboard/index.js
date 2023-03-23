@@ -106,10 +106,10 @@ const Dashboard = () => {
             ...(checkPermission("employee_read")
               ? [{ label: "Staffs", path: paths.employees }]
               : []),
-            ...(localStorage.getItem("userType") === "staff"
+            ...(userType === "staff"
               ? [{ label: "Businesses", path: paths.businesses }]
               : []),
-            ...(localStorage.getItem("userType") === "business"
+            ...(userType === "business"
               ? [{ label: "Settings", path: paths.settings.baseUrl }]
               : []),
           ]}
@@ -143,10 +143,10 @@ const Dashboard = () => {
         {checkPermission("employee_read") && (
           <Route path={paths.employees} element={<Employees />} />
         )}
-        {localStorage.getItem("userType") === "staff" && (
+        {userType === "staff" && (
           <Route path={paths.businesses} element={<Businesses />} />
         )}
-        {localStorage.getItem("userType") === "business" && (
+        {userType === "business" && (
           <Route path={paths.settings.baseUrl} element={<Settings />} />
         )}
       </Routes>

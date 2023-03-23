@@ -14,20 +14,20 @@ export const Provider = ({ children }) => {
   const checkPermission = useCallback(
     (permission) => {
       if (!user) return false;
-      if (localStorage.getItem("userType") === "business") {
+      if (["business", "admin"].includes(userType)) {
         return true;
       }
       if (!business) {
         return false;
       }
-      if (localStorage.getItem("userType") === "staff") {
+      if (userType === "staff") {
         if (business.permissions.includes(permission)) {
           return true;
         }
       }
       return false;
     },
-    [user, business]
+    [user, business, userType]
   );
 
   useEffect(() => {

@@ -63,7 +63,7 @@ const Header = ({}) => {
       >
         <ul>
           {user ? (
-            <Link to={paths.dashboard}>
+            <Link to={paths.dashboard.replace("*", "")}>
               <li>Dashboard</li>
             </Link>
           ) : (
