@@ -50,7 +50,6 @@ const Store = ({ store }) => {
                 href={
                   "http://" + store.business.domain + `/item/${product._id}`
                 }
-                target="_blank"
               >
                 <img src={product.images[0]} />
               </a>
@@ -58,7 +57,7 @@ const Store = ({ store }) => {
           ))}
         </div>
       ) : (
-        <a href={store.business.domain} target="_blank">
+        <a href={"http://" + store.business.domain}>
           <img src={store.image} />
         </a>
       )}
