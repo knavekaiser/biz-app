@@ -1,13 +1,18 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { fileHelper, dbHelper, appHelper } = require("../helpers");
+const { fileHelper } = require("../helpers");
 
-const { Store, Config, Collection, User } = require("../models");
+const { Store } = require("../models");
 
-exports.landingPageStores = async (req, res) => {
+exports.homeStores = async (req, res) => {
   try {
+    const conditions = {};
+    if (req.query.category) {
+      conditions.category = { $in: req.query.category.split(",") };
+    }
     Store.aggregate([
+      { $match: conditions },
       {
         $lookup: {
           from: "users",
@@ -32,20 +37,19 @@ exports.landingPageStores = async (req, res) => {
       { $unwind: { path: "$business", preserveNullAndEmptyArrays: false } },
     ])
       .then(async (data) => {
-        for (let i = 0; i < data.length; i++) {
-          const store = data[i];
-          if (store.featured) {
-            const { Model } = await dbHelper.getModel(
-              store.business._id + "_" + "Product"
-            );
-            data[i].products = await Model
-              .find
-              // add filters
-              ()
-              .limit(5);
-          }
-        }
         responseFn.success(res, { data });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.homeCategories = async (req, res) => {
+  try {
+    Store.aggregate([{ $group: { _id: "$category" } }])
+      .then(async (data) => {
+        responseFn.success(res, { data: data.map((item) => item._id) });
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -62,6 +66,9 @@ exports.find = async (req, res) => {
         $options: "i",
       };
     }
+    if ("business" in req.query) {
+      conditions.business = req.query.business;
+    }
     Store.find(conditions, "-__v")
       .populate("business", "name phone email domain logo")
       .then((data) => {
@@ -75,24 +82,6 @@ exports.find = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    if (typeof req.body.business === "object") {
-      req.body.business.password = appHelper.generateHash(
-        req.body.business.password
-      );
-      const newBusiness = await new User({ ...req.body.business })
-        .save()
-        .then(async (business) => {
-          await new Config({ user: business._id }).save();
-          await Collection.insertMany(
-            dbHelper.defaultSchemas.map((item) => ({
-              ...item,
-              user: business._id,
-            }))
-          );
-          return business;
-        });
-      req.body.business = newBusiness._id;
-    }
     new Store({ ...req.body })
       .save()
       .then(async (data) => {

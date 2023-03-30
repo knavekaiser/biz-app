@@ -71,10 +71,6 @@ exports.getModel = async (table) => {
   const fields = getFields(collection.fields);
 
   if (mongoose.models[table]) {
-    // remove and redefine the model
-  }
-
-  if (mongoose.models[table]) {
     delete mongoose.models[table];
   }
 
@@ -476,8 +472,36 @@ exports.getRatingBreakdownPipeline = ({ business }) => {
 
 exports.defaultSchemas = [
   {
+    name: "Category",
+    fields: [
+      {
+        unique: true,
+        name: "name",
+        required: true,
+        label: "Name",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+    ],
+  },
+  {
     name: "Product",
     fields: [
+      {
+        unique: false,
+        name: "category",
+        required: false,
+        label: "Category",
+        dataType: "string",
+        fieldType: "select",
+        inputType: "text",
+        multiple: false,
+        optionType: "collection",
+        collection: "Category",
+        optionLabel: "name",
+        optionValue: "name",
+      },
       {
         name: "title",
         required: true,

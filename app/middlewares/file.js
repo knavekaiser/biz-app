@@ -2,7 +2,6 @@ const multer = require("multer");
 const {
   appConfig: { responseFn, responseStr, ...appConfig },
 } = require("../config");
-const Collection = require("../models/collection.model");
 const { ObjectId } = require("mongodb");
 const fs = require("fs");
 const path = require("path");
@@ -28,9 +27,9 @@ const upload = (fields, uploadPath, options) => {
       const multiple =
         fields.length &&
         fields.find((item) => item.name === file.fieldname)?.multiple;
-      const fileName = `${req.authUser?._id || Date.now()}_${file.fieldname}${
-        multiple ? `_${Math.random().toString(36).substr(-8)}_` : ""
-      }${ext}`;
+      const fileName = `${req.authUser?._id || Date.now()}_${
+        file.fieldname
+      }_${ObjectId()}${ext}`;
 
       cb(null, fileName);
     },
@@ -102,6 +101,16 @@ const upload = (fields, uploadPath, options) => {
       });
 
       Object.entries(req.body).forEach(([key, value]) => {
+        if (/__\d__/.test(key)) {
+          key.split("__").reduce((p, c, i, arr) => {
+            if (!isNaN(+c)) {
+              const key = arr[i - 1];
+              p[key][+c][arr[i + 1]] = value;
+            }
+            delete p[key];
+            return p;
+          }, req.body);
+        }
         if (key.includes(".")) {
           const multiple =
             fields.length && fields.find((item) => item.name === key)?.multiple;
@@ -128,6 +137,7 @@ const upload = (fields, uploadPath, options) => {
               `${options.fileSize || 10}MB`
             )
           );
+        console.log(err);
         return responseFn.error(res, {}, err?.message || err);
       }
       next();

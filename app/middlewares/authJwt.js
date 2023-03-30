@@ -61,7 +61,9 @@ verifyToken = async (req, res, next) => {
 
 checkPermission = (permission) => {
   return (req, res, next) => {
-    if (req.authToken?.userType === "business") {
+    if (req.authToken?.userType === "admin") {
+      return next();
+    } else if (req.authToken?.userType === "business") {
       return next();
     } else if (req.authToken?.userType === "staff") {
       if (req.permissions.includes(permission)) {

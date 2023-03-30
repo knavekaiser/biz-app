@@ -44,7 +44,8 @@ export const Table = ({
   renderRow,
   pagination,
   url,
-  filters: filterFields,
+  filters: defaultFilters,
+  filterFields,
   tfoot,
 }) => {
   const [filters, setFilters] = useState({});
@@ -92,7 +93,7 @@ export const Table = ({
     if (url) {
       getData({ page: 1 });
     }
-  }, [filters]);
+  }, [filters, defaultFilters]);
 
   useEffect(() => {
     if (sortable) {
@@ -459,6 +460,7 @@ export const DynamicTable = ({
   pagination,
   loading,
   filters,
+  filterFields,
   actions,
   className = "",
 }) => {
@@ -586,7 +588,8 @@ export const DynamicTable = ({
         ...(fields.map((field) => ({ label: field.label })) || []),
         ...(actions ? [{ label: "Action" }] : []),
       ]}
-      filters={filters || fields}
+      filters={filters}
+      filterFields={filterFields || fields}
       renderRow={renderRow}
     />
   ) : (
@@ -707,6 +710,7 @@ export const ImportExport = ({
   exportUrl,
   collection,
   templateData,
+  onSuccess,
 }) => {
   const [importOpen, setImportOpen] = useState(false);
   return (
@@ -727,6 +731,7 @@ export const ImportExport = ({
               collection={collection}
               onSuccess={() => {
                 setImportOpen(false);
+                onSuccess();
               }}
             />
           </Modal>

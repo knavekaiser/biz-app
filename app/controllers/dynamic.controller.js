@@ -158,7 +158,16 @@ exports.create = async (req, res) => {
         );
         return responseFn.success(res, { data: newItem[0] });
       })
-      .catch((err) => responseFn.error(res, {}, err.message));
+      .catch((err) => {
+        if (err.code === 11000) {
+          return responseFn.error(
+            res,
+            {},
+            err.message.replace(/.*?({.*)/, "$1") + " already exists."
+          );
+        }
+        responseFn.error(res, {}, err.message);
+      });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
@@ -194,7 +203,16 @@ exports.bulkCreate = async (req, res) => {
           responseStr.records_created.replace("{num}", data.length)
         );
       })
-      .catch((err) => responseFn.error(res, {}, err.message));
+      .catch((err) => {
+        if (err.code === 11000) {
+          return responseFn.error(
+            res,
+            {},
+            err.message.replace(/.*?({.*)/, "$1") + " already exists."
+          );
+        }
+        responseFn.error(res, {}, err.message);
+      });
   } catch (error) {
     console.log(error);
     return responseFn.error(res, {}, error.message, 500);

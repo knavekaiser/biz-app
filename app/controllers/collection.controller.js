@@ -16,6 +16,9 @@ exports.findAll = async (req, res) => {
         ? req.params.id
         : null;
     const conditions = { user: req.business?._id || req.authUser._id };
+    if (req.authToken.userType === "admin") {
+      conditions.user = req.query.business;
+    }
     if (_id) {
       conditions._id = _id;
     }

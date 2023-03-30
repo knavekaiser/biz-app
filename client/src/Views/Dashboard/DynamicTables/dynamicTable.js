@@ -11,11 +11,11 @@ import s from "./payments.module.scss";
 import DynamicForm from "./dynamicForm";
 
 const DynamicTablePage = () => {
+  const [filters, setFilters] = useState({});
   const { business, checkPermission } = useContext(SiteContext);
   const [templateData, setTemplateData] = useState([]);
   const [edit, setEdit] = useState(null);
   const [addData, setAddData] = useState(false);
-  const [data, setData] = useState([]);
   const [collection, setCollection] = useState(null);
   const [productCollection, setProductCollection] = useState(null);
   const navigate = useNavigate();
@@ -25,17 +25,9 @@ const DynamicTablePage = () => {
   );
   const { get: getProductCollection, loading: gettingProductCollection } =
     useFetch(`${endpoints.collections}/Product`);
-  const { get: getData, loading } = useFetch(`${endpoints.dynamic}/${table}`);
   const { remove: deleteData } = useFetch(`${endpoints.dynamic}/${table}/{ID}`);
 
   useEffect(() => {
-    getData()
-      .then(({ data }) => {
-        if (data.success) {
-          return setData(data.data);
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
     getCollection()
       .then(({ data }) => {
         if (data.success) {
@@ -99,6 +91,7 @@ const DynamicTablePage = () => {
             }
             collection={collection}
             templateData={templateData}
+            onSuccess={() => setFilters((prev) => ({ ...prev }))}
           />
           <button
             className="btn m-a mr-0"
@@ -120,10 +113,10 @@ const DynamicTablePage = () => {
       </div>
       <DynamicTable
         fields={collection?.fields}
-        loading={gettingCollection || loading}
+        loading={gettingCollection}
         url={`${endpoints.dynamic}/${table}`}
+        filters={filters}
         pagination
-        // data={data}
         actions={(item) => [
           ...(checkPermission(`${business?.business._id}_${table}_update`)
             ? [
@@ -150,9 +143,10 @@ const DynamicTablePage = () => {
                         deleteData({}, { params: { "{ID}": item._id } }).then(
                           ({ data }) => {
                             if (data.success) {
-                              setData((prev) =>
-                                prev.filter((data) => data._id !== item._id)
-                              );
+                              setFilters((prev) => ({ ...prev }));
+                              // setData((prev) =>
+                              //   prev.filter((data) => data._id !== item._id)
+                              // );
                             } else {
                               Prompt({ type: "error", message: data.message });
                             }
@@ -183,12 +177,14 @@ const DynamicTablePage = () => {
           })}
           onSuccess={(newData) => {
             if (edit) {
-              setData((prev) =>
-                prev.map((t) => (t._id === edit._id ? newData : t))
-              );
+              setFilters((prev) => ({ ...prev }));
+              // setData((prev) =>
+              //   prev.map((t) => (t._id === edit._id ? newData : t))
+              // );
               setEdit(null);
             } else {
-              setData((prev) => [...prev, newData]);
+              setFilters((prev) => ({ ...prev }));
+              // setData((prev) => [...prev, newData]);
             }
             setAddData(false);
           }}

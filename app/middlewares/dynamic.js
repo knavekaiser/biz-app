@@ -25,20 +25,20 @@ exports.getModel = async (req, res, next) => {
       }
     }
     const { Model, collection } = await dbHelper.getModel(
-      (req.business?._id || req.authUser._id) + "_" + req.params.table
+      (req.authToken.userType === "admin"
+        ? req.query.business
+        : req.business?._id || req.authUser._id) +
+        "_" +
+        req.params.table
     );
     if (!Model || !collection) {
       return responseFn.error(
         res,
         {},
-        responseStr.record_not_found.replace("Record", "Collection")
-      );
-    }
-    if (!Model || !collection) {
-      return responseFn.error(
-        res,
-        {},
-        responseStr.record_not_found.replace("Collection")
+        responseStr.record_not_found.replace(
+          "Record",
+          `${req.params.table} collection`
+        )
       );
     }
     req.Model = Model;

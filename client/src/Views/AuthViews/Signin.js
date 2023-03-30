@@ -32,9 +32,9 @@ const Form = () => {
         setInvalidCred(false);
         login({ phone: values.phone, password: values.password })
           .then(({ data }) => {
-            localStorage.setItem("userType", data.userType);
             if (data.success) {
               setUser(data.data);
+              localStorage.setItem("userType", data.data.userType);
               sessionStorage.setItem("access_token", data.token);
               const path = ["/signin", "/signup"].includes(location.pathname)
                 ? paths.home

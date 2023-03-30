@@ -20,6 +20,7 @@ const paths = {
   roles: "roles",
   employees: "employees",
   stores: "stores",
+  storeListings: "stores/:storeId/listings",
 
   settings: {
     baseUrl: "settings/*",

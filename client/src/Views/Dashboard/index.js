@@ -19,6 +19,7 @@ import DynamicTables from "./DynamicTables";
 import Roles from "./Roles";
 import Employees from "./Employees";
 import Stores from "./Stores";
+import StoreListings from "./Stores/Listings";
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -42,6 +43,10 @@ const Dashboard = () => {
         </div>
         <Routes>
           <Route path={paths.stores} element={<Stores />} />
+          <Route
+            path={"stores/:storeId/listings"}
+            element={<StoreListings />}
+          />
         </Routes>
         <Footer />
       </div>

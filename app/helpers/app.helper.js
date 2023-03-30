@@ -19,7 +19,7 @@ exports.signIn = (res, user, userType) => {
     httpOnly: true,
     sameSite: "strict",
   });
-  responseFn.success(res, { data: user, token: token });
+  responseFn.success(res, { data: { ...user, userType }, token: token });
 };
 
 exports.json = (data) => JSON.parse(JSON.stringify(data));

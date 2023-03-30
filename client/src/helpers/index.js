@@ -34,7 +34,6 @@ export const toCSV = (columns, data) => {
 };
 
 export const parseXLSXtoJSON = (file, collection, cb) => {
-  var name = file.name;
   const reader = new FileReader();
   reader.onload = async (evt) => {
     const bstr = evt.target.result;

@@ -73,6 +73,9 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
                 return;
               }
               const value = values[field.name];
+              if (value === undefined) {
+                return;
+              }
               if (field.inputType === "file" && value.length) {
                 for (const file of value) {
                   payload.append(`${field.name}`, file.uploadFilePath || file);
@@ -117,6 +120,7 @@ const DynamicForm = ({
   loading,
   onSubmit,
 }) => {
+  const [_fields, set_fields] = useState([]);
   const {
     handleSubmit,
     register,
@@ -162,7 +166,9 @@ const DynamicForm = ({
     ),
   });
 
-  const fields = collectionFields.map((field, i) => {
+  const fields = (
+    collection?.name === "Product" ? _fields : collectionFields
+  ).map((field, i) => {
     if (collection?.name === "Product" && field.name === "variants") {
       return null;
     }
@@ -312,6 +318,7 @@ const DynamicForm = ({
   });
 
   const addVariant = watch("addVariant");
+  const category = watch("category");
 
   useEffect(() => {
     const _edit = { ...edit };
@@ -343,20 +350,46 @@ const DynamicForm = ({
     }
     reset(_edit);
   }, [edit]);
+  useEffect(() => {
+    if (category) {
+      set_fields(
+        collectionFields.filter(
+          (item) => !item.category || item.category === category
+        )
+      );
+    } else {
+      set_fields(collectionFields.filter((item) => item.name === "category"));
+    }
+  }, [category]);
 
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        onSubmit({
-          ...values,
-          _id: edit?._id || Math.random().toString(36).substr(-8),
-        });
+        if (collection?.name === "Product") {
+          const fields = _fields.map((item) => item.name);
+          const data = {};
+          Object.entries(values)
+            .filter(([key, value]) => fields.includes(key))
+            .forEach(([key, value]) => {
+              data[key] = value;
+            });
+          onSubmit({
+            ...data,
+            _id: edit?._id || Math.random().toString(36).substr(-8),
+          });
+        } else {
+          onSubmit({
+            ...values,
+            _id: edit?._id || Math.random().toString(36).substr(-8),
+          });
+        }
       })}
       className={`${s.dynamicForm} grid gap-1 p-1`}
     >
       {fields}
 
       {collection?.name === "Product" &&
+        category &&
         collection?.fields.some((item) => "variantArray" === item.dataType) && (
           <Checkbox {...register("addVariant")} label="Add Variant" />
         )}

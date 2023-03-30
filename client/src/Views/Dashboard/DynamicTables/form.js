@@ -144,6 +144,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         className={s.fields}
         columns={[
           { label: "Name" },
+          ...(edit?.name === "Product" ? [{ label: "Category" }] : []),
           { label: "Data Type" },
           { label: "Label" },
           { label: "Field Type" },
@@ -158,6 +159,7 @@ const Form = ({ edit, collections, onSuccess }) => {
             <td>
               <span className="ellipsis">{item.name}</span>
             </td>
+            {edit?.name === "Product" && <td>{item.category}</td>}
             <td>{item.dataType}</td>
             <td>{item.label}</td>
             <td>{item.fieldType}</td>
@@ -213,6 +215,7 @@ const Form = ({ edit, collections, onSuccess }) => {
             setFields((prev) => [...prev, newField]);
           }
         }}
+        clear={() => setEditField(null)}
       />
 
       <form
@@ -231,12 +234,22 @@ const Form = ({ edit, collections, onSuccess }) => {
   );
 };
 
+const defaultFields = [
+  "title",
+  "description",
+  "images",
+  "price",
+  "whatsappNumber",
+  "category",
+];
+
 const FieldForm = ({
   edit,
   fields,
   editCollection,
   collections,
   onSuccess,
+  clear,
 }) => {
   const {
     handleSubmit,
@@ -280,8 +293,25 @@ const FieldForm = ({
 
   const onSubmit = useCallback(
     (values) => {
-      onSuccess(values);
+      if (editCollection?.name === "Product") {
+        const data = {};
+        Object.entries(values).forEach(([key, value]) => {
+          if (
+            (key === "category" &&
+              !defaultFields
+                .filter((item) => item !== "category")
+                .includes(key)) ||
+            key !== "category"
+          ) {
+            data[key] = value;
+          }
+        });
+        onSuccess(data);
+      } else {
+        onSuccess(values);
+      }
       reset({
+        category: "",
         name: "",
         inputType: "",
         dataType: "",
@@ -311,8 +341,27 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`${s.fieldForm} grid gap-1`}
         >
-          <div className="flex all-columns justify-space-between align-center">
-            <h3 className="all-columns">Data</h3>
+          <div className="flex all-columns gap-1 justify-space-between align-center">
+            <h3>Data</h3>
+
+            {editCollection?.name === "Product" &&
+              !defaultFields.includes(name) && (
+                <Select
+                  label="Category"
+                  control={control}
+                  url={endpoints.dynamic + "/Category"}
+                  getQuery={(inputValue, selected) => ({
+                    ...(inputValue && { name: inputValue }),
+                    ...(selected && { name: selected }),
+                  })}
+                  handleData={(item) => ({
+                    label: item.name,
+                    value: item.name,
+                  })}
+                  name="category"
+                />
+              )}
+
             <Checkbox {...register("unique")} label="Unique" />
           </div>
 
@@ -684,6 +733,9 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`flex gap-1 justify-center`}
         >
+          <button className="btn" type="btn" onClick={clear}>
+            Clear
+          </button>
           <button className="btn">{edit ? "Update" : "Add"} Field</button>
         </form>
       </div>
@@ -872,6 +924,7 @@ const NestedObjectFields = ({
             }
             setFormOpen(false);
           }}
+          clear={() => setEdit(null)}
         />
       </Modal>
     </>
