@@ -21,6 +21,21 @@ import s from "./store.module.scss";
 import { endpoints } from "config";
 import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
 
+function getDates(startDate, endDate) {
+  const dates = [];
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= new Date(endDate)) {
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
+    const day = currentDate.getDate().toString().padStart(2, "0");
+    dates.push(`${year}-${month}-${day}`);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dates;
+}
+
 const Form = ({ storeId, edit, onSuccess }) => {
   const [_fields, set_fields] = useState([]);
   const [editProduct, setEditProduct] = useState(null);
@@ -40,6 +55,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
     ),
   });
   const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
   const [productSchema, setProductSchema] = useState(null);
 
   const {
@@ -49,6 +65,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
   } = useFetch(endpoints.stores + `/${edit?._id || ""}`);
 
   const category = watch("category");
+  const subCategory = watch("subCategory");
   const products = watch("products");
   const featured = watch("featured");
 
@@ -56,7 +73,10 @@ const Form = ({ storeId, edit, onSuccess }) => {
     endpoints.collections + "/Product"
   );
   const { get: getCategories, loading: loadingCategories } = useFetch(
-    endpoints.dynamic + "/Category"
+    endpoints.commonCollection + "/Category"
+  );
+  const { get: getSubCategories, loading: loadingSubCategories } = useFetch(
+    endpoints.dynamic + "/Sub Category"
   );
 
   useEffect(() => {
@@ -98,17 +118,40 @@ const Form = ({ storeId, edit, onSuccess }) => {
   }, [storeId]);
 
   useEffect(() => {
+    if (category) {
+      getSubCategories({
+        query: {
+          business: storeId,
+          category: category,
+        },
+      })
+        .then(({ data }) => {
+          if (data.success) {
+            setSubCategories(data.data);
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    } else {
+      // setSubCategories([])
+    }
+  }, [category]);
+
+  useEffect(() => {
     set_fields(
       (productSchema?.fields || [])
-        .filter((item) => !item.category || item.category === category)
+        .filter((item) => !item.subCategory || item.subCategory === subCategory)
         .filter(
           (item) =>
-            !["category", "variants", "richtext", "specification"].includes(
-              item.name
-            )
+            ![
+              "subCategory",
+              "category",
+              "variants",
+              "richtext",
+              "specification",
+            ].includes(item.name)
         )
     );
-  }, [productSchema, category]);
+  }, [productSchema, subCategory]);
 
   useEffect(() => {
     reset({
@@ -117,6 +160,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
       products: edit?.products || [],
       business: storeId,
       order: edit?.order || [],
+      effectiveDate: edit?.start ? getDates(edit.start, edit.end) : [],
     });
   }, [edit]);
   return (
@@ -124,15 +168,17 @@ const Form = ({ storeId, edit, onSuccess }) => {
       <form
         onSubmit={handleSubmit((values) => {
           delete values.image;
-          const payload = { ...values };
+          const payload = {
+            ...values,
+            start: values.effectiveDate[0],
+            end: values.effectiveDate[values.effectiveDate.length - 1],
+          };
+          delete values.effectiveDate;
           values.products.forEach((product, i) => {
             if (product.image?.type) {
               payload[`products__${i}__image`] = product.image;
             }
           });
-          // if (values.images?.[0]) {
-          //   payload.image = values.images?.[0];
-          // }
           const formData = new FormData();
           Object.entries(payload).forEach(([key, value]) => {
             if (value?.type) {
@@ -174,7 +220,38 @@ const Form = ({ storeId, edit, onSuccess }) => {
         />
 
         {category && (
+          <Select
+            disabled={edit?._id}
+            control={control}
+            label="Sub Category"
+            options={subCategories.map((item) => ({
+              label:
+                item[
+                  productSchema.fields.find(
+                    (item) => item.name === "subCategory"
+                  )?.optionLabel || "name"
+                ],
+              value:
+                item[
+                  productSchema.fields.find(
+                    (item) => item.name === "subCategory"
+                  )?.optionValue || "name"
+                ],
+            }))}
+            name="subCategory"
+            formOptions={{ required: true }}
+          />
+        )}
+
+        {category && subCategory && (
           <div className="grid gap-1">
+            <CalendarInput
+              control={control}
+              label="Effective Period"
+              name="effectiveDate"
+              dateWindow="futureIncludingToday"
+              required
+            />
             <Checkbox label="Featured" {...register("featured")} />
             <div className="flex justify-space-between align-center">
               <h3>Products</h3>
@@ -239,7 +316,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           </div>
         )}
 
-        {category && _fields.length > 0 && (
+        {category && subCategory && _fields.length > 0 && (
           <CustomRadio
             control={control}
             name="order"
@@ -288,7 +365,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           onSuccess={(newProduct) => {
             setValue(
               "products",
-              edit?._id
+              editProduct?._id
                 ? products.map((item) =>
                     item._id === newProduct._id ? newProduct : item
                   )
@@ -342,6 +419,7 @@ const ProductForm = ({ _fields, storeId, edit, onSuccess }) => {
             p[_fields[i]?.name] = c;
             return p;
           }, {}),
+        url: yup.string(),
       })
     ),
   });
@@ -466,6 +544,9 @@ const ProductForm = ({ _fields, storeId, edit, onSuccess }) => {
           {...(field.optionType === "collection" && {
             url: `${endpoints.dynamic}/${field.collection}`,
           })}
+          {...(field.optionType === "commonCollection" && {
+            url: `${endpoints.commonCollection}/${field.collection}`,
+          })}
           getQuery={(inputValue, selected) => ({
             business: storeId,
             ...(inputValue && { [field.optionLabel]: inputValue }),
@@ -492,25 +573,28 @@ const ProductForm = ({ _fields, storeId, edit, onSuccess }) => {
   }, [edit]);
 
   return (
-    <form
-      className="grid gap-1 p-1"
-      onSubmit={handleSubmit((values) => {
-        if (values.images?.[0]) {
-          values.image = values.images[0];
-          delete values.images;
-        }
-        onSuccess({
-          ...values,
-          _id: edit?._id || Math.random().toString(32).substr(-8),
-        });
-      })}
-    >
-      {fields}
+    <div>
+      <form
+        className="grid gap-1 p-1"
+        onSubmit={handleSubmit((values) => {
+          if (values.images?.[0]) {
+            values.image = values.images[0];
+            delete values.images;
+          }
+          onSuccess({
+            ...values,
+            _id: edit?._id || Math.random().toString(32).substr(-8),
+          });
+        })}
+      >
+        {fields}
+        <Input label="URL" {...register("url")} />
 
-      <div className="btns">
-        <button className="btn">{edit ? "Update" : "Submit"}</button>
-      </div>
-    </form>
+        <div className="btns">
+          <button className="btn">{edit ? "Update" : "Submit"}</button>
+        </div>
+      </form>
+    </div>
   );
 };
 

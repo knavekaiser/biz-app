@@ -1,4 +1,5 @@
 const Collection = require("../models/collection.model");
+const Category = require("../models/category.model");
 
 const getType = (field) => {
   let t;
@@ -33,36 +34,38 @@ const getType = (field) => {
   return t;
 };
 
+const getFields = (fields) => {
+  const _fields = {};
+  fields.forEach((field) => {
+    // add nested fields type if field is an object
+    if (
+      ["array", "variantArray"].includes(field.dataType) &&
+      field.dataElementType === "object"
+    ) {
+      if (Array.isArray(field.fields) && field.fields.length) {
+        _fields[field.name] = [new Schema(getFields(field.fields))];
+      } else {
+        _fields[field.name] = [];
+      }
+    } else {
+      _fields[field.name] = {
+        type: getType(field),
+        required: field.required,
+        ...(field.dataType === "objectId" && { ref: field.collection }),
+        ...(field.unique && {
+          unique: true,
+          ...(!field.required && { sparse: true }),
+        }),
+      };
+    }
+  });
+  return _fields;
+};
+
 exports.getModel = async (table) => {
   const [_id, name] = table.split("_");
   const collection = await Collection.findOne({ name, user: _id });
-  const getFields = (fields) => {
-    const _fields = {};
-    fields.forEach((field) => {
-      // add nested fields type if field is an object
-      if (
-        ["array", "variantArray"].includes(field.dataType) &&
-        field.dataElementType === "object"
-      ) {
-        if (Array.isArray(field.fields) && field.fields.length) {
-          _fields[field.name] = [new Schema(getFields(field.fields))];
-        } else {
-          _fields[field.name] = [];
-        }
-      } else {
-        _fields[field.name] = {
-          type: getType(field),
-          required: field.required,
-          ...(field.dataType === "objectId" && { ref: field.collection }),
-          ...(field.unique && {
-            unique: true,
-            ...(!field.required && { sparse: true }),
-          }),
-        };
-      }
-    });
-    return _fields;
-  };
+
   if (!collection) {
     return {
       message: "Collection does not exist",
@@ -80,6 +83,44 @@ exports.getModel = async (table) => {
       new Schema(fields, { timestamps: true }),
       table
     ),
+    collection: { ...collection._doc, __name: table },
+  };
+};
+
+exports.getCommonModel = async (table) => {
+  const [_id, name] = table.split("_");
+  const collections = [
+    {
+      _id: "jf02390ds9jf09239jsadfasdf",
+      name: "Category",
+      fields: [
+        {
+          unique: true,
+          name: "name",
+          required: true,
+          label: "Name",
+          dataType: "string",
+          fieldType: "input",
+          inputType: "text",
+        },
+      ],
+    },
+  ];
+
+  const collection = collections.find((item) => item.name === table);
+  if (!collection) {
+    return {
+      message: "Common Collection does not exist",
+    };
+  }
+  const fields = getFields(collection.fields);
+
+  // if (mongoose.models[table]) {
+  //   delete mongoose.models[table];
+  // }
+
+  return {
+    Model: Category,
     collection: { ...collection._doc, __name: table },
   };
 };
@@ -472,8 +513,22 @@ exports.getRatingBreakdownPipeline = ({ business }) => {
 
 exports.defaultSchemas = [
   {
-    name: "Category",
+    name: "Sub Category",
     fields: [
+      {
+        unique: false,
+        name: "category",
+        required: false,
+        label: "Category",
+        dataType: "string",
+        fieldType: "select",
+        inputType: "text",
+        multiple: false,
+        optionType: "commonCollection",
+        collection: "Category",
+        optionLabel: "name",
+        optionValue: "name",
+      },
       {
         unique: true,
         name: "name",
@@ -499,6 +554,20 @@ exports.defaultSchemas = [
         multiple: false,
         optionType: "collection",
         collection: "Category",
+        optionLabel: "name",
+        optionValue: "name",
+      },
+      {
+        unique: false,
+        name: "subCategory",
+        required: false,
+        label: "Sub Category",
+        dataType: "string",
+        fieldType: "select",
+        inputType: "text",
+        multiple: false,
+        optionType: "collection",
+        collection: "Sub Category",
         optionLabel: "name",
         optionValue: "name",
       },

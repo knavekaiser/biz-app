@@ -1195,14 +1195,27 @@ export const CalendarInput = ({
     setDateRange({ startDate, endDate, key: "selection" });
   }, [dateWindow]);
   useEffect(() => {
-    setDefaultRange();
-  }, [dateWindow]);
+    if (control._formValues[name]?.length) {
+      const selectedRange = {
+        label: "selection",
+        key: "selection",
+        startDate: new Date(control._formValues[name][0]),
+        endDate: new Date(
+          control._formValues[name][control._formValues[name].length - 1]
+        ),
+      };
+      setDateRange(selectedRange);
+    } else {
+      setDefaultRange();
+    }
+  }, [control._formValues[name], dateWindow]);
   return (
     <Controller
       control={control}
       name={name}
       rules={formOptions}
       render={({ field: { onChange, onBlur, value = [], name, ref } }) => {
+        // console.log(dateRange);
         return (
           <section className={s.calendarInput}>
             {label && <label>{label}</label>}
@@ -1244,7 +1257,7 @@ export const CalendarInput = ({
                   }
                 }}
                 staticRanges={[]}
-                inputRanges={[]}
+                inputRanges={[value]}
                 dayContentRenderer={(date) => {
                   return (
                     <span

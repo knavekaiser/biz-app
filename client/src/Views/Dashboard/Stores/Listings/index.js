@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table, TableActions } from "Components/elements";
+import { Moment, Table, TableActions } from "Components/elements";
 import s from "./store.module.scss";
 import { endpoints, paths } from "config";
 import { Modal, Prompt } from "Components/modal";
@@ -54,11 +54,21 @@ const Stores = () => {
       <Table
         loading={loading}
         className={s.sales}
-        columns={[{ label: "Category" }, { label: "Action" }]}
+        columns={[
+          { label: "Category" },
+          { label: "Effective Period" },
+          { label: "Featured" },
+          { label: "Action" },
+        ]}
       >
         {stores.map((item) => (
           <tr style={{ cursor: "pointer" }} key={item._id}>
             <td>{item.category}</td>
+            <td>
+              <Moment format="MMM DD, YY">{item.start}</Moment> -{" "}
+              <Moment format="MMM DD, YY">{item.end}</Moment>
+            </td>
+            <td>{item.featured ? "Yes" : "No"}</td>
             <TableActions
               className={s.actions}
               actions={[

@@ -66,8 +66,8 @@ module.exports = {
   passwordResetOtpAttepts: 5,
   supportedImageSizes: 5, // 5MB
   supportedImageTypes:
-    /jpeg|jpg|png|svg|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
+    /jpeg|jpg|png|webp|svg|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
   supportedFileSizes: 10, // 10MB
   supportedFileTypes:
-    /jpeg|jpg|png|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
+    /jpeg|jpg|png|webp|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
 };

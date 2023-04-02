@@ -21,6 +21,7 @@ const paths = {
   employees: "employees",
   stores: "stores",
   storeListings: "stores/:storeId/listings",
+  categories: "categories",
 
   settings: {
     baseUrl: "settings/*",

@@ -15,4 +15,5 @@ module.exports = function (app) {
   require("./role.routes")(app);
   require("./employees.routes")(app);
   require("./store.routes")(app);
+  require("./category.routes")(app);
 };

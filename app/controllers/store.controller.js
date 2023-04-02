@@ -3,13 +3,23 @@ const {
 } = require("../config");
 const { fileHelper } = require("../helpers");
 
-const { Store } = require("../models");
+const { Store, Category, Collection } = require("../models");
 
 exports.homeStores = async (req, res) => {
   try {
-    const conditions = {};
+    const conditions = {
+      $expr: {
+        $and: [
+          { $lte: ["$start", new Date()] },
+          { $gte: ["$end", new Date()] },
+        ],
+      },
+    };
     if (req.query.category) {
       conditions.category = { $in: req.query.category.split(",") };
+    }
+    if (req.query.subCategory) {
+      conditions.subCategory = { $in: req.query.subCategory.split(",") };
     }
     Store.aggregate([
       { $match: conditions },
@@ -31,6 +41,25 @@ exports.homeStores = async (req, res) => {
                 address: 1,
               },
             },
+            {
+              $lookup: {
+                from: "configs",
+                localField: "_id",
+                foreignField: "user",
+                as: "siteConfig",
+              },
+            },
+            {
+              $unwind: {
+                path: "$siteConfig",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            {
+              $set: {
+                siteConfig: "$siteConfig.siteConfig",
+              },
+            },
           ],
         },
       },
@@ -47,9 +76,38 @@ exports.homeStores = async (req, res) => {
 
 exports.homeCategories = async (req, res) => {
   try {
-    Store.aggregate([{ $group: { _id: "$category" } }])
+    const allSubCatFields = [];
+    const pipeline = [];
+    const subCatSchemas = await Collection.find({ name: "Sub Category" });
+    subCatSchemas.forEach((schema, i) => {
+      pipeline.push(
+        ...[
+          {
+            $lookup: {
+              from: `${schema.user}_Sub Category`,
+              localField: "name",
+              foreignField: "category",
+              as: `subCat_${i}`,
+            },
+          },
+        ]
+      );
+      allSubCatFields.push(`subCat_${i}`);
+    });
+    Category.aggregate(pipeline)
       .then(async (data) => {
-        responseFn.success(res, { data: data.map((item) => item._id) });
+        responseFn.success(res, {
+          data: data.map((item) => {
+            const cat = { ...item };
+            const allSubCat = [];
+            allSubCatFields.forEach((field) => {
+              allSubCat.push(...(cat[field] || []));
+              delete cat[field];
+            });
+            cat.subCategories = allSubCat.map((item) => ({ name: item.name }));
+            return cat;
+          }),
+        });
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {

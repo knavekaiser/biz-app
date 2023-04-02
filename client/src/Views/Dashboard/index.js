@@ -20,6 +20,7 @@ import Roles from "./Roles";
 import Employees from "./Employees";
 import Stores from "./Stores";
 import StoreListings from "./Stores/Listings";
+import Categories from "./Categories";
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -38,15 +39,16 @@ const Dashboard = () => {
         <div className={s.tabs}>
           <Tabs
             className={s.tab}
-            tabs={[{ label: "Stores", path: paths.stores }]}
+            tabs={[
+              { label: "Stores", path: paths.stores },
+              { label: "Categories", path: paths.categories },
+            ]}
           />
         </div>
         <Routes>
           <Route path={paths.stores} element={<Stores />} />
-          <Route
-            path={"stores/:storeId/listings"}
-            element={<StoreListings />}
-          />
+          <Route path={paths.storeListings} element={<StoreListings />} />
+          <Route path={paths.categories} element={<Categories />} />
         </Routes>
         <Footer />
       </div>

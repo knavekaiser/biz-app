@@ -51,7 +51,7 @@
     & > div:nth-child(2) {
       overflow: auto;
       max-height: calc((var(--vh) * 100) - (3rem + 36px));
-      max-width: calc(100vw - 3rem);
+      // max-width: calc(100vw - 3rem);
     }
   }
   .head {

@@ -38,6 +38,9 @@ const endpoints = {
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
   stores: `${baseApiUrl}/api/stores`,
+  categories: `${baseApiUrl}/api/categories`,
+
+  commonCollections: `${baseApiUrl}/api/common-collections`,
 
   homeStores: `${baseApiUrl}/api/home/stores`,
   homeCategories: `${baseApiUrl}/api/home/categories`,
@@ -46,6 +49,7 @@ const endpoints = {
   collections: `${baseApiUrl}/api/collections`,
   schemaTemplates: `${baseApiUrl}/api/collections/templates`,
   dynamic: `${baseApiUrl}/api/dynamic`,
+  commonCollection: `${baseApiUrl}/api/common-collection`,
   roles: `${baseApiUrl}/api/roles`,
   staffs: `${baseApiUrl}/api/staffs`,
   employees: `${baseApiUrl}/api/employees`,

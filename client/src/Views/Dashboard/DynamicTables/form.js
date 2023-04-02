@@ -44,7 +44,7 @@ const optionsSchema = yup.object({
   value: yup.string().required(),
 });
 
-const Form = ({ edit, collections, onSuccess }) => {
+const Form = ({ edit, collections, commonCollections, onSuccess }) => {
   const [fields, setFields] = useState(edit?.fields || []);
   const [editField, setEditField] = useState(null);
   const [err, setErr] = useState(null);
@@ -144,7 +144,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         className={s.fields}
         columns={[
           { label: "Name" },
-          ...(edit?.name === "Product" ? [{ label: "Category" }] : []),
+          ...(edit?.name === "Product" ? [{ label: "Sub Category" }] : []),
           { label: "Data Type" },
           { label: "Label" },
           { label: "Field Type" },
@@ -159,7 +159,7 @@ const Form = ({ edit, collections, onSuccess }) => {
             <td>
               <span className="ellipsis">{item.name}</span>
             </td>
-            {edit?.name === "Product" && <td>{item.category}</td>}
+            {edit?.name === "Product" && <td>{item.subCategory}</td>}
             <td>{item.dataType}</td>
             <td>{item.label}</td>
             <td>{item.fieldType}</td>
@@ -199,6 +199,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         editCollection={edit}
         fields={fields}
         collections={collections}
+        commonCollections={commonCollections}
         productCollection={collections.find((c) => c?.name === "Product")}
         onSuccess={(newField) => {
           setErr(null);
@@ -241,6 +242,7 @@ const defaultFields = [
   "price",
   "whatsappNumber",
   "category",
+  "subCategory",
 ];
 
 const FieldForm = ({
@@ -248,6 +250,7 @@ const FieldForm = ({
   fields,
   editCollection,
   collections,
+  commonCollections,
   onSuccess,
   clear,
 }) => {
@@ -297,11 +300,11 @@ const FieldForm = ({
         const data = {};
         Object.entries(values).forEach(([key, value]) => {
           if (
-            (key === "category" &&
+            (key === "subCategory" &&
               !defaultFields
-                .filter((item) => item !== "category")
+                .filter((item) => item !== "subCategory")
                 .includes(key)) ||
-            key !== "category"
+            key !== "subCategory"
           ) {
             data[key] = value;
           }
@@ -312,6 +315,7 @@ const FieldForm = ({
       }
       reset({
         category: "",
+        subCategory: "",
         name: "",
         inputType: "",
         dataType: "",
@@ -347,9 +351,9 @@ const FieldForm = ({
             {editCollection?.name === "Product" &&
               !defaultFields.includes(name) && (
                 <Select
-                  label="Category"
+                  label="Sub Category"
                   control={control}
-                  url={endpoints.dynamic + "/Category"}
+                  url={endpoints.dynamic + "/Sub Category"}
                   getQuery={(inputValue, selected) => ({
                     ...(inputValue && { name: inputValue }),
                     ...(selected && { name: selected }),
@@ -358,7 +362,7 @@ const FieldForm = ({
                     label: item.name,
                     value: item.name,
                   })}
-                  name="category"
+                  name="subCategory"
                 />
               )}
 
@@ -603,16 +607,28 @@ const FieldForm = ({
                   value: "collection",
                   disabled: fieldType === "combobox",
                 },
+                {
+                  label: "Common Collection",
+                  value: "commonCollection",
+                  disabled: fieldType === "combobox",
+                },
               ]}
             />
           )}
 
-          {optionType === "collection" && (
+          {["collection", "commonCollection"].includes(optionType) && (
             <>
               <Select
                 control={control}
-                label="Collection"
-                options={collections
+                label={
+                  optionType === "commonCollection"
+                    ? "Common Collection"
+                    : "Collection"
+                }
+                options={(optionType === "commonCollection"
+                  ? commonCollections
+                  : collections
+                )
                   .filter((coll) => coll._id !== editCollection?._id)
                   .map((item) => ({
                     label: item.name,
@@ -635,7 +651,10 @@ const FieldForm = ({
                         label: "ID",
                         value: "_id",
                       },
-                      ...(collections
+                      ...((optionType === "commonCollection"
+                        ? commonCollections
+                        : collections
+                      )
                         .find((coll) => coll.name === collection)
                         ?.fields.map((item) => ({
                           label: item.label,
@@ -654,7 +673,10 @@ const FieldForm = ({
                         label: "ID",
                         value: "_id",
                       },
-                      ...(collections
+                      ...((optionType === "commonCollection"
+                        ? commonCollections
+                        : collections
+                      )
                         .find((coll) => coll.name === collection)
                         ?.fields.map((item) => ({
                           label: item.label,
@@ -733,9 +755,11 @@ const FieldForm = ({
           onSubmit={handleSubmit(onSubmit)}
           className={`flex gap-1 justify-center`}
         >
-          <button className="btn" type="btn" onClick={clear}>
-            Clear
-          </button>
+          {edit && (
+            <button className="btn" type="button" onClick={clear}>
+              Clear
+            </button>
+          )}
           <button className="btn">{edit ? "Update" : "Add"} Field</button>
         </form>
       </div>

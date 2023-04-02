@@ -10,7 +10,7 @@
     padding: 1rem;
     display: grid;
     grid-auto-rows: min-content;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 330px));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
     grid-gap: 1.5rem;
     & > h2 {
       grid-column: 1 / -1;
@@ -32,7 +32,7 @@
       &.featured {
         grid-column: 1 / -1;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 330px));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 250px));
         grid-gap: 1rem;
         border: 1px solid #d4d4d4;
         h2 {
@@ -57,6 +57,12 @@
       margin-left: 1rem;
       display: grid;
       grid-gap: 0.5rem;
+    }
+    .categories {
+      .subCategories {
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+      }
     }
   }
 }

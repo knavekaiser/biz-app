@@ -18,7 +18,9 @@ const Collections = () => {
   const [addCollection, setAddCollection] = useState(false);
   const [importSchema, setImportSchema] = useState(false);
   const [collections, setCollections] = useState([]);
+  const [commonCollections, setCommonCollections] = useState([]);
   const { get: getCollections, loading } = useFetch(endpoints.collections);
+  const { get: getCommColl } = useFetch(endpoints.commonCollections);
   const { remove: deleteCollection, loading: deleting } = useFetch(
     endpoints.collections + `/{ID}`
   );
@@ -37,6 +39,13 @@ const Collections = () => {
 
   useEffect(() => {
     fetchRecords();
+    getCommColl()
+      .then(({ data }) => {
+        if (data.success) {
+          return setCommonCollections(data.data);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
   if (table) {
@@ -147,6 +156,7 @@ const Collections = () => {
       >
         <CollectionForm
           collections={collections}
+          commonCollections={commonCollections}
           edit={edit}
           onSuccess={(newCollection) => {
             if (edit) {

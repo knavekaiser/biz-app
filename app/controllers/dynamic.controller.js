@@ -270,3 +270,17 @@ exports.delete = async (req, res) => {
     return responseFn.error(res, {}, error.message, 500);
   }
 };
+
+exports.findCommonCollection = async (req, res) => {
+  try {
+    const { Model, collection } = req;
+
+    const conditions = {};
+
+    Model.find(conditions)
+      .then((data) => responseFn.success(res, { data }))
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};

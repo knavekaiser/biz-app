@@ -24,4 +24,5 @@ module.exports = {
   Quote: require("./quote.model"),
   Role: require("./role.model"),
   Store: require("./store.model"),
+  Category: require("./category.model"),
 };

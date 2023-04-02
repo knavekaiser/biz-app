@@ -48,3 +48,27 @@ exports.getModel = async (req, res, next) => {
     responseFn.error(res, {}, err.message, 500);
   }
 };
+
+exports.getCommonModel = async (req, res, next) => {
+  try {
+    const { Model, collection } = await dbHelper.getCommonModel(
+      req.params.table
+    );
+
+    if (!Model || !collection) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.record_not_found.replace(
+          "Record",
+          `Common collection: ${req.params.table}`
+        )
+      );
+    }
+    req.Model = Model;
+    req.collection = collection;
+    next();
+  } catch (err) {
+    responseFn.error(res, {}, err.message, 500);
+  }
+};

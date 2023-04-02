@@ -8,14 +8,24 @@ import s from "./home.module.scss";
 import { ProductThumb } from "./productThumbnail";
 
 const Home = () => {
-  const [filters, setFilters] = useState([]);
+  const [filters, setFilters] = useState({
+    categories: [],
+    subCategories: [],
+  });
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
   const { get: fetchStores, loading } = useFetch(endpoints.homeStores);
   const { get: getCategories } = useFetch(endpoints.homeCategories);
 
   const getStores = useCallback(() => {
-    fetchStores({ query: filters.length ? { category: filters } : {} })
+    fetchStores({
+      query: {
+        ...(filters.categories?.length && { category: filters.categories }),
+        ...(filters.subCategories?.length && {
+          subCategory: filters.subCategories,
+        }),
+      },
+    })
       .then(({ data }) => {
         if (data.success) {
           setStores(data.data);
@@ -49,20 +59,59 @@ const Home = () => {
           <p>
             <strong>Categories</strong>
           </p>
-          <ul>
-            {categories.map((item) => (
-              <Checkbox
-                key={item}
-                label={item}
-                checked={filters.includes(item)}
-                onChange={(e) => {
-                  if (filters.includes(item)) {
-                    setFilters((prev) => prev.filter((i) => i !== item));
-                  } else {
-                    setFilters((prev) => [...prev, item]);
-                  }
-                }}
-              />
+          <ul className={s.categories}>
+            {categories.map((cat) => (
+              <li key={cat.name}>
+                <Checkbox
+                  label={cat.name}
+                  checked={filters.categories.includes(cat.name)}
+                  onChange={(e) => {
+                    if (filters.categories.includes(cat.name)) {
+                      setFilters((prev) => ({
+                        ...prev,
+                        categories: prev.categories.filter(
+                          (i) => i !== cat.name
+                        ),
+                      }));
+                    } else {
+                      setFilters((prev) => ({
+                        ...prev,
+                        categories: [...prev.categories, cat.name],
+                      }));
+                    }
+                  }}
+                />
+                {cat.subCategories?.length > 0 && (
+                  <ul className={s.subCategories}>
+                    {cat.subCategories.map((subCat) => (
+                      <li label={subCat.name}>
+                        <Checkbox
+                          label={subCat.name}
+                          checked={filters.subCategories.includes(subCat.name)}
+                          onChange={(e) => {
+                            if (filters.subCategories.includes(subCat.name)) {
+                              setFilters((prev) => ({
+                                ...prev,
+                                subCategories: prev.subCategories.filter(
+                                  (i) => i !== subCat.name
+                                ),
+                              }));
+                            } else {
+                              setFilters((prev) => ({
+                                ...prev,
+                                subCategories: [
+                                  ...prev.subCategories,
+                                  subCat.name,
+                                ],
+                              }));
+                            }
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
             ))}
           </ul>
         </div>

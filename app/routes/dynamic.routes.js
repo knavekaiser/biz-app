@@ -1,7 +1,8 @@
 const { authJwt, validate, file, dynamic } = require("../middlewares");
 const controller = require("../controllers/dynamic.controller");
 // const { collection: schema } = require("../validationSchemas");
-var router = require("express").Router();
+const router = require("express").Router();
+const commonRouter = require("express").Router();
 
 module.exports = function (app) {
   router.post(
@@ -43,4 +44,14 @@ module.exports = function (app) {
   );
 
   app.use("/api/dynamic", router);
+
+  // -------------------------------------------------------
+
+  commonRouter.get(
+    "/:table/:id?",
+    authJwt.verifyToken,
+    dynamic.getCommonModel,
+    controller.findCommonCollection
+  );
+  app.use("/api/common-collection", commonRouter);
 };

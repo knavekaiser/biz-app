@@ -8,11 +8,11 @@ const { ObjectId } = require("mongodb");
 exports.findAll = async (req, res) => {
   try {
     const _id =
-      req.params.id && mongoose.isValidObjectId(req.params.id)
+      req.params.id && req.params.id.match(/^[0-9a-fA-F]{24}$/)
         ? ObjectId(req.params.id)
         : null;
     let tableName =
-      req.params.id && !mongoose.isValidObjectId(req.params.id)
+      req.params.id && !req.params.id.match(/^[0-9a-fA-F]{24}$/)
         ? req.params.id
         : null;
     const conditions = { user: req.business?._id || req.authUser._id };
@@ -162,6 +162,32 @@ exports.addSchemaTemplates = async (req, res) => {
         );
       })
       .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.commonCollections = async (req, res) => {
+  try {
+    const collections = [
+      {
+        _id: "jf02390ds9jf09239jsadfasdf",
+        name: "Category",
+        fields: [
+          {
+            unique: true,
+            name: "name",
+            required: true,
+            label: "Name",
+            dataType: "string",
+            fieldType: "input",
+            inputType: "text",
+          },
+        ],
+      },
+    ];
+
+    return responseFn.success(res, { data: collections });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

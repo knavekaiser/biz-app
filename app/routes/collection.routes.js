@@ -1,7 +1,8 @@
 const { authJwt, validate } = require("../middlewares");
 const controller = require("../controllers/collection.controller");
 const { collection: schema } = require("../validationSchemas");
-var router = require("express").Router();
+const router = require("express").Router();
+const commonRouter = require("express").Router();
 
 module.exports = function (app) {
   router.get("/templates", authJwt.verifyToken, controller.getSchemaTemplates);
@@ -40,4 +41,13 @@ module.exports = function (app) {
   );
 
   app.use("/api/collections", router);
+
+  // ---------------------------------------------------------------------
+
+  commonRouter.get(
+    "/common-collections",
+    authJwt.verifyToken,
+    controller.commonCollections
+  );
+  app.use("/api", commonRouter);
 };
