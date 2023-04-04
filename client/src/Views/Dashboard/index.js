@@ -2,12 +2,13 @@ import { useContext, useEffect } from "react";
 import { SiteContext } from "SiteContext";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Tabs } from "Components/elements";
-import Settings from "./Settings";
 import { paths } from "config";
 import { Header, Footer } from "Components/ui";
 
 import s from "./dashboard.module.scss";
 
+import Settings from "./Settings";
+import AdminSettings from "./AdminSettings";
 import Businesses from "./Businesses";
 import Invoices from "./Sales";
 import Orders from "./Orders";
@@ -16,10 +17,12 @@ import Purchases from "./Purchases";
 import Receipts from "./Receipts";
 import Payments from "./Payments";
 import DynamicTables from "./DynamicTables";
+import AdminDynamicTables from "./AdminDynamicTables";
 import Roles from "./Roles";
 import Employees from "./Employees";
 import Stores from "./Stores";
 import StoreListings from "./Stores/Listings";
+import Schemas from "./Schemas";
 import Categories from "./Categories";
 
 const Dashboard = () => {
@@ -41,14 +44,23 @@ const Dashboard = () => {
             className={s.tab}
             tabs={[
               { label: "Stores", path: paths.stores },
-              { label: "Categories", path: paths.categories },
+              // { label: "Categories", path: paths.categories },
+              { label: "Schemas", path: paths.schemas },
+              {
+                label: "Dynamic Tables",
+                path: paths.dynamicTables.replace("/*", ""),
+              },
+              { label: "Settings", path: paths.settings.baseUrl },
             ]}
           />
         </div>
         <Routes>
           <Route path={paths.stores} element={<Stores />} />
+          <Route path={paths.schemas} element={<Schemas />} />
           <Route path={paths.storeListings} element={<StoreListings />} />
-          <Route path={paths.categories} element={<Categories />} />
+          {/* <Route path={paths.categories} element={<Categories />} /> */}
+          <Route path={paths.settings.baseUrl} element={<AdminSettings />} />
+          <Route path={paths.dynamicTables} element={<AdminDynamicTables />} />
         </Routes>
         <Footer />
       </div>

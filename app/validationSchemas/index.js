@@ -13,5 +13,5 @@ module.exports = {
   role: require("./role"),
   employee: require("./employee"),
   store: require("./store"),
-  category: require("./category"),
+  adSchema: require("./adSchema"),
 };

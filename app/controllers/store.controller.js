@@ -1,7 +1,7 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { fileHelper } = require("../helpers");
+const { fileHelper, dbHelper } = require("../helpers");
 
 const { Store, Category, Collection } = require("../models");
 
@@ -76,38 +76,10 @@ exports.homeStores = async (req, res) => {
 
 exports.homeCategories = async (req, res) => {
   try {
-    const allSubCatFields = [];
-    const pipeline = [];
-    const subCatSchemas = await Collection.find({ name: "Sub Category" });
-    subCatSchemas.forEach((schema, i) => {
-      pipeline.push(
-        ...[
-          {
-            $lookup: {
-              from: `${schema.user}_Sub Category`,
-              localField: "name",
-              foreignField: "category",
-              as: `subCat_${i}`,
-            },
-          },
-        ]
-      );
-      allSubCatFields.push(`subCat_${i}`);
-    });
-    Category.aggregate(pipeline)
+    const { Model } = await dbHelper.getAdminModel("Category");
+    Model.find()
       .then(async (data) => {
-        responseFn.success(res, {
-          data: data.map((item) => {
-            const cat = { ...item };
-            const allSubCat = [];
-            allSubCatFields.forEach((field) => {
-              allSubCat.push(...(cat[field] || []));
-              delete cat[field];
-            });
-            cat.subCategories = allSubCat.map((item) => ({ name: item.name }));
-            return cat;
-          }),
-        });
+        responseFn.success(res, { data });
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -129,6 +101,7 @@ exports.find = async (req, res) => {
     }
     Store.find(conditions, "-__v")
       .populate("business", "name phone email domain logo")
+      .populate("createdBy", "name phone email")
       .then((data) => {
         responseFn.success(res, { data });
       })
@@ -140,13 +113,12 @@ exports.find = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    new Store({ ...req.body })
+    new Store({ ...req.body, createdBy: req.authUser._id })
       .save()
       .then(async (data) => {
-        const store = await Store.findOne({ _id: data._id }).populate(
-          "business",
-          "name phone email domain logo"
-        );
+        const store = await Store.findOne({ _id: data._id })
+          .populate("business", "name phone email domain logo")
+          .populate("createdBy", "name phone email");
         return responseFn.success(res, { data: store });
       })
       .catch((err) => responseFn.error(res, {}, err.message));
@@ -162,10 +134,9 @@ exports.update = async (req, res) => {
   try {
     Store.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then(async (data) => {
-        const store = await Store.findOne({ _id: data._id }).populate(
-          "business",
-          "name phone email domain logo"
-        );
+        const store = await Store.findOne({ _id: data._id })
+          .populate("business", "name phone email domain logo")
+          .populate("createdBy", "name phone email");
         return responseFn.success(
           res,
           { data: store },

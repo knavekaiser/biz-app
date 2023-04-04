@@ -2,7 +2,7 @@ const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 
-const { User, Collection } = require("../models");
+const { User, AdminCollection } = require("../models");
 const { ObjectId } = require("mongodb");
 
 exports.findAll = async (req, res) => {
@@ -15,7 +15,7 @@ exports.findAll = async (req, res) => {
       req.params.id && !req.params.id.match(/^[0-9a-fA-F]{24}$/)
         ? req.params.id
         : null;
-    const conditions = { user: req.business?._id || req.authUser._id };
+    const conditions = {};
     if (req.authToken.userType === "admin") {
       conditions.user = req.query.business;
     }
@@ -43,7 +43,7 @@ exports.findAll = async (req, res) => {
         conditions.name = tableName;
       }
     }
-    Collection.find(conditions)
+    AdminCollection.find(conditions)
       .then((data) => {
         if (_id || tableName) {
           if (data.length) {
@@ -63,10 +63,7 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    new Collection({
-      ...req.body,
-      user: req.business?._id || req.authUser._id,
-    })
+    new AdminCollection({ ...req.body })
       .save()
       .then(async (data) => {
         return responseFn.success(res, { data });
@@ -80,11 +77,9 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     delete req.body.name;
-    Collection.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    AdminCollection.findOneAndUpdate({ _id: req.params.id }, req.body, {
+      new: true,
+    })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -99,9 +94,8 @@ exports.delete = async (req, res) => {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
-    Collection.deleteMany({
+    AdminCollection.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));
@@ -138,7 +132,7 @@ exports.getSchemaTemplates = async (req, res) => {
 
 exports.addSchemaTemplates = async (req, res) => {
   try {
-    const schemas = await Collection.find({
+    const schemas = await AdminCollection.find({
       user: ObjectId(req.body.schema_id),
     }).then((data) =>
       data.map((item) => ({
@@ -148,12 +142,12 @@ exports.addSchemaTemplates = async (req, res) => {
       }))
     );
 
-    await Collection.deleteMany({
+    await AdminCollection.deleteMany({
       name: { $in: schemas.map((item) => item.name) },
       user: req.business?._id || req.authUser._id,
     });
 
-    Collection.insertMany(schemas, { ordered: 1 })
+    AdminCollection.insertMany(schemas, { ordered: 1 })
       .then((data) => {
         responseFn.success(
           res,

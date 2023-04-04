@@ -49,9 +49,9 @@ exports.getModel = async (req, res, next) => {
   }
 };
 
-exports.getCommonModel = async (req, res, next) => {
+exports.getAdminModel = async (req, res, next) => {
   try {
-    const { Model, collection } = await dbHelper.getCommonModel(
+    const { Model, collection } = await dbHelper.getAdminModel(
       req.params.table
     );
 
@@ -61,7 +61,7 @@ exports.getCommonModel = async (req, res, next) => {
         {},
         responseStr.record_not_found.replace(
           "Record",
-          `Common collection: ${req.params.table}`
+          `Admin collection: ${req.params.table}`
         )
       );
     }

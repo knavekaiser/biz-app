@@ -10,10 +10,12 @@ import StoreForm from "./StoreForm";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Stores = () => {
+  const [business, setBusiness] = useState(null);
   const [stores, setStores] = useState([]);
   const [addStore, setAddStore] = useState(false);
   const [store, setStore] = useState(null);
   const { get: getStores, loading } = useFetch(endpoints.stores);
+  const { get: getBusiness } = useFetch(endpoints.findBusinesses);
   const { storeId } = useParams();
   const navigate = useNavigate();
 
@@ -33,10 +35,20 @@ const Stores = () => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
+  useEffect(() => {
+    getBusiness({ query: { _id: storeId } })
+      .then(({ data }) => {
+        if (data.data?.length) {
+          setBusiness(data.data[0]);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
+
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex justify-space-between">
-        <h2>All Listings</h2>
+        <h2>All Listings {business && <span> - {business.name}</span>}</h2>
         <div className="flex gap-1">
           <button
             className="btn"
@@ -55,7 +67,9 @@ const Stores = () => {
         loading={loading}
         className={s.sales}
         columns={[
+          { label: "Created At" },
           { label: "Category" },
+          { label: "Created By" },
           { label: "Effective Period" },
           { label: "Featured" },
           { label: "Action" },
@@ -63,7 +77,11 @@ const Stores = () => {
       >
         {stores.map((item) => (
           <tr style={{ cursor: "pointer" }} key={item._id}>
+            <td>
+              <Moment format="MMM DD, YY hh:mma">{item.createdAt}</Moment>
+            </td>
             <td>{item.category}</td>
+            <td>{item.createdBy?.name}</td>
             <td>
               <Moment format="MMM DD, YY">{item.start}</Moment> -{" "}
               <Moment format="MMM DD, YY">{item.end}</Moment>

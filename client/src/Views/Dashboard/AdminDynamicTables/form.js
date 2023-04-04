@@ -53,7 +53,7 @@ const Form = ({ edit, collections, onSuccess }) => {
     handleSubmit,
     register,
     reset,
-    setValue,
+    control,
     watch,
     formState: { errors },
     setError,
@@ -64,7 +64,7 @@ const Form = ({ edit, collections, onSuccess }) => {
     post: saveCollection,
     put: updateCollection,
     loading,
-  } = useFetch(endpoints.collections + `/${edit?._id || ""}`);
+  } = useFetch(endpoints.adminCollections + `/${edit?._id || ""}`);
   const tableName = watch("name");
   const onSubmit = useCallback(
     (values) => {
@@ -119,12 +119,12 @@ const Form = ({ edit, collections, onSuccess }) => {
     }
   }, [fields, edit]);
   useEffect(() => {
-    reset({ ...edit });
+    reset({
+      ...edit,
+    });
   }, [edit]);
   return (
     <div className={`grid gap-1 p-1 ${s.addCollectionForm}`}>
-      <h3>Table Information</h3>
-
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={`${s.mainForm} grid gap-1`}
@@ -351,7 +351,7 @@ const FieldForm = ({
                 <Select
                   label="Sub Category"
                   control={control}
-                  url={endpoints.dynamic + "/Sub Category"}
+                  url={endpoints.adminDynamic + "/Sub Category"}
                   getQuery={(inputValue, selected) => ({
                     ...(inputValue && { name: inputValue }),
                     ...(selected && { name: selected }),

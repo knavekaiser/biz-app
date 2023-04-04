@@ -55,7 +55,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
     ),
   });
   const [categories, setCategories] = useState([]);
-  const [subCategories, setSubCategories] = useState([]);
+  const [adSchemas, setAdSchemas] = useState([]);
   const [productSchema, setProductSchema] = useState(null);
 
   const {
@@ -65,7 +65,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
   } = useFetch(endpoints.stores + `/${edit?._id || ""}`);
 
   const category = watch("category");
-  const subCategory = watch("subCategory");
+  const adSchema = watch("adSchema");
   const products = watch("products");
   const featured = watch("featured");
 
@@ -73,21 +73,18 @@ const Form = ({ storeId, edit, onSuccess }) => {
     endpoints.collections + "/Product"
   );
   const { get: getCategories, loading: loadingCategories } = useFetch(
-    endpoints.commonCollection + "/Category"
+    endpoints.adminDynamic + "/Category"
   );
-  const { get: getSubCategories, loading: loadingSubCategories } = useFetch(
-    endpoints.dynamic + "/Sub Category"
+  const { get: getAdSchemas, loading: loadingAdSchemas } = useFetch(
+    endpoints.adSchemas
   );
 
   useEffect(() => {
-    Promise.all([
-      getProductSchema({ query: { business: storeId } }),
-      getCategories({ query: { business: storeId } }),
-    ])
-      .then(([{ data: productSchema }, { data: categories }]) => {
-        if (categories.success) {
-          if (categories.data.length > 0) {
-            setCategories(categories.data);
+    getCategories({ query: { business: storeId } })
+      .then(({ data }) => {
+        if (data.success) {
+          if (data.data.length > 0) {
+            setCategories(data.data);
           } else {
             return Prompt({
               type: "error",
@@ -95,51 +92,31 @@ const Form = ({ storeId, edit, onSuccess }) => {
             });
           }
         } else {
-          return Prompt({ type: "error", message: categories.message });
-        }
-
-        if (productSchema.success) {
-          if (
-            productSchema.data.fields.some((item) => item.name === "category")
-          ) {
-            setProductSchema(productSchema.data);
-          } else {
-            return Prompt({
-              type: "error",
-              message:
-                "Please 'category' field in your product schema to proceed.",
-            });
-          }
-        } else {
-          return Prompt({ type: "error", message: productSchema.message });
+          return Prompt({ type: "error", message: data.message });
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [storeId]);
 
   useEffect(() => {
-    if (category) {
-      getSubCategories({
-        query: {
-          business: storeId,
-          category: category,
-        },
+    getAdSchemas({
+      query: {
+        business: storeId,
+        category: category,
+      },
+    })
+      .then(({ data }) => {
+        if (data.success) {
+          setAdSchemas(data.data);
+        }
       })
-        .then(({ data }) => {
-          if (data.success) {
-            setSubCategories(data.data);
-          }
-        })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
-    } else {
-      // setSubCategories([])
-    }
-  }, [category]);
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
 
   useEffect(() => {
     set_fields(
       (productSchema?.fields || [])
-        .filter((item) => !item.subCategory || item.subCategory === subCategory)
+        .filter((item) => !item.subCategory || item.subCategory === adSchema)
         .filter(
           (item) =>
             ![
@@ -151,7 +128,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
             ].includes(item.name)
         )
     );
-  }, [productSchema, subCategory]);
+  }, [productSchema, adSchema]);
 
   useEffect(() => {
     reset({
@@ -204,18 +181,15 @@ const Form = ({ storeId, edit, onSuccess }) => {
           control={control}
           label="Category"
           options={categories.map((item) => ({
-            label:
-              item[
-                productSchema.fields.find((item) => item.name === "category")
-                  ?.optionLabel || "name"
-              ],
-            value:
-              item[
-                productSchema.fields.find((item) => item.name === "category")
-                  ?.optionValue || "name"
-              ],
+            label: item.name,
+            value: item.name,
           }))}
           name="category"
+          onChange={(e) => {
+            if (!e?.value) {
+              setValue("adSchema", "");
+            }
+          }}
           formOptions={{ required: true }}
         />
 
@@ -223,27 +197,26 @@ const Form = ({ storeId, edit, onSuccess }) => {
           <Select
             disabled={edit?._id}
             control={control}
-            label="Sub Category"
-            options={subCategories.map((item) => ({
-              label:
-                item[
-                  productSchema.fields.find(
-                    (item) => item.name === "subCategory"
-                  )?.optionLabel || "name"
-                ],
-              value:
-                item[
-                  productSchema.fields.find(
-                    (item) => item.name === "subCategory"
-                  )?.optionValue || "name"
-                ],
-            }))}
-            name="subCategory"
+            label="Ad-Schema"
+            options={adSchemas
+              .filter((item) => item.category === category)
+              .map((item) => ({
+                label: item.name,
+                value: item.name,
+              }))}
+            name="adSchema"
+            onChange={(e) => {
+              if (e.value) {
+                setProductSchema(
+                  adSchemas.find((item) => item.name === e.value)
+                );
+              }
+            }}
             formOptions={{ required: true }}
           />
         )}
 
-        {category && subCategory && (
+        {category && adSchema && (
           <div className="grid gap-1">
             <CalendarInput
               control={control}
@@ -316,7 +289,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           </div>
         )}
 
-        {category && subCategory && _fields.length > 0 && (
+        {category && adSchema && _fields.length > 0 && (
           <CustomRadio
             control={control}
             name="order"
@@ -542,10 +515,7 @@ const ProductForm = ({ _fields, storeId, edit, onSuccess }) => {
             options: field.options || [],
           })}
           {...(field.optionType === "collection" && {
-            url: `${endpoints.dynamic}/${field.collection}`,
-          })}
-          {...(field.optionType === "commonCollection" && {
-            url: `${endpoints.commonCollection}/${field.collection}`,
+            url: `${endpoints.adminDynamic}/${field.collection}`,
           })}
           getQuery={(inputValue, selected) => ({
             business: storeId,

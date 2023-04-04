@@ -206,6 +206,9 @@ exports.find = async (req, res) => {
         $options: "i",
       };
     }
+    if ("_id" in req.query && mongoose.isValidObjectId(req.query._id)) {
+      conditions._id = req.query._id;
+    }
     User.find(conditions, "username name motto phone email domain logo")
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));

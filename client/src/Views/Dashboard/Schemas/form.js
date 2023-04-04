@@ -45,7 +45,53 @@ const optionsSchema = yup.object({
 });
 
 const Form = ({ edit, collections, onSuccess }) => {
-  const [fields, setFields] = useState(edit?.fields || []);
+  const [fields, setFields] = useState(
+    edit?.fields || [
+      {
+        name: "title",
+        required: true,
+        label: "Title",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        name: "description",
+        inputType: "text",
+        dataType: "string",
+        fieldType: "textarea",
+        label: "Description",
+        required: true,
+      },
+      {
+        name: "images",
+        required: true,
+        label: "Images",
+        dataType: "array",
+        fieldType: "input",
+        inputType: "file",
+        dataElementType: "string",
+        multiple: true,
+      },
+      {
+        name: "price",
+        inputType: "number",
+        dataType: "number",
+        fieldType: "input",
+        label: "Price",
+        required: true,
+        decimalPlaces: "0.00",
+      },
+      {
+        name: "whatsappNumber",
+        required: true,
+        label: "WhatsApp",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "phone",
+      },
+    ]
+  );
   const [editField, setEditField] = useState(null);
   const [err, setErr] = useState(null);
 
@@ -53,51 +99,64 @@ const Form = ({ edit, collections, onSuccess }) => {
     handleSubmit,
     register,
     reset,
-    setValue,
+    control,
     watch,
+    setValue,
+    clearErrors,
     formState: { errors },
     setError,
   } = useForm({
     resolver: useYup(mainSchema),
   });
   const {
-    post: saveCollection,
-    put: updateCollection,
+    post: save,
+    put: update,
     loading,
-  } = useFetch(endpoints.collections + `/${edit?._id || ""}`);
+  } = useFetch(endpoints.adSchemas + `/${edit?._id || ""}`);
   const tableName = watch("name");
+  const category = watch("category");
   const onSubmit = useCallback(
     (values) => {
       if (!values.name && tableName) {
         values.name = tableName;
       }
+      if (!values.category && category) {
+        values.category = category;
+      }
       if (!values.name) {
         setError("name", {
           type: "required",
-          message: "Table name is required",
+          message: "Schema name is required",
+        });
+        return;
+      }
+      if (!values.category) {
+        setError("category", {
+          type: "required",
+          message: "Category is required",
         });
         return;
       }
       if (fields.length < 1) {
         return setErr("Add at least one field");
       }
-      if (values.name === "Product") {
-        if (!fields.find((item) => item.name === "images")) {
-          return setErr('"images" is a required field');
-        }
-        if (!fields.find((item) => item.name === "title")) {
-          return setErr('"title" is a required field');
-        }
-        if (!fields.find((item) => item.name === "price")) {
-          return setErr('"price" is a required field');
-        }
-        if (!fields.find((item) => item.name === "whatsappNumber")) {
-          return setErr('"whatsappNumber" is a required field');
-        }
+
+      if (!fields.find((item) => item.name === "images")) {
+        return setErr('"images" is a required field');
+      }
+      if (!fields.find((item) => item.name === "title")) {
+        return setErr('"title" is a required field');
+      }
+      if (!fields.find((item) => item.name === "price")) {
+        return setErr('"price" is a required field');
+      }
+      if (!fields.find((item) => item.name === "whatsappNumber")) {
+        return setErr('"whatsappNumber" is a required field');
       }
 
-      (edit ? updateCollection : saveCollection)({
+      (edit ? update : save)({
         name: values.name,
+        category: values.category,
         fields: fields.map((item) => ({ ...item, _id: undefined })),
       }).then(({ data }) => {
         if (data.errors) {
@@ -107,7 +166,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         }
       });
     },
-    [fields, tableName]
+    [fields, tableName, category]
   );
 
   useEffect(() => {
@@ -119,18 +178,37 @@ const Form = ({ edit, collections, onSuccess }) => {
     }
   }, [fields, edit]);
   useEffect(() => {
-    reset({ ...edit });
+    reset({
+      ...edit,
+    });
   }, [edit]);
   return (
     <div className={`grid gap-1 p-1 ${s.addCollectionForm}`}>
-      <h3>Table Information</h3>
-
       <form
         onSubmit={handleSubmit(onSubmit)}
         className={`${s.mainForm} grid gap-1`}
       >
+        <Select
+          disabled={edit?._id}
+          label="Category"
+          control={control}
+          url={endpoints.adminDynamic + "/Category"}
+          getQuery={(inputValue, selected) => ({
+            ...(inputValue && { name: [inputValue, ...(selected || [])] }),
+          })}
+          handleData={(item) => ({
+            label: item.name,
+            value: item.name,
+          })}
+          name="category"
+          onChange={(opt) => {
+            setValue("category", opt.value);
+            clearErrors("category");
+          }}
+          formOptions={{ required: true }}
+        />
         <Input
-          label="Table Name (singular)"
+          label="Schema Name"
           type="text"
           {...register("name")}
           required
@@ -199,7 +277,6 @@ const Form = ({ edit, collections, onSuccess }) => {
         editCollection={edit}
         fields={fields}
         collections={collections}
-        productCollection={collections.find((c) => c?.name === "Product")}
         onSuccess={(newField) => {
           setErr(null);
           if (editField) {
@@ -291,6 +368,7 @@ const FieldForm = ({
   const optionType = watch("optionType");
   const options = watch("options");
   const label = watch("label");
+  const multiple = watch("multiple");
 
   const onSubmit = useCallback(
     (values) => {
@@ -346,24 +424,6 @@ const FieldForm = ({
           <div className="flex all-columns gap-1 justify-space-between align-center">
             <h3>Data</h3>
 
-            {editCollection?.name === "Product" &&
-              !defaultFields.includes(name) && (
-                <Select
-                  label="Sub Category"
-                  control={control}
-                  url={endpoints.dynamic + "/Sub Category"}
-                  getQuery={(inputValue, selected) => ({
-                    ...(inputValue && { name: inputValue }),
-                    ...(selected && { name: selected }),
-                  })}
-                  handleData={(item) => ({
-                    label: item.name,
-                    value: item.name,
-                  })}
-                  name="subCategory"
-                />
-              )}
-
             <Checkbox {...register("unique")} label="Unique" />
           </div>
 
@@ -390,7 +450,7 @@ const FieldForm = ({
               { label: "Object", value: "object" },
               { label: "Object ID", value: "objectId" },
             ]}
-            disabled={edit || fieldType === "richText"}
+            disabled={edit || multiple || fieldType === "richText"}
           />
 
           {dataType === "objectId" && (
@@ -447,41 +507,6 @@ const FieldForm = ({
             />
           )}
         </form>
-
-        {dataType === "object" &&
-          !["includeProducts", "excludeProducts"].includes(name) && (
-            <NestedObjectFields
-              name={label || name}
-              value={dataElements}
-              setValue={(newValue) => setValue("objectFields", newValue)}
-              collection={editCollection}
-              collections={collections}
-            />
-          )}
-
-        {
-          // dataType === "object" &&
-          // name === "includeProducts" &&
-          // (productCollection ? (
-          //   <ProductFilterFields
-          //     name={`${
-          //       name === "includeProducts"
-          //         ? "Include Products"
-          //         : "Exclude Products"
-          //     } filters`}
-          //     value={dataElements}
-          //     setValue={(newValue) => setValue("includeProducts", newValue)}
-          //     collection={editCollection}
-          //     collections={collections}
-          //     productCollection={productCollection}
-          //   />
-          // ) : (
-          //   <p>
-          //     Please add "Product" table to add "includeProducts" or
-          //     "excludeProducts"
-          //   </p>
-          // ))
-        }
 
         {["array", "variantArray"].includes(dataType) &&
           dataElementType === "object" && (
@@ -688,7 +713,16 @@ const FieldForm = ({
         >
           {(["file"].includes(inputType) ||
             ["select", "combobox"].includes(fieldType)) && (
-            <Checkbox {...register("multiple")} label="Multiple" />
+            <Checkbox
+              {...register("multiple")}
+              label="Multiple"
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setValue("dataType", "array");
+                  setValue("dataElementType", "string");
+                }
+              }}
+            />
           )}
 
           {inputType === "calendar" && (
@@ -744,85 +778,6 @@ const FieldForm = ({
         </form>
       </div>
     </div>
-  );
-};
-
-const ProductFilterFields = ({
-  name,
-  value = [],
-  setValue,
-  collection,
-  collections,
-  productCollection,
-}) => {
-  const [formOpen, setFormOpen] = useState();
-  return (
-    <>
-      <div className="flex justify-space-between align-center">
-        <h3>{name}</h3>
-        <button className="btn" onClick={() => setFormOpen(true)}>
-          Update {name}
-        </button>
-      </div>
-
-      <Table className={s.fields} columns={[{ label: "Field" }]}>
-        {value.map((item, i) => (
-          <tr key={i}>
-            <td>{item}</td>
-          </tr>
-        ))}
-      </Table>
-
-      <Modal
-        head
-        label={`Update Fields`}
-        open={formOpen}
-        setOpen={() => {
-          setFormOpen(false);
-        }}
-        className={s.nestedObjectFormModal}
-      >
-        <ProductFilterFieldsForm
-          editCollection={collection}
-          collections={collections}
-          productCollection={productCollection}
-          onSubmit={(newValues) => {
-            setValue([...(value || []), ...newValues]);
-            setFormOpen(false);
-          }}
-        />
-      </Modal>
-    </>
-  );
-};
-const ProductFilterFieldsForm = ({ productCollection, onSubmit }) => {
-  const { handleSubmit, control } = useForm();
-  return (
-    <form
-      onSubmit={handleSubmit((values) => onSubmit(values.fields))}
-      className="grid gap-1 p-1"
-    >
-      <CustomRadio
-        control={control}
-        name="fields"
-        className={s.itemColumnsRadio}
-        multiple
-        label="Fields"
-        options={productCollection.fields
-          .filter(
-            (item) =>
-              !(item.inputType === "file" || item.inputType === "calendar")
-          )
-          .map((item) => ({
-            label: item.label,
-            value: item.name,
-          }))}
-      />
-
-      <div className="flex justify-center">
-        <button className="btn">Update</button>
-      </div>
-    </form>
   );
 };
 
@@ -912,7 +867,6 @@ const NestedObjectFields = ({
           fields={value}
           editCollection={collection}
           collections={collections}
-          productCollection={collections.find((c) => c?.name === "Product")}
           onSuccess={(newField) => {
             if (edit) {
               setValue(

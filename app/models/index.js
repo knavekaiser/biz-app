@@ -20,9 +20,10 @@ module.exports = {
   Purchase: require("./purchase.model"),
   Payment: require("./payment.model"),
   Collection: require("./collection.model"),
+  AdminCollection: require("./adminCollection.model"),
   Order: require("./order.model"),
   Quote: require("./quote.model"),
   Role: require("./role.model"),
   Store: require("./store.model"),
-  Category: require("./category.model"),
+  AdSchema: require("./adSchema.model"),
 };

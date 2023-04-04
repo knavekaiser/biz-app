@@ -1,5 +1,5 @@
 const { authJwt, validate } = require("../middlewares");
-const controller = require("../controllers/collection.controller");
+const controller = require("../controllers/adminCollection.controller");
 const { collection: schema } = require("../validationSchemas");
 const router = require("express").Router();
 
@@ -39,5 +39,5 @@ module.exports = function (app) {
     controller.delete
   );
 
-  app.use("/api/collections", router);
+  app.use("/api/admin/collections", router);
 };

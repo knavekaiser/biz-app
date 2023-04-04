@@ -40,16 +40,16 @@ const endpoints = {
   stores: `${baseApiUrl}/api/stores`,
   categories: `${baseApiUrl}/api/categories`,
 
-  commonCollections: `${baseApiUrl}/api/common-collections`,
-
   homeStores: `${baseApiUrl}/api/home/stores`,
   homeCategories: `${baseApiUrl}/api/home/categories`,
+  adSchemas: `${baseApiUrl}/api/ad-schemas`,
 
   userConfig: `${baseApiUrl}/api/user-config`,
   collections: `${baseApiUrl}/api/collections`,
   schemaTemplates: `${baseApiUrl}/api/collections/templates`,
   dynamic: `${baseApiUrl}/api/dynamic`,
-  commonCollection: `${baseApiUrl}/api/common-collection`,
+  adminCollections: `${baseApiUrl}/api/admin/collections`,
+  adminDynamic: `${baseApiUrl}/api/admin/dynamic`,
   roles: `${baseApiUrl}/api/roles`,
   staffs: `${baseApiUrl}/api/staffs`,
   employees: `${baseApiUrl}/api/employees`,

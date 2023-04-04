@@ -30,7 +30,9 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
     post: saveData,
     put: updateData,
     loading,
-  } = useFetch(`${endpoints.dynamic}/${collection.name}/${edit?._id || ""}`);
+  } = useFetch(
+    `${endpoints.adminDynamic}/${collection.name}/${edit?._id || ""}`
+  );
 
   return (
     <div className={`grid gap-1`}>
@@ -298,7 +300,7 @@ const DynamicForm = ({
             options: field.options || [],
           })}
           {...(field.optionType === "collection" && {
-            url: `${endpoints.dynamic}/${field.collection}`,
+            url: `${endpoints.adminDynamic}/${field.collection}`,
           })}
           getQuery={(inputValue, selected) => ({
             ...(inputValue && { [field.optionLabel]: inputValue }),
@@ -553,7 +555,7 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
             options: field.options,
           })}
           {...(field.optionType === "collection" && {
-            url: `${endpoints.dynamic}/${field.collection}`,
+            url: `${endpoints.adminDynamic}/${field.collection}`,
           })}
           getQuery={(inputValue, selected) => ({
             ...(inputValue && { [field.optionLabel]: inputValue }),
@@ -979,7 +981,7 @@ const ProductFilterFieldsForm = ({
                 options: field.options,
               })}
               {...(field.optionType === "collection" && {
-                url: `${endpoints.dynamic}/${field.collection}`,
+                url: `${endpoints.adminDynamic}/${field.collection}`,
               })}
               getQuery={(inputValue, selected) => ({
                 ...(inputValue && { [field.optionLabel]: inputValue }),

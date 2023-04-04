@@ -14,6 +14,7 @@ module.exports = mongoose.model(
       featured: { type: Schema.Types.Boolean, default: false },
       products: [],
       order: [],
+      createdBy: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
     },
     { timestamps: true }
   )

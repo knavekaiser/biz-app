@@ -18,9 +18,9 @@ const Collections = () => {
   const [addCollection, setAddCollection] = useState(false);
   const [importSchema, setImportSchema] = useState(false);
   const [collections, setCollections] = useState([]);
-  const { get: getCollections, loading } = useFetch(endpoints.collections);
+  const { get: getCollections, loading } = useFetch(endpoints.adminCollections);
   const { remove: deleteCollection, loading: deleting } = useFetch(
-    endpoints.collections + `/{ID}`
+    endpoints.adminCollections + `/{ID}`
   );
   const navigate = useNavigate();
   const { "*": table } = useParams();
@@ -47,12 +47,12 @@ const Collections = () => {
       <div className="flex justify-space-between">
         <h2>All Tables</h2>
         <div className="flex gap-1">
-          <button
+          {/* <button
             className="btn m-a mr-0"
             onClick={() => setImportSchema(true)}
           >
             Import Schema
-          </button>
+          </button> */}
           <button
             className="btn m-a mr-0"
             onClick={() => setAddCollection(true)}
@@ -137,7 +137,7 @@ const Collections = () => {
 
       <Modal
         head
-        label={edit ? "Update Collection" : "Add Collection"}
+        label={`${edit ? "Update" : "Add"} Table`}
         open={addCollection}
         setOpen={() => {
           setAddCollection(false);
@@ -167,7 +167,7 @@ const Collections = () => {
         />
       </Modal>
 
-      <Modal
+      {/* <Modal
         head
         label="Import Schema"
         open={importSchema}
@@ -182,7 +182,7 @@ const Collections = () => {
             fetchRecords();
           }}
         />
-      </Modal>
+      </Modal> */}
     </div>
   );
 };

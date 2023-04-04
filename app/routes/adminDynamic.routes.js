@@ -1,5 +1,5 @@
 const { authJwt, validate, file, dynamic } = require("../middlewares");
-const controller = require("../controllers/dynamic.controller");
+const controller = require("../controllers/adminDynamic.controller");
 // const { collection: schema } = require("../validationSchemas");
 const router = require("express").Router();
 
@@ -7,7 +7,7 @@ module.exports = function (app) {
   router.post(
     "/:table/bulk-create",
     authJwt.verifyToken,
-    dynamic.getModel,
+    dynamic.getAdminModel,
     file.dynamicUpload,
     // validate(schema.create),
     controller.bulkCreate
@@ -15,7 +15,7 @@ module.exports = function (app) {
   router.post(
     "/:table",
     authJwt.verifyToken,
-    dynamic.getModel,
+    dynamic.getAdminModel,
     file.dynamicUpload,
     // validate(schema.create),
     controller.create
@@ -23,7 +23,7 @@ module.exports = function (app) {
   router.put(
     "/:table/:id",
     authJwt.verifyToken,
-    dynamic.getModel,
+    dynamic.getAdminModel,
     file.dynamicUpload,
     // validate(schema.update),
     controller.update
@@ -31,16 +31,16 @@ module.exports = function (app) {
   router.get(
     "/:table/:id?",
     authJwt.verifyToken,
-    dynamic.getModel,
+    dynamic.getAdminModel,
     controller.findAll
   );
   router.delete(
     "/:table/:id?",
     authJwt.verifyToken,
-    dynamic.getModel,
+    dynamic.getAdminModel,
     file.removeFiles,
     controller.delete
   );
 
-  app.use("/api/dynamic", router);
+  app.use("/api/admin/dynamic", router);
 };

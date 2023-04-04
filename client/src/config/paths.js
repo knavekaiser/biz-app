@@ -22,6 +22,7 @@ const paths = {
   stores: "stores",
   storeListings: "stores/:storeId/listings",
   categories: "categories",
+  schemas: "schemas",
 
   settings: {
     baseUrl: "settings/*",

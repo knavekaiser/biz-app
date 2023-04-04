@@ -1,5 +1,5 @@
 const Collection = require("../models/collection.model");
-const Category = require("../models/category.model");
+const AdminCollection = require("../models/adminCollection.model");
 
 const getType = (field) => {
   let t;
@@ -87,40 +87,27 @@ exports.getModel = async (table) => {
   };
 };
 
-exports.getCommonModel = async (table) => {
-  const [_id, name] = table.split("_");
-  const collections = [
-    {
-      _id: "jf02390ds9jf09239jsadfasdf",
-      name: "Category",
-      fields: [
-        {
-          unique: true,
-          name: "name",
-          required: true,
-          label: "Name",
-          dataType: "string",
-          fieldType: "input",
-          inputType: "text",
-        },
-      ],
-    },
-  ];
-
-  const collection = collections.find((item) => item.name === table);
+exports.getAdminModel = async (table) => {
+  const collection = await AdminCollection.findOne({ name: table });
   if (!collection) {
     return {
-      message: "Common Collection does not exist",
+      message: "Admin Collection does not exist",
     };
   }
   const fields = getFields(collection.fields);
 
-  // if (mongoose.models[table]) {
-  //   delete mongoose.models[table];
-  // }
+  table = "Admin_" + table;
+
+  if (mongoose.models[table]) {
+    delete mongoose.models[table];
+  }
 
   return {
-    Model: Category,
+    Model: mongoose.model(
+      table,
+      new Schema(fields, { timestamps: true }),
+      table
+    ),
     collection: { ...collection._doc, __name: table },
   };
 };
