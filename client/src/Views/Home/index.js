@@ -108,10 +108,21 @@ const Sidebar = ({ filters, setFilters, config }) => {
 
   return (
     <div className={s.sidebar}>
-      {schema ? (
+      {schema &&
+      config?.sidebarFilters?.find(
+        (item) =>
+          item.category === filters.category &&
+          item.subCategory === filters.subCategory
+      )?.filters?.length > 0 ? (
         <div
           className="flex align-center gap_5 pointer wrap"
-          onClick={() => setSchema(null)}
+          onClick={() => {
+            setSchema(null);
+            setFilters((prev) => ({
+              category: prev.category,
+              subCategory: undefined,
+            }));
+          }}
         >
           <BsArrowLeft style={{ fontSize: "1.3em" }} />{" "}
           <p className="flex align-center gap_5">
