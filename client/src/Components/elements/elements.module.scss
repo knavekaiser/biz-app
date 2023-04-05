@@ -497,7 +497,7 @@
     .btn {
       z-index: 12;
       position: absolute;
-      bottom: 6px;
+      top: 9px;
       display: grid;
       place-items: center;
       svg {
@@ -1055,6 +1055,52 @@
   padding: 1rem;
   width: 18rem;
   max-width: calc(100vw - 3rem);
+}
+
+.range {
+  .track {
+    height: 1rem;
+    width: 100%;
+    background: white;
+    border: 1px solid #b7b7b7;
+    border-radius: 2rem;
+    position: relative;
+    box-shadow: inset 0 1px 3px #8c8c8c;
+    .handle,
+    .handle {
+      position: absolute;
+      top: 50%;
+      border-radius: 50%;
+      display: block;
+      height: 1.25rem;
+      width: 1.25rem;
+      cursor: grab;
+      transform: translateY(-50%) translateX(-50%);
+      background: white;
+      box-sizing: border-box;
+      border: solid 0.2em transparent;
+      box-shadow: 0 2px 5px #7d7d7d;
+      background: linear-gradient(#c5c5c5, whitesmoke) padding-box,
+        linear-gradient(#fbfbfb, #c2c2c2) border-box;
+      &:active {
+        cursor: grabbing;
+      }
+    }
+    .fill {
+      display: block;
+      position: absolute;
+      height: 100%;
+      background: $primary-color;
+      box-shadow: inset 0 0 3px 3px rgba($primary-color-dark2, 0.4);
+    }
+  }
+  .values {
+    font-size: 0.8em;
+    margin-top: 0.4em;
+    color: $grey2;
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 $branch-angle: 35deg;

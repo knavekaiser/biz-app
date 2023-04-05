@@ -15,12 +15,12 @@ export const ProductThumb = ({ order, business, product }) => {
   return (
     <div className={`${s.productThumb}`}>
       <div className={s.thumbnailWrapper}>
-        <a href={product.url || "http://" + business.domain}>
+        <a href={product?.url || "http://" + business.domain}>
           <img src={product.image} />
         </a>
       </div>
       <div className={s.productDetail}>
-        <a href={product.url || "http://" + business.domain}>
+        <a href={product?.url || "http://" + business.domain}>
           <h4>{product.title}</h4>
         </a>
         {order?.map((item) => {

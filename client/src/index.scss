@@ -72,6 +72,9 @@ a {
   flex: 1;
 }
 
+.gap_5 {
+  grid-gap: 0.5rem;
+}
 .gap-1 {
   grid-gap: 1rem;
 }
@@ -362,4 +365,8 @@ a {
       }
     }
   }
+}
+
+.pointer {
+  cursor: pointer;
 }

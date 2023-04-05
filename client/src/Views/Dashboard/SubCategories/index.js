@@ -43,10 +43,10 @@ const Collections = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex justify-space-between">
-        <h2>All Ad-Schemas</h2>
+        <h2>All Sub Categories</h2>
         <div className="flex gap-1">
           <button className="btn m-a mr-0" onClick={() => setEdit(true)}>
-            Add Schema
+            Add Sub Categories
           </button>
         </div>
       </div>
@@ -74,7 +74,7 @@ const Collections = () => {
                   callBack: () =>
                     Prompt({
                       type: "confirmation",
-                      message: `Are you sure you want to remove this Schema?`,
+                      message: `Are you sure you want to remove this Sub Category?`,
                       callback: () => {
                         deleteSchema(
                           {},
@@ -110,7 +110,7 @@ const Collections = () => {
 
       <Modal
         head
-        label={`${edit ? "Update" : "Add"} Schema`}
+        label={`${edit?._id ? "Update" : "Add"} Sub Category`}
         open={!!edit}
         setOpen={() => {
           setEdit(null);

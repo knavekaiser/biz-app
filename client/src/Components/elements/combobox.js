@@ -453,6 +453,9 @@ export const Select = ({
                     (multiple && !value?.length) || (!multiple && !value)
                       ? DropdownIndicator
                       : ClearButton,
+                  ...(disabled && {
+                    DropdownIndicator: undefined,
+                  }),
                   ...(renderOption && { Option: renderOption }),
                 }}
                 className={`reactSelect ${s.reactSelect} ${

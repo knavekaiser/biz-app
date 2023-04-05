@@ -500,6 +500,20 @@ exports.getRatingBreakdownPipeline = ({ business }) => {
 
 exports.defaultSchemas = [
   {
+    name: "Category",
+    fields: [
+      {
+        unique: true,
+        name: "name",
+        required: true,
+        label: "Name",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+    ],
+  },
+  {
     name: "Sub Category",
     fields: [
       {
@@ -511,7 +525,7 @@ exports.defaultSchemas = [
         fieldType: "select",
         inputType: "text",
         multiple: false,
-        optionType: "commonCollection",
+        optionType: "collection",
         collection: "Category",
         optionLabel: "name",
         optionValue: "name",

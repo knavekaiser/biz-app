@@ -38,10 +38,12 @@ const endpoints = {
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
   stores: `${baseApiUrl}/api/stores`,
+  storeConfig: `${baseApiUrl}/api/store-config`,
   categories: `${baseApiUrl}/api/categories`,
 
   homeStores: `${baseApiUrl}/api/home/stores`,
   homeCategories: `${baseApiUrl}/api/home/categories`,
+  homeConfig: `${baseApiUrl}/api/home/config`,
   adSchemas: `${baseApiUrl}/api/ad-schemas`,
 
   userConfig: `${baseApiUrl}/api/user-config`,

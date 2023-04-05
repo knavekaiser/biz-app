@@ -1,6 +1,7 @@
 const schema = new Schema(
   {
     category: { type: Schema.Types.String, required: true },
+    subCategory: { type: Schema.Types.String, required: true },
     name: { type: Schema.Types.String, min: 3, required: true },
     fields: [{}],
   },

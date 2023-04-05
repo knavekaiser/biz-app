@@ -5,7 +5,7 @@
   min-height: 86vh;
   background: white;
   display: grid;
-  grid-template-columns: 15rem 1fr;
+  grid-template-columns: 18rem 1fr;
   .allProducts {
     padding: 1rem;
     display: grid;
@@ -50,18 +50,55 @@
   }
   .sidebar {
     padding: 1rem;
-    p {
+    & > p {
       margin-bottom: 0.5rem;
     }
     ul {
-      margin-left: 1rem;
+      // margin-left: 1rem;
       display: grid;
       grid-gap: 0.5rem;
     }
     .categories {
-      .subCategories {
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
+      li {
+        .subCategories {
+          margin-left: 1rem;
+          margin-top: 0.5rem;
+          margin-bottom: 1rem;
+        }
+      }
+    }
+    .section {
+      width: 17rem;
+      border-radius: 0.5rem;
+      .head {
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        svg {
+          font-size: 1.5rem;
+        }
+      }
+      .sectionContent {
+        display: grid;
+        grid-gap: 1rem;
+        padding: 0.75rem;
+        .filterList {
+          label,
+          input {
+            cursor: pointer;
+          }
+        }
+        ul {
+          display: grid;
+          grid-gap: 0.5rem;
+          li {
+            display: flex;
+            align-items: center;
+            grid-gap: 0.5rem;
+          }
+        }
       }
     }
   }

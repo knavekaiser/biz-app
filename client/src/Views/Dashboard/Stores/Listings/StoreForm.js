@@ -65,13 +65,10 @@ const Form = ({ storeId, edit, onSuccess }) => {
   } = useFetch(endpoints.stores + `/${edit?._id || ""}`);
 
   const category = watch("category");
-  const adSchema = watch("adSchema");
+  const subCategory = watch("subCategory");
   const products = watch("products");
   const featured = watch("featured");
 
-  const { get: getProductSchema, loading: loadingSchema } = useFetch(
-    endpoints.collections + "/Product"
-  );
   const { get: getCategories, loading: loadingCategories } = useFetch(
     endpoints.adminDynamic + "/Category"
   );
@@ -116,7 +113,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
   useEffect(() => {
     set_fields(
       (productSchema?.fields || [])
-        .filter((item) => !item.subCategory || item.subCategory === adSchema)
+        .filter((item) => !item.subCategory || item.subCategory === subCategory)
         .filter(
           (item) =>
             ![
@@ -128,7 +125,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
             ].includes(item.name)
         )
     );
-  }, [productSchema, adSchema]);
+  }, [productSchema, subCategory]);
 
   useEffect(() => {
     reset({
@@ -187,7 +184,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           name="category"
           onChange={(e) => {
             if (!e?.value) {
-              setValue("adSchema", "");
+              setValue("subCategory", "");
             }
           }}
           formOptions={{ required: true }}
@@ -204,7 +201,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
                 label: item.name,
                 value: item.name,
               }))}
-            name="adSchema"
+            name="subCategory"
             onChange={(e) => {
               if (e.value) {
                 setProductSchema(
@@ -216,7 +213,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           />
         )}
 
-        {category && adSchema && (
+        {category && subCategory && (
           <div className="grid gap-1">
             <CalendarInput
               control={control}
@@ -289,7 +286,7 @@ const Form = ({ storeId, edit, onSuccess }) => {
           </div>
         )}
 
-        {category && adSchema && _fields.length > 0 && (
+        {category && subCategory && _fields.length > 0 && (
           <CustomRadio
             control={control}
             name="order"

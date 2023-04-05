@@ -6,25 +6,23 @@ import { useFetch } from "hooks";
 import { useCallback, useEffect, useState } from "react";
 import s from "./home.module.scss";
 import { ProductThumb } from "./productThumbnail";
+import { BsArrowLeft } from "react-icons/bs";
+import { FiChevronRight } from "react-icons/fi";
+import Filters from "./Filter";
 
 const Home = () => {
-  const [filters, setFilters] = useState({
-    categories: [],
-    subCategories: [],
-  });
+  const [filters, setFilters] = useState({});
+  const [config, setConfig] = useState(null);
   const [stores, setStores] = useState([]);
-  const [categories, setCategories] = useState([]);
+
+  // console.log(filters);
+
   const { get: fetchStores, loading } = useFetch(endpoints.homeStores);
-  const { get: getCategories } = useFetch(endpoints.homeCategories);
+  const { get: getConfig } = useFetch(endpoints.homeConfig);
 
   const getStores = useCallback(() => {
     fetchStores({
-      query: {
-        ...(filters.categories?.length && { category: filters.categories }),
-        ...(filters.subCategories?.length && {
-          subCategory: filters.subCategories,
-        }),
-      },
+      query: filters,
     })
       .then(({ data }) => {
         if (data.success) {
@@ -41,80 +39,22 @@ const Home = () => {
   }, [filters]);
 
   useEffect(() => {
-    getCategories()
+    getConfig()
       .then(({ data }) => {
         if (data.success) {
-          setCategories(data.data);
+          setConfig(data.data);
         } else {
           Prompt({ type: "error", message: data.message });
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
+
   return (
     <>
       <Header />
       <div className={s.landingPage}>
-        <div className={s.sidebar}>
-          <p>
-            <strong>Categories</strong>
-          </p>
-          <ul className={s.categories}>
-            {categories.map((cat) => (
-              <li key={cat.name}>
-                <Checkbox
-                  label={cat.name}
-                  checked={filters.categories.includes(cat.name)}
-                  onChange={(e) => {
-                    if (filters.categories.includes(cat.name)) {
-                      setFilters((prev) => ({
-                        ...prev,
-                        categories: prev.categories.filter(
-                          (i) => i !== cat.name
-                        ),
-                      }));
-                    } else {
-                      setFilters((prev) => ({
-                        ...prev,
-                        categories: [...prev.categories, cat.name],
-                      }));
-                    }
-                  }}
-                />
-                {cat.subCategories?.length > 0 && (
-                  <ul className={s.subCategories}>
-                    {cat.subCategories.map((subCat) => (
-                      <li label={subCat.name}>
-                        <Checkbox
-                          label={subCat.name}
-                          checked={filters.subCategories.includes(subCat.name)}
-                          onChange={(e) => {
-                            if (filters.subCategories.includes(subCat.name)) {
-                              setFilters((prev) => ({
-                                ...prev,
-                                subCategories: prev.subCategories.filter(
-                                  (i) => i !== subCat.name
-                                ),
-                              }));
-                            } else {
-                              setFilters((prev) => ({
-                                ...prev,
-                                subCategories: [
-                                  ...prev.subCategories,
-                                  subCat.name,
-                                ],
-                              }));
-                            }
-                          }}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Sidebar filters={filters} config={config} setFilters={setFilters} />
         <div className={s.allProducts}>
           {stores.map((item) =>
             item.featured ? (
@@ -145,6 +85,109 @@ const Home = () => {
       </div>
       <Footer />
     </>
+  );
+};
+
+const Sidebar = ({ filters, setFilters, config }) => {
+  const [schema, setSchema] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  const { get: getCategories } = useFetch(endpoints.homeCategories);
+
+  useEffect(() => {
+    getCategories()
+      .then(({ data }) => {
+        if (data.success) {
+          setCategories(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
+
+  return (
+    <div className={s.sidebar}>
+      {schema ? (
+        <div
+          className="flex align-center gap_5 pointer wrap"
+          onClick={() => setSchema(null)}
+        >
+          <BsArrowLeft style={{ fontSize: "1.3em" }} />{" "}
+          <p className="flex align-center gap_5">
+            {filters.category} <FiChevronRight /> {filters.subCategory}
+          </p>
+          <Filters
+            filters={filters}
+            setFilters={setFilters}
+            schema={schema}
+            fields={
+              config?.sidebarFilters?.find(
+                (item) =>
+                  item.category === filters.category &&
+                  item.subCategory === filters.subCategory
+              )?.filters || []
+            }
+          />
+        </div>
+      ) : (
+        <>
+          <p>
+            <strong>Categories</strong>
+          </p>
+          <ul className={s.categories}>
+            {categories.map((cat) => (
+              <li key={cat.name}>
+                <Checkbox
+                  label={cat.name}
+                  checked={filters.category === cat.name}
+                  onChange={(e) => {
+                    if (filters.category === cat.name) {
+                      setFilters((prev) => ({
+                        ...prev,
+                        category: undefined,
+                      }));
+                    } else {
+                      setFilters((prev) => ({
+                        ...prev,
+                        category: cat.name,
+                      }));
+                    }
+                  }}
+                />
+                {cat.subCategories?.length > 0 && (
+                  <ul className={s.subCategories}>
+                    {cat.subCategories.map((subCat) => (
+                      <li label={subCat.name}>
+                        <Checkbox
+                          label={subCat.name}
+                          checked={filters.subCategory === subCat.name}
+                          onChange={(e) => {
+                            if (filters.subCategory === subCat.name) {
+                              setFilters((prev) => ({
+                                ...prev,
+                                subCategory: undefined,
+                              }));
+                            } else {
+                              setFilters((prev) => ({
+                                ...prev,
+                                category: cat.name,
+                                subCategory: subCat.name,
+                              }));
+                            }
+                            setSchema(e.target.checked ? subCat.fields : null);
+                          }}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
   );
 };
 

@@ -126,7 +126,7 @@ const Form = ({ edit, collections, onSuccess }) => {
       if (!values.name) {
         setError("name", {
           type: "required",
-          message: "Schema name is required",
+          message: "Sub Category name is required",
         });
         return;
       }
@@ -208,7 +208,7 @@ const Form = ({ edit, collections, onSuccess }) => {
           formOptions={{ required: true }}
         />
         <Input
-          label="Schema Name"
+          label="Sub Category name"
           type="text"
           {...register("name")}
           required

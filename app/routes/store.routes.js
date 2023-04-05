@@ -3,6 +3,7 @@ const { appConfig } = require("../config");
 const controller = require("../controllers/store.controller");
 const { store: schema } = require("../validationSchemas");
 const router = require("express").Router();
+const configRouter = require("express").Router();
 const homeRouter = require("express").Router();
 
 module.exports = function (app) {
@@ -65,7 +66,15 @@ module.exports = function (app) {
 
   app.use("/api/stores", router);
 
+  // -------------------------------------------------- config
+  configRouter.get("/", authJwt.verifyToken, controller.storeConfig);
+  configRouter.put("/", authJwt.verifyToken, controller.updateStoreConfig);
+
+  app.use("/api/store-config", configRouter);
+
+  // -------------------------------------------------- public
   homeRouter.get("/stores", controller.homeStores);
   homeRouter.get("/categories", controller.homeCategories);
+  homeRouter.get("/config", controller.homeConfig);
   app.use("/api/home", homeRouter);
 };

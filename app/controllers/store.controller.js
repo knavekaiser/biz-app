@@ -3,10 +3,11 @@ const {
 } = require("../config");
 const { fileHelper, dbHelper } = require("../helpers");
 
-const { Store, Category, Collection } = require("../models");
+const { Store, StoreConfig, AdSchema } = require("../models");
 
 exports.homeStores = async (req, res) => {
   try {
+    const { category, subCategory, ...query } = req.query;
     const conditions = {
       $expr: {
         $and: [
@@ -15,12 +16,60 @@ exports.homeStores = async (req, res) => {
         ],
       },
     };
-    if (req.query.category) {
-      conditions.category = { $in: req.query.category.split(",") };
+    if (category) {
+      conditions.category = { $in: category.split(",") };
     }
-    if (req.query.subCategory) {
-      conditions.subCategory = { $in: req.query.subCategory.split(",") };
+    if (subCategory) {
+      conditions.subCategory = { $in: subCategory.split(",") };
     }
+    const productQuery = [];
+    const schema = await AdSchema.findOne({ category, name: subCategory });
+    schema?.fields.forEach((field) => {
+      if (field.name in query) {
+        if (field.dataType === "string" || field.dataElementType === "string") {
+          productQuery.push({
+            $regexMatch: {
+              input:
+                field.dataElementType === "string"
+                  ? {
+                      $reduce: {
+                        input: `$$product.${field.name}`,
+                        initialValue: "",
+                        in: { $concat: ["$$value", "$$this"] },
+                      },
+                    }
+                  : `$$product.${field.name}`,
+              regex: RegExp(query[field.name].split(",").join("|")),
+              options: "i",
+            },
+          });
+        } else if (field.dataElementType === "number") {
+          query.push({
+            $in: [
+              query[field.name]
+                .split(",")
+                .map((i) => +i)
+                .map((i) => isNaN(i)),
+              `$$product.${field.name}`,
+            ],
+          });
+        } else if (field.dataType === "number") {
+          productQuery.push({
+            $eq: [`$$product.${field.name}`, +query[field.name]],
+          });
+        }
+      } else if (
+        +req.query[field.name + "-min"] <= +req.query[field.name + "-max"]
+      ) {
+        productQuery.push({
+          $and: [
+            { $gte: [`$$product.${field.name}`, +query[`${field.name}-min`]] },
+            { $lte: [`$$product.${field.name}`, +query[`${field.name}-max`]] },
+          ],
+        });
+      }
+    });
+    // console.log(query, JSON.stringify(productQuery, null, 2));
     Store.aggregate([
       { $match: conditions },
       {
@@ -64,6 +113,24 @@ exports.homeStores = async (req, res) => {
         },
       },
       { $unwind: { path: "$business", preserveNullAndEmptyArrays: false } },
+      ...(productQuery.length
+        ? [
+            {
+              $addFields: {
+                products: {
+                  $filter: {
+                    input: "$products",
+                    as: "product",
+                    cond: {
+                      $and: productQuery,
+                    },
+                  },
+                },
+              },
+            },
+          ]
+        : []),
+      { $match: { $expr: { $gt: [{ $size: "$products" }, 0] } } },
     ])
       .then(async (data) => {
         responseFn.success(res, { data });
@@ -77,7 +144,35 @@ exports.homeStores = async (req, res) => {
 exports.homeCategories = async (req, res) => {
   try {
     const { Model } = await dbHelper.getAdminModel("Category");
-    Model.find()
+    Model.aggregate([
+      {
+        $lookup: {
+          from: "adschemas",
+          localField: "name",
+          foreignField: "category",
+          as: "subCategories",
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          "subCategories.name": 1,
+          "subCategories.fields": 1,
+        },
+      },
+    ])
+      .then(async (data) => {
+        responseFn.success(res, { data });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.homeConfig = async (req, res) => {
+  try {
+    StoreConfig.findOne()
       .then(async (data) => {
         responseFn.success(res, { data });
       })
@@ -170,6 +265,25 @@ exports.delete = async (req, res) => {
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.storeConfig = async (req, res) => {
+  try {
+    StoreConfig.findOne().then((data) => responseFn.success(res, { data }));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.updateStoreConfig = async (req, res) => {
+  try {
+    StoreConfig.findOneAndUpdate({}, req.body, {
+      new: true,
+      upsert: true,
+    }).then((data) => responseFn.success(res, { data }));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

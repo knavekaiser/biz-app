@@ -24,7 +24,7 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
       }
       if (query) {
         _url += `${_url.includes("?") ? "" : "?"}&${new URLSearchParams(
-          query
+          JSON.parse(JSON.stringify(query))
         ).toString()}`;
       }
       setLoading(true);

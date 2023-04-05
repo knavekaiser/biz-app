@@ -22,7 +22,7 @@ import Roles from "./Roles";
 import Employees from "./Employees";
 import Stores from "./Stores";
 import StoreListings from "./Stores/Listings";
-import Schemas from "./Schemas";
+import SubCategories from "./SubCategories";
 import Categories from "./Categories";
 
 const Dashboard = () => {
@@ -45,7 +45,7 @@ const Dashboard = () => {
             tabs={[
               { label: "Stores", path: paths.stores },
               // { label: "Categories", path: paths.categories },
-              { label: "Schemas", path: paths.schemas },
+              { label: "Sub Categories", path: paths.subCategories },
               {
                 label: "Dynamic Tables",
                 path: paths.dynamicTables.replace("/*", ""),
@@ -56,7 +56,7 @@ const Dashboard = () => {
         </div>
         <Routes>
           <Route path={paths.stores} element={<Stores />} />
-          <Route path={paths.schemas} element={<Schemas />} />
+          <Route path={paths.subCategories} element={<SubCategories />} />
           <Route path={paths.storeListings} element={<StoreListings />} />
           {/* <Route path={paths.categories} element={<Categories />} /> */}
           <Route path={paths.settings.baseUrl} element={<AdminSettings />} />

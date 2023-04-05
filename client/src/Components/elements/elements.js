@@ -1374,3 +1374,202 @@ export const RichText = ({ control, name, label, required }) => {
     />
   );
 };
+
+export const Range = ({
+  control,
+  setValue,
+  name,
+  label,
+  formOptions,
+  onChange: customOnChange,
+  className,
+  min = 0,
+  max = 100,
+  step,
+  locale,
+}) => {
+  const valueLoaded = useRef(false);
+  const [activeHandle, setActiveHandle] = useState(false);
+  const [minPos, setMinPos] = useState(0);
+  const [maxPos, setMaxPos] = useState(100);
+  const trackRef = useRef();
+
+  const handleTrackMove = useCallback(
+    (e) => {
+      if (activeHandle) {
+        if (e.type !== "touchmove") {
+          if (e.preventDefault) e.preventDefault();
+        }
+        if (e.stopPropagation) e.stopPropagation();
+        e.cancelBubble = true;
+        e.returnValue = false;
+
+        const track = trackRef.current;
+        const boundingBox = track.getBoundingClientRect();
+        const evtX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+        const val = Math.max(
+          Math.min(
+            +((evtX - boundingBox.x - 10) / (boundingBox.width - 20)).toFixed(
+              2
+            ),
+            1
+          ),
+          0
+        );
+        if (activeHandle === "min") {
+          setMinPos(Math.min(maxPos, +(val * 100).toFixed(step)));
+        }
+        if (activeHandle === "max") {
+          setMaxPos(Math.max(minPos, +(val * 100).toFixed(step)));
+        }
+      }
+    },
+    [activeHandle, minPos, maxPos]
+  );
+  const updateValue = useCallback(
+    (onChange) => {
+      const value = {
+        min: +(minPos / (100 / (max - min)) + min).toFixed(step),
+        max: +(maxPos / (100 / (max - min)) + min).toFixed(step),
+      };
+      setValue(name, value);
+      // onChange(value);
+      customOnChange && customOnChange(value);
+    },
+    [min, max, minPos, maxPos]
+  );
+  useEffect(() => {
+    if (activeHandle === null) {
+      updateValue();
+    }
+  }, [activeHandle]);
+  useEffect(() => {
+    document
+      .querySelector("body")
+      .addEventListener("mousemove", handleTrackMove);
+    const mouseUpHandler = () => {
+      setActiveHandle(null);
+    };
+    document.querySelector("body").addEventListener("mouseup", mouseUpHandler);
+    document.querySelector("body").addEventListener("touchend", mouseUpHandler);
+    return () => {
+      document
+        .querySelector("body")
+        .removeEventListener("mouseup", mouseUpHandler);
+      document
+        .querySelector("body")
+        .removeEventListener("mousemove", handleTrackMove);
+      document
+        .querySelector("body")
+        .removeEventListener("touchend", mouseUpHandler);
+    };
+  }, [handleTrackMove, activeHandle]);
+
+  useEffect(() => {
+    if (!valueLoaded.current && control._formValues[name]) {
+      let { min: valueMin, max: valueMax } = control._formValues[name];
+      if (["", undefined].includes(valueMin)) {
+        valueMin = min;
+      } else {
+        valueMin = valueMin - min;
+      }
+      if (["", undefined].includes(valueMax)) {
+        valueMax = max;
+      } else {
+        valueMax = valueMax - min;
+      }
+      setMinPos(
+        +((valueMin / max) * 100 + ((valueMin / max) * 100) / 100).toFixed(step)
+      );
+      setMaxPos(
+        (+((valueMax / max) * 100) + ((valueMax / max) * 100) / 100).toFixed(
+          step
+        )
+      );
+      valueLoaded.current = true;
+    }
+  }, [control._formValues[name]]);
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({
+        field: { onChange, onBlur, value = { min, max }, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        return (
+          <section
+            className={`${s.range} ${className || ""} ${error ? s.err : ""}`}
+          >
+            {label && (
+              <label>
+                {label} {formOptions?.required && "*"}
+              </label>
+            )}
+            <div className={s.wrapper}>
+              <div className={s.field}>
+                <div
+                  className={s.track}
+                  ref={trackRef}
+                  onTouchMove={handleTrackMove}
+                >
+                  <span
+                    className={`${s.handle} ${s.min}`}
+                    onMouseDown={() => setActiveHandle("min")}
+                    onTouchStart={() => setActiveHandle("min")}
+                    style={{
+                      left: `${Math.min(98, Math.max(2, minPos))}%`,
+                      zIndex: minPos > 50 ? 2 : 1,
+                    }}
+                  />
+                  <span
+                    className={s.fill}
+                    style={{
+                      left: `${Math.min(98, Math.max(2, minPos))}%`,
+                      right: `${Math.min(98, Math.max(2, 100 - maxPos))}%`,
+                    }}
+                  />
+                  <span
+                    className={`${s.handle} ${s.max}`}
+                    onMouseDown={() => setActiveHandle("max")}
+                    onTouchStart={() => setActiveHandle("max")}
+                    style={{
+                      left: `${Math.min(98, Math.max(2, maxPos))}%`,
+                      zIndex: maxPos < 50 ? 2 : 1,
+                    }}
+                  />
+                </div>
+                <div className={s.values}>
+                  <span className={s.min}>
+                    {(+(minPos / (100 / (max - min)) + min).toFixed(
+                      step
+                    )).toLocaleString(locale || "en-IN")}
+                  </span>
+                  <span className={s.max}>
+                    {(+(maxPos / (100 / (max - min)) + min).toFixed(
+                      step
+                    )).toLocaleString(locale || "en-IN")}
+                  </span>
+                </div>
+                {
+                  // <>
+                  //   <div className={s.values}>
+                  //     <span className={s.min}>{minPos}</span>
+                  //     <span className={s.max}>{maxPos}</span>
+                  //   </div>
+                  //   <div className={s.values}>
+                  //     <span className={s.min}>{value.min}</span>
+                  //     <span className={s.max}>{value.max}</span>
+                  //   </div>
+                  // </>
+                }
+              </div>
+              {error && <span className={s.errMsg}>{error.message}</span>}
+            </div>
+          </section>
+        );
+      }}
+    />
+  );
+};

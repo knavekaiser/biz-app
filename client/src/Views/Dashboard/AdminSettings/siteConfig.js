@@ -1,32 +1,19 @@
-import { useEffect, useContext, useState, useCallback } from "react";
-import { SiteContext } from "SiteContext";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import * as yup from "yup";
-import { paths, endpoints } from "config";
-import { useYup, useFetch } from "hooks";
+import { endpoints } from "config";
+import { useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
-import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
-import { findProperties } from "helpers";
 import {
   Input,
   Combobox,
   Select,
   CustomRadio,
-  Checkbox,
   Table,
-  TableActions,
-  FileInputNew,
 } from "Components/elements";
-import s from "./settings.module.scss";
 
 const SiteConfig = () => {
-  const [productCollection, setProductCollection] = useState(null);
-  const [productEelementOptions, setProductElementOptions] = useState([]);
-  const [productPageEelementOptions, setProductPageElementOptions] = useState(
-    []
-  );
+  const [fields, setFields] = useState([]);
   const [updateSidebarFilters, setUpdateSidebarFilters] = useState(false);
-  const { config, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -37,211 +24,59 @@ const SiteConfig = () => {
     formState: { errors },
   } = useForm();
 
-  const { put: updateConfig, loading } = useFetch(endpoints.userConfig);
-  const { get: getProductCollection, loading: gettingProductCollection } =
-    useFetch(endpoints.collections + "/Product");
+  const [storeConfig, setStoreConfig] = useState(null);
+  const {
+    get: getConfig,
+    put: updateConfig,
+    loading,
+  } = useFetch(endpoints.storeConfig);
+
+  const [categories, setCategories] = useState([]);
+
+  const { get: getCategories } = useFetch(endpoints.homeCategories);
 
   useEffect(() => {
     reset({
-      businessType: config?.businessType || "",
-      elements: config?.siteConfig?.productCard?.length
-        ? config?.siteConfig?.productCard
-        : [],
-      productViewElements:
-        config?.siteConfig?.productViewPage?.productElements || [],
-      currency: config?.siteConfig?.currency || "",
-      sidebarFilters: config?.siteConfig?.browsePage?.sidebarFilters || [],
-      recommendationFilters:
-        config?.siteConfig?.productViewPage?.recommendationFilters || [],
-      recommendationLimit:
-        config?.siteConfig?.productViewPage?.recommendationLimit,
-      viewWhatsApp: config?.siteConfig?.productViewPage?.viewWhatsApp || false,
-      viewLandingPage:
-        config?.siteConfig?.landingPage?.viewLandingPage || false,
-      heroImages: config?.siteConfig?.landingPage?.hero?.slides || [],
-      viewHeroSection:
-        config?.siteConfig?.landingPage?.hero?.viewHeroSection || false,
-      landingPageShelves: config?.siteConfig?.landingPage?.shelves || [],
-      sidebarFiltersDefaultState:
-        config?.siteConfig?.browsePage?.sidebarFiltersDefaultState ||
-        "collapsed",
-      footerElements: config?.siteConfig?.footer?.sections,
+      sidebarFilters: storeConfig?.sidebarFilters || [],
     });
-  }, [config]);
+  }, [storeConfig]);
+
+  const category = watch("category");
+  const subCategory = watch("subCategory");
 
   const sidebarFilters = watch("sidebarFilters");
-  const viewLandingPage = watch("viewLandingPage");
-  const whatsapp = watch("viewWhatsApp");
 
   useEffect(() => {
-    if (
-      config?.siteConfig?.productCard &&
-      productEelementOptions.length === 0
-    ) {
-      getProductCollection({ query: { relatedCollections: true } })
-        .then(({ data }) => {
-          if (data.success) {
-            const fields = data.data.fields
-              .filter((item) => !["images", "title"].includes(item.name))
-              .map((item) => {
-                return {
-                  label: item.label,
-                  value: item.name,
-                };
-              });
-            fields.push({ value: "review", label: "Review" });
-            if (config.businessType === "service") {
-              fields.push({ value: "dateRange", label: "Date Range" });
-            }
-            setProductCollection(data.data);
-            setProductElementOptions(
-              fields
-                .filter(
-                  (item) => !["description", "dateRange"].includes(item.value)
-                )
-                .sort((a, b, i) => {
-                  if (!config.siteConfig.productCard?.includes(a.value)) {
-                    return 1;
-                  }
-                  return config.siteConfig.productCard.findIndex(
-                    (i) => i === a.value
-                  ) >
-                    config.siteConfig.productCard.findIndex(
-                      (i) => i === b.value
-                    )
-                    ? 1
-                    : -1;
-                })
-                .reverse()
-            );
-            setProductPageElementOptions(
-              fields
-                .filter(
-                  (item) =>
-                    !["description", "whatsappNumber"].includes(item.value)
-                )
-                .sort((a, b) => {
-                  if (
-                    !config.siteConfig.productViewPage?.productElements?.includes(
-                      a.value
-                    )
-                  ) {
-                    return 1;
-                  }
-                  return config.siteConfig.productViewPage?.productElements.findIndex(
-                    (i) => i === a.value
-                  ) >
-                    config.siteConfig.productViewPage?.productElements.findIndex(
-                      (i) => i === b.value
-                    )
-                    ? 1
-                    : -1;
-                })
-                .reverse()
-            );
-          }
-        })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
-    }
-  }, [config?.siteConfig?.productCard, productEelementOptions]);
+    getConfig()
+      .then(({ data }) => {
+        if (data.success) {
+          setStoreConfig(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+    getCategories()
+      .then(({ data }) => {
+        if (data.success) {
+          setCategories(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
 
   return (
     <form
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
-        const payload = {
-          ...config,
-          businessType: values.businessType,
-          siteConfig: {
-            ...config.siteConfig,
-            productCard: values.elements.filter((item) =>
-              productEelementOptions.find((opt) => opt.value === item)
-            ),
-            currency: values.currency,
-            browsePage: {
-              ...config.siteConfig.browsePage,
-              sidebarFilters: values.sidebarFilters,
-              sidebarFiltersDefaultState: values.sidebarFiltersDefaultState,
-            },
-            productViewPage: {
-              viewWhatsApp: whatsapp,
-              productElements: values.productViewElements.filter((item) =>
-                productPageEelementOptions.find((opt) => opt.value === item)
-              ),
-              recommendationFilters: values.recommendationFilters,
-              recommendationLimit: values.recommendationLimit,
-            },
-            landingPage: {
-              viewLandingPage: viewLandingPage,
-              hero: {
-                viewHeroSection: values.viewHeroSection,
-              },
-              shelves: values.landingPageShelves,
-            },
-            footer: {
-              sections: values.footerElements.map((section) => ({
-                ...section,
-                items: section.items.map((item) => ({
-                  ...item,
-                  condition: item.type === "dynamicPage",
-                  ...(item.type === "dynamicPage" && {
-                    files: (item.files || [])
-                      .filter(
-                        (item) =>
-                          item.uploadFilePath || typeof item === "string"
-                      )
-                      .map((file) => file.uploadFilePath || file),
-                  }),
-                })),
-              })),
-            },
-          },
-        };
-        findProperties("_id", payload).forEach((item) => {
-          item.path.reduce((obj, key, i, arr) => {
-            if (i === arr.length - 1 && obj[key].length <= 20) {
-              delete obj[key];
-            }
-            return obj[key];
-          }, payload);
-        });
-        const formData = new FormData();
-        Object.entries(payload).forEach(([key, value]) => {
-          formData.append(key, JSON.stringify(value));
-        });
-        values.heroImages.forEach((file) => {
-          if (file.type) {
-            formData.append("siteConfig.landingPage.hero.slides", file);
-          } else {
-            formData.append(
-              "siteConfig.landingPage.hero.slides",
-              file.uploadFilePath || file
-            );
-          }
-        });
-        values.footerElements.forEach((section, i) => {
-          section.items.forEach((item, j) => {
-            item.files.forEach((file) => {
-              if (file.type) {
-                formData.append(
-                  `dynamicPageFiles`,
-                  file,
-                  `siteConfig.footer.${section.title}.${item.label}.files___${file.name}`
-                );
-              } else {
-                // formData.append(
-                //   `siteConfig.footer.${section.title}.${item.label}.files`,
-                //   file.uploadFilePath || file
-                // );
-              }
-            });
-          });
-        });
+        const payload = { sidebarFilters: values.sidebarFilters };
 
-        updateConfig(formData)
+        updateConfig(payload)
           .then(({ data }) => {
             if (data.success) {
-              setConfig(data.data);
+              setStoreConfig(data.data);
               Prompt({
                 type: "information",
                 message: "Updates have been saved.",
@@ -253,44 +88,79 @@ const SiteConfig = () => {
           .catch((err) => Prompt({ type: "error", data: err.message }));
       })}
     >
-      <div>
-        <div className="flex gap-1 justify-start align-center mb-1">
-          <h5>Sidebar filters</h5>
+      <div className="flex gap-1 justify-center align-center mb-1">
+        <Select
+          label="Category"
+          control={control}
+          name="category"
+          options={categories.map((item) => ({
+            label: item.name,
+            value: item.name,
+          }))}
+          onChange={() => setValue("subCategory", "")}
+        />
 
-          <button
-            className="btn"
-            type="button"
-            onClick={() => setUpdateSidebarFilters(true)}
-          >
-            Update Sidebar Filters
-          </button>
-
-          <Combobox
-            label="Sidebar filters default state"
-            name="sidebarFiltersDefaultState"
-            control={control}
-            options={[
-              { label: "Open", value: "open" },
-              { label: "Collapsed", value: "collapsed" },
-            ]}
-          />
-        </div>
-        <Table
-          columns={[
-            { label: "Field" },
-            { label: "Filter Type" },
-            { label: "Filter Style" },
-          ]}
-        >
-          {sidebarFilters?.map((item, i) => (
-            <tr key={i}>
-              <td>{item.fieldName}</td>
-              <td>{item.filterType}</td>
-              <td>{item.filterStyle}</td>
-            </tr>
-          ))}
-        </Table>
+        <Select
+          label="Sub Category"
+          control={control}
+          name="subCategory"
+          options={(
+            categories.find((item) => item.name === category)?.subCategories ||
+            []
+          ).map((item) => ({
+            label: item.name,
+            value: item.name,
+            fields: item.fields,
+          }))}
+          onChange={(opt) => {
+            setFields(
+              (opt.fields || []).filter(
+                (item) =>
+                  !(
+                    ["file"].includes(item.inputType) ||
+                    ["whatsappNumber"].includes(item.name)
+                  )
+              )
+            );
+          }}
+        />
       </div>
+
+      {category && subCategory && (
+        <div>
+          <div className="flex gap-1 justify-space-between align-center mb-1">
+            <h5>Sidebar filters</h5>
+
+            <button
+              className="btn"
+              type="button"
+              onClick={() => setUpdateSidebarFilters(true)}
+            >
+              Update Sidebar Filters
+            </button>
+          </div>
+          <Table
+            columns={[
+              { label: "Field" },
+              { label: "Filter Type" },
+              { label: "Filter Style" },
+            ]}
+          >
+            {sidebarFilters
+              ?.find(
+                (item) =>
+                  item.category === category && item.subCategory === subCategory
+              )
+              ?.filters?.map((item, i) => (
+                <tr key={i}>
+                  <td>{item.fieldName}</td>
+                  <td>{item.filterType}</td>
+                  <td>{item.filterStyle}</td>
+                </tr>
+              ))}
+          </Table>
+        </div>
+      )}
 
       <Modal
         open={updateSidebarFilters}
@@ -299,12 +169,24 @@ const SiteConfig = () => {
         setOpen={() => setUpdateSidebarFilters(false)}
       >
         <SidebarFilters
-          fields={productCollection?.fields?.filter(
-            (item) => !["file"].includes(item.inputType)
-          )}
-          value={sidebarFilters}
+          fields={fields}
+          value={
+            sidebarFilters?.find(
+              (item) =>
+                item.category === category && item.subCategory === subCategory
+            )?.filters
+          }
           onSuccess={(values) => {
-            setValue("sidebarFilters", values);
+            setValue("sidebarFilters", [
+              ...sidebarFilters.filter(
+                (item) =>
+                  !(
+                    item.category === category &&
+                    item.subCategory === subCategory
+                  )
+              ),
+              { category, subCategory, filters: values },
+            ]);
             setUpdateSidebarFilters(false);
           }}
         />

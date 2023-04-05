@@ -69,6 +69,7 @@ const Stores = () => {
         columns={[
           { label: "Created At" },
           { label: "Category" },
+          { label: "Sub Category" },
           { label: "Created By" },
           { label: "Effective Period" },
           { label: "Featured" },
@@ -81,6 +82,7 @@ const Stores = () => {
               <Moment format="MMM DD, YY hh:mma">{item.createdAt}</Moment>
             </td>
             <td>{item.category}</td>
+            <td>{item.subCategory}</td>
             <td>{item.createdBy?.name}</td>
             <td>
               <Moment format="MMM DD, YY">{item.start}</Moment> -{" "}

@@ -26,4 +26,5 @@ module.exports = {
   Role: require("./role.model"),
   Store: require("./store.model"),
   AdSchema: require("./adSchema.model"),
+  StoreConfig: require("./storeConfig.model"),
 };
