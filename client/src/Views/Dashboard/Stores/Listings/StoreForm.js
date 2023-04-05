@@ -105,6 +105,11 @@ const Form = ({ storeId, edit, onSuccess }) => {
       .then(({ data }) => {
         if (data.success) {
           setAdSchemas(data.data);
+          if (edit?.subCategory) {
+            setProductSchema(
+              data.data.find((item) => item.name === edit?.subCategory) || null
+            );
+          }
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
