@@ -1214,10 +1214,10 @@ export const CalendarInput = ({
       control={control}
       name={name}
       rules={formOptions}
-      render={({ field: { onChange, onBlur, value = [], name, ref } }) => {
+      render={({ field: { onChange, value = [] }, fieldState: { error } }) => {
         // console.log(dateRange);
         return (
-          <section className={s.calendarInput}>
+          <section className={`${s.calendarInput} ${error ? s.err : ""}`}>
             {label && <label>{label}</label>}
             <div className={s.calendarWrapper}>
               <DateRangePicker
@@ -1310,6 +1310,7 @@ export const CalendarInput = ({
                 </div>
               )}
             </div>
+            {error && <span className={s.errMsg}>{error.message}</span>}
           </section>
         );
       }}
@@ -1324,10 +1325,7 @@ export const RichText = ({ control, name, label, required }) => {
     <Controller
       control={control}
       name={name}
-      render={({
-        field: { onChange, onBlur, value, name, ref },
-        fieldState: { invalid, isTouched, isDirty, error },
-      }) => {
+      render={({ field: { onChange, value }, fieldState: { error } }) => {
         if (value === undefined) {
           pastValue.current = undefined;
         } else if (typeof value === "object" && "blocks" in value) {

@@ -661,6 +661,15 @@
       border-color: $primary-color;
     }
   }
+  &.err {
+    .calendarWrapper {
+      border-color: red;
+    }
+  }
+  .errMsg {
+    color: red;
+    font-size: 10pt;
+  }
 }
 
 .checkbox {

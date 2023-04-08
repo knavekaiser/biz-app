@@ -50,6 +50,10 @@ const Form = ({ storeId, edit, onSuccess }) => {
   } = useForm({
     resolver: useYup(
       yup.object({
+        effectiveDate: yup
+          .object()
+          .required()
+          .typeError("Please select effective period"),
         category: yup.string().required("field is required"),
       })
     ),

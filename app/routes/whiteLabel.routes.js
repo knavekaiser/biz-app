@@ -94,6 +94,7 @@ module.exports = function (app) {
     authJwt.verifyToken,
     controller.placeOrder
   );
+  router.get("/categories", whitelabel.getBusiness, controller.categories);
 
   app.use("/api", router);
 };

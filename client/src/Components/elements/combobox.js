@@ -456,6 +456,7 @@ export const Select = ({
                   ...(disabled && {
                     DropdownIndicator: undefined,
                   }),
+                  ...(multiple && { DropdownIndicator: undefined }),
                   ...(renderOption && { Option: renderOption }),
                 }}
                 className={`reactSelect ${s.reactSelect} ${

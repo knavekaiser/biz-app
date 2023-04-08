@@ -733,6 +733,36 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+exports.categories = async (req, res) => {
+  try {
+    const { Model: Category } = await dbHelper.getModel(
+      req.business._id + "_Category"
+    );
+    Category.aggregate([
+      {
+        $lookup: {
+          from: `${req.business._id}_Sub Category`,
+          localField: "name",
+          foreignField: "category",
+          as: "subCategories",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          "subCategories._id": 1,
+          "subCategories.name": 1,
+        },
+      },
+    ])
+      .then((data) => responseFn.success(res, { data }))
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 const query = [
   {
     $lookup: {

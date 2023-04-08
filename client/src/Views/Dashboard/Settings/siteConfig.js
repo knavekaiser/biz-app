@@ -67,9 +67,6 @@ const SiteConfig = () => {
       viewHeroSection:
         config?.siteConfig?.landingPage?.hero?.viewHeroSection || false,
       landingPageShelves: config?.siteConfig?.landingPage?.shelves || [],
-      sidebarFiltersDefaultState:
-        config?.siteConfig?.browsePage?.sidebarFiltersDefaultState ||
-        "collapsed",
       footerElements: config?.siteConfig?.footer?.sections,
     });
   }, [config]);
@@ -82,6 +79,8 @@ const SiteConfig = () => {
   const whatsapp = watch("viewWhatsApp");
   const landingPageShelves = watch("landingPageShelves");
   const footerElements = watch("footerElements");
+  const category = watch("category");
+  const subCategory = watch("subCategory");
 
   useEffect(() => {
     if (
@@ -171,7 +170,6 @@ const SiteConfig = () => {
             browsePage: {
               ...config.siteConfig.browsePage,
               sidebarFilters: values.sidebarFilters,
-              sidebarFiltersDefaultState: values.sidebarFiltersDefaultState,
             },
             productViewPage: {
               viewWhatsApp: whatsapp,
@@ -412,43 +410,80 @@ const SiteConfig = () => {
         }
       />
 
-      <div>
-        <div className="flex gap-1 justify-start align-center mb-1">
+      <div style={{ margin: "1rem 0" }}>
+        <div className="flex gap-1 justify-space-between align-center mb-1">
           <h5>Sidebar filters</h5>
 
           <button
             className="btn"
             type="button"
             onClick={() => setUpdateSidebarFilters(true)}
+            disabled={!(category && subCategory)}
           >
             Update Sidebar Filters
           </button>
+        </div>
 
-          <Combobox
-            label="Sidebar filters default state"
-            name="sidebarFiltersDefaultState"
+        <div className="flex gap-1  mb-1">
+          <Select
+            label="Category"
             control={control}
-            options={[
-              { label: "Open", value: "open" },
-              { label: "Collapsed", value: "collapsed" },
-            ]}
+            name="category"
+            url={`${endpoints.dynamic}/Category`}
+            getQuery={(inputValue, selected) => ({
+              ...(inputValue && { name: inputValue }),
+              ...(selected && { name: selected }),
+            })}
+            handleData={(item) => ({
+              label: item.name,
+              value: item.name,
+            })}
+            onChange={() => setValue("subCategory", "")}
+          />
+          <Select
+            disabled={!category}
+            label="Sub Category"
+            control={control}
+            name="subCategory"
+            url={`${endpoints.dynamic}/Sub Category`}
+            getQuery={(inputValue, selected) => ({
+              category,
+              ...(inputValue && { name: inputValue }),
+              ...(selected && { name: selected }),
+            })}
+            handleData={(item) => ({
+              label: item.name,
+              value: item.name,
+            })}
           />
         </div>
-        <Table
-          columns={[
-            { label: "Field" },
-            { label: "Filter Type" },
-            { label: "Filter Style" },
-          ]}
-        >
-          {sidebarFilters?.map((item, i) => (
-            <tr key={i}>
-              <td>{item.fieldName}</td>
-              <td>{item.filterType}</td>
-              <td>{item.filterStyle}</td>
-            </tr>
-          ))}
-        </Table>
+
+        {category && subCategory ? (
+          <Table
+            columns={[
+              { label: "Field" },
+              { label: "Filter Type" },
+              { label: "Filter Style" },
+            ]}
+          >
+            {(sidebarFilters || [])
+              .find(
+                (item) =>
+                  item.category === category && item.subCategory === subCategory
+              )
+              ?.filters?.map((item, i) => (
+                <tr key={i}>
+                  <td>{item.fieldName}</td>
+                  <td>{item.filterType}</td>
+                  <td>{item.filterStyle}</td>
+                </tr>
+              ))}
+          </Table>
+        ) : (
+          <p>
+            Please select category and sub category to update sidebar filters.
+          </p>
+        )}
       </div>
 
       <div>
@@ -596,12 +631,35 @@ const SiteConfig = () => {
         setOpen={() => setUpdateSidebarFilters(false)}
       >
         <SidebarFilters
-          fields={productCollection?.fields?.filter(
-            (item) => !["file"].includes(item.inputType)
-          )}
-          value={sidebarFilters}
+          fields={productCollection?.fields
+            ?.filter(
+              (item) =>
+                !(
+                  ["richText"].includes(item.fieldType) ||
+                  ["file"].includes(item.inputType) ||
+                  ["category", "subCategory", "variants"].includes(item.name)
+                )
+            )
+            .filter(
+              (item) => !item.subCategory || item.subCategory === subCategory
+            )}
+          value={
+            (sidebarFilters || []).find(
+              (item) =>
+                item.category === category && item.subCategory === subCategory
+            )?.filters
+          }
           onSuccess={(values) => {
-            setValue("sidebarFilters", values);
+            setValue("sidebarFilters", [
+              ...(sidebarFilters || []).filter(
+                (item) =>
+                  !(
+                    item.category === category &&
+                    item.subCategory === subCategory
+                  )
+              ),
+              { filters: values, category, subCategory },
+            ]);
             setUpdateSidebarFilters(false);
           }}
         />
