@@ -321,9 +321,6 @@ const Filters = ({ filterFields, filters, setFilters }) => {
           {...(field.optionType === "collection" && {
             url: `${endpoints.dynamic}/${field.collection}`,
           })}
-          {...(field.optionType === "commonCollection" && {
-            url: `${endpoints.commonCollection}/${field.collection}`,
-          })}
           getQuery={(inputValue, selected) => ({
             ...(inputValue && { [field.optionLabel]: inputValue }),
             ...(selected && { [field.optionValue]: selected }),

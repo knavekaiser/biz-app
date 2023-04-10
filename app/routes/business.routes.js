@@ -42,5 +42,20 @@ module.exports = function (app) {
   app.use("/api/business", routerExcl);
 
   router.get("/find", authJwt.verifyToken, controller.find);
+  router.put(
+    "/:_id",
+    authJwt.verifyToken,
+    file.upload(
+      [{ name: "logo" }, { name: "ownerSignature" }, { name: "favicon" }],
+      "/",
+      {
+        fileSize: appConfig.supportedImageSizes,
+        fileTypes: appConfig.supportedImageTypes,
+        override: true,
+      }
+    ),
+    validate(schema.update),
+    controller.updateBusiness
+  );
   app.use("/api/businesses", router);
 };

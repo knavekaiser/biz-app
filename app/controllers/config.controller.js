@@ -6,7 +6,11 @@ const { Config } = require("../models");
 
 exports.findOne = async (req, res) => {
   try {
-    Config.findOne({ user: req.authUser._id }, "-__v")
+    const condition = { user: req.authUser._id };
+    if (["admin", "staff"].includes(req.authToken.userType)) {
+      condition.user = req.headers.business_id;
+    }
+    Config.findOne(condition, "-__v")
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -16,12 +20,16 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const config = await Config.findOne({ user: req.authUser._id });
+    const conditions = { user: req.authUser._id };
+    if (["admin", "staff"].includes(req.authToken.userType)) {
+      conditions.user = req.headers.business_id;
+    }
+    const config = await Config.findOne(conditions);
     req.files?.dynamicPageFiles?.forEach((file) => {
       const [paths, fileName] = file.originalname.split("___");
       const [siteConfig, footer, section, item, files] = paths.split(".");
-      req.body.siteConfig.footer.sections = req.body.siteConfig.footer.sections.map(
-        (sec) => {
+      req.body.siteConfig.footer.sections =
+        req.body.siteConfig.footer.sections.map((sec) => {
           if (sec.title === section) {
             return {
               ...sec,
@@ -47,8 +55,7 @@ exports.update = async (req, res) => {
           } else {
             return sec;
           }
-        }
-      );
+        });
     });
     if (req.body.siteConfig) {
       const oldSlides = config.siteConfig.landingPage?.hero?.slides || [];
@@ -80,7 +87,7 @@ exports.update = async (req, res) => {
       }
     }
 
-    Config.findOneAndUpdate({ user: req.authUser._id }, req.body, { new: true })
+    Config.findOneAndUpdate(conditions, req.body, { new: true })
       .then((data) => {
         if (data) {
           return responseFn.success(res, { data }, responseStr.record_updated);

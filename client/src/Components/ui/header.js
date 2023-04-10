@@ -9,7 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { paths } from "config";
 
 const Header = ({}) => {
-  const { business, user, setUser, setConfig, userType } =
+  const { business, setBusiness, user, setUser, setConfig, userType } =
     useContext(SiteContext);
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
@@ -62,6 +62,17 @@ const Header = ({}) => {
         style={style}
       >
         <ul>
+          {user?.userType === "admin" && business && (
+            <li
+              onClick={() => {
+                setOpen(false);
+                setBusiness(null);
+                naviage(paths.businesses);
+              }}
+            >
+              Switch Business
+            </li>
+          )}
           {user ? (
             <Link to={paths.dashboard.replace("*", "")}>
               <li>Dashboard</li>

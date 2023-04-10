@@ -26,7 +26,7 @@ exports.getModel = async (req, res, next) => {
     }
     const { Model, collection } = await dbHelper.getModel(
       (req.authToken.userType === "admin"
-        ? req.query.business
+        ? req.query.business || req.business._id
         : req.business?._id || req.authUser._id) +
         "_" +
         req.params.table

@@ -194,6 +194,9 @@ exports.find = async (req, res) => {
     if ("business" in req.query) {
       conditions.business = req.query.business;
     }
+    if ("featured" in req.query) {
+      conditions.featured = req.query.featured === "true";
+    }
     Store.find(conditions, "-__v")
       .populate("business", "name phone email domain logo")
       .populate("createdBy", "name phone email")

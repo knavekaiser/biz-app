@@ -19,8 +19,7 @@ const paths = {
   dynamicTable: ":table",
   roles: "roles",
   employees: "employees",
-  stores: "stores",
-  storeListings: "stores/:storeId/listings",
+  storeListings: "stores",
   categories: "categories",
   subCategories: "sub-categories",
 

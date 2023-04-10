@@ -40,9 +40,12 @@ verifyToken = async (req, res, next) => {
     if (!user) {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
-    if (decoded.userType === "staff" && req.headers.business_id) {
+    if (
+      ["staff", "admin"].includes(decoded.userType) &&
+      req.headers.business_id
+    ) {
       req.business = await User.findOne({ _id: req.headers.business_id });
-      if (req.business) {
+      if (req.business && decoded.userType === "staff") {
         const business = user.businesses.find(
           (item) => item.business.toString() === req.business._id.toString()
         );

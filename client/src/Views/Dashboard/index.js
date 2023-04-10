@@ -10,6 +10,7 @@ import s from "./dashboard.module.scss";
 import Settings from "./Settings";
 import AdminSettings from "./AdminSettings";
 import Businesses from "./Businesses";
+import AdminBusinesses from "./AdminBusinesses";
 import Invoices from "./Sales";
 import Orders from "./Orders";
 import Quotes from "./Quotes";
@@ -20,8 +21,8 @@ import DynamicTables from "./DynamicTables";
 import AdminDynamicTables from "./AdminDynamicTables";
 import Roles from "./Roles";
 import Employees from "./Employees";
-import Stores from "./Stores";
-import StoreListings from "./Stores/Listings";
+// import Stores from "./Stores/__old";
+import StoreListings from "./Stores";
 import SubCategories from "./SubCategories";
 import Categories from "./Categories";
 
@@ -35,7 +36,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  if (userType === "admin") {
+  if (userType === "admin" && !business) {
     return (
       <div className={s.container}>
         <Header />
@@ -43,7 +44,8 @@ const Dashboard = () => {
           <Tabs
             className={s.tab}
             tabs={[
-              { label: "Stores", path: paths.stores },
+              { label: "Businesses", path: paths.businesses },
+              { label: "Stores", path: paths.storeListings },
               // { label: "Categories", path: paths.categories },
               { label: "Sub Categories", path: paths.subCategories },
               {
@@ -55,10 +57,11 @@ const Dashboard = () => {
           />
         </div>
         <Routes>
-          <Route path={paths.stores} element={<Stores />} />
+          {/* <Route path={paths.stores} element={<Stores />} /> */}
           <Route path={paths.subCategories} element={<SubCategories />} />
           <Route path={paths.storeListings} element={<StoreListings />} />
           {/* <Route path={paths.categories} element={<Categories />} /> */}
+          <Route path={paths.businesses} element={<AdminBusinesses />} />
           <Route path={paths.settings.baseUrl} element={<AdminSettings />} />
           <Route path={paths.dynamicTables} element={<AdminDynamicTables />} />
         </Routes>
@@ -125,11 +128,11 @@ const Dashboard = () => {
             ...(checkPermission("employee_read")
               ? [{ label: "Staffs", path: paths.employees }]
               : []),
-            ...(userType === "staff"
-              ? [{ label: "Businesses", path: paths.businesses }]
-              : []),
-            ...(userType === "business"
+            ...(["business", "admin"].includes(userType)
               ? [{ label: "Settings", path: paths.settings.baseUrl }]
+              : []),
+            ...(["staff", "admin"].includes(userType)
+              ? [{ label: "Businesses", path: paths.businesses }]
               : []),
           ]}
         />
@@ -165,7 +168,10 @@ const Dashboard = () => {
         {userType === "staff" && (
           <Route path={paths.businesses} element={<Businesses />} />
         )}
-        {userType === "business" && (
+        {userType === "admin" && (
+          <Route path={paths.businesses} element={<AdminBusinesses />} />
+        )}
+        {["business", "admin"].includes(userType) && (
           <Route path={paths.settings.baseUrl} element={<Settings />} />
         )}
       </Routes>

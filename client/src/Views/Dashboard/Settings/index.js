@@ -61,7 +61,7 @@ const Settings = () => {
 };
 
 const BusinessInformation = () => {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, business, setBusiness } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -74,24 +74,29 @@ const BusinessInformation = () => {
     resolver: useYup(businessInformationSchema),
   });
   const logo = watch("logo");
-  const { put: updateOwnerDetails, loading } = useFetch(endpoints.profile);
+  const { put: updateOwnerDetails, loading } = useFetch(
+    business
+      ? endpoints.businesses + `/${business.business?._id}`
+      : endpoints.profile
+  );
   useEffect(() => {
+    const client = business?.business || user;
     reset({
-      logo: user.logo ? [user.logo] : [],
-      name: user.name || "",
-      motto: user.motto || "",
-      phone: user.phone || "",
-      whatsappNumber: user.whatsappNumber || "",
-      email: user.email || "",
-      address: user.address || "",
-      description: user.description || "",
-      gstin: user.gstin || "",
-      pan: user.pan || "",
-      ifsc: user.ifsc || "",
-      domain: user.domain || "",
-      favicon: user.favicon ? [user.favicon] : [],
+      logo: client.logo ? [client.logo] : [],
+      name: client.name || "",
+      motto: client.motto || "",
+      phone: client.phone || "",
+      whatsappNumber: client.whatsappNumber || "",
+      email: client.email || "",
+      address: client.address || "",
+      description: client.description || "",
+      gstin: client.gstin || "",
+      pan: client.pan || "",
+      ifsc: client.ifsc || "",
+      domain: client.domain || "",
+      favicon: client.favicon ? [client.favicon] : [],
     });
-  }, [user]);
+  }, [user, business]);
   return (
     <form
       className="grid gap-1"
@@ -126,7 +131,11 @@ const BusinessInformation = () => {
 
         updateOwnerDetails(formData).then(({ data }) => {
           if (data.success) {
-            setUser(data.data);
+            if (business) {
+              setBusiness((prev) => ({ ...prev, business: data.data }));
+            } else {
+              setUser(data.data);
+            }
             Prompt({
               type: "information",
               message: "Updates have been saved.",
@@ -192,24 +201,28 @@ const BusinessInformation = () => {
 };
 
 const BankDetail = () => {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, business, setBusiness } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
     reset,
     formState: { errors },
   } = useForm();
-  const [activeTab, setActiveTab] = useState("business-information");
   useEffect(() => {
+    const client = business?.business || user;
     reset({
-      bankName: user?.bankDetails?.bankName || "",
-      branch: user?.bankDetails?.branch || "",
-      accNo: user?.bankDetails?.accNo || "",
-      accName: user?.bankDetails?.accName || "",
+      bankName: client?.bankDetails?.bankName || "",
+      branch: client?.bankDetails?.branch || "",
+      accNo: client?.bankDetails?.accNo || "",
+      accName: client?.bankDetails?.accName || "",
     });
-  }, [user]);
+  }, [user, business]);
 
-  const { put: updateBankDetail, loading } = useFetch(endpoints.profile);
+  const { put: updateBankDetail, loading } = useFetch(
+    business
+      ? endpoints.businesses + `/${business.business._id}`
+      : endpoints.profile
+  );
 
   return (
     <form
@@ -224,7 +237,11 @@ const BankDetail = () => {
           },
         }).then(({ data }) => {
           if (data.success) {
-            setUser(data.data);
+            if (business) {
+              setBusiness((prev) => ({ ...prev, business: data.data }));
+            } else {
+              setUser(data.data);
+            }
             Prompt({
               type: "information",
               message: "Updates have been saved.",
@@ -260,7 +277,7 @@ const BankDetail = () => {
 };
 
 const OwnerDetails = () => {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, business, setBusiness } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -272,18 +289,23 @@ const OwnerDetails = () => {
 
   const signature = watch("signature");
 
-  const { put: updateOwnerDetails, loading } = useFetch(endpoints.profile);
+  const { put: updateOwnerDetails, loading } = useFetch(
+    business
+      ? endpoints.businesses + `/${business.business._id}`
+      : endpoints.profile
+  );
 
   useEffect(() => {
+    const client = business?.business || user;
     reset({
-      ownerName: user?.ownerDetails?.name || "",
-      ownerPhone: user?.ownerDetails?.phone || "",
-      ownerEmail: user?.ownerDetails?.email || "",
-      signature: user?.ownerDetails?.signature
-        ? [user?.ownerDetails?.signature]
+      ownerName: client?.ownerDetails?.name || "",
+      ownerPhone: client?.ownerDetails?.phone || "",
+      ownerEmail: client?.ownerDetails?.email || "",
+      signature: client?.ownerDetails?.signature
+        ? [client?.ownerDetails?.signature]
         : [],
     });
-  }, [user]);
+  }, [user, business]);
 
   return (
     <form
@@ -305,7 +327,11 @@ const OwnerDetails = () => {
 
         updateOwnerDetails(formData).then(({ data }) => {
           if (data.success) {
-            setUser(data.data);
+            if (business) {
+              setBusiness((prev) => ({ ...prev, business: data.data }));
+            } else {
+              setUser(data.data);
+            }
             Prompt({
               type: "information",
               message: "Updates have been saved.",

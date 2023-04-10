@@ -10,18 +10,23 @@ import * as yup from "yup";
 import s from "./settings.module.scss";
 
 const TermsAndConditions = () => {
-  const { user, setUser } = useContext(SiteContext);
+  const { user, setUser, business, setBusiness } = useContext(SiteContext);
   const {
     handleSubmit,
     formState: { errors },
   } = useForm();
   const [terms, setTerms] = useState([]);
 
-  const { put: updateTerms } = useFetch(endpoints.profile);
+  const { put: updateTerms } = useFetch(
+    business
+      ? endpoints.businesses + `/${business.business._id}`
+      : endpoints.profile
+  );
 
   useEffect(() => {
-    setTerms(user.terms || []);
-  }, [user]);
+    const client = business?.business || user;
+    setTerms(client.terms || []);
+  }, [user, business]);
 
   return (
     <form
@@ -29,10 +34,20 @@ const TermsAndConditions = () => {
       onSubmit={handleSubmit((values) => {
         updateTerms({ terms }).then(({ data }) => {
           if (data.success) {
-            setUser((prev) => ({
-              ...prev,
-              terms,
-            }));
+            if (business) {
+              setBusiness((prev) => ({
+                ...prev,
+                business: {
+                  ...prev.business,
+                  terms,
+                },
+              }));
+            } else {
+              setUser((prev) => ({
+                ...prev,
+                terms,
+              }));
+            }
             Prompt({
               type: "information",
               message: "Updates have been saved.",

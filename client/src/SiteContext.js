@@ -40,16 +40,28 @@ export const Provider = ({ children }) => {
 
   const { get: getConfig } = useFetch(endpoints.userConfig);
   useEffect(() => {
-    if (user && !config) {
-      getConfig().then(({ data }) => {
-        if (data.success) {
-          setConfig(data.data);
-        }
-      });
-    } else if (!user && config) {
-      setConfig(null);
+    if ((business || user) && !config) {
+      if (user.userType === "business") {
+        getConfig().then(({ data }) => {
+          if (data.success) {
+            setConfig(data.data);
+          }
+        });
+      } else if (business) {
+        getConfig().then(({ data }) => {
+          if (data.success) {
+            setConfig(data.data);
+          }
+        });
+      }
+    } else if (user) {
+      if (user.userType === "business") {
+        setConfig(null);
+      } else if (!business) {
+        setConfig(null);
+      }
     }
-  }, [user, config]);
+  }, [user, config, business]);
 
   useEffect(() => {
     if (

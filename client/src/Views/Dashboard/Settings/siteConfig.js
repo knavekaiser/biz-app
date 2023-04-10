@@ -30,7 +30,7 @@ const SiteConfig = () => {
   const [updateFooterElements, setUpdateFooterElements] = useState(false);
   const [updateRecommendationFilters, setUpdateRecommendationFilters] =
     useState(false);
-  const { user, setUser, config, setConfig } = useContext(SiteContext);
+  const { config, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
     register,

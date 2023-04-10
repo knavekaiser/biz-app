@@ -197,6 +197,38 @@ exports.update = async (req, res) => {
   }
 };
 
+exports.updateBusiness = async (req, res) => {
+  try {
+    if (req.body.password) {
+      req.body.password = appHelper.generateHash(req.body.password);
+    }
+    if (req.body.ownerSignature) {
+      req.body.ownerDetails = {
+        ...req.body.ownerDetails,
+        signature: req.body.ownerSignature,
+      };
+    }
+    User.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
+      .then((data) =>
+        responseFn.success(
+          res,
+          {
+            data: {
+              ...data._doc,
+              password: undefined,
+              __v: undefined,
+              updatedAt: undefined,
+            },
+          },
+          responseStr.record_updated
+        )
+      )
+      .catch((error) => responseFn.error(res, {}, error.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.find = async (req, res) => {
   try {
     const conditions = {};
@@ -209,7 +241,11 @@ exports.find = async (req, res) => {
     if ("_id" in req.query && mongoose.isValidObjectId(req.query._id)) {
       conditions._id = req.query._id;
     }
-    User.find(conditions, "username name motto phone email domain logo")
+    const attributes =
+      req.authToken.userType === "admin"
+        ? "-password -__v"
+        : "username name motto phone email domain logo";
+    User.find(conditions, attributes)
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
