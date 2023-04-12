@@ -92,3 +92,37 @@ export const parseXLSXtoJSON = (file, collection, cb) => {
   };
   reader.readAsBinaryString(file);
 };
+
+export function getUserLocation() {
+  return new Promise((resolve, reject) => {
+    let err;
+    const errHandler = (error) => {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          err = new Error("User denied the request for Location.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          err = new Error("Location information is unavailable");
+          break;
+        case error.TIMEOUT:
+          err = new Error("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+          err = new Error("An unknown error occurred.");
+          break;
+      }
+      resolve({ position: null, error: err });
+    };
+
+    if (!navigator.geolocation) {
+      err = new Error("Location is not supported by this browser.");
+      return resolve({ error: err });
+    }
+    navigator.geolocation.getCurrentPosition((position, error) => {
+      if (error) {
+        return errHandler(error);
+      }
+      resolve({ position: position?.coords, error: err });
+    }, errHandler);
+  });
+}

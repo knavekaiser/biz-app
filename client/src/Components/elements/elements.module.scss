@@ -1042,12 +1042,30 @@
     white-space: nowrap;
   }
   .field {
-    display: flex;
-    flex-wrap: wrap;
-    grid-gap: 6px;
+    display: grid;
+    grid-template-columns: min-content 1fr min-content;
+    align-items: center;
+    // flex-wrap: wrap;
+    // grid-gap: 6px;
+    .startAdronment {
+      & > * {
+        margin-left: 6px;
+      }
+    }
     .chip {
       height: 30px;
     }
+    &:focus-within {
+      border-color: $primary-color;
+    }
+    &.err {
+      border-color: red;
+    }
+    &.reactSelect--is-disabled {
+      background: rgb(235, 235, 235);
+    }
+    border: 1px solid #b7b7b7;
+    border-radius: 4px;
   }
   .customValue {
     width: max-content;

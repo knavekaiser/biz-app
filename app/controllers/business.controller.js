@@ -191,7 +191,16 @@ exports.update = async (req, res) => {
           responseStr.record_updated
         )
       )
-      .catch((error) => responseFn.error(res, {}, error.message, 500));
+      .catch((error) => {
+        if (err.code === 11000) {
+          return responseFn.error(
+            res,
+            {},
+            err.message.replace(/.*?({.*)/, "$1") + " already exists."
+          );
+        }
+        responseFn.error(res, {}, error.message, 500);
+      });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
@@ -223,7 +232,16 @@ exports.updateBusiness = async (req, res) => {
           responseStr.record_updated
         )
       )
-      .catch((error) => responseFn.error(res, {}, error.message, 500));
+      .catch((err) => {
+        if (err.code === 11000) {
+          return responseFn.error(
+            res,
+            {},
+            err.message.replace(/.*?({.*)/, "$1") + " already exists."
+          );
+        }
+        responseFn.error(res, {}, err.message, 500);
+      });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

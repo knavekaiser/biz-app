@@ -68,7 +68,7 @@ module.exports = {
         email: yup.string(),
         signature: yup.string(),
       }),
-      address: yup.string(),
+      address: yup.object(),
       terms: yup
         .array()
         .of(yup.string().typeError("Only strings can be a term")),

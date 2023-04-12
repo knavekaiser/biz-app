@@ -15,8 +15,6 @@ const Home = () => {
   const [config, setConfig] = useState(null);
   const [stores, setStores] = useState([]);
 
-  // console.log(filters);
-
   const { get: fetchStores, loading } = useFetch(endpoints.homeStores);
   const { get: getConfig } = useFetch(endpoints.homeConfig);
 
@@ -52,7 +50,7 @@ const Home = () => {
 
   return (
     <>
-      <Header />
+      <Header home filters={filters} setFilters={setFilters} />
       <div className={s.landingPage}>
         <Sidebar filters={filters} config={config} setFilters={setFilters} />
         <div className={s.allProducts}>
@@ -169,7 +167,7 @@ const Sidebar = ({ filters, setFilters, config }) => {
                 {cat.subCategories?.length > 0 && (
                   <ul className={s.subCategories}>
                     {cat.subCategories.map((subCat) => (
-                      <li label={subCat.name}>
+                      <li key={subCat.name}>
                         <Checkbox
                           label={subCat.name}
                           checked={filters.subCategory === subCat.name}

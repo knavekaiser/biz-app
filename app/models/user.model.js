@@ -33,7 +33,7 @@ module.exports = mongoose.model(
         set: (v) => normalizeDomain(v) || null,
         sparse: true,
       },
-      address: { type: Schema.Types.String },
+      address: {},
       bankDetails: {
         bankName: { type: Schema.Types.String },
         branch: { type: Schema.Types.String },

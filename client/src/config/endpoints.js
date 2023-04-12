@@ -44,6 +44,7 @@ const endpoints = {
   homeStores: `${baseApiUrl}/api/home/stores`,
   homeCategories: `${baseApiUrl}/api/home/categories`,
   homeConfig: `${baseApiUrl}/api/home/config`,
+  homeLocations: `${baseApiUrl}/api/home/locations`,
   adSchemas: `${baseApiUrl}/api/ad-schemas`,
 
   userConfig: `${baseApiUrl}/api/user-config`,

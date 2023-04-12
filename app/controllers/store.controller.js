@@ -1,13 +1,22 @@
+const { default: fetch } = require("node-fetch");
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 const { fileHelper, dbHelper } = require("../helpers");
 
-const { Store, StoreConfig, AdSchema } = require("../models");
+const { Store, StoreConfig, AdSchema, User } = require("../models");
 
 exports.homeStores = async (req, res) => {
   try {
-    const { category, subCategory, ...query } = req.query;
+    const {
+      category,
+      subCategory,
+      address_city,
+      address_county,
+      address_state,
+      address_country,
+      ...query
+    } = req.query;
     const conditions = {
       $expr: {
         $and: [
@@ -22,6 +31,14 @@ exports.homeStores = async (req, res) => {
     if (subCategory) {
       conditions.subCategory = { $in: subCategory.split(",") };
     }
+    const address = JSON.parse(
+      JSON.stringify({
+        "business.address.city": address_city,
+        "business.address.county": address_county,
+        "business.address.state": address_state,
+        "business.address.country": address_country,
+      })
+    );
     const productQuery = [];
     const schema = await AdSchema.findOne({ category, name: subCategory });
     schema?.fields.forEach((field) => {
@@ -104,11 +121,7 @@ exports.homeStores = async (req, res) => {
                 preserveNullAndEmptyArrays: false,
               },
             },
-            {
-              $set: {
-                siteConfig: "$siteConfig.siteConfig",
-              },
-            },
+            { $set: { siteConfig: "$siteConfig.siteConfig" } },
           ],
         },
       },
@@ -121,16 +134,19 @@ exports.homeStores = async (req, res) => {
                   $filter: {
                     input: "$products",
                     as: "product",
-                    cond: {
-                      $and: productQuery,
-                    },
+                    cond: { $and: productQuery },
                   },
                 },
               },
             },
           ]
         : []),
-      { $match: { $expr: { $gt: [{ $size: "$products" }, 0] } } },
+      {
+        $match: {
+          $expr: { $gt: [{ $size: "$products" }, 0] },
+          ...address,
+        },
+      },
     ])
       .then(async (data) => {
         responseFn.success(res, { data });
@@ -287,6 +303,164 @@ exports.updateStoreConfig = async (req, res) => {
       new: true,
       upsert: true,
     }).then((data) => responseFn.success(res, { data }));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.locations = async (req, res) => {
+  try {
+    let userAddress = null;
+    if (req.query.latlng) {
+      await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${req.query.latlng}&key=${process.env.GOOGLE_MAP_API_KEY}`
+      )
+        .then((data) => data.json())
+        .then((data) => {
+          let components = data.results?.[0]?.address_components;
+          if (components?.length) {
+            let parts = components.filter(
+              (item) =>
+                !(
+                  item.types.includes("plus_code") ||
+                  item.types.includes("route") ||
+                  (item.types.includes("locality") &&
+                    item.types.includes("political"))
+                )
+            );
+            const countryIndex = parts.findIndex((item) =>
+              item.types.includes("country")
+            );
+            if (countryIndex === parts.length - 1) {
+            } else {
+              parts = parts.slice(0, -(parts.length - countryIndex));
+            }
+            if (parts.length > 4) {
+              parts.slice(-4);
+            }
+            if (parts.length < 4) {
+              parts.unshift(
+                components.filter(
+                  (item) =>
+                    !(
+                      item.types.includes("plus_code") ||
+                      item.types.includes("route")
+                    )
+                )[0]
+              );
+            }
+            if (parts.length === 4) {
+              const [
+                { long_name: city },
+                { long_name: county },
+                { long_name: state },
+                { long_name: country },
+              ] = parts;
+              userAddress = { city, county, state, country };
+            }
+          }
+        })
+        .catch((err) => console.log(err));
+    }
+    if (userAddress) {
+      // console.log(userAddress);
+    }
+    User.aggregate([
+      {
+        $facet: {
+          states: [
+            {
+              $project: {
+                city: "$address.city",
+                county: "$address.county",
+                state: "$address.state",
+                country: "$address.country",
+              },
+            },
+            {
+              $group: {
+                _id: { state: "$city", country: "$state" },
+                count: { $sum: 1 },
+                cities: { $push: "$$ROOT" },
+              },
+            },
+            { $match: { count: { $gte: 1 } } },
+            { $replaceRoot: { newRoot: { $arrayElemAt: ["$cities", 0] } } },
+            {
+              $group: {
+                _id: "$state",
+                cities: {
+                  $push: {
+                    label: "$city",
+                    county: "$county",
+                    state: "$state",
+                    type: "city",
+                  },
+                },
+              },
+            },
+            { $set: { type: "state", label: "$_id" } },
+            { $unset: "_id" },
+          ],
+          countries: [
+            {
+              $project: {
+                state: "$address.state",
+                country: "$address.country",
+              },
+            },
+            {
+              $group: {
+                _id: { state: "$state", country: "$country" },
+                count: { $sum: 1 },
+                states: { $push: "$$ROOT" },
+              },
+            },
+            { $match: { count: { $gte: 1 } } },
+            { $replaceRoot: { newRoot: { $arrayElemAt: ["$states", 0] } } },
+            {
+              $group: {
+                _id: "$country",
+                states: {
+                  $push: {
+                    label: "$state",
+                    country: "$country",
+                    type: "state",
+                  },
+                },
+              },
+            },
+            { $set: { type: "country", label: "$_id" } },
+            { $unset: "_id" },
+          ],
+        },
+      },
+      {
+        $project: {
+          result: { $concatArrays: ["$states.cities", "$countries.states"] },
+        },
+      },
+      { $unwind: "$result" },
+      { $unwind: "$result" },
+      { $replaceRoot: { newRoot: "$result" } },
+      { $sort: { state: 1, label: 1, country: 1 } },
+    ]).then((data) => {
+      return responseFn.success(res, {
+        data,
+        ...(req.query.latlng && {
+          match:
+            data
+              .filter((item) => item.type === "city")
+              .find((item) => item.label === userAddress.city) ||
+            data
+              .filter((item) => item.type === "city")
+              .find((item) => item.county === userAddress.county) ||
+            data
+              .filter((item) => item.type === "state")
+              .find((item) => item.label === userAddress.state),
+        }),
+      });
+    });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

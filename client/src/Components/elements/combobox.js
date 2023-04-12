@@ -340,13 +340,15 @@ export const Select = ({
   setValue,
   disabled,
   onChange: _onChange,
+  startAdronment,
+  loading,
 }) => {
   const firstRender = useRef(true);
   const [inputValue, setInputValue] = useState("");
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [options, setOptions] = useState([]);
 
-  const { get: fetchData, loading } = useFetch(url);
+  const { get: fetchData, loading: loadingData } = useFetch(url);
 
   const getOptions = useCallback(
     (inputValue, selected) => {
@@ -439,7 +441,8 @@ export const Select = ({
                 {label} {formOptions?.required && "*"}
               </label>
             )}
-            <div className={s.field}>
+            <div className={`${s.field} ${error ? s.err : ""}`}>
+              <span className={s.startAdronment}>{startAdronment}</span>
               <ReactSelect
                 placeholder={
                   url
@@ -457,11 +460,17 @@ export const Select = ({
                     DropdownIndicator: undefined,
                   }),
                   ...(multiple && { DropdownIndicator: undefined }),
-                  ...(renderOption && { Option: renderOption }),
+                  ...(renderOption && {
+                    Option: (props) => (
+                      <components.Option {...props}>
+                        {renderOption(props.data)}
+                      </components.Option>
+                    ),
+                  }),
                 }}
                 className={`reactSelect ${s.reactSelect} ${
                   disabled ? "readOnly" : ""
-                } ${error ? "err" : ""} ${className || ""}`}
+                } ${className || ""}`}
                 classNamePrefix="reactSelect"
                 isDisabled={url ? false : !options || !options?.length}
                 inputRef={ref}

@@ -23,6 +23,8 @@ import Sortable from "sortablejs";
 import { moment, getAllDates } from "./moment";
 import { Editor } from "react-draft-wysiwyg";
 import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
+import AutoComplete from "react-google-autocomplete";
+import { GoogleMap as GoogleMapLib, Marker } from "@react-google-maps/api";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -1569,5 +1571,93 @@ export const Range = ({
         );
       }}
     />
+  );
+};
+
+export const MapAutoComplete = ({
+  className,
+  label,
+  control,
+  name,
+  onChange: defaultOnChange,
+  formOptions,
+}) => {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={formOptions}
+      render={({
+        field: { onChange, onBlur, value = { formatted: "" }, name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        return (
+          <section
+            className={`${s.input} ${className || ""}`}
+            data-testid="customRadioInput"
+          >
+            {label && (
+              <label>
+                {label} {formOptions?.required && "*"}
+              </label>
+            )}
+            <div className={s.field}>
+              <AutoComplete
+                ref={ref}
+                value={value.formatted || ""}
+                apiKey={process.env.REACT_APP_GOOGLE_MAP_API_KEY}
+                onPlaceSelected={(place) => {
+                  const [city, county, state, country] =
+                    place.address_components.reduce((p, c) => {
+                      p.push(c.long_name);
+                      return p;
+                    }, []);
+                  onChange({
+                    formatted: place.formatted_address,
+                    address: { city, county, state, country },
+                  });
+                  defaultOnChange &&
+                    defaultOnChange({
+                      place,
+                      formatted: place.formatted_address,
+                      address: { city, county, state, country },
+                    });
+                }}
+                onChange={(e) => {
+                  onChange({ ...value, formatted: e.target.value });
+                }}
+              />
+            </div>
+            {error && <span className={s.errMsg}>{error.message}</span>}
+          </section>
+        );
+      }}
+    />
+  );
+};
+
+export const GoogleMap = ({
+  lat = 23,
+  lng = 90,
+  marker,
+  zoom = 16,
+  onClick,
+}) => {
+  const mapContainerStyle = {
+    width: "100%",
+    aspectRatio: 1.75,
+  };
+
+  const center = { lat, lng };
+
+  return (
+    <GoogleMapLib
+      mapContainerStyle={mapContainerStyle}
+      center={center}
+      onClick={onClick}
+      zoom={zoom}
+    >
+      {marker && <Marker position={{ lat, lng }} />}
+    </GoogleMapLib>
   );
 };

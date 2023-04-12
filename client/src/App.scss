@@ -138,17 +138,17 @@
 
 .reactSelect {
   width: 100%;
-  &:focus-within {
-    border-color: $primary-color;
-  }
-  &.err {
-    border-color: red;
-  }
-  &.reactSelect--is-disabled {
-    background: rgb(235, 235, 235);
-  }
-  border: 1px solid #b7b7b7;
-  border-radius: 4px;
+  // &:focus-within {
+  //   border-color: $primary-color;
+  // }
+  // &.err {
+  //   border-color: red;
+  // }
+  // &.reactSelect--is-disabled {
+  //   background: rgb(235, 235, 235);
+  // }
+  // border: 1px solid #b7b7b7;
+  // border-radius: 4px;
   .reactSelect__control {
     display: flex;
     height: min-content;

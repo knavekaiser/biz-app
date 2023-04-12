@@ -9,6 +9,8 @@ import {
   Tabs,
   CustomRadio,
   Combobox,
+  MapAutoComplete,
+  GoogleMap,
 } from "Components/elements";
 import * as yup from "yup";
 import s from "./settings.module.scss";
@@ -74,11 +76,14 @@ const BusinessInformation = () => {
     resolver: useYup(businessInformationSchema),
   });
   const logo = watch("logo");
+  const [marker, setMarker] = useState(false);
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business?._id}`
       : endpoints.profile
   );
+  const latitude = watch("latitude");
+  const longitude = watch("longitude");
   useEffect(() => {
     const client = business?.business || user;
     reset({
@@ -88,7 +93,13 @@ const BusinessInformation = () => {
       phone: client.phone || "",
       whatsappNumber: client.whatsappNumber || "",
       email: client.email || "",
-      address: client.address || "",
+      street: client.address?.street || "",
+      address: {
+        address: { ...client.address },
+        formatted: client.address?.formatted || "",
+      },
+      latitude: client?.address?.latitude,
+      longitude: client?.address?.longitude,
       description: client.description || "",
       gstin: client.gstin || "",
       pan: client.pan || "",
@@ -96,11 +107,26 @@ const BusinessInformation = () => {
       domain: client.domain || "",
       favicon: client.favicon ? [client.favicon] : [],
     });
+    if (client?.address?.latitude && client?.address?.longitude) {
+      setMarker(true);
+    }
   }, [user, business]);
   return (
     <form
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
+        if (values.address) {
+          values.address = {
+            ...values.address.address,
+            street: values.street,
+            formatted: values.address.formatted,
+            latitude: values.latitude,
+            longitude: values.longitude,
+          };
+          delete values.street;
+          delete values.latitude;
+          delete values.longitude;
+        }
         let logo = values.logo[0];
         let favicon = values.favicon[0];
 
@@ -121,7 +147,7 @@ const BusinessInformation = () => {
         formData.append(`motto`, values.motto);
         formData.append(`phone`, values.phone);
         formData.append(`email`, values.email);
-        formData.append(`address`, values.address);
+        formData.append(`address`, JSON.stringify(values.address));
         formData.append(`gstin`, values.gstin);
         formData.append(`pan`, values.pan);
         formData.append(`ifsc`, values.ifsc);
@@ -178,11 +204,37 @@ const BusinessInformation = () => {
         error={errors.phone}
       />
       <Input label="Email" {...register("email")} error={errors.email} />
-      <Textarea
-        label="Address"
-        {...register("address")}
-        error={errors.address}
+      <Input
+        label="Street Address"
+        {...register("street")}
+        error={errors.street}
       />
+
+      <MapAutoComplete
+        label="City, State, Country"
+        control={control}
+        name="address"
+        onChange={(e) => {
+          const lat = e.place.geometry.location.lat();
+          const lng = e.place.geometry.location.lng();
+          setValue("latitude", lat);
+          setValue("longitude", lng);
+        }}
+      />
+
+      <GoogleMap
+        lat={latitude}
+        lng={longitude}
+        marker={marker}
+        onClick={(e) => {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          setValue("latitude", lat);
+          setValue("longitude", lng);
+          setMarker(true);
+        }}
+      />
+
       <Textarea
         label="Description"
         {...register("description")}

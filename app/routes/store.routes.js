@@ -76,5 +76,6 @@ module.exports = function (app) {
   homeRouter.get("/stores", controller.homeStores);
   homeRouter.get("/categories", controller.homeCategories);
   homeRouter.get("/config", controller.homeConfig);
+  homeRouter.get("/locations", controller.locations);
   app.use("/api/home", homeRouter);
 };

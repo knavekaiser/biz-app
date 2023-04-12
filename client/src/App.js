@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { paths, endpoints } from "config";
 import { Prompt } from "Components/modal";
 import { useFetch } from "hooks";
+import { LoadScript } from "@react-google-maps/api";
 
 import Dashboard from "Views/Dashboard";
 import Home from "Views/Home";
@@ -45,13 +46,15 @@ function App() {
   }, []);
 
   return (
-    <div className={"App"}>
-      <Routes>
-        <Route path={paths.home} element={<Home />} />
-        <Route path={paths.dashboard} element={<Dashboard />} />
-        <Route path="*" element={<AuthView />} />
-      </Routes>
-    </div>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAP_API_KEY}>
+      <div className={"App"}>
+        <Routes>
+          <Route path={paths.home} element={<Home />} />
+          <Route path={paths.dashboard} element={<Dashboard />} />
+          <Route path="*" element={<AuthView />} />
+        </Routes>
+      </div>
+    </LoadScript>
   );
 }
 
