@@ -3,11 +3,12 @@ import { Prompt } from "Components/modal";
 import { Header, Footer } from "Components/ui";
 import { endpoints } from "config";
 import { useFetch } from "hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import s from "./home.module.scss";
 import { ProductThumb } from "./productThumbnail";
 import { BsArrowLeft } from "react-icons/bs";
 import { FiChevronRight } from "react-icons/fi";
+import { BiFilterAlt } from "react-icons/bi";
 import Filters from "./Filter";
 
 const Home = () => {
@@ -61,14 +62,16 @@ const Home = () => {
                 className={`${s.store} ${item.featured ? s.featured : ""}`}
               >
                 <h2>{item.business.name}</h2>
-                {item.products.map((product) => (
-                  <ProductThumb
-                    order={item.order}
-                    business={item.business}
-                    key={product._id}
-                    product={product}
-                  />
-                ))}
+                <div className={s.products}>
+                  {item.products.map((product) => (
+                    <ProductThumb
+                      order={item.order}
+                      business={item.business}
+                      key={product._id}
+                      product={product}
+                    />
+                  ))}
+                </div>
               </div>
             ) : (
               <ProductThumb
@@ -87,6 +90,8 @@ const Home = () => {
 };
 
 const Sidebar = ({ filters, setFilters, config }) => {
+  const mobile = useRef(window.innerWidth <= 480 ? true : false);
+  const [showSidebar, setShowSidebar] = useState(mobile.current ? false : true);
   const [schema, setSchema] = useState(null);
   const [categories, setCategories] = useState([]);
 
@@ -104,6 +109,19 @@ const Sidebar = ({ filters, setFilters, config }) => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
+  if (!showSidebar) {
+    return (
+      <div className={`${s.sidebar} flex justify-end`}>
+        <button
+          className={`${s.filterBtn} btn clear`}
+          onClick={() => setShowSidebar(true)}
+        >
+          <BiFilterAlt />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={s.sidebar}>
       {schema &&
@@ -113,7 +131,9 @@ const Sidebar = ({ filters, setFilters, config }) => {
           item.subCategory === filters.subCategory
       )?.filters?.length > 0 ? (
         <div
-          className="flex align-center gap_5 pointer wrap"
+          className={`flex align-center gap_5 ${
+            mobile.current ? "justify-space-between" : ""
+          } pointer wrap`}
           onClick={() => {
             setSchema(null);
             setFilters((prev) => ({
@@ -123,9 +143,17 @@ const Sidebar = ({ filters, setFilters, config }) => {
           }}
         >
           <BsArrowLeft style={{ fontSize: "1.3em" }} />{" "}
-          <p className="flex align-center gap_5">
-            {filters.category} <FiChevronRight /> {filters.subCategory}
-          </p>
+          <div className="flex align-center gap_5">
+            <p className="flex align-center gap_5">
+              {filters.category} <FiChevronRight /> {filters.subCategory}
+            </p>
+          </div>
+          <button
+            className={`${s.filterBtn} btn clear`}
+            onClick={() => setShowSidebar(false)}
+          >
+            <BiFilterAlt />
+          </button>
           <Filters
             filters={filters}
             setFilters={setFilters}
@@ -141,9 +169,19 @@ const Sidebar = ({ filters, setFilters, config }) => {
         </div>
       ) : (
         <>
-          <p>
-            <strong>Categories</strong>
-          </p>
+          <div className="flex align-center justify-space-between gap_5 pb-1">
+            <p>
+              <strong>Categories</strong>
+            </p>
+            {mobile.current && (
+              <button
+                className={`${s.filterBtn} btn clear`}
+                onClick={() => setShowSidebar(false)}
+              >
+                <BiFilterAlt />
+              </button>
+            )}
+          </div>
           <ul className={s.categories}>
             {categories.map((cat) => (
               <li key={cat.name}>
