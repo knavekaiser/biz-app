@@ -24,7 +24,11 @@ import { moment, getAllDates } from "./moment";
 import { Editor } from "react-draft-wysiwyg";
 import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import AutoComplete from "react-google-autocomplete";
-import { GoogleMap as GoogleMapLib, Marker } from "@react-google-maps/api";
+import {
+  GoogleMap as GoogleMapLib,
+  Marker,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -1626,6 +1630,18 @@ export const MapAutoComplete = ({
                 onChange={(e) => {
                   onChange({ ...value, formatted: e.target.value });
                 }}
+                onLoad={() => {
+                  console.log("loaded");
+                  if (
+                    window.google &&
+                    window.google.maps &&
+                    window.google.maps.places
+                  ) {
+                    console.log("Google Places library loaded successfully");
+                  } else {
+                    console.log("Error: Google Places library not loaded");
+                  }
+                }}
               />
             </div>
             {error && <span className={s.errMsg}>{error.message}</span>}
@@ -1643,21 +1659,32 @@ export const GoogleMap = ({
   zoom = 16,
   onClick,
 }) => {
-  const mapContainerStyle = {
-    width: "100%",
-    aspectRatio: 1.75,
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAP_API_KEY,
+  });
+
+  const renderMap = () => {
+    const mapContainerStyle = {
+      width: "100%",
+      aspectRatio: 1.75,
+    };
+
+    const center = { lat, lng };
+
+    return (
+      <GoogleMapLib
+        mapContainerStyle={mapContainerStyle}
+        center={center}
+        onClick={onClick}
+        zoom={zoom}
+      >
+        {marker && <Marker position={{ lat, lng }} />}
+      </GoogleMapLib>
+    );
   };
 
-  const center = { lat, lng };
-
-  return (
-    <GoogleMapLib
-      mapContainerStyle={mapContainerStyle}
-      center={center}
-      onClick={onClick}
-      zoom={zoom}
-    >
-      {marker && <Marker position={{ lat, lng }} />}
-    </GoogleMapLib>
-  );
+  if (loadError) {
+    return <div>Map cannot be loaded right now, sorry.</div>;
+  }
+  return isLoaded ? renderMap() : <div>Loading Map...</div>;
 };
