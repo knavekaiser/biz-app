@@ -42,6 +42,12 @@ module.exports = function (app) {
   app.use("/api/business", routerExcl);
 
   router.get("/find", authJwt.verifyToken, controller.find);
+  router.post(
+    "/",
+    authJwt.verifyToken,
+    validate(schema.signup),
+    controller.createBusiness
+  );
   router.put(
     "/:_id",
     authJwt.verifyToken,

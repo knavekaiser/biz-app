@@ -37,7 +37,7 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
             }),
             "x-access-token": sessionStorage.getItem("access_token"),
             ...(sessionStorage.getItem("business_id") && {
-              business_id: sessionStorage.getItem("business_id"),
+              "x-business-id": sessionStorage.getItem("business_id"),
             }),
             ...hookHeaders,
             ...headers,

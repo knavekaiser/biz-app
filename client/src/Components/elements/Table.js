@@ -560,7 +560,7 @@ export const DynamicTable = ({
               return (
                 <td key={j} className="ellipsis l-1">
                   {item[field.name]
-                    ? item[field.name].toLocaleString(config.numberSeparator)
+                    ? item[field.name].toLocaleString(config?.numberSeparator)
                     : item[field.name]}
                 </td>
               );

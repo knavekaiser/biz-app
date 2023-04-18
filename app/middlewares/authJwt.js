@@ -10,6 +10,7 @@ const { responseStr } = require("../config/app.config");
 verifyToken = async (req, res, next) => {
   // let token = req.cookies.access_token;
   const token = req.headers["x-access-token"];
+  const business_id = req.headers["x-business-id"];
 
   if (!token) {
     return responseFn.error(res, {}, "No token provided!", 403);
@@ -40,11 +41,8 @@ verifyToken = async (req, res, next) => {
     if (!user) {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
-    if (
-      ["staff", "admin"].includes(decoded.userType) &&
-      req.headers.business_id
-    ) {
-      req.business = await User.findOne({ _id: req.headers.business_id });
+    if (["staff", "admin"].includes(decoded.userType) && business_id) {
+      req.business = await User.findOne({ _id: business_id });
       if (req.business && decoded.userType === "staff") {
         const business = user.businesses.find(
           (item) => item.business.toString() === req.business._id.toString()

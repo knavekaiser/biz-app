@@ -270,3 +270,26 @@ exports.find = async (req, res) => {
     return responseFn.error(res, {}, error.message, 500);
   }
 };
+
+exports.createBusiness = async (req, res) => {
+  try {
+    req.body.password = appHelper.generateHash(req.body.password);
+
+    new User({ ...req.body })
+      .save()
+      .then(async (user) => {
+        await new Config({ user: user._id }).save();
+        await Collection.insertMany(
+          dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
+        );
+        return responseFn.success(res, {
+          data: { ...user._doc, password: undefined, __v: undefined },
+        });
+      })
+      .catch((err) => {
+        return responseFn.error(res, {}, err.message);
+      });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};

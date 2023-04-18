@@ -9,7 +9,7 @@ exports.findAll = async (req, res) => {
     Staff.find(
       {
         businesses: {
-          $elemMatch: { businesse: req.business?._id || req.authUser._id },
+          $elemMatch: { business: req.business?._id || req.authUser._id },
         },
       },
       "name phone businesses"

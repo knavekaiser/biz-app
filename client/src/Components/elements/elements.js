@@ -1111,7 +1111,7 @@ export const Tabs = ({
     ) {
       navigate(tabs[0]?.path, { replace: true });
     }
-  }, []);
+  }, [location.pathname]);
   return (
     <div
       className={`${s.tabs} ${className || ""} ${
@@ -1630,18 +1630,6 @@ export const MapAutoComplete = ({
                 onChange={(e) => {
                   onChange({ ...value, formatted: e.target.value });
                 }}
-                onLoad={() => {
-                  console.log("loaded");
-                  if (
-                    window.google &&
-                    window.google.maps &&
-                    window.google.maps.places
-                  ) {
-                    console.log("Google Places library loaded successfully");
-                  } else {
-                    console.log("Error: Google Places library not loaded");
-                  }
-                }}
               />
             </div>
             {error && <span className={s.errMsg}>{error.message}</span>}
@@ -1659,9 +1647,26 @@ export const GoogleMap = ({
   zoom = 16,
   onClick,
 }) => {
+  const [map, setMap] = useState(null);
+  const [center, setCenter] = useState(null);
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAP_API_KEY,
   });
+
+  const onLoad = useCallback((map) => {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
+
+  useEffect(() => {
+    if (map) {
+      map.panTo({ lat, lng }, { duration: 1000 });
+    }
+    setTimeout(() => setCenter({ lat, lng }), 1010);
+  }, [lat, lng]);
 
   const renderMap = () => {
     const mapContainerStyle = {
@@ -1669,14 +1674,16 @@ export const GoogleMap = ({
       aspectRatio: 1.75,
     };
 
-    const center = { lat, lng };
+    // const center = { lat, lng };
 
     return (
       <GoogleMapLib
         mapContainerStyle={mapContainerStyle}
-        center={center}
+        // center={center}
         onClick={onClick}
         zoom={zoom}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
       >
         {marker && <Marker position={{ lat, lng }} />}
       </GoogleMapLib>

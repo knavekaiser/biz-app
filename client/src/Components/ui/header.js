@@ -72,7 +72,7 @@ const Header = ({ home, filters, setFilters }) => {
         style={style}
       >
         <ul>
-          {user?.userType === "admin" && business && (
+          {user?.userType === "admin" && business && !home && (
             <li
               onClick={() => {
                 setOpen(false);
@@ -194,9 +194,9 @@ const LocationFilter = ({ filters, setFilters }) => {
                 if (error) {
                   return Prompt({ type: "error", message: error.message });
                 }
-                // const latlng = position.latitude + "," + position.longitude;
+                const latlng = position.latitude + "," + position.longitude;
                 // const latlng = "23.756450,90.353687";
-                const latlng = "21.4508945,91.9678827";
+                // const latlng = "21.4508945,91.9678827";
                 getLocations({
                   query: { latlng },
                 }).then(({ data }) => {
