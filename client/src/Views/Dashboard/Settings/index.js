@@ -82,8 +82,8 @@ const BusinessInformation = () => {
       ? endpoints.businesses + `/${business.business?._id}`
       : endpoints.profile
   );
-  const latitude = watch("latitude");
-  const longitude = watch("longitude");
+  // const latitude = watch("latitude");
+  // const longitude = watch("longitude");
   useEffect(() => {
     const client = business?.business || user;
     reset({
@@ -98,8 +98,10 @@ const BusinessInformation = () => {
         address: { ...client.address },
         formatted: client.address?.formatted || "",
       },
-      latitude: client?.address?.latitude,
-      longitude: client?.address?.longitude,
+      latlng:
+        client?.address?.latitude && client?.address?.longitude
+          ? client?.address?.latitude + "," + client?.address?.longitude
+          : "",
       description: client.description || "",
       gstin: client.gstin || "",
       pan: client.pan || "",
@@ -120,12 +122,16 @@ const BusinessInformation = () => {
             ...values.address.address,
             street: values.street,
             formatted: values.address.formatted,
-            latitude: values.latitude,
-            longitude: values.longitude,
+            // latitude: values.latitude,
+            // longitude: values.longitude,
           };
+          if (values.latlng) {
+            const [latitude, longitude] = values.latlng.split(",");
+            values.address.latitude = latitude;
+            values.address.longitude = longitude;
+          }
           delete values.street;
-          delete values.latitude;
-          delete values.longitude;
+          delete values.latlng;
         }
         let logo = values.logo[0];
         let favicon = values.favicon[0];
@@ -217,20 +223,15 @@ const BusinessInformation = () => {
         onChange={(e) => {
           const lat = e.place.geometry.location.lat();
           const lng = e.place.geometry.location.lng();
-          setValue("latitude", lat);
-          setValue("longitude", lng);
+          setValue("latlng", lat + "," + lng);
         }}
       />
 
       <GoogleMap
-        lat={latitude}
-        lng={longitude}
+        control={control}
+        name="latlng"
         marker={marker}
         onClick={(e) => {
-          const lat = e.latLng.lat();
-          const lng = e.latLng.lng();
-          setValue("latitude", lat);
-          setValue("longitude", lng);
           setMarker(true);
         }}
       />

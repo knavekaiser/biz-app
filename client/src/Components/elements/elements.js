@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useLayoutEffect,
   forwardRef,
+  useContext,
 } from "react";
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSearch, FaRegTrashAlt, FaTimes } from "react-icons/fa";
@@ -27,7 +28,7 @@ import AutoComplete from "react-google-autocomplete";
 import {
   GoogleMap as GoogleMapLib,
   Marker,
-  useJsApiLoader,
+  Autocomplete,
 } from "@react-google-maps/api";
 
 import "react-date-range/dist/styles.css";
@@ -42,6 +43,7 @@ import { Table, TableActions } from "./Table";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 import { Combobox } from "./combobox";
+import { SiteContext } from "SiteContext";
 
 export const Input = forwardRef(
   ({ className, label, icon, error, type, required, ...rest }, ref) => {
@@ -1641,17 +1643,18 @@ export const MapAutoComplete = ({
 };
 
 export const GoogleMap = ({
-  lat = 23,
-  lng = 90,
-  marker,
+  control,
+  name,
+  formOptions,
+  autoComplete,
+  label,
   zoom = 16,
-  onClick,
+  onClick: compOnClick,
 }) => {
+  const [marker, setMarker] = useState(null);
+  const locationRef = useRef();
   const [map, setMap] = useState(null);
-  const [center, setCenter] = useState(null);
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAP_API_KEY,
-  });
+  const [searchbox, setSearchbox] = useState(null);
 
   const onLoad = useCallback((map) => {
     setMap(map);
@@ -1662,36 +1665,112 @@ export const GoogleMap = ({
   }, []);
 
   useEffect(() => {
-    if (map) {
-      map.panTo({ lat, lng }, { duration: 1000 });
+    if (map && Object.entries(marker || {}).length === 2) {
+      map.panTo(marker, { duration: 1000 });
     }
-    setTimeout(() => setCenter({ lat, lng }), 1010);
-  }, [lat, lng]);
+  }, [map, marker]);
 
-  const renderMap = () => {
-    const mapContainerStyle = {
-      width: "100%",
-      aspectRatio: 1.75,
-    };
+  const onSearchboxLoad = useCallback((searchbox) => {
+    setSearchbox(searchbox);
+  }, []);
 
-    // const center = { lat, lng };
+  useEffect(() => {
+    if (control._formValues[name]) {
+      const [lat, lng] = control._formValues[name].split(",").map((i) => +i);
+      setMarker({ lat, lng });
+    }
+  }, [control._formValues[name]]);
 
-    return (
-      <GoogleMapLib
-        mapContainerStyle={mapContainerStyle}
-        // center={center}
-        onClick={onClick}
-        zoom={zoom}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-      >
-        {marker && <Marker position={{ lat, lng }} />}
-      </GoogleMapLib>
-    );
-  };
+  return (
+    <Controller
+      control={control}
+      name={name}
+      rules={{ formOptions }}
+      render={({
+        field: { onChange, onBlur, value = "23,90", name, ref },
+        fieldState: { invalid, isTouched, isDirty, error },
+      }) => {
+        const [lat, lng] = value.split(",").map((i) => +i);
 
-  if (loadError) {
-    return <div>Map cannot be loaded right now, sorry.</div>;
-  }
-  return isLoaded ? renderMap() : <div>Loading Map...</div>;
+        // if (value && (marker?.lat !== lat || marker.lng !== lng)) {
+        //   setMarker({ lat, lng });
+        // }
+
+        return (
+          <section>
+            {label && <label>{label}</label>}
+            {window.google?.maps ? (
+              <GoogleMapLib
+                mapContainerStyle={{
+                  width: "100%",
+                  aspectRatio: 1.75,
+                }}
+                center={lat && lng ? { lat, lng } : undefined}
+                onClick={(e) => {
+                  const lat = e.latLng.lat();
+                  const lng = e.latLng.lng();
+
+                  onChange(lat + "," + lng);
+                  locationRef.current = lat + "," + lng;
+                  compOnClick && compOnClick(e);
+                  setMarker({ lat, lng });
+                  // rerender();
+                }}
+                zoom={zoom}
+                onLoad={onLoad}
+                onUnmount={onUnmount}
+              >
+                {/* {value && <Marker position={{ lat, lng }} />} */}
+                {marker && (
+                  <Marker
+                    // position={{ lat: 21.4272283, lng: 92.0058074 }}
+                    position={marker}
+                  />
+                )}
+
+                {autoComplete && (
+                  <Autocomplete
+                    onLoad={onSearchboxLoad}
+                    onPlaceChanged={(e) => {
+                      const place = searchbox?.getPlace();
+                      if (place) {
+                        const lat = place.geometry.location.lat();
+                        const lng = place.geometry.location.lng();
+                        onChange(lat + "," + lng);
+                        locationRef.current = lat + "," + lng;
+                        compOnClick && compOnClick(place);
+                        setMarker({ lat, lng });
+                      }
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Customized your placeholder"
+                      style={{
+                        boxSizing: `border-box`,
+                        border: `1px solid transparent`,
+                        width: `85%`,
+                        height: `40px`,
+                        padding: `0 12px`,
+                        borderRadius: `3px`,
+                        boxShadow: `0 2px 6px rgba(0, 0, 0, 0.3)`,
+                        fontSize: `14px`,
+                        outline: `none`,
+                        textOverflow: `ellipses`,
+                        position: "absolute",
+                        left: "10px",
+                        top: "10px",
+                      }}
+                    />
+                  </Autocomplete>
+                )}
+              </GoogleMapLib>
+            ) : (
+              <div>Map cannot be loaded right now, sorry.</div>
+            )}
+          </section>
+        );
+      }}
+    />
+  );
 };

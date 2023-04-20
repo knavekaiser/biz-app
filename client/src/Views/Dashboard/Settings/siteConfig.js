@@ -47,6 +47,7 @@ const SiteConfig = () => {
     useFetch(endpoints.collections + "/Product");
 
   useEffect(() => {
+    console.log(config);
     reset({
       businessType: config?.businessType || "",
       elements: config?.siteConfig?.productCard?.length

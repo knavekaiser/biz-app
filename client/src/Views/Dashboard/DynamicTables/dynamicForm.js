@@ -15,6 +15,7 @@ import {
   RichText,
   Checkbox,
   TableActions,
+  GoogleMap,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
@@ -312,6 +313,19 @@ const DynamicForm = ({
           name={field.name}
           formOptions={{ required: field.required }}
           className={s.itemName}
+        />
+      );
+    }
+    if (field.fieldType === "googleMap") {
+      return (
+        <GoogleMap
+          key={field.name}
+          control={control}
+          name={field.name}
+          label={field.label}
+          marker
+          autoComplete
+          formOptions={{ required: field.required }}
         />
       );
     }

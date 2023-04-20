@@ -8,7 +8,7 @@ exports.findOne = async (req, res) => {
   try {
     const condition = { user: req.authUser._id };
     if (["admin", "staff"].includes(req.authToken.userType)) {
-      condition.user = req.headers.business_id;
+      condition.user = req.business._id;
     }
     Config.findOne(condition, "-__v")
       .then((data) => responseFn.success(res, { data }))
@@ -22,7 +22,7 @@ exports.update = async (req, res) => {
   try {
     const conditions = { user: req.authUser._id };
     if (["admin", "staff"].includes(req.authToken.userType)) {
-      conditions.user = req.headers.business_id;
+      conditions.user = req.business._id;
     }
     const config = await Config.findOne(conditions);
     req.files?.dynamicPageFiles?.forEach((file) => {

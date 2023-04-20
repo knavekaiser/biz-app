@@ -292,6 +292,16 @@ const FieldForm = ({
   const options = watch("options");
   const label = watch("label");
 
+  useEffect(() => {
+    if (editCollection.name === "Product") {
+      if (name === "latlng") {
+        setValue("dataType", "string");
+        setValue("fieldType", "googleMap");
+        setValue("label", "Location");
+      }
+    }
+  }, [name, editCollection]);
+
   const onSubmit = useCallback(
     (values) => {
       if (editCollection?.name === "Product") {
@@ -390,7 +400,7 @@ const FieldForm = ({
               { label: "Object", value: "object" },
               { label: "Object ID", value: "objectId" },
             ]}
-            disabled={edit || fieldType === "richText"}
+            disabled={edit || ["richText", "googleMap"].includes(fieldType)}
           />
 
           {dataType === "objectId" && (
@@ -528,12 +538,15 @@ const FieldForm = ({
                 { label: "Combobox", value: "combobox" },
                 { label: "Autocomplete", value: "select" },
                 { label: "Date Range", value: "dateRange" },
+                { label: "Google Map", value: "googleMap" },
                 { label: "Collection Filter", value: "collectionFilter" },
                 { label: "None", value: "none" },
               ]}
               onChange={(opt) => {
                 if (opt?.value === "richText") {
                   setValue("dataType", "object");
+                } else if (opt?.value === "googleMap") {
+                  setValue("dataType", "string");
                 }
               }}
             />
@@ -546,6 +559,7 @@ const FieldForm = ({
               "richText",
               "collectionFilter",
               "none",
+              "googleMap",
             ].includes(fieldType) ||
             (["array", "variantArray"].includes(dataType) &&
               dataElementType === "object") ||
