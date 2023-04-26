@@ -79,9 +79,13 @@ const DynamicTablePage = () => {
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex justify-space-between">
+      <div
+        className={`${
+          window.innerWidth <= 480 ? "grid gap-1" : "flex"
+        } justify-space-between`}
+      >
         <h2>All {table}(s)</h2>
-        <div className="flex gap-1">
+        <div className={`flex gap-1 wrap`}>
           <ImportExport
             exportUrl={`${endpoints.dynamic}/${table}`}
             importUrl={
@@ -172,10 +176,11 @@ const DynamicTablePage = () => {
         <DynamicForm
           edit={edit}
           collection={collection}
+          prefill={addData?.title ? addData : null}
           {...(["Campaign", "Order"].includes(collection?.name) && {
             productCollection,
           })}
-          onSuccess={(newData) => {
+          onSuccess={(newData, addNew = false) => {
             if (edit) {
               setFilters((prev) => ({ ...prev }));
               // setData((prev) =>
@@ -186,7 +191,20 @@ const DynamicTablePage = () => {
               setFilters((prev) => ({ ...prev }));
               // setData((prev) => [...prev, newData]);
             }
-            setAddData(false);
+            console.log("addNew: ", addNew);
+            if (addNew) {
+              console.log(addData);
+              setAddData({
+                category: newData.category,
+                subCategory: newData.subCategory,
+                title: newData.title,
+                price: newData.price,
+                description: newData.description,
+                whatsappNumber: newData.whatsappNumber,
+              });
+            } else {
+              setAddData(false);
+            }
           }}
         />
       </Modal>

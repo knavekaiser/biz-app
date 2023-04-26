@@ -354,7 +354,7 @@ export const Select = ({
     (inputValue, selected) => {
       fetchData({
         query: {
-          ...(getQuery && getQuery(inputValue, selected)),
+          ...(getQuery && inputValue && getQuery(inputValue, selected)),
           pageSize: 10 + (selectedOptions.length || 0),
         },
       })
@@ -399,6 +399,8 @@ export const Select = ({
 
   useEffect(() => {
     if (url && inputValue) {
+      getOptions(inputValue);
+    } else if (url) {
       getOptions(inputValue);
     }
   }, [inputValue]);

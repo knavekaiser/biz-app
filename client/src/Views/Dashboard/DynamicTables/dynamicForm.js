@@ -41,7 +41,7 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
         productCollection={productCollection}
         edit={edit}
         loading={loading}
-        onSubmit={(values) => {
+        onSubmit={(values, addNew) => {
           let payload = { ...values };
 
           if (collection.name === "Product" && "variants" in payload) {
@@ -104,7 +104,11 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
             if (data.errors) {
               return Prompt({ type: "error", message: data.message });
             } else if (data.success) {
-              onSuccess(data.data);
+              if (addNew) {
+                onSuccess(data.data, addNew);
+              } else {
+                onSuccess(data.data);
+              }
             }
           });
         }}
@@ -114,6 +118,7 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
 };
 
 const DynamicForm = ({
+  prefill,
   collection,
   fields: collectionFields,
   productCollection,
@@ -134,7 +139,7 @@ const DynamicForm = ({
   } = useForm({
     resolver: useYup(
       yup.object({
-        ...collectionFields
+        ..._fields
           .map((f) => {
             let field;
             if (["objectId", "string", "date"].includes(f.dataType)) {
@@ -160,7 +165,7 @@ const DynamicForm = ({
             return field;
           })
           .reduce((p, c, i) => {
-            p[collectionFields[i]?.name] = c;
+            p[_fields[i]?.name] = c;
             return p;
           }, {}),
       })
@@ -335,7 +340,7 @@ const DynamicForm = ({
   const subCategory = watch("subCategory");
 
   useEffect(() => {
-    const _edit = { ...edit };
+    const _edit = { ...edit, addNew: false };
     if (edit) {
       collectionFields.forEach((field) => {
         if (field.inputType === "date") {
@@ -364,6 +369,48 @@ const DynamicForm = ({
     }
     reset(_edit);
   }, [edit]);
+  useEffect(() => {
+    const _prefill = {
+      ..._fields
+        .map((item) => item.name)
+        .reduce((p, c) => {
+          p[c] = "";
+          return p;
+        }, {}),
+      ...prefill,
+      addNew: false,
+    };
+    if (prefill) {
+      collectionFields.forEach((field) => {
+        if (field.inputType === "date") {
+          _prefill[field.name] = moment(_prefill[field.name], "YYYY-MM-DD");
+        } else if (field.inputType === "datetime-local") {
+          _prefill[field.name] = moment(
+            _prefill[field.name],
+            "YYYY-MM-DD hh:mm"
+          );
+        } else if (
+          field.dataType === "objectId" &&
+          typeof prefill[field.name] === "object"
+        ) {
+          _prefill[field.name] = prefill[field.name][field.optionValue];
+        } else if (
+          field.dataElementType === "objectId" &&
+          typeof (prefill[field.name] || [])[0] === "object"
+        ) {
+          _prefill[field.name] = prefill[field.name].map(
+            (item) => item[field.optionValue]
+          );
+        } else if (
+          field.name === "variants" &&
+          collection?.name === "Product"
+        ) {
+          _prefill.addVariant = !!prefill.variants?.length;
+        }
+      });
+      reset(_prefill);
+    }
+  }, [prefill]);
   useEffect(() => {
     if (subCategory) {
       set_fields(
@@ -398,10 +445,13 @@ const DynamicForm = ({
             .forEach(([key, value]) => {
               data[key] = value;
             });
-          onSubmit({
-            ...data,
-            _id: edit?._id || Math.random().toString(36).substr(-8),
-          });
+          onSubmit(
+            {
+              ...data,
+              _id: edit?._id || Math.random().toString(36).substr(-8),
+            },
+            collection.name === "Product" && values.addNew
+          );
         } else {
           onSubmit({
             ...values,
@@ -428,9 +478,22 @@ const DynamicForm = ({
       )}
 
       <div className="btns">
-        <button className="btn" disabled={loading}>
+        <button
+          className="btn"
+          disabled={loading}
+          onClick={() => setValue("addNew", false)}
+        >
           {edit ? "Update" : "Submit"}
         </button>
+        {!edit && collection.name === "Product" && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setValue("addNew", true)}
+          >
+            {edit ? "Update" : "Submit"} and Add one more
+          </button>
+        )}
       </div>
     </form>
   );
@@ -655,7 +718,6 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
           .find((item) => item.name === "products")
           .fields.filter((item) => !["product", "variant"].includes(item.name))
       : null;
-  console.log(orderFields, values);
   return (
     <section className={s.nestedTable} onSubmit={(e) => e.stopPropagation()}>
       <div className="flex justify-space-between align-center mb-1">

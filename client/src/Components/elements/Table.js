@@ -714,7 +714,7 @@ export const ImportExport = ({
 }) => {
   const [importOpen, setImportOpen] = useState(false);
   return (
-    <div className="flex gap-1">
+    <div className={"flex gap-1 wrap"}>
       {importUrl && (
         <>
           <button className="btn m-a mr-0" onClick={() => setImportOpen(true)}>

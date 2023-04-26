@@ -49,7 +49,7 @@ const Dashboard = () => {
               // { label: "Categories", path: paths.categories },
               { label: "Sub Categories", path: paths.subCategories },
               {
-                label: "Dynamic Tables",
+                label: "Manage Data",
                 path: paths.dynamicTables.replace("/*", ""),
               },
               { label: "Settings", path: paths.settings.baseUrl },
@@ -117,7 +117,7 @@ const Dashboard = () => {
             ...(checkPermission("dynamic_table_read")
               ? [
                   {
-                    label: "Dynamic Tables",
+                    label: "Manage Data",
                     path: paths.dynamicTables.replace("/*", ""),
                   },
                 ]

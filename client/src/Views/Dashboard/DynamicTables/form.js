@@ -293,7 +293,7 @@ const FieldForm = ({
   const label = watch("label");
 
   useEffect(() => {
-    if (editCollection.name === "Product") {
+    if (editCollection?.name === "Product") {
       if (name === "latlng") {
         setValue("dataType", "string");
         setValue("fieldType", "googleMap");

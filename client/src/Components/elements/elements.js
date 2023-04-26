@@ -1608,31 +1608,33 @@ export const MapAutoComplete = ({
               </label>
             )}
             <div className={s.field}>
-              <AutoComplete
-                ref={ref}
-                value={value.formatted || ""}
-                apiKey={process.env.REACT_APP_GOOGLE_MAP_API_KEY}
-                onPlaceSelected={(place) => {
-                  const [city, county, state, country] =
-                    place.address_components.reduce((p, c) => {
-                      p.push(c.long_name);
-                      return p;
-                    }, []);
-                  onChange({
-                    formatted: place.formatted_address,
-                    address: { city, county, state, country },
-                  });
-                  defaultOnChange &&
-                    defaultOnChange({
-                      place,
+              {window.google?.maps && (
+                <AutoComplete
+                  ref={ref}
+                  value={value.formatted || ""}
+                  apiKey={process.env.REACT_APP_GOOGLE_MAP_API_KEY}
+                  onPlaceSelected={(place) => {
+                    const [city, county, state, country] =
+                      place.address_components.reduce((p, c) => {
+                        p.push(c.long_name);
+                        return p;
+                      }, []);
+                    onChange({
                       formatted: place.formatted_address,
                       address: { city, county, state, country },
                     });
-                }}
-                onChange={(e) => {
-                  onChange({ ...value, formatted: e.target.value });
-                }}
-              />
+                    defaultOnChange &&
+                      defaultOnChange({
+                        place,
+                        formatted: place.formatted_address,
+                        address: { city, county, state, country },
+                      });
+                  }}
+                  onChange={(e) => {
+                    onChange({ ...value, formatted: e.target.value });
+                  }}
+                />
+              )}
             </div>
             {error && <span className={s.errMsg}>{error.message}</span>}
           </section>
@@ -1745,7 +1747,7 @@ export const GoogleMap = ({
                   >
                     <input
                       type="text"
-                      placeholder="Customized your placeholder"
+                      placeholder="Search"
                       style={{
                         boxSizing: `border-box`,
                         border: `1px solid transparent`,
