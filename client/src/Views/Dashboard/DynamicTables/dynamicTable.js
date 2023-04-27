@@ -191,9 +191,7 @@ const DynamicTablePage = () => {
               setFilters((prev) => ({ ...prev }));
               // setData((prev) => [...prev, newData]);
             }
-            console.log("addNew: ", addNew);
             if (addNew) {
-              console.log(addData);
               setAddData({
                 category: newData.category,
                 subCategory: newData.subCategory,

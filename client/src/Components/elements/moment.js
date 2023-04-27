@@ -1,5 +1,27 @@
 import { useRef, useState, useEffect } from "react";
 
+function splitDate(str, parts) {
+  let result = [];
+  let i = 0;
+  let j = 0;
+
+  while (i < str.length && j < parts.length) {
+    let format = parts[j];
+    let char = (str + "").slice(i, i + format.length);
+
+    if (char === format) {
+      result.push(format);
+      j++;
+      i += format.length;
+    } else {
+      char = char[0];
+      result.push(char);
+      i++;
+    }
+  }
+
+  return result;
+}
 export const moment = (time, format) => {
   if (isNaN(new Date(time || new Date()).getTime())) {
     return time;
@@ -12,11 +34,11 @@ export const moment = (time, format) => {
       ? "short"
       : format.includes("MM")
       ? "2-digit"
-      : "numeric"
-      ? "long"
-      : format.includes("ddd")
-      ? "short"
-      : "narrow",
+      : "numeric",
+    // ? "long"
+    // : format.includes("ddd")
+    // ? "short"
+    // : "narrow",
     weekday: format.includes("dddd")
       ? "long"
       : format.includes("ddd")
@@ -34,15 +56,32 @@ export const moment = (time, format) => {
     .map(({ type, value, ...rest }) => {
       values[type] = value;
     });
-  return format
-    .replace(/Y+/g, values.year)
-    .replace(/M+/g, values.month)
-    .replace(/D+/g, values.day)
-    .replace(/h+/g, values.hour)
-    .replace(/m+/g, values.minute)
-    .replace(/s+/g, values.second)
-    .replace(/a/g, values.dayPeriod)
-    .replace(/d+/g, values.weekday);
+  const _values = {};
+  const formatParts = format.match(
+    /(YYYY|YY|M{2,3}|d{2,4}|D{1,2}|h{1,2}|m{1,2}|s{1,2}|a)/g
+  );
+  formatParts.forEach((part) => {
+    if (part.includes("Y")) {
+      _values[part] = values.year;
+    } else if (part.includes("M")) {
+      _values[part] = values.month;
+    } else if (part.includes("D")) {
+      _values[part] = values.day;
+    } else if (part.includes("h")) {
+      _values[part] = values.hour;
+    } else if (part.includes("m")) {
+      _values[part] = values.minute;
+    } else if (part.includes("s")) {
+      _values[part] = values.second;
+    } else if (part.includes("a")) {
+      _values[part] = values.dayPeriod;
+    } else if (values.includes("d")) {
+      _values[part] = values.weekday;
+    }
+  });
+  return splitDate(format, formatParts)
+    .map((item) => _values[item] || item)
+    .join("");
 };
 
 export const Moment = ({ format, children, ...rest }) => {

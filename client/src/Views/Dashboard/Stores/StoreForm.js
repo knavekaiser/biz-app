@@ -8,11 +8,11 @@ import {
   FileInputNew,
   Input,
   MobileNumberInput,
-  Radio,
   Select,
   Table,
   TableActions,
   Textarea,
+  moment,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Modal, Prompt } from "Components/modal";
@@ -20,21 +20,6 @@ import * as yup from "yup";
 import s from "./store.module.scss";
 import { endpoints } from "config";
 import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
-
-function getDates(startDate, endDate) {
-  const dates = [];
-  let currentDate = new Date(startDate);
-
-  while (currentDate <= new Date(endDate)) {
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
-    const day = currentDate.getDate().toString().padStart(2, "0");
-    dates.push(`${year}-${month}-${day}`);
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return dates;
-}
 
 const Form = ({ edit, onSuccess }) => {
   const [_fields, set_fields] = useState([]);
@@ -50,10 +35,8 @@ const Form = ({ edit, onSuccess }) => {
   } = useForm({
     resolver: useYup(
       yup.object({
-        effectiveDate: yup
-          .array()
-          .required()
-          .typeError("Please select effective period"),
+        start: yup.string().required().typeError("Please select start date"),
+        end: yup.string().required().typeError("Please select start date"),
         category: yup.string().required("field is required"),
       })
     ),
@@ -134,6 +117,9 @@ const Form = ({ edit, onSuccess }) => {
     );
   }, [productSchema, subCategory]);
 
+  const startDate = watch("start");
+  const endDate = watch("end");
+
   useEffect(() => {
     reset({
       ...edit,
@@ -141,7 +127,8 @@ const Form = ({ edit, onSuccess }) => {
       products: edit?.products || [],
       business: edit?.business?._id || "",
       order: edit?.order || [],
-      effectiveDate: edit?.start ? getDates(edit.start, edit.end) : [],
+      start: edit?.start ? moment(edit.start, "YYYY-MM-DD") : "",
+      end: edit?.end ? moment(edit.end, "YYYY-MM-DD") : "",
     });
   }, [edit]);
   return (
@@ -149,12 +136,7 @@ const Form = ({ edit, onSuccess }) => {
       <form
         onSubmit={handleSubmit((values) => {
           delete values.image;
-          const payload = {
-            ...values,
-            start: values.effectiveDate[0],
-            end: values.effectiveDate[values.effectiveDate.length - 1],
-          };
-          delete values.effectiveDate;
+          const payload = { ...values };
           values.products.forEach((product, i) => {
             if (product.image?.type) {
               payload[`products__${i}__image`] = product.image;
@@ -225,7 +207,7 @@ const Form = ({ edit, onSuccess }) => {
           <Select
             disabled={edit?._id}
             control={control}
-            label="Ad-Schema"
+            label="Sub Category"
             options={adSchemas
               .filter((item) => item.category === category)
               .map((item) => ({
@@ -246,12 +228,19 @@ const Form = ({ edit, onSuccess }) => {
 
         {category && subCategory && (
           <div className="grid gap-1">
-            <CalendarInput
-              control={control}
-              label="Effective Period"
-              name="effectiveDate"
-              dateWindow="futureIncludingToday"
-              required
+            <Input
+              type="date"
+              label="Start Date*"
+              max={endDate}
+              {...register("start")}
+              error={errors.start}
+            />
+            <Input
+              type="date"
+              label="End Date*"
+              min={startDate}
+              {...register("end")}
+              error={errors.end}
             />
             <Checkbox label="Featured" {...register("featured")} />
             <div className="flex justify-space-between align-center">

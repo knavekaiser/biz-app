@@ -478,22 +478,22 @@ const DynamicForm = ({
       )}
 
       <div className="btns">
-        <button
-          className="btn"
-          disabled={loading}
-          onClick={() => setValue("addNew", false)}
-        >
-          {edit ? "Update" : "Submit"}
-        </button>
         {!edit && collection.name === "Product" && (
           <button
             className="btn"
             disabled={loading}
             onClick={() => setValue("addNew", true)}
           >
-            {edit ? "Update" : "Submit"} and Add one more
+            {edit ? "Update" : "Submit"}
           </button>
         )}
+        <button
+          className="btn"
+          disabled={loading}
+          onClick={() => setValue("addNew", false)}
+        >
+          {edit ? "Update" : "Submit"} & Close
+        </button>
       </div>
     </form>
   );

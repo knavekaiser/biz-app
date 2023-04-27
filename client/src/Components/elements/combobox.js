@@ -337,11 +337,9 @@ export const Select = ({
   className,
   placeholder,
   renderOption,
-  setValue,
   disabled,
   onChange: _onChange,
   startAdronment,
-  loading,
 }) => {
   const firstRender = useRef(true);
   const [inputValue, setInputValue] = useState("");
