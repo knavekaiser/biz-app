@@ -98,7 +98,7 @@ const DynamicTablePage = () => {
             onSuccess={() => setFilters((prev) => ({ ...prev }))}
           />
           <button
-            className="btn m-a mr-0"
+            className="btn"
             onClick={() =>
               navigate(
                 paths.dashboard.replace("*", "") +
@@ -109,7 +109,7 @@ const DynamicTablePage = () => {
             Back
           </button>
           {checkPermission(`${business?.business._id}_${table}_create`) && (
-            <button className="btn m-a mr-0" onClick={() => setAddData(true)}>
+            <button className="btn" onClick={() => setAddData(true)}>
               Add {table}
             </button>
           )}

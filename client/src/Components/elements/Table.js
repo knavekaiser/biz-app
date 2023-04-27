@@ -36,6 +36,7 @@ export const Table = ({
   columns,
   className,
   theadTrStyle,
+  tbodyTrStyle,
   children,
   sortable,
   actions,
@@ -105,6 +106,7 @@ export const Table = ({
       });
     }
   }, []);
+  console.log(theadTrStyle);
   return (
     <table
       ref={table}
@@ -125,7 +127,7 @@ export const Table = ({
               </td>
             </tr>
           ) : null}
-          <tr style={{ ...theadTrStyle }}>
+          <tr style={theadTrStyle}>
             {columns.map((column, i) => (
               <th
                 key={i}
@@ -152,7 +154,7 @@ export const Table = ({
         ) : (children || dynamicData).length > 0 ? (
           <>{children || dynamicData.map((item, i) => renderRow(item, i))}</>
         ) : (
-          <tr className={s.placeholder}>
+          <tr className={s.placeholder} style={tbodyTrStyle}>
             <td>{placeholder || "Nothing yet..."}</td>
           </tr>
         )}
@@ -469,7 +471,14 @@ export const DynamicTable = ({
   const renderRow = useCallback(
     (item, i) => {
       return (
-        <tr key={item._id || i}>
+        <tr
+          key={item._id || i}
+          style={{
+            gridTemplateColumns:
+              Array(fields.length).fill("100px").join(" ") +
+              (actions ? " 3.5rem" : ""),
+          }}
+        >
           {fields.map((field, j) => {
             if (field.dataType === "boolean") {
               return (
@@ -591,6 +600,11 @@ export const DynamicTable = ({
       filters={filters}
       filterFields={filterFields || fields}
       renderRow={renderRow}
+      theadTrStyle={{
+        gridTemplateColumns:
+          Array(fields.length).fill("100px").join(" ") +
+          (actions ? " 2rem" : ""),
+      }}
     />
   ) : (
     <Table
@@ -600,6 +614,11 @@ export const DynamicTable = ({
         ...(fields.map((field) => ({ label: field.label })) || []),
         ...(actions ? [{ label: "Action" }] : []),
       ]}
+      theadTrStyle={{
+        gridTemplateColumn: Array(fields.length + (actions ? 1 : 0))
+          .fill("55px")
+          .join(" "),
+      }}
     >
       {data.map((item, i) => renderRow(item, i))}
     </Table>
@@ -717,7 +736,7 @@ export const ImportExport = ({
     <div className={"flex gap-1 wrap"}>
       {importUrl && (
         <>
-          <button className="btn m-a mr-0" onClick={() => setImportOpen(true)}>
+          <button className="btn" onClick={() => setImportOpen(true)}>
             Import Data
           </button>
           <Modal

@@ -751,12 +751,12 @@
     }
     .filters {
       background: white;
-      padding-bottom: 1rem;
+      padding: 0.5rem;
       td {
         form {
           display: grid;
           grid-gap: 0.5rem;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 270px));
+          grid-template-columns: repeat(auto-fit, minmax(200px, 320px));
         }
       }
     }
@@ -842,9 +842,15 @@
     }
   }
   tfoot {
+    margin-top: 0.5rem;
     .pagination {
-      border-top: 1px solid $grey2;
+      position: sticky;
+      right: 0;
+      // border-top: 1px solid $grey2;
       padding: 0.5rem;
+      width: max-content;
+      margin: auto;
+      margin-right: 0;
       td {
         .perPage {
           width: 7rem;
@@ -928,6 +934,8 @@
   background: white;
   margin-left: -10px;
   padding-left: 10px !important;
+  height: 100%;
+  align-items: center;
   .btn {
     padding: 1px 2px;
     padding-right: 1px;
@@ -1166,6 +1174,18 @@ $branch-angle: 35deg;
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .table {
+    thead {
+      .filters {
+        position: sticky;
+        left: 0;
+        width: calc(100vw - (2rem));
+      }
+    }
   }
 }
 
