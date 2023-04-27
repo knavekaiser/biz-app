@@ -9,7 +9,7 @@ import { useFetch } from "hooks";
 import Dashboard from "Views/Dashboard";
 import Home from "Views/Home";
 import AuthView from "Views/AuthViews";
-import { LoadScript } from "@react-google-maps/api";
+// import { LoadScript } from "@react-google-maps/api";
 
 function resizeWindow() {
   let vh = window.innerHeight * 0.01;
@@ -52,13 +52,13 @@ function App() {
         <Route path={paths.dashboard} element={<Dashboard />} />
         <Route path="*" element={<AuthView />} />
       </Routes>
-      {!window.google && (
+      {/* {!window.google && (
         <LoadScript
           loadingElement={<div style={{ display: "none" }}>Loading...</div>}
           googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAP_API_KEY}
           libraries={["places"]}
         />
-      )}
+      )} */}
     </div>
   );
 }

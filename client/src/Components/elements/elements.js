@@ -5,7 +5,6 @@ import React, {
   useCallback,
   useLayoutEffect,
   forwardRef,
-  useContext,
 } from "react";
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSearch, FaRegTrashAlt, FaTimes } from "react-icons/fa";
@@ -23,12 +22,13 @@ import { DateRangePicker } from "react-date-range";
 import Sortable from "sortablejs";
 import { moment, getAllDates } from "./moment";
 import { Editor } from "react-draft-wysiwyg";
-import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
+import { EditorState, convertToRaw } from "draft-js";
 import AutoComplete from "react-google-autocomplete";
 import {
   GoogleMap as GoogleMapLib,
   Marker,
   Autocomplete,
+  useLoadScript,
 } from "@react-google-maps/api";
 
 import "react-date-range/dist/styles.css";
@@ -43,7 +43,6 @@ import { Table, TableActions } from "./Table";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 import { Combobox } from "./combobox";
-import { SiteContext } from "SiteContext";
 
 export const Input = forwardRef(
   ({ className, label, icon, error, type, required, ...rest }, ref) => {
@@ -113,7 +112,7 @@ export const SearchField = ({
   const { get: getData } = useFetch(url);
 
   useLayoutEffect(() => {
-    const { width, height, x, y } = container.current.getBoundingClientRect();
+    const { width, height, x, y } = container.current?.getBoundingClientRect();
     setStyle({
       position: "absolute",
       left: x,
@@ -1411,7 +1410,7 @@ export const Range = ({
         e.returnValue = false;
 
         const track = trackRef.current;
-        const boundingBox = track.getBoundingClientRect();
+        const boundingBox = track?.getBoundingClientRect();
         const evtX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
         const val = Math.max(
           Math.min(
@@ -1588,6 +1587,11 @@ export const MapAutoComplete = ({
   onChange: defaultOnChange,
   formOptions,
 }) => {
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAP_API_KEY,
+    libraries: ["places"],
+  });
+
   return (
     <Controller
       control={control}
@@ -1608,7 +1612,7 @@ export const MapAutoComplete = ({
               </label>
             )}
             <div className={s.field}>
-              {window.google?.maps && (
+              {isLoaded && (
                 <AutoComplete
                   ref={ref}
                   value={value.formatted || ""}
@@ -1653,6 +1657,10 @@ export const GoogleMap = ({
   zoom = 16,
   onClick: compOnClick,
 }) => {
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAP_API_KEY,
+    libraries: ["places"],
+  });
   const [marker, setMarker] = useState(null);
   const locationRef = useRef();
   const [map, setMap] = useState(null);
@@ -1701,7 +1709,7 @@ export const GoogleMap = ({
         return (
           <section>
             {label && <label>{label}</label>}
-            {window.google?.maps ? (
+            {isLoaded ? (
               <GoogleMapLib
                 mapContainerStyle={{
                   width: "100%",
@@ -1723,12 +1731,7 @@ export const GoogleMap = ({
                 onUnmount={onUnmount}
               >
                 {/* {value && <Marker position={{ lat, lng }} />} */}
-                {marker && (
-                  <Marker
-                    // position={{ lat: 21.4272283, lng: 92.0058074 }}
-                    position={marker}
-                  />
-                )}
+                {marker && <Marker position={marker} />}
 
                 {autoComplete && (
                   <Autocomplete

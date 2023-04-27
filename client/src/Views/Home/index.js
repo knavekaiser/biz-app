@@ -55,6 +55,9 @@ const Home = () => {
       <div className={s.landingPage}>
         <Sidebar filters={filters} config={config} setFilters={setFilters} />
         <div className={s.allProducts}>
+          {stores.length === 0 && (
+            <p className="all-columns text-center p-2">Nothing for now.</p>
+          )}
           {stores.map((item) =>
             item.featured ? (
               <div

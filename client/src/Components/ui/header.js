@@ -92,20 +92,22 @@ const Header = ({ home, filters, setFilters }) => {
               <li>Sign in / Sign up</li>
             </Link>
           )}
-          <li
-            onClick={() => {
-              logout().then(({ data }) => {
-                if (data.success) {
-                  setUser(null);
-                  setConfig(null);
-                  sessionStorage.removeItem("access_token");
-                  naviage(paths.home);
-                }
-              });
-            }}
-          >
-            Logout
-          </li>
+          {user && (
+            <li
+              onClick={() => {
+                logout().then(({ data }) => {
+                  if (data.success) {
+                    setUser(null);
+                    setConfig(null);
+                    sessionStorage.removeItem("access_token");
+                    naviage(paths.home);
+                  }
+                });
+              }}
+            >
+              Logout
+            </li>
+          )}
         </ul>
       </Modal>
     </div>
