@@ -27,7 +27,8 @@ const businessInformationSchema = yup.object({
   name: yup.string().required(),
   phone: yup.string().required(),
   description: yup.string(),
-  // email: yup.string().required(),
+  email: yup.string().required(),
+  domain: yup.string().required(),
   // address: yup.string().required(),
 });
 
