@@ -192,11 +192,11 @@ exports.update = async (req, res) => {
         )
       )
       .catch((error) => {
-        if (err.code === 11000) {
+        if (error.code === 11000) {
           return responseFn.error(
             res,
             {},
-            err.message.replace(/.*?({.*)/, "$1") + " already exists."
+            error.message.replace(/.*?({.*)/, "$1") + " already exists."
           );
         }
         responseFn.error(res, {}, error.message, 500);
