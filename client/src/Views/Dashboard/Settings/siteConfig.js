@@ -47,7 +47,6 @@ const SiteConfig = () => {
     useFetch(endpoints.collections + "/Product");
 
   useEffect(() => {
-    console.log(config);
     reset({
       businessType: config?.businessType || "",
       elements: config?.siteConfig?.productCard?.length
@@ -163,7 +162,7 @@ const SiteConfig = () => {
           ...config,
           businessType: values.businessType,
           siteConfig: {
-            ...config.siteConfig,
+            ...config?.siteConfig,
             productCard: values.elements.filter((item) =>
               productEelementOptions.find((opt) => opt.value === item)
             ),

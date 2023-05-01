@@ -5,7 +5,7 @@ import { endpoints } from "config";
 export const SiteContext = createContext();
 export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [config, setConfig] = useState({});
+  const [config, setConfig] = useState(null);
   const [business, setBusiness] = useState(null);
   const [userType, setUserType] = useState(
     localStorage.getItem("userType") || "business"
@@ -40,7 +40,7 @@ export const Provider = ({ children }) => {
 
   const { get: getConfig } = useFetch(endpoints.userConfig);
   useEffect(() => {
-    if ((business || user) && !config) {
+    if (!!(business || user) && !config) {
       if (user.userType === "business") {
         getConfig().then(({ data }) => {
           if (data.success) {
@@ -61,7 +61,7 @@ export const Provider = ({ children }) => {
         setConfig(null);
       }
     }
-  }, [user, config, business]);
+  }, [user, business]);
 
   useEffect(() => {
     if (

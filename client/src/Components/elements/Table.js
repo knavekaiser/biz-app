@@ -106,7 +106,6 @@ export const Table = ({
       });
     }
   }, []);
-  console.log(theadTrStyle);
   return (
     <table
       ref={table}
