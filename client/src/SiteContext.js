@@ -41,7 +41,7 @@ export const Provider = ({ children }) => {
   const { get: getConfig } = useFetch(endpoints.userConfig);
   useEffect(() => {
     if (!!(business || user) && !config) {
-      if (user.userType === "business") {
+      if (user?.userType === "business") {
         getConfig().then(({ data }) => {
           if (data.success) {
             setConfig(data.data);

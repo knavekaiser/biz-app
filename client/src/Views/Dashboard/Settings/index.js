@@ -80,37 +80,37 @@ const BusinessInformation = () => {
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business?._id}`
-      : endpoints.profile
+      : endpoints.businessProfile
   );
-  // const latitude = watch("latitude");
-  // const longitude = watch("longitude");
   useEffect(() => {
     const client = business?.business || user;
-    reset({
-      logo: client.logo ? [client.logo] : [],
-      name: client.name || "",
-      motto: client.motto || "",
-      phone: client.phone || "",
-      whatsappNumber: client.whatsappNumber || "",
-      email: client.email || "",
-      street: client.address?.street || "",
-      address: {
-        address: { ...client.address },
-        formatted: client.address?.formatted || "",
-      },
-      latlng:
-        client?.address?.latitude && client?.address?.longitude
-          ? client?.address?.latitude + "," + client?.address?.longitude
-          : "",
-      description: client.description || "",
-      gstin: client.gstin || "",
-      pan: client.pan || "",
-      ifsc: client.ifsc || "",
-      domain: client.domain || "",
-      favicon: client.favicon ? [client.favicon] : [],
-    });
-    if (client?.address?.latitude && client?.address?.longitude) {
-      setMarker(true);
+    if (client) {
+      reset({
+        logo: client.logo ? [client.logo] : [],
+        name: client.name || "",
+        motto: client.motto || "",
+        phone: client.phone || "",
+        whatsappNumber: client.whatsappNumber || "",
+        email: client.email || "",
+        street: client.address?.street || "",
+        address: {
+          address: { ...client.address },
+          formatted: client.address?.formatted || "",
+        },
+        latlng:
+          client?.address?.latitude && client?.address?.longitude
+            ? client?.address?.latitude + "," + client?.address?.longitude
+            : "",
+        description: client.description || "",
+        gstin: client.gstin || "",
+        pan: client.pan || "",
+        ifsc: client.ifsc || "",
+        domain: client.domain || "",
+        favicon: client.favicon ? [client.favicon] : [],
+      });
+      if (client?.address?.latitude && client?.address?.longitude) {
+        setMarker(true);
+      }
     }
   }, [user, business]);
   return (
@@ -274,7 +274,7 @@ const BankDetail = () => {
   const { put: updateBankDetail, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
-      : endpoints.profile
+      : endpoints.businessProfile
   );
 
   return (
@@ -345,7 +345,7 @@ const OwnerDetails = () => {
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
-      : endpoints.profile
+      : endpoints.businessProfile
   );
 
   useEffect(() => {
