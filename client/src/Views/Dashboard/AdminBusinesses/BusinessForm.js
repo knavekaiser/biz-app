@@ -62,7 +62,7 @@ const Form = ({ edit, onSuccess }) => {
         />
 
         <Input
-          label="Phone"
+          label="Username"
           {...register("phone")}
           required
           error={errors.phone}

@@ -79,6 +79,8 @@ module.exports = mongoose.model(
           productElements: [],
           recommendationFilters: [],
           recommendationLimit: { type: Schema.Types.Number, default: false },
+          comparisonFilters: [],
+          comparisonLimit: { type: Schema.Types.Number, default: false },
         },
         productCard: [],
         footer: {

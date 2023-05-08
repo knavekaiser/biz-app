@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { Suspense, lazy, useContext, useEffect } from "react";
 import { SiteContext } from "SiteContext";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { Tabs } from "Components/elements";
@@ -7,24 +7,40 @@ import { Header, Footer } from "Components/ui";
 
 import s from "./dashboard.module.scss";
 
-import Settings from "./Settings";
-import AdminSettings from "./AdminSettings";
-import Businesses from "./Businesses";
-import AdminBusinesses from "./AdminBusinesses";
-import Invoices from "./Sales";
-import Orders from "./Orders";
-import Quotes from "./Quotes";
-import Purchases from "./Purchases";
-import Receipts from "./Receipts";
-import Payments from "./Payments";
-import DynamicTables from "./DynamicTables";
-import AdminDynamicTables from "./AdminDynamicTables";
-import Roles from "./Roles";
-import Employees from "./Employees";
-// import Stores from "./Stores/__old";
-import StoreListings from "./Stores";
-import SubCategories from "./SubCategories";
-import Categories from "./Categories";
+// import Settings from "./Settings";
+// import AdminSettings from "./AdminSettings";
+// import Businesses from "./Businesses";
+// import AdminBusinesses from "./AdminBusinesses";
+// import Invoices from "./Sales";
+// import Orders from "./Orders";
+// import Quotes from "./Quotes";
+// import Purchases from "./Purchases";
+// import Receipts from "./Receipts";
+// import Payments from "./Payments";
+// import DynamicTables from "./DynamicTables";
+// import AdminDynamicTables from "./AdminDynamicTables";
+// import Roles from "./Roles";
+// import Employees from "./Employees";
+// import StoreListings from "./Stores";
+// import SubCategories from "./SubCategories";
+// import Categories from "./Categories";
+
+const Settings = lazy(() => import("./Settings"));
+const AdminSettings = lazy(() => import("./AdminSettings"));
+const Businesses = lazy(() => import("./Businesses"));
+const AdminBusinesses = lazy(() => import("./AdminBusinesses"));
+const Invoices = lazy(() => import("./Sales"));
+const Orders = lazy(() => import("./Orders"));
+const Quotes = lazy(() => import("./Quotes"));
+const Purchases = lazy(() => import("./Purchases"));
+const Receipts = lazy(() => import("./Receipts"));
+const Payments = lazy(() => import("./Payments"));
+const DynamicTables = lazy(() => import("./DynamicTables"));
+const AdminDynamicTables = lazy(() => import("./AdminDynamicTables"));
+const Roles = lazy(() => import("./Roles"));
+const Employees = lazy(() => import("./Employees"));
+const StoreListings = lazy(() => import("./Stores"));
+const SubCategories = lazy(() => import("./SubCategories"));
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -58,12 +74,47 @@ const Dashboard = () => {
         </div>
         <Routes>
           {/* <Route path={paths.stores} element={<Stores />} /> */}
-          <Route path={paths.subCategories} element={<SubCategories />} />
-          <Route path={paths.storeListings} element={<StoreListings />} />
+          <Route
+            path={paths.subCategories}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <SubCategories />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.storeListings}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <StoreListings />
+              </Suspense>
+            }
+          />
           {/* <Route path={paths.categories} element={<Categories />} /> */}
-          <Route path={paths.businesses} element={<AdminBusinesses />} />
-          <Route path={paths.settings.baseUrl} element={<AdminSettings />} />
-          <Route path={paths.dynamicTables} element={<AdminDynamicTables />} />
+          <Route
+            path={paths.businesses}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <AdminBusinesses />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.settings.baseUrl}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <AdminSettings />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.dynamicTables}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <AdminDynamicTables />
+              </Suspense>
+            }
+          />
         </Routes>
         <Footer />
       </div>
@@ -83,7 +134,14 @@ const Dashboard = () => {
           />
         </div>
         <Routes>
-          <Route path={paths.businesses} element={<Businesses />} />
+          <Route
+            path={paths.businesses}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Businesses />
+              </Suspense>
+            }
+          />
         </Routes>
         <Footer />
       </div>
@@ -139,40 +197,124 @@ const Dashboard = () => {
       </div>
       <Routes>
         {checkPermission("quote_read") && (
-          <Route path={paths.quotes} element={<Quotes />} />
+          <Route
+            path={paths.quotes}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Quotes />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("order_read") && (
-          <Route path={paths.orders} element={<Orders />} />
+          <Route
+            path={paths.orders}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Orders />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("invoice_read") && (
-          <Route path={paths.sales} element={<Invoices />} />
+          <Route
+            path={paths.sales}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Invoices />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("purchase_read") && (
-          <Route path={paths.purchases} element={<Purchases />} />
+          <Route
+            path={paths.purchases}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Purchases />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("reciept_read") && (
-          <Route path={paths.receipts} element={<Receipts />} />
+          <Route
+            path={paths.receipts}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Receipts />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("payment_read") && (
-          <Route path={paths.payments} element={<Payments />} />
+          <Route
+            path={paths.payments}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Payments />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("dynamic_table_read") && (
-          <Route path={paths.dynamicTables} element={<DynamicTables />} />
+          <Route
+            path={paths.dynamicTables}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <DynamicTables />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("role_read") && (
-          <Route path={paths.roles} element={<Roles />} />
+          <Route
+            path={paths.roles}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Roles />
+              </Suspense>
+            }
+          />
         )}
         {checkPermission("employee_read") && (
-          <Route path={paths.employees} element={<Employees />} />
+          <Route
+            path={paths.employees}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Employees />
+              </Suspense>
+            }
+          />
         )}
         {userType === "staff" && (
-          <Route path={paths.businesses} element={<Businesses />} />
+          <Route
+            path={paths.businesses}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Businesses />
+              </Suspense>
+            }
+          />
         )}
         {userType === "admin" && (
-          <Route path={paths.businesses} element={<AdminBusinesses />} />
+          <Route
+            path={paths.businesses}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <AdminBusinesses />
+              </Suspense>
+            }
+          />
         )}
         {["business", "admin"].includes(userType) && (
-          <Route path={paths.settings.baseUrl} element={<Settings />} />
+          <Route
+            path={paths.settings.baseUrl}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <Settings />
+              </Suspense>
+            }
+          />
         )}
       </Routes>
       <Footer />

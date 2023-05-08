@@ -30,6 +30,7 @@ const SiteConfig = () => {
   const [updateFooterElements, setUpdateFooterElements] = useState(false);
   const [updateRecommendationFilters, setUpdateRecommendationFilters] =
     useState(false);
+  const [updateComparisonFilters, setUpdateComparisonFilters] = useState(false);
   const { config, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -58,8 +59,11 @@ const SiteConfig = () => {
       sidebarFilters: config?.siteConfig?.browsePage?.sidebarFilters || [],
       recommendationFilters:
         config?.siteConfig?.productViewPage?.recommendationFilters || [],
+      comparisonFilters:
+        config?.siteConfig?.productViewPage?.comparisonFilters || [],
       recommendationLimit:
         config?.siteConfig?.productViewPage?.recommendationLimit,
+      comparisonLimit: config?.siteConfig?.productViewPage?.comparisonLimit,
       viewWhatsApp: config?.siteConfig?.productViewPage?.viewWhatsApp || false,
       viewLandingPage:
         config?.siteConfig?.landingPage?.viewLandingPage || false,
@@ -74,6 +78,7 @@ const SiteConfig = () => {
   const businessType = watch("businessType");
   const sidebarFilters = watch("sidebarFilters");
   const recommendationFilters = watch("recommendationFilters");
+  const comparisonFilters = watch("comparisonFilters");
   const viewLandingPage = watch("viewLandingPage");
   const viewHeroSection = watch("viewHeroSection");
   const whatsapp = watch("viewWhatsApp");
@@ -123,6 +128,7 @@ const SiteConfig = () => {
                 })
                 .reverse()
             );
+            fields.push({ value: "compare", label: "Compare" });
             setProductPageElementOptions(
               fields
                 .filter(
@@ -178,6 +184,8 @@ const SiteConfig = () => {
               ),
               recommendationFilters: values.recommendationFilters,
               recommendationLimit: values.recommendationLimit,
+              comparisonFilters: values.comparisonFilters,
+              comparisonLimit: values.comparisonLimit,
             },
             landingPage: {
               viewLandingPage: viewLandingPage,
@@ -521,6 +529,38 @@ const SiteConfig = () => {
 
       <div>
         <div className="flex justify-space-between align-center mb-1">
+          <h5>Comparison Filters</h5>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setUpdateComparisonFilters(true)}
+          >
+            Update Comparison Filters
+          </button>
+        </div>
+        <Table columns={[{ label: "Field" }, { label: "Oparator" }]}>
+          {comparisonFilters?.map((item, i) => (
+            <tr key={i}>
+              <td>{item.fieldName}</td>
+              <td>{item.oparator}</td>
+            </tr>
+          ))}
+        </Table>
+      </div>
+
+      <Combobox
+        label="Comparison limit"
+        name="comparisonLimit"
+        control={control}
+        options={[
+          { label: "2", value: 2 },
+          { label: "5", value: 5 },
+          { label: "10", value: 10 },
+        ]}
+      />
+
+      <div>
+        <div className="flex justify-space-between align-center mb-1">
           <h5>Footer Elements</h5>
           <button
             className="btn"
@@ -620,6 +660,30 @@ const SiteConfig = () => {
           onSuccess={(values) => {
             setValue("recommendationFilters", values);
             setUpdateRecommendationFilters(false);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        open={updateComparisonFilters}
+        head
+        label="Update Comparison Filters"
+        className={s.recFilterModal}
+        setOpen={() => setUpdateComparisonFilters(false)}
+      >
+        <ComparisonFilters
+          fields={productCollection?.fields?.filter(
+            (item) =>
+              !(
+                ["file"].includes(item.inputType) ||
+                (["input", "textarea"].includes(item.fieldType) &&
+                  item.dataType === "string")
+              )
+          )}
+          value={comparisonFilters}
+          onSuccess={(values) => {
+            setValue("comparisonFilters", values);
+            setUpdateComparisonFilters(false);
           }}
         />
       </Modal>
@@ -1119,6 +1183,150 @@ const SidebarFilters = ({
 };
 
 const RecommendationFilters = ({ fields = [], value = [], onSuccess }) => {
+  const {
+    handleSubmit,
+    register,
+    control,
+    watch,
+    reset,
+    getValues,
+    formState: { errors },
+  } = useForm();
+  const selectedFields = watch("fields");
+  const [forceRender, setForceRender] = useState(Math.random());
+  useEffect(() => {
+    const data = {
+      fields: value.map((item) => item.fieldName),
+    };
+    value.forEach((field) => {
+      const { fieldName, ...options } = field;
+      Object.entries(options).forEach(([key, value]) => {
+        if (typeof value === "object") {
+          Object.entries(value).forEach(([includeKey, includeValue]) => {
+            data[`${fieldName}.${includeKey}`] = includeValue;
+          });
+          return;
+        }
+        data[`${fieldName}`] = {};
+        data[`${fieldName}`][key] = value;
+      });
+    });
+    reset(data);
+  }, []);
+  return (
+    <form
+      onSubmit={handleSubmit((values) => {
+        const data = [];
+        values.fields.forEach((f) => {
+          const field = fields.find((field) => field.name === f);
+          if (!field) return;
+          data.push({
+            fieldName: f,
+            ...(["input"].includes(field.fieldType) &&
+              field.dataType === "number" && {
+                oparator: values[f]?.oparator,
+              }),
+            ...(["select", "combobox"].includes(field.fieldType) && {
+              oparator: values[f]?.oparator,
+              includes: Object.entries(values[f])
+                .filter(([key, value]) => value?.length > 0)
+                .reduce((p, [k, v]) => {
+                  p[k] = v;
+                  return p;
+                }, {}),
+            }),
+          });
+        });
+        onSuccess(data);
+      })}
+      className={`p-1 grid gap-1`}
+    >
+      <CustomRadio
+        control={control}
+        name="fields"
+        multiple
+        label="Filter Fields"
+        sortable
+        options={(value.length
+          ? fields
+              .sort((a, b, i) => {
+                if (!value?.includes(a.value)) {
+                  return 1;
+                }
+                return value.findIndex((i) => i === a.value) >
+                  value.findIndex((i) => i === b.value)
+                  ? 1
+                  : -1;
+              })
+              .reverse()
+              .map((item, i, arr) => ({ ...item, order: arr.length - i }))
+          : fields
+        ).map((item) => ({
+          label: item.label,
+          value: item.name,
+          data: item,
+        }))}
+      />
+
+      {selectedFields?.map((f, i) => {
+        const field = fields.find((field) => field.name === f);
+        if (!field) return null;
+        if (["input"].includes(field.fieldType)) {
+          if (field.dataType === "number") {
+            return (
+              <div key={i}>
+                <p className="mb_5">
+                  <strong>{field.label}:</strong>{" "}
+                </p>
+                <Combobox
+                  control={control}
+                  name={`${field.name}.oparator`}
+                  label="Oparator"
+                  options={[
+                    { label: "Greater than", value: "greaterThan" },
+                    { label: "Less than", value: "lessThan" },
+                  ]}
+                  formOptions={{ required: "Select an option" }}
+                />
+              </div>
+            );
+          }
+        } else if (["select", "combobox"].includes(field.fieldType)) {
+          return (
+            <div key={i}>
+              <p className="mb_5">
+                <strong>{field.label} Mapping:</strong>
+              </p>
+              <Combobox
+                className="mb_5"
+                control={control}
+                name={`${field.name}.oparator`}
+                label="Oparator"
+                options={[
+                  { label: `Match ${field.label}`, value: "match" },
+                  { label: "Custom Mapping", value: "customMapping" },
+                ]}
+                formOptions={{ required: "Select an option" }}
+                onChange={() => {
+                  setForceRender(Math.random());
+                }}
+              />
+              {getValues(`${field.name}.oparator`) === "customMapping" && (
+                <FieldMapper field={field} control={control} />
+              )}
+            </div>
+          );
+        }
+      })}
+
+      <div className="flex justify-center">
+        <button className="btn">Update</button>
+      </div>
+    </form>
+  );
+};
+
+const ComparisonFilters = ({ fields = [], value = [], onSuccess }) => {
   const {
     handleSubmit,
     register,

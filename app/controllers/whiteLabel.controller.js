@@ -163,6 +163,12 @@ exports.browse = async (req, res) => {
     const page = +req.query.page || 1;
     const pageSize = +req.query.pageSize || 10;
 
+    if (req.query._ids) {
+      query._id = {
+        $in: req.query._ids.split(",").map((item) => ObjectId(item)),
+      };
+    }
+
     collection.fields.forEach((field) => {
       if (field.name in req.query) {
         if (field.dataType === "string" || field.dataElementType === "string") {
@@ -250,7 +256,7 @@ exports.getRelatedProducts = async (req, res) => {
       );
     }
 
-    const query = { _id: { $ne: product._id } };
+    const reccQuery = { _id: { $ne: product._id } };
 
     const recommendationFilters =
       config?.siteConfig?.productViewPage?.recommendationFilters;
@@ -259,50 +265,95 @@ exports.getRelatedProducts = async (req, res) => {
         (field) => field.name === filter.fieldName
       );
       if (filter.oparator === "lessThan") {
-        query[filter.fieldName] = { $lt: product[filter.fieldName] };
+        reccQuery[filter.fieldName] = { $lt: product[filter.fieldName] };
       } else if (filter.oparator === "greaterThan") {
-        query[filter.fieldName] = { $gt: product[filter.fieldName] };
+        reccQuery[filter.fieldName] = { $gt: product[filter.fieldName] };
       } else if (filter.oparator === "match") {
-        query[filter.fieldName] = product[filter.fieldName];
+        reccQuery[filter.fieldName] = product[filter.fieldName];
       } else if (filter.oparator === "customMapping") {
-        query[filter.fieldName] = {
-          $in: filter.includes[product[filter.fieldName]]?.map((item) =>
+        reccQuery[filter.fieldName] = {
+          $in: product[filter.fieldName]?.map((item) =>
             field?.dataType === "objectId" ? ObjectId(item) : item
           ),
         };
       }
     });
-    const limit =
+    const reccLimit =
       config?.siteConfig?.productViewPage?.recommendationLimit || 10;
 
-    Model.aggregate([
-      ...dbHelper.getDynamicPipeline({
-        fields: collection.fields,
-        business_id: req.business._id,
-        table: "Product",
-      }),
-      { $match: query },
-      { $limit: limit },
-      ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
-      {
-        $lookup: {
-          from: "users",
-          as: "user",
-          // localField: "user",
-          // foreignField: "_id",
-          pipeline: [{ $match: { _id: req.business._id } }],
-        },
-      },
-      { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
-      { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
-      { $unset: ["__v", "user"] },
-    ])
-      .then((data) => {
-        responseFn.success(res, { data });
-      })
-      .catch((err) =>
-        responseFn.error(res, {}, err.message || responseStr.error_occurred)
+    const comQuery = {};
+
+    const comparisonFilters =
+      config?.siteConfig?.productViewPage?.comparisonFilters;
+    (comparisonFilters || []).forEach((filter) => {
+      const field = collection.fields.find(
+        (field) => field.name === filter.fieldName
       );
+      if (filter.oparator === "lessThan") {
+        comQuery[filter.fieldName] = { $lt: product[filter.fieldName] };
+      } else if (filter.oparator === "greaterThan") {
+        comQuery[filter.fieldName] = { $gt: product[filter.fieldName] };
+      } else if (filter.oparator === "match") {
+        comQuery[filter.fieldName] = product[filter.fieldName];
+      } else if (filter.oparator === "customMapping") {
+        comQuery[filter.fieldName] = {
+          $in: product[filter.fieldName]?.map((item) =>
+            field?.dataType === "objectId" ? ObjectId(item) : item
+          ),
+        };
+      }
+    });
+    const comLimit = config?.siteConfig?.productViewPage?.comparisonLimit || 10;
+
+    Promise.all([
+      Model.aggregate([
+        ...dbHelper.getDynamicPipeline({
+          fields: collection.fields,
+          business_id: req.business._id,
+          table: "Product",
+        }),
+        { $match: reccQuery },
+        { $limit: reccLimit },
+        ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
+        {
+          $lookup: {
+            from: "users",
+            as: "user",
+            pipeline: [{ $match: { _id: req.business._id } }],
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
+        { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
+        { $unset: ["__v", "user"] },
+      ]),
+      Model.aggregate([
+        ...dbHelper.getDynamicPipeline({
+          fields: collection.fields,
+          business_id: req.business._id,
+          table: "Product",
+        }),
+        { $match: comQuery },
+        { $limit: comLimit },
+        ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
+        {
+          $lookup: {
+            from: "users",
+            as: "user",
+            pipeline: [{ $match: { _id: req.business._id } }],
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: false } },
+        { $set: { seller: { name: "$user.name", logo: "$user.logo" } } },
+        { $unset: ["__v", "user"] },
+      ]),
+    ])
+      .then(([recommendation, comparison]) => {
+        responseFn.success(res, { data: { recommendation, comparison } });
+      })
+      .catch((err) => {
+        console.log(err);
+        responseFn.error(res, {}, err.message || responseStr.error_occurred);
+      });
   } catch (error) {
     console.log(error);
     return responseFn.error(res, {}, error.message, 500);
