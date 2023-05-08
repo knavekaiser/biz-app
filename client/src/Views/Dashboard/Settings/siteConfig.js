@@ -18,8 +18,9 @@ import {
   FileInputNew,
 } from "Components/elements";
 import s from "./settings.module.scss";
+import { useNavigate } from "react-router-dom";
 
-const SiteConfig = () => {
+const SiteConfig = ({ next }) => {
   const [productCollection, setProductCollection] = useState(null);
   const [productEelementOptions, setProductElementOptions] = useState([]);
   const [productPageEelementOptions, setProductPageElementOptions] = useState(
@@ -41,6 +42,9 @@ const SiteConfig = () => {
     control,
     formState: { errors },
   } = useForm();
+
+  const [goNext, setGoNext] = useState(false);
+  const navigate = useNavigate();
 
   const { put: updateConfig, loading } = useFetch(endpoints.userConfig);
   const [editSection, setEditSection] = useState(null);
@@ -256,15 +260,21 @@ const SiteConfig = () => {
 
         updateConfig(formData)
           .then(({ data }) => {
-            if (data.success) {
-              setConfig(data.data);
-              Prompt({
-                type: "information",
-                message: "Updates have been saved.",
-              });
-            } else {
-              Prompt({ type: "error", message: data.message });
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
             }
+            setConfig(data.data);
+            Prompt({
+              type: "information",
+              message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.dynamicTables.replace("*", "")
+                  ),
+              }),
+            });
           })
           .catch((err) => Prompt({ type: "error", data: err.message }));
       })}
@@ -729,7 +739,20 @@ const SiteConfig = () => {
         />
       </Modal>
 
-      <button className="btn">Save Changes</button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };

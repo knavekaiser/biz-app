@@ -6,11 +6,14 @@ import { Modal, Prompt } from "Components/modal";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
 import BusinessForm from "./BusinessForm";
+import { useNavigate } from "react-router-dom";
+import { paths } from "config";
 
 const Businesses = () => {
   const { setBusiness, setConfig } = useContext(SiteContext);
   const [businesses, setBusinesses] = useState([]);
   const [addBusiness, setAddBusiness] = useState(false);
+  const navigate = useNavigate();
 
   const { get: getBusinesses } = useFetch(endpoints.findBusinesses);
 
@@ -38,9 +41,7 @@ const Businesses = () => {
         {businesses.map((item) => (
           <tr
             onClick={() => {
-              setBusiness({
-                business: item,
-              });
+              setBusiness({ business: item });
               setConfig(item.config);
             }}
             style={{ cursor: "pointer" }}
@@ -61,7 +62,7 @@ const Businesses = () => {
       >
         <BusinessForm
           edit={addBusiness?._id ? addBusiness : null}
-          onSuccess={(newBusiness) => {
+          onSuccess={(newBusiness, next) => {
             if (addBusiness?._id) {
               setBusinesses((prev) =>
                 prev.map((item) =>
@@ -72,6 +73,16 @@ const Businesses = () => {
               setBusinesses((prev) => [...prev, newBusiness]);
             }
             setAddBusiness(null);
+            if (next) {
+              setBusiness({ business: newBusiness });
+              setConfig(newBusiness.config);
+              navigate(
+                paths.dashboard.replace("*", "") +
+                  paths.settings.baseUrl.replace("*", "") +
+                  paths.settings.businessInformation,
+                { state: { next } }
+              );
+            }
           }}
         />
       </Modal>

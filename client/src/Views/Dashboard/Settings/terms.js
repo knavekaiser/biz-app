@@ -8,16 +8,20 @@ import { Textarea, Table, TableActions } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import * as yup from "yup";
 import s from "./settings.module.scss";
+import { useNavigate } from "react-router-dom";
+import { paths } from "config";
 
-const TermsAndConditions = () => {
+const TermsAndConditions = ({ next }) => {
   const { user, setUser, business, setBusiness } = useContext(SiteContext);
+  const [goNext, setGoNext] = useState(false);
+  const navigate = useNavigate();
   const {
     handleSubmit,
     formState: { errors },
   } = useForm();
   const [terms, setTerms] = useState([]);
 
-  const { put: updateTerms } = useFetch(
+  const { put: updateTerms, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
       : endpoints.businessProfile
@@ -32,8 +36,11 @@ const TermsAndConditions = () => {
     <form
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
-        updateTerms({ terms }).then(({ data }) => {
-          if (data.success) {
+        updateTerms({ terms })
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
+            }
             if (business) {
               setBusiness((prev) => ({
                 ...prev,
@@ -51,16 +58,36 @@ const TermsAndConditions = () => {
             Prompt({
               type: "information",
               message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.settings.baseUrl.replace("*", "") +
+                      paths.settings.config,
+                    { state: { next: true } }
+                  ),
+              }),
             });
-          } else if (data.errors) {
-            Prompt({ type: "error", message: data.message });
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <Terms terms={terms} setTerms={setTerms} />
 
-      <button className="btn">Save Changes</button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };

@@ -1,20 +1,18 @@
-import { useContext, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input, Table, Checkbox } from "Components/elements";
+import { Input } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
 import * as yup from "yup";
 import s from "./sales.module.scss";
-import { endpoints, tables } from "config";
-import { SiteContext } from "SiteContext";
+import { endpoints } from "config";
 
 const Form = ({ edit, onSuccess }) => {
+  const [next, setNext] = useState(false);
   const {
     handleSubmit,
     register,
     reset,
-    watch,
-    setValue,
     formState: { errors },
   } = useForm({
     resolver: useYup(
@@ -44,13 +42,14 @@ const Form = ({ edit, onSuccess }) => {
       <form
         autoComplete="new-password"
         onSubmit={handleSubmit((values) => {
-          (edit ? updateBusiness : saveBusiness)(values).then(({ data }) => {
-            if (data.errors) {
-              return Prompt({ type: "error", message: data.message });
-            } else if (data.success) {
-              onSuccess(data.data);
-            }
-          });
+          (edit ? updateBusiness : saveBusiness)(values)
+            .then(({ data }) => {
+              if (!data.success) {
+                return Prompt({ type: "error", message: data.message });
+              }
+              onSuccess(data.data, next);
+            })
+            .catch((err) => Prompt({ type: "error", message: err.message }));
         })}
         className={`${s.mainForm} grid gap-1`}
       >
@@ -80,6 +79,17 @@ const Form = ({ edit, onSuccess }) => {
           <button className="btn" disabled={loading}>
             {edit ? "Update" : "Submit"}
           </button>
+          {!edit && (
+            <button
+              className="btn"
+              disabled={loading}
+              onClick={() => {
+                setNext(true);
+              }}
+            >
+              Next
+            </button>
+          )}
         </div>
       </form>
     </div>

@@ -789,6 +789,8 @@ exports.categories = async (req, res) => {
     const { Model: Category } = await dbHelper.getModel(
       req.business._id + "_Category"
     );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
     Category.aggregate([
       {
         $lookup: {

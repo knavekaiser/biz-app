@@ -278,12 +278,12 @@ exports.createBusiness = async (req, res) => {
     new User({ ...req.body })
       .save()
       .then(async (user) => {
-        await new Config({ user: user._id }).save();
+        const config = await new Config({ user: user._id }).save();
         await Collection.insertMany(
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
         return responseFn.success(res, {
-          data: { ...user._doc, password: undefined, __v: undefined },
+          data: { ...user._doc, password: undefined, __v: undefined, config },
         });
       })
       .catch((err) => {

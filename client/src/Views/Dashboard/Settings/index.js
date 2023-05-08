@@ -18,7 +18,7 @@ import { useYup, useFetch } from "hooks";
 import { FaTimes } from "react-icons/fa";
 import { Prompt } from "Components/modal";
 import { paths, endpoints } from "config";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 
 import TermsAndConditions from "./terms";
 import SiteConfig from "./siteConfig";
@@ -33,6 +33,8 @@ const businessInformationSchema = yup.object({
 });
 
 const Settings = () => {
+  const location = useLocation();
+  const [next, setNext] = useState(location.state?.next);
   return (
     <div className={s.container}>
       <Tabs
@@ -48,23 +50,33 @@ const Settings = () => {
       <Routes>
         <Route
           path={paths.settings.businessInformation}
-          element={<BusinessInformation />}
+          element={<BusinessInformation next={next} />}
         />
-        <Route path={paths.settings.bankDetails} element={<BankDetail />} />
-        <Route path={paths.settings.ownerDetails} element={<OwnerDetails />} />
+        <Route
+          path={paths.settings.bankDetails}
+          element={<BankDetail next={next} />}
+        />
+        <Route
+          path={paths.settings.ownerDetails}
+          element={<OwnerDetails next={next} />}
+        />
         <Route
           path={paths.settings.termsAndConditions}
-          element={<TermsAndConditions />}
+          element={<TermsAndConditions next={next} />}
         />
-        <Route path={paths.settings.config} element={<Config />} />
-        <Route path={paths.settings.siteConfig} element={<SiteConfig />} />
+        <Route path={paths.settings.config} element={<Config next={next} />} />
+        <Route
+          path={paths.settings.siteConfig}
+          element={<SiteConfig next={next} />}
+        />
       </Routes>
     </div>
   );
 };
 
-const BusinessInformation = () => {
+const BusinessInformation = ({ next }) => {
   const { user, setUser, business, setBusiness } = useContext(SiteContext);
+  const [goNext, setGoNext] = useState(false);
   const {
     handleSubmit,
     register,
@@ -76,6 +88,7 @@ const BusinessInformation = () => {
   } = useForm({
     resolver: useYup(businessInformationSchema),
   });
+  const navigate = useNavigate();
   const logo = watch("logo");
   const [marker, setMarker] = useState(false);
   const { put: updateOwnerDetails, loading } = useFetch(
@@ -162,8 +175,14 @@ const BusinessInformation = () => {
         formData.append(`whatsappNumber`, values.whatsappNumber);
         formData.append("description", values.description);
 
-        updateOwnerDetails(formData).then(({ data }) => {
-          if (data.success) {
+        updateOwnerDetails(formData)
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({
+                type: "error",
+                message: data.message,
+              });
+            }
             if (business) {
               setBusiness((prev) => ({ ...prev, business: data.data }));
             } else {
@@ -172,14 +191,18 @@ const BusinessInformation = () => {
             Prompt({
               type: "information",
               message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.settings.baseUrl.replace("*", "") +
+                      paths.settings.bankDetails,
+                    { state: { next: true } }
+                  ),
+              }),
             });
-          } else if (data.errors) {
-            Prompt({
-              type: "error",
-              message: data.message,
-            });
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <h3>Business Information</h3>
@@ -247,15 +270,28 @@ const BusinessInformation = () => {
       <Input label="PAN" {...register("pan")} error={errors.pan} />
       <Input label="IFSC" {...register("ifsc")} error={errors.ifsc} />
 
-      <button className="btn" disabled={loading}>
-        Save Changes
-      </button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };
 
-const BankDetail = () => {
+const BankDetail = ({ next }) => {
   const { user, setUser, business, setBusiness } = useContext(SiteContext);
+  const [goNext, setGoNext] = useState(false);
+  const navigate = useNavigate();
   const {
     handleSubmit,
     register,
@@ -289,8 +325,14 @@ const BankDetail = () => {
             accNo: values.accNo,
             accName: values.accName,
           },
-        }).then(({ data }) => {
-          if (data.success) {
+        })
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({
+                type: "error",
+                message: data.message,
+              });
+            }
             if (business) {
               setBusiness((prev) => ({ ...prev, business: data.data }));
             } else {
@@ -299,14 +341,18 @@ const BankDetail = () => {
             Prompt({
               type: "information",
               message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.settings.baseUrl.replace("*", "") +
+                      paths.settings.ownerDetails,
+                    { state: { next: true } }
+                  ),
+              }),
             });
-          } else if (data.errors) {
-            Prompt({
-              type: "error",
-              message: data.message,
-            });
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <h3>Bank Detail</h3>
@@ -323,15 +369,28 @@ const BankDetail = () => {
         error={errors.accName}
       />
 
-      <button className="btn" disabled={loading}>
-        Save Changes
-      </button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };
 
-const OwnerDetails = () => {
+const OwnerDetails = ({ next }) => {
   const { user, setUser, business, setBusiness } = useContext(SiteContext);
+  const [goNext, setGoNext] = useState(false);
+  const navigate = useNavigate();
   const {
     handleSubmit,
     register,
@@ -379,8 +438,11 @@ const OwnerDetails = () => {
         formData.append(`ownerDetails[phone]`, values.ownerPhone);
         formData.append(`ownerDetails[email]`, values.ownerEmail);
 
-        updateOwnerDetails(formData).then(({ data }) => {
-          if (data.success) {
+        updateOwnerDetails(formData)
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
+            }
             if (business) {
               setBusiness((prev) => ({ ...prev, business: data.data }));
             } else {
@@ -389,9 +451,18 @@ const OwnerDetails = () => {
             Prompt({
               type: "information",
               message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.settings.baseUrl.replace("*", "") +
+                      paths.settings.termsAndConditions,
+                    { state: { next: true } }
+                  ),
+              }),
             });
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <h3>Owner Detail</h3>
@@ -415,9 +486,20 @@ const OwnerDetails = () => {
         }}
       />
 
-      <button className="btn" disabled={loading}>
-        Save Changes
-      </button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };
@@ -440,8 +522,10 @@ const configSchema = yup.object({
     .typeError("Enter a valid number"),
   printCurrency: yup.string().max(3, "Currency can only be 3 characters long"),
 });
-const Config = () => {
+const Config = ({ next }) => {
   const { config, setConfig } = useContext(SiteContext);
+  const [goNext, setGoNext] = useState(false);
+  const navigate = useNavigate();
   const {
     handleSubmit,
     register,
@@ -515,20 +599,27 @@ const Config = () => {
             currency: values.printCurrency,
             businessInfo: values.printQuoteBusinessInfo,
           },
-        }).then(({ data }) => {
-          if (data.success) {
+        })
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
+            }
             setConfig(data.data);
             Prompt({
               type: "information",
               message: "Updates have been saved.",
+              ...(goNext && {
+                callback: () =>
+                  navigate(
+                    paths.dashboard.replace("*", "") +
+                      paths.settings.baseUrl.replace("*", "") +
+                      paths.settings.siteConfig,
+                    { state: { next: true } }
+                  ),
+              }),
             });
-          } else {
-            Prompt({
-              type: "error",
-              message: data.message,
-            });
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
     >
       <section className="unitsOfMeasure">
@@ -659,9 +750,20 @@ const Config = () => {
         ]}
       />
 
-      <button className="btn" disabled={loading}>
-        Save Changes
-      </button>
+      <div className="flex gap-1 justify-center">
+        <button className="btn" disabled={loading}>
+          Save Changes
+        </button>
+        {next && (
+          <button
+            className="btn"
+            disabled={loading}
+            onClick={() => setGoNext(true)}
+          >
+            Next
+          </button>
+        )}
+      </div>
     </form>
   );
 };
