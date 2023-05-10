@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { SiteContext } from "SiteContext";
-import { Table } from "Components/elements";
+import { Table, TableActions } from "Components/elements";
 import s from "./sales.module.scss";
 import { Modal, Prompt } from "Components/modal";
 import { useFetch } from "hooks";
@@ -8,6 +8,7 @@ import { endpoints } from "config";
 import BusinessForm from "./BusinessForm";
 import { useNavigate } from "react-router-dom";
 import { paths } from "config";
+import { FaPencilAlt } from "react-icons/fa";
 
 const Businesses = () => {
   const { setBusiness, setConfig } = useContext(SiteContext);
@@ -37,17 +38,39 @@ const Businesses = () => {
           Add Business
         </button>
       </div>
-      <Table className={s.sales} columns={[{ label: "Business" }]}>
+      <Table
+        className={s.sales}
+        columns={[
+          { label: "Business" },
+          { label: "Plan" },
+          { label: "Actions" },
+        ]}
+      >
         {businesses.map((item) => (
           <tr
-            onClick={() => {
-              setBusiness({ business: item });
-              setConfig(item.config);
+            onClick={(e) => {
+              if (["TR", "TD"].includes(e.target.nodeName)) {
+                setBusiness({ business: item });
+                setConfig(item.config);
+              }
             }}
             style={{ cursor: "pointer" }}
             key={item._id}
           >
             <td>{item.name}</td>
+            <td>{item.subscription?.plan?.name}</td>
+            <TableActions
+              className={s.actions}
+              actions={[
+                {
+                  icon: <FaPencilAlt />,
+                  label: "Edit",
+                  callBack: () => {
+                    setAddBusiness(item);
+                  },
+                },
+              ]}
+            />
           </tr>
         ))}
       </Table>

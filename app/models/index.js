@@ -27,4 +27,5 @@ module.exports = {
   Store: require("./store.model"),
   AdSchema: require("./adSchema.model"),
   StoreConfig: require("./storeConfig.model"),
+  SubPlan: require("./subPlan.model"),
 };

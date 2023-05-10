@@ -51,6 +51,8 @@ module.exports = {
     fields_required: "{fields} are required",
 
     domain_not_specified: "Domain not specified",
+    max_product_limit_reached:
+      "Maximum number product reached. Please upgrade your account to add more products.",
 
     file_too_large:
       "File is too large. Please provide files that are less that {maxSize}",

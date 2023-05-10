@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "Components/elements";
+import { Input, Select } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
 import * as yup from "yup";
@@ -10,6 +10,7 @@ import { endpoints } from "config";
 const Form = ({ edit, onSuccess }) => {
   const [next, setNext] = useState(false);
   const {
+    control,
     handleSubmit,
     register,
     reset,
@@ -20,6 +21,7 @@ const Form = ({ edit, onSuccess }) => {
         name: yup.string().required(),
         phone: yup.string().required(),
         password: edit ? yup.string() : yup.string().required(),
+        subPlan: yup.string().required(),
       })
     ),
   });
@@ -35,6 +37,7 @@ const Form = ({ edit, onSuccess }) => {
       name: edit?.name || "",
       phone: edit?.phone || "",
       password: "",
+      subPlan: edit?.subscription?.plan?._id || "",
     });
   }, [edit]);
   return (
@@ -42,6 +45,9 @@ const Form = ({ edit, onSuccess }) => {
       <form
         autoComplete="new-password"
         onSubmit={handleSubmit((values) => {
+          if (!values.password) {
+            delete values.password;
+          }
           (edit ? updateBusiness : saveBusiness)(values)
             .then(({ data }) => {
               if (!data.success) {
@@ -71,8 +77,23 @@ const Form = ({ edit, onSuccess }) => {
           label="Password"
           type="password"
           {...register("password")}
-          required
+          required={!edit}
           error={errors.password}
+        />
+
+        <Select
+          control={control}
+          label="Subscription Plan*"
+          name="subPlan"
+          url={endpoints.subPlans}
+          getQuery={(inputValue, selected) => ({
+            name: inputValue,
+            _id: selected,
+          })}
+          handleData={(item) => ({
+            label: item.name,
+            value: item._id,
+          })}
         />
 
         <div className="btns">

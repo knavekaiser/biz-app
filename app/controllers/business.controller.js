@@ -8,7 +8,7 @@ const {
   dbHelper,
 } = require("../helpers");
 
-const { User, Otp, Config, Collection } = require("../models");
+const { User, Otp, Config, Collection, SubPlan } = require("../models");
 
 exports.signup = async (req, res) => {
   try {
@@ -217,8 +217,25 @@ exports.updateBusiness = async (req, res) => {
         signature: req.body.ownerSignature,
       };
     }
+
+    if (req.body.subPlan) {
+      req.body.subscription = {
+        plan: req.body.subPlan,
+        metadata: {
+          startDate: new Date(),
+          endDate: null,
+        },
+      };
+      delete req.body.subPlan;
+    }
+
     User.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
-      .then((data) =>
+      .then(async (data) => {
+        const config = await new Config({ user: data._id }).save();
+        let plan = null;
+        if (data.subscription?.plan) {
+          plan = await SubPlan.findOne({ _id: data.subscription.plan });
+        }
         responseFn.success(
           res,
           {
@@ -227,11 +244,13 @@ exports.updateBusiness = async (req, res) => {
               password: undefined,
               __v: undefined,
               updatedAt: undefined,
+              config,
+              subscription: { ...data.subscription, plan },
             },
           },
           responseStr.record_updated
-        )
-      )
+        );
+      })
       .catch((err) => {
         if (err.code === 11000) {
           return responseFn.error(
@@ -264,6 +283,7 @@ exports.find = async (req, res) => {
         ? "-password -__v"
         : "username name motto phone email domain logo";
     User.find(conditions, attributes)
+      .populate("subscription.plan")
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -275,6 +295,17 @@ exports.createBusiness = async (req, res) => {
   try {
     req.body.password = appHelper.generateHash(req.body.password);
 
+    if (req.body.subPlan) {
+      req.body.subscription = {
+        plan: req.body.subPlan,
+        metadata: {
+          startDate: new Date(),
+          endDate: null,
+        },
+      };
+      delete req.body.subPlan;
+    }
+
     new User({ ...req.body })
       .save()
       .then(async (user) => {
@@ -282,8 +313,18 @@ exports.createBusiness = async (req, res) => {
         await Collection.insertMany(
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
+        let plan = null;
+        if (user.subscription?.plan) {
+          plan = await SubPlan.findOne({ _id: user.subscription.plan });
+        }
         return responseFn.success(res, {
-          data: { ...user._doc, password: undefined, __v: undefined, config },
+          data: {
+            ...user._doc,
+            password: undefined,
+            __v: undefined,
+            config,
+            subscription: { ...user.subscription, plan },
+          },
         });
       })
       .catch((err) => {

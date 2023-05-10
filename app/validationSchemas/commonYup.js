@@ -34,21 +34,25 @@ yup.addMethod(yup.string, "noneOf", function (arr, message) {
   });
 });
 
-yup.addMethod(yup.string, "phone", function (
-  message = "Phone number is invalid. Make sure to include country code"
-) {
-  return this.test("phone", message, function (value) {
-    const { path, createError } = this;
-    return (
-      !value ||
-      phone(value)?.isValid ||
-      createError({
-        path,
-        message,
-      })
-    );
-  });
-});
+yup.addMethod(
+  yup.string,
+  "phone",
+  function (
+    message = "Phone number is invalid. Make sure to include country code"
+  ) {
+    return this.test("phone", message, function (value) {
+      const { path, createError } = this;
+      return (
+        !value ||
+        phone(value)?.isValid ||
+        createError({
+          path,
+          message,
+        })
+      );
+    });
+  }
+);
 
 yup.addMethod(yup.string, "objectId", function (message) {
   return this.test("phone", message, function (value) {
@@ -61,5 +65,16 @@ yup.addMethod(yup.string, "objectId", function (message) {
         message: message || `"${value}" is not a valid ObjectId`,
       })
     );
+  });
+});
+
+yup.addMethod(yup.string, "none", function (message) {
+  return this.test("none", message, function (value) {
+    const { path, createError } = this;
+    if (value !== undefined) {
+      createError({ path, message: message || `Please remove ${path}` });
+    } else {
+      return true;
+    }
   });
 });

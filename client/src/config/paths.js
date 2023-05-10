@@ -22,6 +22,7 @@ const paths = {
   storeListings: "stores",
   categories: "categories",
   subCategories: "sub-categories",
+  subPlans: "subscription-plans",
 
   settings: {
     baseUrl: "settings/*",

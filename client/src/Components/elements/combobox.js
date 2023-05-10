@@ -350,6 +350,10 @@ export const Select = ({
 
   const getOptions = useCallback(
     (inputValue, selected) => {
+      console.log(url, {
+        ...(getQuery && inputValue && getQuery(inputValue, selected)),
+        pageSize: 10 + (selectedOptions.length || 0),
+      });
       fetchData({
         query: {
           ...(getQuery && inputValue && getQuery(inputValue, selected)),

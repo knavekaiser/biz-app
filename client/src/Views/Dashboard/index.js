@@ -41,6 +41,7 @@ const Roles = lazy(() => import("./Roles"));
 const Employees = lazy(() => import("./Employees"));
 const StoreListings = lazy(() => import("./Stores"));
 const SubCategories = lazy(() => import("./SubCategories"));
+const SubPlans = lazy(() => import("./SubPlans"));
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -62,6 +63,7 @@ const Dashboard = () => {
             tabs={[
               { label: "Businesses", path: paths.businesses },
               { label: "Stores", path: paths.storeListings },
+              { label: "Subscription Plans", path: paths.subPlans },
               // { label: "Categories", path: paths.categories },
               { label: "Sub Categories", path: paths.subCategories },
               {
@@ -79,6 +81,14 @@ const Dashboard = () => {
             element={
               <Suspense fallback={<p>Loading...</p>}>
                 <SubCategories />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.subPlans}
+            element={
+              <Suspense fallback={<p>Loading...</p>}>
+                <SubPlans />
               </Suspense>
             }
           />

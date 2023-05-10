@@ -3,7 +3,7 @@ const {
   appConfig: { responseFn },
 } = require("../config");
 
-const { User, Staff, Role, Admin } = require("../models");
+const { User, Staff, Role, Admin, SubPlan } = require("../models");
 const { dbHelper } = require("../helpers");
 const { responseStr } = require("../config/app.config");
 
@@ -37,12 +37,20 @@ verifyToken = async (req, res, next) => {
       Model = Admin;
     }
     const user = await Model.findOne({ _id: decoded.sub });
+    if (decoded.userType === "business" && user?.subscription?.plan) {
+      req.subPlan = await SubPlan.findOne({ _id: user.subscription.plan });
+    }
 
     if (!user) {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
     if (["staff", "admin"].includes(decoded.userType) && business_id) {
       req.business = await User.findOne({ _id: business_id });
+      if (req.business?.subscription?.plan) {
+        req.subPlan = await SubPlan.findOne({
+          _id: req.business.subscription.plan,
+        });
+      }
       if (req.business && decoded.userType === "staff") {
         const business = user.businesses.find(
           (item) => item.business.toString() === req.business._id.toString()

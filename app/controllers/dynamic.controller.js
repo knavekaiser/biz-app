@@ -145,6 +145,13 @@ exports.create = async (req, res) => {
         });
     }
 
+    if (req.params.table === "Product" && req.subPlan) {
+      const totalProducts = await Model.count();
+      if (totalProducts >= req.subPlan.features.maxProduct) {
+        return responseFn.error(res, {}, responseStr.max_product_limit_reached);
+      }
+    }
+
     new Model({ ...req.body })
       .save()
       .then(async (data) => {
@@ -193,6 +200,13 @@ exports.bulkCreate = async (req, res) => {
           }
         });
       });
+    }
+
+    if (req.params.table === "Product" && req.subPlan) {
+      const totalProducts = await Model.count();
+      if (totalProducts + data.length >= req.subPlan.features.maxProduct) {
+        return responseFn.error(res, {}, responseStr.max_product_limit_reached);
+      }
     }
 
     Model.insertMany(data, { ordered: false })

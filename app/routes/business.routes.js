@@ -45,7 +45,7 @@ module.exports = function (app) {
   router.post(
     "/",
     authJwt.verifyToken,
-    validate(schema.signup),
+    validate(schema.createBusiness),
     controller.createBusiness
   );
   router.put(

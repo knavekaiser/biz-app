@@ -1,6 +1,6 @@
 const yup = require("yup");
 const commonYup = require("./commonYup");
-const { User } = require("../models");
+const { User, SubPlan } = require("../models");
 
 module.exports = {
   signup: yup.object({
@@ -14,6 +14,30 @@ module.exports = {
           User.findOne({ phone: v }).then((user) => !user)
         ),
       password: commonYup.password.required(),
+      subscription: yup.string().none(),
+      subPlan: yup.string().none(),
+    }),
+  }),
+
+  createBusiness: yup.object({
+    body: yup.object({
+      name: yup.string().required(),
+      phone: yup
+        .string()
+        .min(8)
+        .required()
+        .test("checkPhone", "Phone number already in use", (v) =>
+          User.findOne({ phone: v }).then((user) => !user)
+        ),
+      password: commonYup.password.required(),
+      subscription: yup.string().none(),
+      subPlan: yup
+        .string()
+        .objectId()
+        .test("checkPhone", "Subscription Plan not found", (v) =>
+          SubPlan.findOne({ _id: v })
+        )
+        .required(),
     }),
   }),
 
@@ -72,6 +96,13 @@ module.exports = {
       terms: yup
         .array()
         .of(yup.string().typeError("Only strings can be a term")),
+      subscription: yup.string().none(),
+      subPlan: yup
+        .string()
+        .objectId()
+        .test("checkPhone", "Subscription Plan not found", (v) =>
+          SubPlan.findOne({ _id: v })
+        ),
     }),
   }),
 };

@@ -18,4 +18,5 @@ module.exports = function (app) {
   require("./employees.routes")(app);
   require("./store.routes")(app);
   require("./adSchema.routes")(app);
+  require("./subPlan.routes")(app);
 };

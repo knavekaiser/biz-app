@@ -14,4 +14,5 @@ module.exports = {
   employee: require("./employee"),
   store: require("./store"),
   adSchema: require("./adSchema"),
+  subPlan: require("./subPlan"),
 };

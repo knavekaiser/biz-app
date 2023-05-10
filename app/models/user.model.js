@@ -55,6 +55,14 @@ module.exports = mongoose.model(
       ifsc: { type: Schema.Types.String },
       description: { type: Schema.Types.String },
       terms: [],
+      subscription: {
+        plan: {
+          type: Schema.Types.ObjectId,
+          ref: "SubscriptionPlan",
+          default: null,
+        },
+        metadata: {},
+      },
     },
     { timestamps: true }
   )
