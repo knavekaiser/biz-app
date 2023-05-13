@@ -36,18 +36,16 @@ const Form = ({ onSuccess }) => {
         onSubmit={handleSubmit((values) => {
           saveSchema(values)
             .then(({ data }) => {
-              if (data?.success) {
-                return Prompt({
-                  type: "success",
-                  message: data.message,
-                  callback: () => {
-                    onSuccess(data.data);
-                  },
-                });
-              }
-              if (data.errors) {
+              if (!data.success) {
                 return Prompt({ type: "error", message: data.message });
               }
+              return Prompt({
+                type: "success",
+                message: data.message,
+                callback: () => {
+                  onSuccess(data.data);
+                },
+              });
             })
             .catch((err) => Prompt({ type: "error", message: err.message }));
         })}

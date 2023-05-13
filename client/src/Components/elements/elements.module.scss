@@ -865,6 +865,14 @@
       }
     }
   }
+  &.dynamic {
+    tr {
+      td:not(.tableActions),
+      th:not(.actions) {
+        min-width: 120px;
+      }
+    }
+  }
 }
 
 .imageTumbnail {
@@ -936,8 +944,11 @@
   padding-left: 10px !important;
   height: 100%;
   align-items: center;
+  // button {
+  //   font-size: 1rem !important;
+  //   padding: 2px 4px;
+  // }
   .btn {
-    padding: 1px 2px;
     padding-right: 1px;
     color: rgb(55, 55, 55);
     border: 1px solid rgb(55, 55, 55);

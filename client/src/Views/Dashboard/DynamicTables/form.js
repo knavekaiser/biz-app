@@ -99,13 +99,14 @@ const Form = ({ edit, collections, onSuccess }) => {
       (edit ? updateCollection : saveCollection)({
         name: values.name,
         fields: fields.map((item) => ({ ...item, _id: undefined })),
-      }).then(({ data }) => {
-        if (data.errors) {
-          return Prompt({ type: "error", message: data.message });
-        } else if (data.success) {
+      })
+        .then(({ data }) => {
+          if (!data.success) {
+            return Prompt({ type: "error", message: data.message });
+          }
           onSuccess(data.data);
-        }
-      });
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
     },
     [fields, tableName]
   );

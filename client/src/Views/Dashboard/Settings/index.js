@@ -566,16 +566,17 @@ const Config = ({ next }) => {
   }, [config]);
 
   useEffect(() => {
-    getConfig().then(({ data }) => {
-      if (data.success) {
+    getConfig()
+      .then(({ data }) => {
+        if (!data.success) {
+          Prompt({
+            type: "error",
+            message: data.message,
+          });
+        }
         setConfig(data.data);
-      } else if (data.errors) {
-        Prompt({
-          type: "error",
-          message: data.message,
-        });
-      }
-    });
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
   return (

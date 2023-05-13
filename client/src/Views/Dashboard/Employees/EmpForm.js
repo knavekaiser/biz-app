@@ -29,13 +29,14 @@ const Form = ({ edit, onSuccess }) => {
     <div className={`grid gap-1 p-1 ${s.addEmpForm}`}>
       <form
         onSubmit={handleSubmit((values) => {
-          updateEmp(values).then(({ data }) => {
-            if (data.errors) {
-              return Prompt({ type: "error", message: data.message });
-            } else if (data.success) {
+          updateEmp(values)
+            .then(({ data }) => {
+              if (!data.success) {
+                return Prompt({ type: "error", message: data.message });
+              }
               onSuccess(data.data);
-            }
-          });
+            })
+            .catch((err) => Prompt({ type: "error", message: err.message }));
         })}
         className={`${s.mainForm} grid gap-1`}
       >

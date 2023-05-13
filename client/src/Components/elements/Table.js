@@ -474,7 +474,7 @@ export const DynamicTable = ({
           key={item._id || i}
           style={{
             gridTemplateColumns:
-              Array(fields.length).fill("100px").join(" ") +
+              Array(fields.length).fill("1fr").join(" ") +
               (actions ? " 3.5rem" : ""),
           }}
         >
@@ -591,18 +591,18 @@ export const DynamicTable = ({
       loading={loading}
       url={url}
       pagination={pagination}
-      className={className}
+      className={`${s.dynamic} ${className}`}
       columns={[
         ...(fields.map((field) => ({ label: field.label })) || []),
-        ...(actions ? [{ label: "Action" }] : []),
+        ...(actions ? [{ label: "Action", className: s.actions }] : []),
       ]}
       filters={filters}
       filterFields={filterFields || fields}
       renderRow={renderRow}
       theadTrStyle={{
         gridTemplateColumns:
-          Array(fields.length).fill("100px").join(" ") +
-          (actions ? " 2rem" : ""),
+          Array(fields.length).fill("1fr").join(" ") +
+          (actions ? " 3.5rem" : ""),
       }}
     />
   ) : (

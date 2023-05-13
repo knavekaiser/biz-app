@@ -7,6 +7,16 @@
   // max-width: 80rem;
   width: 100%;
   grid-template-rows: min-content 1fr;
+  .collections {
+    .tableName {
+      width: max-content;
+      cursor: pointer;
+      &:hover {
+        color: $primary-color-dark2;
+        text-decoration: underline;
+      }
+    }
+  }
 }
 .payments {
   tr {

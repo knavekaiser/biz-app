@@ -376,13 +376,14 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
             detail: values.customerDetail,
           },
           items: items.map((item) => ({ ...item, _id: undefined })),
-        }).then(({ data }) => {
-          if (data.errors) {
-            return Prompt({ type: "error", message: data.message });
-          } else if (data.success) {
+        })
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
+            }
             onSuccess(data.data);
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
       className={`${s.mainForm} grid gap-1`}
     >

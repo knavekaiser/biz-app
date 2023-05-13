@@ -101,7 +101,7 @@ module.exports = {
         .string()
         .objectId()
         .test("checkPhone", "Subscription Plan not found", (v) =>
-          SubPlan.findOne({ _id: v })
+          v ? SubPlan.findOne({ _id: v }) : true
         ),
     }),
   }),

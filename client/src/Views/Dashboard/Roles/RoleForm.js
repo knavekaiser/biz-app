@@ -41,13 +41,14 @@ const Form = ({ edit, dynamicTables, onSuccess }) => {
     <div className={`grid gap-1 p-1 ${s.addRoleForm}`}>
       <form
         onSubmit={handleSubmit((values) => {
-          (edit ? updateRole : saveRole)(values).then(({ data }) => {
-            if (data.errors) {
-              return Prompt({ type: "error", message: data.message });
-            } else if (data.success) {
+          (edit ? updateRole : saveRole)(values)
+            .then(({ data }) => {
+              if (!data.success) {
+                return Prompt({ type: "error", message: data.message });
+              }
               onSuccess(data.data);
-            }
-          });
+            })
+            .catch((err) => Prompt({ type: "error", message: err.message }));
         })}
         className={`${s.mainForm} grid gap-1`}
       >

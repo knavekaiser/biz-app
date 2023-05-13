@@ -101,13 +101,14 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
               payload.append("variants", JSON.stringify(values.variants));
             }
           }
-          (edit ? updateData : saveData)(payload).then(({ data }) => {
-            if (data.errors) {
-              return Prompt({ type: "error", message: data.message });
-            } else if (data.success) {
+          (edit ? updateData : saveData)(payload)
+            .then(({ data }) => {
+              if (!data.success) {
+                return Prompt({ type: "error", message: data.message });
+              }
               onSuccess(data.data);
-            }
-          });
+            })
+            .catch((err) => Prompt({ type: "error", message: err.message }));
         }}
       />
     </div>

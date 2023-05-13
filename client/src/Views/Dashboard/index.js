@@ -7,24 +7,6 @@ import { Header, Footer } from "Components/ui";
 
 import s from "./dashboard.module.scss";
 
-// import Settings from "./Settings";
-// import AdminSettings from "./AdminSettings";
-// import Businesses from "./Businesses";
-// import AdminBusinesses from "./AdminBusinesses";
-// import Invoices from "./Sales";
-// import Orders from "./Orders";
-// import Quotes from "./Quotes";
-// import Purchases from "./Purchases";
-// import Receipts from "./Receipts";
-// import Payments from "./Payments";
-// import DynamicTables from "./DynamicTables";
-// import AdminDynamicTables from "./AdminDynamicTables";
-// import Roles from "./Roles";
-// import Employees from "./Employees";
-// import StoreListings from "./Stores";
-// import SubCategories from "./SubCategories";
-// import Categories from "./Categories";
-
 const Settings = lazy(() => import("./Settings"));
 const AdminSettings = lazy(() => import("./AdminSettings"));
 const Businesses = lazy(() => import("./Businesses"));

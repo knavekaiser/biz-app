@@ -30,13 +30,14 @@ const Form = ({ edit, onSuccess }) => {
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        (edit ? update : save)({ ...values }).then(({ data }) => {
-          if (data.errors) {
-            return Prompt({ type: "error", message: data.message });
-          } else if (data.success) {
+        (edit ? update : save)({ ...values })
+          .then(({ data }) => {
+            if (!data.success) {
+              return Prompt({ type: "error", message: data.message });
+            }
             onSuccess(data.data);
-          }
-        });
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
       className={`grid gap-1 p-1`}
     >

@@ -67,15 +67,17 @@ const Collections = () => {
         columns={[{ label: "Name" }, { label: "Action" }]}
       >
         {collections.map((item, i) => (
-          <tr
-            key={i}
-            onClick={(e) => {
-              if (e.target.tagName === "TD") {
-                navigate(paths.dynamicTable.replace(":table", item.name));
-              }
-            }}
-          >
-            <td>{item.name}</td>
+          <tr key={i}>
+            <td
+              className={s.tableName}
+              onClick={(e) => {
+                if (e.target.tagName === "TD") {
+                  navigate(paths.dynamicTable.replace(":table", item.name));
+                }
+              }}
+            >
+              {item.name}
+            </td>
             <TableActions
               actions={[
                 ...(checkPermission("dynamic_table_update")
