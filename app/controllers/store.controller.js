@@ -160,6 +160,13 @@ exports.homeStores = async (req, res) => {
 exports.homeCategories = async (req, res) => {
   try {
     const { Model } = await dbHelper.getAdminModel("Category");
+    if (!Model) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.record_not_found.replace("Record", "Category Table")
+      );
+    }
     Model.aggregate([
       {
         $lookup: {

@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { IoIosClose } from "react-icons/io";
 import { FaUpload, FaSearch, FaRegTrashAlt, FaTimes } from "react-icons/fa";
+import { CgSpinner } from "react-icons/cg";
 import { BsFillExclamationTriangleFill } from "react-icons/bs";
 import { GoCalendar } from "react-icons/go";
 import {
@@ -214,186 +215,60 @@ export const SearchField = ({
   );
 };
 
-export const FileInput = ({
-  label,
-  thumbnail,
-  required,
-  multiple,
-  onChange,
-  prefill,
-}) => {
-  const id = useRef(Math.random().toString(36).substr(4));
-  const prefillLoaded = useRef(false);
-  const [files, setFiles] = useState([]);
-  const [showFiles, setShowFiles] = useState(false);
-  useEffect(() => {
-    if (prefill?.length !== files.length) {
-      setFiles(
-        prefill?.map((file) =>
-          typeof file === "string" ? { name: file, uploadFilePath: file } : file
-        ) || []
-      );
-    }
-  }, [prefill?.length]);
-  useEffect(() => {
-    if (prefill?.length !== files.length) {
-      onChange?.(files);
-    }
-  }, [files?.length]);
-  return (
-    <section data-testid="fileInput" className={s.fileInput}>
-      <div className={s.label}>
-        <label>
-          {label} {required && "*"}
-        </label>
-        {!thumbnail && (
-          <span className={s.fileCount} onClick={() => setShowFiles(true)}>
-            {files.length} files selected
-          </span>
-        )}
-      </div>
-      <input
-        id={id.current}
-        style={{ display: "none" }}
-        type="file"
-        multiple={multiple}
-        required={required}
-        onChange={(e) => {
-          if (e.target.files.length > 0) {
-            if (multiple) {
-              setFiles((prev) => [
-                ...prev,
-                ...[...e.target.files].filter(
-                  (item) =>
-                    !files.some(
-                      (file) =>
-                        (file.name || file.fileName) ===
-                        (item.name || item.fileName)
-                    )
-                ),
-              ]);
+const resizeImg = async (file) => {
+  return new Promise((res, rej) => {
+    try {
+      const maxDim = 1200;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+
+        img.onload = async function () {
+          let w = this.width,
+            h = this.height,
+            aspectRatio = h / w;
+
+          if (w > maxDim || h > maxDim) {
+            if (h > w) {
+              const newHeight = Math.min(maxDim, h);
+              const newWidth = Math.round(newHeight / aspectRatio);
+              h = newHeight;
+              w = newWidth;
             } else {
-              setFiles([e.target.files[0]]);
+              const newWidth = Math.min(maxDim, w);
+              const newHeight = Math.round(newWidth * aspectRatio);
+              h = newHeight;
+              w = newWidth;
             }
-            // e.target.files = {};
           }
-        }}
-      />
-      {thumbnail ? (
-        <ul className={s.files}>
-          {files.map((file, i) => {
-            const ClearBtn = () => (
-              <button
-                className={`clear ${s.clear}`}
-                type="button"
-                onClick={() =>
-                  setFiles((prev) =>
-                    prev.filter((f) =>
-                      typeof f === "string"
-                        ? f !== file
-                        : (f.name || f.fileName) !==
-                          (file.name || file.fileName)
-                    )
-                  )
-                }
-              >
-                <FaTimes />
-              </button>
-            );
 
-            if (
-              !file.size &&
-              new RegExp(/\.(jpg|jpeg|png|gif|webp)$/).test(file.name)
-            ) {
-              return (
-                <li className={s.file} key={i}>
-                  <ClearBtn />
-                  <img src={file.name} />
-                </li>
-              );
-            }
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-            if (new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file?.name)) {
-              const url = URL.createObjectURL(file);
-              return (
-                <li className={s.file} key={i}>
-                  <ClearBtn />
-                  <img src={url} />
-                </li>
-              );
-            }
-            return (
-              <li className={s.file} key={i}>
-                <ClearBtn />
-                {file.name || "__file--"}
-              </li>
-            );
-          })}
-          {(multiple || (!multiple && !files.length)) && (
-            <li className={s.fileInput}>
-              <label htmlFor={id.current}>
-                <FaUpload />
-              </label>
-            </li>
-          )}
-        </ul>
-      ) : (
-        <div className={s.inputField}>
-          <label htmlFor={id.current}>
-            <span className={s.fileNames}>
-              {files.reduce((p, a) => {
-                return p + (a.name || a.fileName) + ", ";
-              }, "") || "Item select"}
-            </span>
-            <span className={s.btn}>
-              <FaUpload />
-            </span>
-          </label>
-        </div>
-      )}
-      {!thumbnail && (
-        <Modal
-          open={showFiles}
-          className={s.fileInputModal}
-          setOpen={setShowFiles}
-          head={true}
-          label="Files"
-        >
-          <div className={s.container}>
-            <Table columns={[{ label: "File" }, { label: "Action" }]}>
-              {files.map((file, i) => (
-                <tr key={i}>
-                  <td>
-                    <a target="_blank" href={file.uploadFilePath}>
-                      {file.name || file.fileName || file.uploadFilePath}
-                    </a>
-                  </td>
-                  <TableActions
-                    actions={[
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Remove",
-                        callBack: () => {
-                          setFiles((prev) =>
-                            prev.filter((f) =>
-                              typeof f === "string"
-                                ? f !== file
-                                : (f.name || f.fileName) !==
-                                  (file.name || file.fileName)
-                            )
-                          );
-                        },
-                      },
-                    ]}
-                  />
-                </tr>
-              ))}
-            </Table>
-          </div>
-        </Modal>
-      )}
-    </section>
-  );
+          canvas.width = w;
+          canvas.height = h;
+
+          const bitmap = await createImageBitmap(file);
+
+          ctx.drawImage(bitmap, 0, 0, w, h);
+          canvas.toBlob(
+            (blob) =>
+              res(
+                new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+                  type: blob.type,
+                })
+              ),
+            "image/webp",
+            0.8
+          );
+        };
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      rej(err);
+    }
+  });
 };
 export const FileInputNew = ({
   label,
@@ -405,6 +280,7 @@ export const FileInputNew = ({
   accept,
 }) => {
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
   useEffect(() => {
     if (control._formValues[name]?.length !== files.length) {
@@ -438,13 +314,14 @@ export const FileInputNew = ({
             )}
           </div>
           <input
+            disabled={loading}
             id={name}
             style={{ display: "none" }}
             type="file"
             multiple={multiple}
             accept={accept}
             // required={formOptions?.required}
-            onChange={(e) => {
+            onChange={async (e) => {
               if (e.target.files.length > 0) {
                 let _files;
                 if (multiple) {
@@ -459,11 +336,18 @@ export const FileInputNew = ({
                         )
                     ),
                   ];
-                  setFiles(_files);
                 } else {
                   _files = [e.target.files[0]];
-                  setFiles(_files);
                 }
+                for (let i = 0; i < _files.length; i++) {
+                  const item = _files[i];
+                  if (item.type?.startsWith("image/")) {
+                    setLoading(true);
+                    _files[i] = await resizeImg(item);
+                    setLoading(false);
+                  }
+                }
+                setFiles(_files);
                 onChange(_files);
               }
             }}
@@ -521,9 +405,13 @@ export const FileInputNew = ({
                 );
               })}
               {(multiple || (!multiple && !files.length)) && (
-                <li className={s.fileInput}>
+                <li className={s.fileInputUploadBtn}>
                   <label htmlFor={name}>
-                    <FaUpload />
+                    {loading ? (
+                      <CgSpinner className={s.spinner} />
+                    ) : (
+                      <FaUpload />
+                    )}
                   </label>
                 </li>
               )}
@@ -537,7 +425,7 @@ export const FileInputNew = ({
                   }, "") || "Item select"}
                 </span>
                 <span className={s.btn}>
-                  <FaUpload />
+                  {loading ? <CgSpinner className={s.spinner} /> : <FaUpload />}
                 </span>
               </label>
             </div>

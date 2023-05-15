@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import {
   Input,
   Textarea,
-  FileInput,
   FileInputNew,
   Tabs,
   CustomRadio,
@@ -206,13 +205,12 @@ const BusinessInformation = ({ next }) => {
       })}
     >
       <h3>Business Information</h3>
-      <FileInput
+      <FileInputNew
         thumbnail
+        control={control}
+        name="logo"
         label="Logo"
-        prefill={logo}
-        onChange={(files) => {
-          setValue("logo", files);
-        }}
+        accept="image/*"
       />
       <FileInputNew
         thumbnail
@@ -393,10 +391,10 @@ const OwnerDetails = ({ next }) => {
   const navigate = useNavigate();
   const {
     handleSubmit,
+    control,
     register,
     reset,
     watch,
-    setValue,
     formState: { errors },
   } = useForm();
 
@@ -477,13 +475,12 @@ const OwnerDetails = ({ next }) => {
         {...register("ownerEmail")}
         error={errors.ownerEmail}
       />
-      <FileInput
+      <FileInputNew
         thumbnail
+        control={control}
+        name="signature"
         label="Signature"
-        prefill={signature}
-        onChange={(files) => {
-          setValue("signature", files);
-        }}
+        accept="image/*"
       />
 
       <div className="flex gap-1 justify-center">

@@ -189,6 +189,7 @@
     }
   }
   .inputField {
+    background: red;
     border-radius: 4px;
     border: 1px solid #b7b7b7;
     label {
@@ -245,7 +246,7 @@
           max-height: 100%;
         }
       }
-      &.fileInput {
+      &.fileInputUploadBtn {
         label {
           display: grid;
           color: $grey3;
@@ -259,6 +260,10 @@
           svg {
             display: block;
             margin: auto;
+            &.spinner {
+              font-size: 2rem;
+              animation: spin 1.5s linear infinite;
+            }
           }
         }
       }

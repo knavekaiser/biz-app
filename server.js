@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const sharp = require("sharp");
 require("dotenv").config();
 
 const app = express();
@@ -36,7 +37,30 @@ app.get("/assets/*/:file", (req, res) => {
   const filepath =
     __dirname + "/assets/" + req.params[0] + "/" + req.params.file;
   if (fs.existsSync(filepath)) {
-    res.sendFile(filepath);
+    if (/\.(png|jpg|jpeg|webp)$/.test(filepath)) {
+      const { h, w } = req.query;
+      res.type("webp");
+      res.set("Cache-Control", `public, max-age=${3600 * 1}`); // 1 hour
+
+      const imageSharp = sharp(filepath);
+
+      if (+h && +w) {
+        imageSharp.resize(+w, +h).toFormat("webp");
+      } else if (+h) {
+        imageSharp.resize(null, +h).toFormat("webp").rotate();
+      } else if (+w) {
+        imageSharp.resize(+w, null).toFormat("webp").rotate();
+      }
+
+      const resizedImageStream = imageSharp.pipe(res);
+
+      resizedImageStream.on("error", (error) => {
+        console.error("Error sending resized image:", error);
+        res.sendStatus(500);
+      });
+    } else {
+      res.sendFile(filepath);
+    }
   } else {
     res.status(404).json("File not found");
   }
