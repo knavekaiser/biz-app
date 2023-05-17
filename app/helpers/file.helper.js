@@ -1,3 +1,4 @@
+const { log } = require("console");
 const { appConfig } = require("../config");
 const fs = require("fs");
 

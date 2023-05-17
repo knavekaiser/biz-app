@@ -4,6 +4,7 @@ import { SiteContext } from "SiteContext";
 import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { paths, endpoints } from "config";
 import { Prompt } from "Components/modal";
+import { CgSpinner } from "react-icons/cg";
 import { useFetch } from "hooks";
 
 const Dashboard = lazy(() => import("Views/Dashboard"));
@@ -50,7 +51,7 @@ function App() {
         <Route
           path={paths.home}
           element={
-            <Suspense fallback={<p>Loading...</p>}>
+            <Suspense fallback={<CgSpinner className="loadingSpinner" />}>
               <Home />
             </Suspense>
           }
@@ -58,7 +59,7 @@ function App() {
         <Route
           path={paths.dashboard}
           element={
-            <Suspense fallback={<p>Loading...</p>}>
+            <Suspense fallback={<CgSpinner className="loadingSpinner" />}>
               <Dashboard />
             </Suspense>
           }
@@ -66,7 +67,7 @@ function App() {
         <Route
           path="*"
           element={
-            <Suspense fallback={<p>Loading...</p>}>
+            <Suspense fallback={<CgSpinner className="loadingSpinner" />}>
               <AuthView />
             </Suspense>
           }

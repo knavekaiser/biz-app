@@ -6,6 +6,7 @@ const {
   smsHelper,
   appHelper: { genId },
   dbHelper,
+  fileHelper,
 } = require("../helpers");
 
 const { User, Otp, Config, Collection, SubPlan } = require("../models");
@@ -170,14 +171,22 @@ exports.update = async (req, res) => {
     if (req.body.password) {
       req.body.password = appHelper.generateHash(req.body.password);
     }
+    const filesToDelete = [];
+    if (req.body.logo && user.logo) {
+      filesToDelete.push(user.logo);
+    }
     if (req.body.ownerSignature) {
+      if (req.authUser.ownerDetails.signature) {
+        filesToDelete.push(req.authUser.ownerDetails.signature);
+      }
       req.body.ownerDetails = {
         ...req.body.ownerDetails,
         signature: req.body.ownerSignature,
       };
     }
     User.findOneAndUpdate({ _id: req.authUser._id }, req.body, { new: true })
-      .then((data) =>
+      .then((data) => {
+        fileHelper.deleteFiles(filesToDelete);
         responseFn.success(
           res,
           {
@@ -189,8 +198,8 @@ exports.update = async (req, res) => {
             },
           },
           responseStr.record_updated
-        )
-      )
+        );
+      })
       .catch((error) => {
         if (error.code === 11000) {
           return responseFn.error(
@@ -208,10 +217,18 @@ exports.update = async (req, res) => {
 
 exports.updateBusiness = async (req, res) => {
   try {
+    const user = await User.findOne({ _id: req.params._id });
     if (req.body.password) {
       req.body.password = appHelper.generateHash(req.body.password);
     }
+    const filesToDelete = [];
+    if (req.body.logo && user.logo) {
+      filesToDelete.push(user.logo);
+    }
     if (req.body.ownerSignature) {
+      if (user.ownerDetails.signature) {
+        filesToDelete.push(user.ownerDetails.signature);
+      }
       req.body.ownerDetails = {
         ...req.body.ownerDetails,
         signature: req.body.ownerSignature,
@@ -236,6 +253,7 @@ exports.updateBusiness = async (req, res) => {
         if (data.subscription?.plan) {
           plan = await SubPlan.findOne({ _id: data.subscription.plan });
         }
+        fileHelper.deleteFiles(filesToDelete);
         responseFn.success(
           res,
           {

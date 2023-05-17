@@ -61,7 +61,7 @@ const Dashboard = () => {
           <Route
             path={paths.subCategories}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <SubCategories />
               </Suspense>
             }
@@ -69,7 +69,7 @@ const Dashboard = () => {
           <Route
             path={paths.subPlans}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <SubPlans />
               </Suspense>
             }
@@ -77,7 +77,7 @@ const Dashboard = () => {
           <Route
             path={paths.storeListings}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <StoreListings />
               </Suspense>
             }
@@ -86,7 +86,7 @@ const Dashboard = () => {
           <Route
             path={paths.businesses}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <AdminBusinesses />
               </Suspense>
             }
@@ -94,7 +94,7 @@ const Dashboard = () => {
           <Route
             path={paths.settings.baseUrl}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <AdminSettings />
               </Suspense>
             }
@@ -102,7 +102,7 @@ const Dashboard = () => {
           <Route
             path={paths.dynamicTables}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <AdminDynamicTables />
               </Suspense>
             }
@@ -129,7 +129,7 @@ const Dashboard = () => {
           <Route
             path={paths.businesses}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Businesses />
               </Suspense>
             }
@@ -192,7 +192,7 @@ const Dashboard = () => {
           <Route
             path={paths.quotes}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Quotes />
               </Suspense>
             }
@@ -202,7 +202,7 @@ const Dashboard = () => {
           <Route
             path={paths.orders}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Orders />
               </Suspense>
             }
@@ -212,7 +212,7 @@ const Dashboard = () => {
           <Route
             path={paths.sales}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Invoices />
               </Suspense>
             }
@@ -222,7 +222,7 @@ const Dashboard = () => {
           <Route
             path={paths.purchases}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Purchases />
               </Suspense>
             }
@@ -232,7 +232,7 @@ const Dashboard = () => {
           <Route
             path={paths.receipts}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Receipts />
               </Suspense>
             }
@@ -242,7 +242,7 @@ const Dashboard = () => {
           <Route
             path={paths.payments}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Payments />
               </Suspense>
             }
@@ -252,7 +252,7 @@ const Dashboard = () => {
           <Route
             path={paths.dynamicTables}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <DynamicTables />
               </Suspense>
             }
@@ -262,7 +262,7 @@ const Dashboard = () => {
           <Route
             path={paths.roles}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Roles />
               </Suspense>
             }
@@ -272,7 +272,7 @@ const Dashboard = () => {
           <Route
             path={paths.employees}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Employees />
               </Suspense>
             }
@@ -282,7 +282,7 @@ const Dashboard = () => {
           <Route
             path={paths.businesses}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <Businesses />
               </Suspense>
             }
@@ -292,7 +292,7 @@ const Dashboard = () => {
           <Route
             path={paths.businesses}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<LoadingSaklleton />}>
                 <AdminBusinesses />
               </Suspense>
             }
@@ -302,7 +302,7 @@ const Dashboard = () => {
           <Route
             path={paths.settings.baseUrl}
             element={
-              <Suspense fallback={<p>Loading...</p>}>
+              <Suspense fallback={<SettingLoading />}>
                 <Settings />
               </Suspense>
             }
@@ -310,6 +310,81 @@ const Dashboard = () => {
         )}
       </Routes>
       <Footer />
+    </div>
+  );
+};
+
+const LoadingSaklleton = () => {
+  return (
+    <div className={s.loading}>
+      <div className={`${s.header} flex align-center justify-space-between`}>
+        <div className={`${s.title} skl-loading`} />
+        <div className={`${s.btns} flex gap_5`}>
+          <div className={`${s.btn} skl-loading`} />
+          <div className={`${s.btn} skl-loading`} />
+        </div>
+      </div>
+      <div className={s.content}>
+        <div className={s.head}>
+          {Array(3)
+            .fill(null)
+            .map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  width: `${Math.floor(Math.random() * (75 - 25 + 1)) + 25}%`,
+                }}
+                className={`${s.col} skl-loading`}
+              />
+            ))}
+          <div className={`${s.col} skl-loading`} />
+        </div>
+        <div className={s.body}>
+          {Array(4)
+            .fill(null)
+            .map((item, i) => (
+              <div key={i} className={s.row}>
+                <div
+                  style={{
+                    width: `${Math.floor(Math.random() * (75 - 25 + 1)) + 25}%`,
+                  }}
+                  className={`${s.col} skl-loading`}
+                />
+                <div
+                  style={{
+                    width: `${Math.floor(Math.random() * (75 - 25 + 1)) + 25}%`,
+                  }}
+                  className={`${s.col} skl-loading`}
+                />
+                <div
+                  style={{
+                    width: `${Math.floor(Math.random() * (75 - 25 + 1)) + 25}%`,
+                  }}
+                  className={`${s.col} skl-loading`}
+                />
+              </div>
+            ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SettingLoading = () => {
+  return (
+    <div className={s.settingsLoading}>
+      <div className={`${s.tabs} flex wrap gap_5`}>
+        {Array(5)
+          .fill(null)
+          .map((item, i) => (
+            <div key={i} className={`${s.tab} skl-loading`} />
+          ))}
+      </div>
+      <div className={`${s.title} skl-loading`} />
+      <div className={`${s.sq} skl-loading`} />
+      <div className={`${s.title} skl-loading`} />
+      <div className={`${s.title} skl-loading`} />
+      <div className={`${s.title} skl-loading`} />
     </div>
   );
 };

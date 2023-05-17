@@ -79,9 +79,6 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
       callback &&
       callback();
   };
-  if (type === "error") {
-    // console.trace(message);
-  }
   root.render(
     <>
       <div className={`promptBackdrop`} />

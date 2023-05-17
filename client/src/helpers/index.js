@@ -1,5 +1,6 @@
 import { moment } from "Components/elements/moment";
 import { Prompt } from "Components/modal";
+import phone from "phone";
 const XLSX = require("xlsx");
 
 export const findProperties = function (prop, obj) {
@@ -49,10 +50,21 @@ export const parseXLSXtoJSON = (file, collection, cb) => {
         const item = {};
         cols.forEach((col, j) => {
           const field = collection.fields.find((f) => f.name === col);
+          if (!field) {
+            return;
+          }
           if (field.required && !row[j]) {
             throw `${
               field.name
             } is a mandetory field, and it is missing on row ${rowIndex + 2}`;
+          }
+          if (field.inputType === "phone" && row[j]) {
+            let n = row[j].toString();
+            if (!n.startsWith("+")) {
+              n = "+" + n;
+            }
+            item[col] = phone(n).phoneNumber;
+            return;
           }
           if (field.dataType === "number" && row[j]) {
             item[col] =
@@ -87,7 +99,7 @@ export const parseXLSXtoJSON = (file, collection, cb) => {
       });
       cb(arr);
     } catch (err) {
-      return Prompt({ type: "error", message: err });
+      return Prompt({ type: "error", message: err?.message });
     }
   };
   reader.readAsBinaryString(file);
