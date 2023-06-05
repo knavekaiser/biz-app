@@ -1,10 +1,7 @@
 import { useCallback, useContext, useRef, useState } from "react";
-import {
-  AiOutlineMessage,
-  AiOutlineSend,
-  AiOutlineClose,
-  AiOutlineClear,
-} from "react-icons/ai";
+import { AiOutlineMessage, AiOutlineSend } from "react-icons/ai";
+import { BiArrowBack } from "react-icons/bi";
+import { TiArrowMinimise } from "react-icons/ti";
 import s from "./style.module.css";
 import { ChatContextProvider, ChatContext } from "./ChatContext";
 import { useFetch } from "./utils/useFetch";
@@ -12,18 +9,13 @@ import endpoints from "./utils/endpoints";
 
 export default function ComifyChat() {
   const [open, setOpen] = useState(false);
-  const { topics } = useContext(ChatContext);
 
   return (
     <div className={s.chatContainer}>
       {open ? (
         <Chat setOpen={setOpen} />
       ) : (
-        <button
-          className={s.chatTglBtn}
-          onClick={() => setOpen(true)}
-          disabled={topics.length === 0}
-        >
+        <button className={s.chatTglBtn} onClick={() => setOpen(true)}>
           <AiOutlineMessage />
         </button>
       )}
@@ -33,24 +25,29 @@ export default function ComifyChat() {
 
 const Chat = ({ setOpen }) => {
   const messagesRef = useRef();
-  const { convo, setConvo, messages, setMessages } = useContext(ChatContext);
+  const { convo, setUser, setConvo, messages, setMessages } =
+    useContext(ChatContext);
   return (
     <div className={s.chat}>
-      {convo && (
-        <button
-          className={s.clearBtn}
-          onClick={() => {
-            setConvo(null);
-            setMessages([]);
-            localStorage.removeItem("comify_chat_id");
-          }}
-        >
-          <AiOutlineClear />
+      <div className={s.header}>
+        {convo && (
+          <button
+            className={s.clearBtn}
+            onClick={() => {
+              setUser(convo.user);
+              setConvo(null);
+              setMessages([]);
+              localStorage.removeItem("comify_chat_id");
+            }}
+          >
+            <BiArrowBack />
+          </button>
+        )}
+        <button className={s.closeBtn} onClick={() => setOpen(false)}>
+          <TiArrowMinimise />
         </button>
-      )}
-      <button className={s.closeBtn} onClick={() => setOpen(false)}>
-        <AiOutlineClose />
-      </button>
+      </div>
+
       <div className={s.messages} ref={messagesRef}>
         {!convo ? (
           <ConvoForm />
@@ -125,11 +122,13 @@ const ChatForm = ({ convo, setMessages, scrollDown }) => {
 };
 
 const ConvoForm = ({}) => {
-  const { topics, setConvo, setMessages } = useContext(ChatContext);
+  const { user, topics, setConvo, setMessages } = useContext(ChatContext);
   const [errors, setErrors] = useState({});
+  const [source, setSource] = useState("topic");
   const [topic, setTopic] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [url, setUrl] = useState("");
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [msg, setMsg] = useState("");
 
   const { post: initChat, loading } = useFetch(endpoints.chat);
@@ -137,6 +136,13 @@ const ConvoForm = ({}) => {
   const submit = useCallback(
     (e) => {
       e.preventDefault();
+
+      if (!source) {
+        return setErrors((prev) => ({
+          ...prev,
+          source: "Please select a source",
+        }));
+      }
 
       if (!topic) {
         return setErrors((prev) => ({
@@ -168,7 +174,7 @@ const ConvoForm = ({}) => {
         })
         .catch((err) => alert(err.message));
     },
-    [topic, name, email, msg]
+    [topic, name, source, email, msg]
   );
 
   return (
@@ -192,24 +198,82 @@ const ConvoForm = ({}) => {
           className={s.input}
         />
       </section>
-      <section className={s.topics}>
-        <label className={s.label}>Pick a Topic</label>
-        <ul className={s.list}>
-          {topics.map((item) => (
-            <li
-              key={item}
-              className={`${s.topic} ${topic === item ? s.active : ""}`}
-              onClick={() => {
-                setTopic(item);
-                setErrors((prev) => ({ ...prev, topic: undefined }));
+
+      <section className={s.sources}>
+        <label htmlFor="topic" className={s.label}>
+          Source:
+        </label>
+        {
+          <div className={s.radio}>
+            <label htmlFor="topic" className={s.radioLabel}>
+              <input
+                id="topic"
+                type="radio"
+                value="topic"
+                checked={source === "topic"}
+                disabled={topics.length === 0}
+                onChange={(e) => {
+                  setSource(e.target.value);
+                  setErrors((prev) => ({ ...prev, source: undefined }));
+                }}
+              />
+              Topic
+            </label>
+          </div>
+        }
+        <div className={s.radio}>
+          <label htmlFor="url" className={s.radioLabel}>
+            <input
+              id="url"
+              type="radio"
+              value="url"
+              disabled
+              checked={source === "url"}
+              onChange={(e) => {
+                setSource(e.target.value);
+                setErrors((prev) => ({ ...prev, source: undefined }));
               }}
-            >
-              {item}
-            </li>
-          ))}
-        </ul>
-        {errors.topic && <p className={s.err}>{errors.topic}</p>}
+            />
+            URL
+          </label>
+        </div>
+        {errors.source && <p className={s.err}>{errors.source}</p>}
       </section>
+
+      {source === "topic" && (
+        <section className={s.topics}>
+          <label className={s.label}>Pick a Topic</label>
+          <ul className={s.list}>
+            {topics.map((item) => (
+              <li
+                key={item}
+                className={`${s.topic} ${topic === item ? s.active : ""}`}
+                onClick={() => {
+                  setTopic(item);
+                  setErrors((prev) => ({ ...prev, topic: undefined }));
+                }}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+          {errors.topic && <p className={s.err}>{errors.topic}</p>}
+        </section>
+      )}
+
+      {source === "url" && (
+        <section>
+          <label className={s.label}>URL</label>
+          <input
+            required
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className={s.input}
+          />
+        </section>
+      )}
+
       <section>
         <label className={s.label}>Message</label>
         <textarea

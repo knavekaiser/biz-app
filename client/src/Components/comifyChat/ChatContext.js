@@ -5,6 +5,7 @@ import endpoints from "./utils/endpoints";
 
 export const ChatContext = createContext();
 export const ChatContextProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
   const [convo, setConvo] = useState(null);
   const [topics, setTopics] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -41,6 +42,8 @@ export const ChatContextProvider = ({ children }) => {
   return (
     <ChatContext.Provider
       value={{
+        user,
+        setUser,
         topics,
         setTopics,
         convo,

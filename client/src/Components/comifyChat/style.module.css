@@ -12,10 +12,6 @@
     background: #81daf0;
     cursor: pointer;
     display: grid;
-    &:disabled {
-      background: rgb(201, 201, 201);
-      cursor: no-drop;
-    }
   }
   .chat {
     height: 28rem;
@@ -24,25 +20,32 @@
     border-radius: 0.5rem;
     border: 1px solid rgba(54, 54, 54, 0.363);
     display: grid;
-    grid-template-rows: 1fr min-content;
+    grid-template-rows: min-content 1fr min-content;
     position: relative;
     .clearBtn,
     .closeBtn {
       display: grid;
       border-radius: 50%;
-      font-size: 1.4rem;
-      position: absolute;
-      padding: 0.3rem;
+      font-size: 1.7rem;
+      /* position: absolute; */
+      /* padding: 0.3rem; */
       border: none;
       cursor: pointer;
+      color: white;
+      background: none;
+    }
+    .header {
+      background: #81daf0;
+      padding: 0.5rem;
+      display: flex;
     }
     .clearBtn {
-      top: -1rem;
-      left: -1rem;
+      margin: auto;
+      margin-left: 0;
     }
     .closeBtn {
-      top: -1rem;
-      right: -1rem;
+      margin: auto;
+      margin-right: 0;
     }
     .convoForm {
       height: 100%;
@@ -60,6 +63,20 @@
         padding: 0.5rem;
         border-radius: 0.5rem;
         border: 1px solid rgb(180, 180, 180);
+      }
+      .sources {
+        display: flex;
+        grid-gap: 0 1rem;
+        flex-wrap: wrap;
+        .err {
+          flex-basis: 100%;
+        }
+      }
+      .radioLabel {
+        display: flex;
+        align-items: center;
+        grid-gap: 0.35rem;
+        cursor: pointer;
       }
       .err {
         color: red;
