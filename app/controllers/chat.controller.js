@@ -5,7 +5,6 @@ const {
 const { FaqDoc, Chat } = require("../models");
 
 const { Configuration, OpenAIApi } = require("openai");
-const { chat } = require("../validationSchemas");
 const mammoth = require("mammoth");
 const PDFParser = require("pdf-parse");
 const fs = require("fs");
@@ -53,27 +52,26 @@ exports.initChat = async (req, res) => {
     let context = "";
     for (let i = 0; i < doc.files.length; i++) {
       const file = doc.files[i];
-      if (file.url.endsWith(".docx")) {
+      const path = __dirname.replace("\\app\\controllers", "") + file.url;
+      if (path.endsWith(".docx")) {
         await mammoth
-          .extractRawText({
-            path: __dirname.replace("\\app\\controllers", "") + file.url,
-          })
+          .extractRawText({ path })
           .then((result) => {
             context += result.value.trim() + "\n\n";
           })
           .catch((error) => {
             console.error(error);
           });
-      } else if (file.url.endsWith(".txt")) {
-        await fs.readFileSync(file.url, "utf8", (err, data) => {
+      } else if (path.endsWith(".txt")) {
+        await fs.readFileSync(path, "utf8", (err, data) => {
           if (err) {
             console.error(err);
           }
 
           context += data.trim() + "\n\n";
         });
-      } else if (file.url.endsWith(".pdf")) {
-        await fs.readFileSync(file.url, (error, buffer) => {
+      } else if (path.endsWith(".pdf")) {
+        await fs.readFileSync(path, (error, buffer) => {
           if (error) {
             console.error(error);
           }
