@@ -2,6 +2,7 @@
   position: fixed;
   right: 1rem;
   bottom: 1rem;
+  z-index: 10000;
   .chatTglBtn {
     font-size: 2rem;
     padding: 0.75rem;
@@ -10,6 +11,7 @@
     border: 2px solid white;
     background: #81daf0;
     cursor: pointer;
+    display: grid;
     &:disabled {
       background: rgb(201, 201, 201);
       cursor: no-drop;
@@ -26,6 +28,7 @@
     position: relative;
     .clearBtn,
     .closeBtn {
+      display: grid;
       border-radius: 50%;
       font-size: 1.4rem;
       position: absolute;
@@ -140,6 +143,7 @@
         cursor: pointer;
         border-radius: 0.3rem;
         border: none;
+        display: grid;
       }
     }
   }
