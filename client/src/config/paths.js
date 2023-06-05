@@ -32,6 +32,7 @@ const paths = {
     termsAndConditions: "terms-and-conditions",
     config: "config",
     collections: "collections",
+    documents: "documents",
     siteConfig: "site-config",
   },
 };

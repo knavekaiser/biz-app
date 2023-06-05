@@ -9,6 +9,7 @@ import { ProductThumb } from "./productThumbnail";
 import { BsArrowLeft } from "react-icons/bs";
 import { FiChevronRight } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
+import ComifyChat from "Components/comifyChat";
 import Filters from "./Filter";
 
 const Home = () => {
@@ -87,6 +88,7 @@ const Home = () => {
           )}
         </div>
       </div>
+      <ComifyChat />
       <Footer />
     </>
   );

@@ -5,13 +5,16 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "SiteContext";
 import { BrowserRouter } from "react-router-dom";
+import { ChatContextProvider } from "Components/comifyChat";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Provider>
-        <App />
+        <ChatContextProvider>
+          <App />
+        </ChatContextProvider>
       </Provider>
     </BrowserRouter>
   </React.StrictMode>

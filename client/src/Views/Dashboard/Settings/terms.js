@@ -63,7 +63,7 @@ const TermsAndConditions = ({ next }) => {
                   navigate(
                     paths.dashboard.replace("*", "") +
                       paths.settings.baseUrl.replace("*", "") +
-                      paths.settings.config,
+                      paths.settings.faqDocuments,
                     { state: { next: true } }
                   ),
               }),

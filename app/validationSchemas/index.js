@@ -15,4 +15,6 @@ module.exports = {
   store: require("./store"),
   adSchema: require("./adSchema"),
   subPlan: require("./subPlan"),
+  faqDocument: require("./faqDocument"),
+  chat: require("./chat"),
 };

@@ -9,7 +9,7 @@ const {
 } = require("../helpers");
 
 exports.getBusiness = async (req, res, next) => {
-  let domain = normalizeDomain(req.headers["origin"]);
+  let domain = normalizeDomain(req.headers["referer"] || req.headers["origin"]);
   if (!domain)
     return responseFn.error(res, {}, responseStr.domain_not_specified);
   if (domain === "localhost:3000") domain = "infinai.loca.lt";

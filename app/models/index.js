@@ -28,4 +28,6 @@ module.exports = {
   AdSchema: require("./adSchema.model"),
   StoreConfig: require("./storeConfig.model"),
   SubPlan: require("./subPlan.model"),
+  FaqDoc: require("./faqDoc.model"),
+  Chat: require("./chat.model"),
 };

@@ -21,6 +21,7 @@ import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 
 import TermsAndConditions from "./terms";
 import SiteConfig from "./siteConfig";
+import Documents from "./documents";
 
 const businessInformationSchema = yup.object({
   name: yup.string().required(),
@@ -42,6 +43,7 @@ const Settings = () => {
           { label: "Bank Detail", path: "bank-details" },
           { label: "Owner Detail", path: "owner-details" },
           { label: "Terms & Conditions", path: "terms-and-conditions" },
+          { label: "Documents", path: "documents" },
           { label: "Configurations", path: "config" },
           { label: "Site Configurations", path: "site-config" },
         ]}
@@ -67,6 +69,10 @@ const Settings = () => {
         <Route
           path={paths.settings.siteConfig}
           element={<SiteConfig next={next} />}
+        />
+        <Route
+          path={paths.settings.documents}
+          element={<Documents next={next} />}
         />
       </Routes>
     </div>

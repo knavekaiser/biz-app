@@ -41,6 +41,7 @@ const endpoints = {
   storeConfig: `${baseApiUrl}/api/store-config`,
   categories: `${baseApiUrl}/api/categories`,
   subPlans: `${baseApiUrl}/api/sub-plans`,
+  faqDocuments: `${baseApiUrl}/api/faq-documents`,
 
   homeStores: `${baseApiUrl}/api/home/stores`,
   homeCategories: `${baseApiUrl}/api/home/categories`,
