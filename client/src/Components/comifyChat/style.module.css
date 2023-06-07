@@ -53,6 +53,7 @@
       grid-gap: 0.5rem;
       padding: 0.5rem;
       grid-auto-rows: min-content;
+      overflow: auto;
       .label {
         font-size: 0.9rem;
         display: block;
@@ -167,17 +168,18 @@
 }
 
 @media only screen and (min-width: 480px) {
-  .messages,
-  .textarea {
-    &::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
-      background-color: rgba(hsl(192, 100%, 85%), 0.2);
-      border-radius: 1rem;
-    }
-    &::-webkit-scrollbar-thumb {
-      background-color: #c4c4c4;
-      border-radius: 1rem;
-    }
+  .convoForm::-webkit-scrollbar,
+  .messages::-webkit-scrollbar,
+  .textarea::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+    background-color: rgba(hsl(192, 100%, 85%), 0.2);
+    border-radius: 1rem;
+  }
+  .convoForm::-webkit-scrollbar-thumb,
+  .messages::-webkit-scrollbar-thumb,
+  .textarea::-webkit-scrollbar-thumb {
+    background-color: #c4c4c4;
+    border-radius: 1rem;
   }
 }

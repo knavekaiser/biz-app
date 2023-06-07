@@ -3,6 +3,7 @@ module.exports = mongoose.model(
   new Schema(
     {
       topic: { type: String, required: true },
+      url: { type: String },
       user: {
         name: { type: String, required: true },
         email: { type: String, required: true },

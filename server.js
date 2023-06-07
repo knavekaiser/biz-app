@@ -12,6 +12,11 @@ app.use(express.urlencoded({ extended: true }));
 
 const path = require("path");
 
+global.__appDir = __dirname;
+global.__assetDir = __dirname + "/assets";
+global.__tempDir = __dirname + "/assets/temp";
+global.__uploadDir = __dirname + "/assets/uploads";
+
 app.use((req, res, next) => {
   ["query", "body", "params"].forEach((data) => {
     req[data] = Object.entries(req[data]).reduce(

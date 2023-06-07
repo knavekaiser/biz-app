@@ -7,7 +7,11 @@ const { FaqDoc, Chat } = require("../models");
 const { Configuration, OpenAIApi } = require("openai");
 const mammoth = require("mammoth");
 const PDFParser = require("pdf-parse");
+const fetch = require("node-fetch");
+const puppeteer = require("puppeteer");
+const cheerio = require("cheerio");
 const fs = require("fs");
+const { fileHelper } = require("../helpers");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY_MINE,
@@ -44,46 +48,105 @@ exports.getTopics = async (req, res) => {
   }
 };
 
-exports.initChat = async (req, res) => {
-  try {
-    const doc = await FaqDoc.findOne({ topic: req.body.topic });
+const getContext = async ({ ext, path, file }) => {
+  let context = "";
 
-    // get text content from documents
-    let context = "";
-    for (let i = 0; i < doc.files.length; i++) {
-      const file = doc.files[i];
-      const path = __dirname.replace("\\app\\controllers", "") + file.url;
-      if (path.endsWith(".docx")) {
-        await mammoth
-          .extractRawText({ path })
-          .then((result) => {
-            context += result.value.trim() + "\n\n";
+  if (ext === "docx") {
+    await mammoth
+      .extractRawText({ ...(path && { path }), ...(file && { buffer: file }) })
+      .then((result) => {
+        context = result.value.trim() + "\n\n";
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  } else if (ext === "txt") {
+    if (file) {
+      context = file.toString().trim() + "\n\n";
+    } else if (path) {
+      await fs.readFileSync(path, "utf8", (err, data) => {
+        if (err) {
+          console.error(err);
+        }
+
+        context = data.toString().trim() + "\n\n";
+      });
+    }
+  } else if (ext === "pdf") {
+    if (file) {
+      await PDFParser(file)
+        .then((data) => {
+          context = data.text.trim() + "\n\n";
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    } else if (path) {
+      await fs.readFileSync(path, async (error, buffer) => {
+        if (error) {
+          console.error(error);
+        }
+
+        await PDFParser(buffer)
+          .then((data) => {
+            context = data.text.trim() + "\n\n";
           })
           .catch((error) => {
             console.error(error);
           });
-      } else if (path.endsWith(".txt")) {
-        await fs.readFileSync(path, "utf8", (err, data) => {
-          if (err) {
-            console.error(err);
-          }
+      });
+    }
+  }
 
-          context += data.trim() + "\n\n";
-        });
-      } else if (path.endsWith(".pdf")) {
-        await fs.readFileSync(path, (error, buffer) => {
-          if (error) {
-            console.error(error);
-          }
+  return context;
+};
 
-          PDFParser(buffer)
-            .then((data) => {
-              context += data.text.trim() + "\n\n";
-            })
-            .catch((error) => {
-              console.error(error);
-            });
+exports.initChat = async (req, res) => {
+  try {
+    if (!req.body.topic && !req.body.url) {
+      return responseFn.error(res, {}, responseStr.include_either_topic_or_url);
+    }
+
+    // get text content from documents
+    let context = "";
+    let topic = "";
+
+    if (req.body.topic) {
+      const doc = await FaqDoc.findOne({ topic: req.body.topic });
+      topic = doc.topic;
+
+      for (let i = 0; i < doc.files.length; i++) {
+        const file = doc.files[i];
+        context += await getContext({
+          ext: file.url.replace(/.+\./, ""),
+          path: __appDir + file.url,
         });
+      }
+    } else if (req.body.url) {
+      if (new RegExp(/\.(pdf|docx)$/i).test(req.body.url)) {
+        const file = await fetch(req.body.url).then((res) => res.arrayBuffer());
+
+        topic = req.body.url.replace(/.*\//, "");
+        context = await getContext({
+          ext: req.body.url.replace(/.+\./, ""),
+          file,
+        });
+      } else {
+        const browser = await puppeteer.launch({ headless: "new" });
+        const page = await browser.newPage();
+        await page.goto(req.body.url, { waitUntil: "networkidle0" });
+
+        const pageContent = (await page.content())
+          .match(/<body([\s\S]*)<\/body>/i)[0]
+          .replace(
+            /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>|<img\b[^<]*(?:(?!\/>)[^<]*)*\/>|class="[^<>]*"/gi,
+            ""
+          );
+        const $ = cheerio.load(`<html>${pageContent}</html>`);
+        context = $("body").text().trim();
+
+        topic = (await page.title()) || req.body.url.replace(/.*\//, "");
+        await browser.close();
       }
     }
 
@@ -91,7 +154,7 @@ exports.initChat = async (req, res) => {
       return responseFn.error(res, {});
     }
 
-    const message = `You are an AI assistant here to help with ${doc.topic} FAQs. You are equipped with knowledge about ${doc.topic} to provide you with accurate answers. If the question is not related to ${doc.topic}, You will politely ask if I can help you with ${doc.topic}. If your question is about ${doc.topic}, You will use the context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
+    const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide you with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If your question is about ${topic}, You will use the context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
 
 Context: ${context}`;
 
@@ -115,7 +178,8 @@ Context: ${context}`;
     if (completion?.data?.id) {
       messages.push(completion.data.choices[0]?.message);
       const chat = await new Chat({
-        topic: req.body.topic,
+        topic,
+        url: req.body.url,
         user: {
           name: req.body.name,
           email: req.body.email,

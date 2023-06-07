@@ -124,7 +124,7 @@ const ChatForm = ({ convo, setMessages, scrollDown }) => {
 const ConvoForm = ({}) => {
   const { user, topics, setConvo, setMessages } = useContext(ChatContext);
   const [errors, setErrors] = useState({});
-  const [source, setSource] = useState("topic");
+  const [source, setSource] = useState("");
   const [topic, setTopic] = useState("");
   const [url, setUrl] = useState("");
   const [name, setName] = useState(user?.name || "");
@@ -144,16 +144,23 @@ const ConvoForm = ({}) => {
         }));
       }
 
-      if (!topic) {
+      if (source === "topic" && !topic) {
         return setErrors((prev) => ({
           ...prev,
           topic: "Please select a topic",
         }));
       }
+      if (source === "url" && !url) {
+        return setErrors((prev) => ({
+          ...prev,
+          url: "Please provide an URL",
+        }));
+      }
 
       initChat(
         {
-          topic,
+          ...(topic && { topic }),
+          ...(url && { url }),
           name,
           email,
           message: msg,
@@ -174,7 +181,7 @@ const ConvoForm = ({}) => {
         })
         .catch((err) => alert(err.message));
     },
-    [topic, name, source, email, msg]
+    [topic, name, source, email, url, msg]
   );
 
   return (
@@ -227,7 +234,6 @@ const ConvoForm = ({}) => {
               id="url"
               type="radio"
               value="url"
-              disabled
               checked={source === "url"}
               onChange={(e) => {
                 setSource(e.target.value);

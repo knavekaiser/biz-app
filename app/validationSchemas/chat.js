@@ -3,7 +3,8 @@ const yup = require("yup");
 module.exports = {
   initChat: yup.object({
     body: yup.object({
-      topic: yup.string().max(60).required(), // check if the doc exists
+      url: yup.string().url(),
+      topic: yup.string().max(60), // check if the doc exists
       name: yup.string().max(60).required(),
       email: yup.string().max(150).email().required(),
       message: yup.string().max(250).required(),
