@@ -160,7 +160,7 @@ const ConvoForm = ({}) => {
       initChat(
         {
           ...(topic && { topic }),
-          ...(url && { url }),
+          ...(url && { url: url.startsWith("http") ? url : "http://" + url }),
           name,
           email,
           message: msg,
@@ -272,7 +272,7 @@ const ConvoForm = ({}) => {
           <label className={s.label}>URL</label>
           <input
             required
-            type="url"
+            // type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className={s.input}

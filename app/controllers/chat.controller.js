@@ -14,7 +14,7 @@ const fs = require("fs");
 const { fileHelper } = require("../helpers");
 
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY_MINE,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
@@ -101,15 +101,20 @@ const getContext = async ({ ext, path, file }) => {
   return context;
 };
 const parseHtml = (html) => {
-  const pageContent = html
-    .match(/<body([\s\S]*)<\/body>/i)[0]
-    .replace(
-      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>|<img\b[^<]*(?:(?!\/>)[^<]*)*\/>|class="[^<>]*"/gi,
-      ""
-    );
+  try {
+    const $ = cheerio.load(html);
+    const bodyText = $("body")
+      .html()
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s{4}/gi, "\t")
+      .replace(/\t+\s/gi, "\n");
+    // .replace(/\s{2,}/gi, " ");
 
-  const $ = cheerio.load(`<html>${pageContent}</html>`);
-  return $("body").text().trim();
+    return cheerio.load(bodyText).text().trim();
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 exports.initChat = async (req, res) => {
@@ -121,6 +126,7 @@ exports.initChat = async (req, res) => {
     // get text content from documents
     let context = "";
     let topic = "";
+    let error = "";
 
     if (req.body.topic) {
       const doc = await FaqDoc.findOne({ topic: req.body.topic });
@@ -135,21 +141,29 @@ exports.initChat = async (req, res) => {
       }
     } else if (req.body.url) {
       if (true || new RegExp(/\.(pdf|docx)$/i).test(req.body.url)) {
-        await fetch(req.body.url).then(async (res) => {
-          const contentType = res.headers.get("content-type");
-          topic = req.body.url.replace(/.*\//, "");
-          if (contentType.includes("text/html")) {
-            context = parseHtml(await res.text());
-          } else if (contentType.includes("text/plain")) {
-            context = await res.text();
-          } else if (contentType.startsWith("application/")) {
-            const file = await res.arrayBuffer();
-            context = await getContext({
-              ext: req.body.url.replace(/.+\./, ""),
-              file,
-            });
-          }
-        });
+        await fetch(req.body.url)
+          .then(async (res) => {
+            if (res.status === 200) {
+              const contentType = res.headers.get("content-type");
+              topic = req.body.url.replace(/.*\//, "");
+              if (contentType.includes("text/html")) {
+                context = parseHtml(await res.text());
+              } else if (contentType.includes("text/plain")) {
+                context = await res.text();
+              } else if (contentType.startsWith("application/")) {
+                const file = await res.arrayBuffer();
+                context = await getContext({
+                  ext: req.body.url.replace(/.+\./, ""),
+                  file,
+                });
+              }
+            } else {
+              error = `Request failed with ${res.status}`;
+            }
+          })
+          .catch((err) => {
+            error = err.message;
+          });
         if (!topic) {
           topic = req.body.url;
         }
@@ -187,7 +201,7 @@ exports.initChat = async (req, res) => {
     }
 
     if (!context.trim().length) {
-      return responseFn.error(res, {});
+      return responseFn.error(res, {}, error);
     }
 
     const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide you with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If your question is about ${topic}, You will use the context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
