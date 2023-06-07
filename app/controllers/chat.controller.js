@@ -100,6 +100,17 @@ const getContext = async ({ ext, path, file }) => {
 
   return context;
 };
+const parseHtml = (html) => {
+  const pageContent = html
+    .match(/<body([\s\S]*)<\/body>/i)[0]
+    .replace(
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>|<img\b[^<]*(?:(?!\/>)[^<]*)*\/>|class="[^<>]*"/gi,
+      ""
+    );
+
+  const $ = cheerio.load(`<html>${pageContent}</html>`);
+  return $("body").text().trim();
+};
 
 exports.initChat = async (req, res) => {
   try {
@@ -123,27 +134,52 @@ exports.initChat = async (req, res) => {
         });
       }
     } else if (req.body.url) {
-      if (new RegExp(/\.(pdf|docx)$/i).test(req.body.url)) {
-        const file = await fetch(req.body.url).then((res) => res.arrayBuffer());
-
-        topic = req.body.url.replace(/.*\//, "");
-        context = await getContext({
-          ext: req.body.url.replace(/.+\./, ""),
-          file,
+      if (true || new RegExp(/\.(pdf|docx)$/i).test(req.body.url)) {
+        await fetch(req.body.url).then(async (res) => {
+          const contentType = res.headers.get("content-type");
+          topic = req.body.url.replace(/.*\//, "");
+          if (contentType.includes("text/html")) {
+            context = parseHtml(await res.text());
+          } else if (contentType.includes("text/plain")) {
+            context = await res.text();
+          } else if (contentType.startsWith("application/")) {
+            const file = await res.arrayBuffer();
+            context = await getContext({
+              ext: req.body.url.replace(/.+\./, ""),
+              file,
+            });
+          }
         });
+        if (!topic) {
+          topic = req.body.url;
+        }
       } else {
         const browser = await puppeteer.launch({ headless: "new" });
         const page = await browser.newPage();
+        await page._client.send("Page.setDownloadBehavior", {
+          behavior: "allow",
+          downloadPath: __tempDir,
+        });
         await page.goto(req.body.url, { waitUntil: "networkidle0" });
 
-        const pageContent = (await page.content())
-          .match(/<body([\s\S]*)<\/body>/i)[0]
-          .replace(
-            /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>|<img\b[^<]*(?:(?!\/>)[^<]*)*\/>|class="[^<>]*"/gi,
-            ""
-          );
-        const $ = cheerio.load(`<html>${pageContent}</html>`);
-        context = $("body").text().trim();
+        const download = await page.waitForDownload();
+        const mimeType = download.headers["content-type"];
+
+        console.log(mimeType);
+
+        if (mimeType) {
+          const filePath = download.suggestedFilename;
+          // extract the content
+          context = await getContext({
+            ext: filePath.replace(/.+\./, ""),
+            file: filePath,
+          });
+
+          // delete file
+          await fileHelper.deleteFiles(filePath);
+        } else if (mimeType) {
+          context = parseHtml(await page.content());
+        }
 
         topic = (await page.title()) || req.body.url.replace(/.*\//, "");
         await browser.close();
