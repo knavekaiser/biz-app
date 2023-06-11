@@ -18,4 +18,13 @@ module.exports = {
       _id: yup.string().required(), // check if the chat exists
     }),
   }),
+  vote: yup.object({
+    body: yup.object({
+      like: yup.mixed().oneOf([true, false, null]).nullable(),
+    }),
+    params: yup.object({
+      chat_id: yup.string().required(), // check if the chat exists
+      message_id: yup.string().required(), // check if the chat exists
+    }),
+  }),
 };

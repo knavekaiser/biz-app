@@ -2,6 +2,13 @@ import { useCallback, useContext, useRef, useState } from "react";
 import { AiOutlineMessage, AiOutlineSend } from "react-icons/ai";
 import { BiArrowBack } from "react-icons/bi";
 import { TiArrowMinimise } from "react-icons/ti";
+import { BsClipboard } from "react-icons/bs";
+import {
+  HiThumbDown,
+  HiThumbUp,
+  HiOutlineThumbDown,
+  HiOutlineThumbUp,
+} from "react-icons/hi";
 import s from "./style.module.css";
 import { ChatContextProvider, ChatContext } from "./ChatContext";
 import { useFetch } from "./utils/useFetch";
@@ -27,6 +34,34 @@ const Chat = ({ setOpen }) => {
   const messagesRef = useRef();
   const { convo, setUser, setConvo, messages, setMessages } =
     useContext(ChatContext);
+
+  const { post: castVote, loading } = useFetch(endpoints.message);
+  const vote = useCallback(
+    (msg_id, vote) => {
+      castVote(
+        { like: vote },
+        {
+          params: {
+            ":chat_id": convo._id,
+            ":message_id": msg_id,
+          },
+        }
+      )
+        .then(({ data }) => {
+          if (!data.success) {
+            return alert(data.message);
+          }
+          setMessages((prev) =>
+            prev.map((item) =>
+              item._id === msg_id ? { ...item, like: vote } : item
+            )
+          );
+        })
+        .catch((err) => alert(err.message));
+    },
+    [convo]
+  );
+
   return (
     <div className={s.chat}>
       <div className={s.header}>
@@ -55,15 +90,15 @@ const Chat = ({ setOpen }) => {
           <p className={s.placeholder}>No message yet!</p>
         ) : (
           messages.map((item, i, arr) => (
-            <p
+            <Message
               key={item._id}
-              className={`${s.msg} ${s[item.role]}`}
+              msg={item}
+              loading={loading}
               style={{
                 marginBottom: arr[i - 1]?.role !== item.role ? 5 : 0,
               }}
-            >
-              {item.content}
-            </p>
+              castVote={vote}
+            />
           ))
         )}
       </div>
@@ -76,6 +111,41 @@ const Chat = ({ setOpen }) => {
           }}
         />
       )}
+    </div>
+  );
+};
+
+const Message = ({ msg, castVote, loading, style }) => {
+  return (
+    <div className={`${s.msg} ${s[msg.role]}`} style={style}>
+      {msg.role === "assistant" && (
+        <div className={s.actions}>
+          <button
+            className={s.btn}
+            title="Copy"
+            onClick={() => navigator.clipboard.writeText(msg.content)}
+          >
+            <BsClipboard />
+          </button>
+          <button
+            className={s.btn}
+            title="Like"
+            disabled={loading}
+            onClick={() => castVote(msg._id, msg.like ? null : true)}
+          >
+            {msg.like ? <HiThumbUp /> : <HiOutlineThumbUp />}
+          </button>
+          <button
+            className={s.btn}
+            title="Dislike"
+            disabled={loading}
+            onClick={() => castVote(msg._id, msg.like === false ? null : false)}
+          >
+            {msg.like === false ? <HiThumbDown /> : <HiOutlineThumbDown />}
+          </button>
+        </div>
+      )}
+      <p>{msg.content}</p>
     </div>
   );
 };

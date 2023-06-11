@@ -14,6 +14,7 @@ module.exports = mongoose.model(
             role: { type: String, required: true },
             name: { type: String },
             content: { type: String, required: true },
+            like: { type: Boolean, required: false, default: null },
           },
           { timestamps: true }
         ),

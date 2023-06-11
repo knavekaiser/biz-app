@@ -16,10 +16,11 @@ export const ChatContextProvider = ({ children }) => {
   useEffect(() => {
     getTopics()
       .then(({ data }) => {
-        if (!data.success) {
-          return alert(data.message);
+        if (data.success) {
+          setTopics(data.data);
+        } else {
+          // alert(data.message);
         }
-        setTopics(data.data);
       })
       .catch((err) => alert(err.message));
 

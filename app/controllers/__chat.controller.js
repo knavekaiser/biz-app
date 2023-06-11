@@ -18,9 +18,29 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+const pastMessages = [
+  {
+    role: "user",
+    content: "who is barack obama?",
+  },
+  {
+    role: "assistant",
+    content:
+      "Barack Obama is an American politician who served as the 44th president of the United States from 2009-2017. He was born in Hawaii in 1961 and graduated from Columbia University and Harvard Law School. Obama served as a community organizer, lawyer, and senator before becoming president",
+  },
+  {
+    role: "user",
+    content: "how tall is he?",
+  },
+  {
+    role: "assistant",
+    content: "Barack Obama is 6 feet 1 inch (185 cm) tall.",
+  },
+];
+
 exports.getTopics = async (req, res) => {
   try {
-    const topics = await FaqDoc.find({ user_id: req.business?._id || null });
+    const topics = await FaqDoc.find({ user_id: req.business._id });
 
     responseFn.success(res, { data: topics.map((item) => item.topic) });
   } catch (error) {
@@ -81,8 +101,42 @@ const getContext = async ({ ext, path, file }) => {
   return context;
 };
 
-const parseHtml = async (url, html) => {
+const crawlLins = async (links) => {
+  const pages = [];
+  await Promise.all(
+    links.map(({ title, url }) =>
+      fetch(url).then(async (res) => {
+        const contentType = res.headers.get("content-type");
+        if (contentType.includes("text/html")) {
+          return {
+            title,
+            content: await parseHtml(res.url, await res.text()),
+          };
+        } else if (contentType.includes("text/plain")) {
+          return {
+            title,
+            content: await res.text(),
+          };
+        }
+      })
+    )
+  ).then((results) => {
+    results.forEach((item) => {
+      if ("title" in item) {
+        pages.push(item);
+      }
+    });
+  });
+
+  // console.log(pages);
+  return pages;
+};
+const parseHtml = async (url, html, crawl) => {
   try {
+    const baseUrl = url.match(
+      /https?:\/\/(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}[^\s\/]*/gi
+    )[0];
+    let internalLinks = [];
     const $ = cheerio.load(html);
     let bodyText = $("body")
       .html()
@@ -91,6 +145,51 @@ const parseHtml = async (url, html) => {
       .replace(/\s{4}/gi, "\t")
       .replace(/\t+\s/gi, "\n");
     // .replace(/\s{2,}/gi, " ");
+
+    if (crawl) {
+      const aTags = $("a");
+      aTags.each((index, value) => {
+        let url = $(value).attr("href");
+        if (url.startsWith("/")) {
+          url = baseUrl + url;
+        }
+        if (url === baseUrl) {
+          return;
+        }
+        internalLinks.push({
+          title: $(value).text().trim(),
+          url,
+        });
+        // Print the text from the tags and the associated href
+      });
+
+      internalLinks = internalLinks
+        .filter(
+          (item, i, arr) => i === arr.findIndex((obj) => obj.url === item.url)
+        )
+        .filter((item) => item.url.startsWith(baseUrl));
+
+      // console.log(internalLinks);
+      // console.log(bodyText);
+
+      const pages = await crawlLins(internalLinks);
+
+      bodyText =
+        `Page: Home
+      Content: ${cheerio.load(bodyText).text().trim()}
+
+
+      ` +
+        pages
+          .map(
+            (item) => `Page: ${item.title}
+      Content: ${item.content}
+
+
+      `
+          )
+          .join();
+    }
 
     return cheerio.load(bodyText).text().trim();
   } catch (err) {
@@ -181,7 +280,8 @@ exports.initChat = async (req, res) => {
       }
     }
 
-    // console.log({ topic, context });
+    // console.log({ topic, context, length: context.length });
+
     // return responseFn.error(res, {}, "testgin");
 
     if (!context.trim().length) {
@@ -306,23 +406,25 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-exports.vote = async (req, res) => {
+exports.postMessage = async (req, res) => {
   try {
-    Chat.updateOne(
-      {
-        _id: req.params.chat_id,
-        "messages._id": req.params.message_id,
-      },
-      { $set: { "messages.$.like": req.body.like } }
-    )
-      .then((data) => {
-        if (data.modifiedCount) {
-          return responseFn.success(res, {});
-        }
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      // model: "text-davinci-003",
+      messages: [{ role: "user", content: req.body.message }],
+      // prompt: req.body.message,
+      max_tokens: 60,
+    });
+    responseFn.success(res, { data: completion.data }, "postMessage");
+  } catch (error) {
+    console.log(error?.response?.data);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
 
-        return responseFn.error(res, {}, responseStr.record_not_found);
-      })
-      .catch((err) => responseFn.error(res, {}, err.message));
+exports.getMessages = async (req, res) => {
+  try {
+    responseFn.success(res, {}, "getMessages");
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

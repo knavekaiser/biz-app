@@ -25,3 +25,12 @@ exports.getBusiness = async (req, res, next) => {
   req.business = business;
   next();
 };
+
+exports.getBusinessOptinal = async (req, res, next) => {
+  let domain = normalizeDomain(req.headers["referer"] || req.headers["origin"]);
+
+  const business = await User.findOne({ domain });
+
+  req.business = business;
+  next();
+};
