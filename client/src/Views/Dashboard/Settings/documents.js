@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
@@ -9,6 +9,7 @@ import {
   TableActions,
   Input,
   FileInputNew,
+  CustomRadio,
 } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import * as yup from "yup";
@@ -123,7 +124,10 @@ const Docs = ({ docs, setDocs }) => {
         head
         label={edit ? "Update Document" : "Add Document"}
         open={addDoc}
-        setOpen={setAddDoc}
+        setOpen={() => {
+          setAddDoc(false);
+          setEdit(false);
+        }}
         className={s.termFormModal}
       >
         <DocForm
@@ -147,19 +151,21 @@ const Docs = ({ docs, setDocs }) => {
 const docSchema = yup.object({
   topic: yup.string().required(),
   description: yup.string(),
-  files: yup
-    .array()
-    .of(yup.mixed())
-    .min(1, "Please select at least one file")
-    .required(),
+  files: yup.array().of(yup.mixed()),
+  urls: yup.array().of(yup.string().url()),
 });
 
 const DocForm = ({ edit, onSuccess }) => {
+  const [updateUrl, setUpdateUrl] = useState(false);
   const {
     handleSubmit,
     register,
     reset,
     control,
+    watch,
+    setError,
+    setValue,
+    clearErrors,
     formState: { errors },
   } = useForm({
     resolver: useYup(docSchema),
@@ -170,8 +176,11 @@ const DocForm = ({ edit, onSuccess }) => {
     endpoints.faqDocuments + `/${edit?._id || ""}`
   );
 
+  const urls = watch("urls");
+  const url = watch("url");
+
   useEffect(() => {
-    reset({ ...edit });
+    reset({ ...edit, urls: edit?.urls || [] });
   }, [edit]);
   return (
     <form
@@ -181,9 +190,22 @@ const DocForm = ({ edit, onSuccess }) => {
         const payload = {
           ...values,
           files: values.files,
+          urls: JSON.stringify(values.urls),
         };
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
+          if (key === "files") {
+            const oldFiles = value.filter((item) => item.url);
+            const newFiles = value.filter((item) => !item.url);
+
+            if (oldFiles.length) {
+              formData.append(key, JSON.stringify(oldFiles));
+            }
+            if (newFiles.length) {
+              newFiles.forEach((file) => formData.append(key, file));
+            }
+            return;
+          }
           if (Array.isArray(value)) {
             value.forEach((file) => formData.append(key, file));
           } else if (value) {
@@ -202,12 +224,107 @@ const DocForm = ({ edit, onSuccess }) => {
       })}
     >
       <Input label="Topic" {...register("topic")} error={errors.topic} />
+      {/* <CustomRadio
+        label="Source Type:"
+        control={control}
+        name="sourceType"
+        options={[
+          { label: "Files", value: "files" },
+          { label: "URLs", value: "urls" },
+        ]}
+      /> */}
       <FileInputNew
         label="File"
         accept="txt,pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
         control={control}
         name="files"
       />
+
+      <section className={s.docUrls}>
+        <section className={s.urlInput}>
+          <Input
+            label="URL"
+            {...register("url")}
+            error={errors.url}
+            onChange={(e) => {
+              setValue("url", e.target.value);
+              clearErrors("url");
+            }}
+          />
+          <button
+            className="btn"
+            type="button"
+            onClick={() => {
+              if (!url) {
+                return setError("url", {
+                  type: "manual",
+                  message: "Field is required",
+                });
+              }
+
+              const _url = url.startsWith("http") ? url : "http://" + url;
+              setValue(
+                "urls",
+                updateUrl
+                  ? urls.map((i) => (i === updateUrl ? _url : i))
+                  : [...urls, _url]
+              );
+              setValue("url", "");
+              setUpdateUrl(null);
+            }}
+          >
+            {updateUrl ? "Update" : "Add"}
+          </button>
+          {updateUrl && (
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                setValue("url", "");
+                setUpdateUrl(null);
+              }}
+            >
+              Cancel
+            </button>
+          )}
+        </section>
+
+        <Table columns={[{ label: "URL" }, { label: "Action" }]}>
+          {(urls || []).map((item) => (
+            <tr key={item}>
+              <td>{item}</td>
+              <TableActions
+                actions={[
+                  {
+                    icon: <FaPencilAlt />,
+                    label: "Edit",
+                    callBack: () => {
+                      setValue("url", item);
+                      setUpdateUrl(item);
+                    },
+                  },
+                  {
+                    icon: <FaRegTrashAlt />,
+                    label: "Delete",
+                    callBack: () =>
+                      Prompt({
+                        type: "confirmation",
+                        message: `Are you sure you want to remove this URL?`,
+                        callback: () => {
+                          setValue(
+                            "urls",
+                            urls.filter((i) => item !== i)
+                          );
+                        },
+                      }),
+                  },
+                ]}
+              />
+            </tr>
+          ))}
+        </Table>
+      </section>
+
       <Textarea
         label="Description"
         {...register("description")}

@@ -13,6 +13,7 @@ module.exports = mongoose.model(
           size: { type: Number, required: true },
         }),
       ],
+      urls: [{ type: String }],
     },
     { timestamps: true }
   )

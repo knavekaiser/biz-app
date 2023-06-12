@@ -190,6 +190,39 @@ const uploadNew = (fields, uploadPath, options) => {
 
   return (req, res, next) => {
     upload(req, res, (err) => {
+      Object.entries(req.body).forEach(([key, value]) => {
+        if (typeof value === "string" && value.isJSON()) {
+          req.body[key] = JSON.parse(value);
+        }
+      });
+
+      Object.entries(req.body).forEach(([key, value]) => {
+        if (/__\d__/.test(key)) {
+          key.split("__").reduce((p, c, i, arr) => {
+            if (!isNaN(+c)) {
+              const key = arr[i - 1];
+              p[key][+c][arr[i + 1]] = value;
+            }
+            delete p[key];
+            return p;
+          }, req.body);
+        }
+        if (key.includes(".")) {
+          const multiple =
+            fields.length && fields.find((item) => item.name === key)?.multiple;
+          key.split(".").reduce((p, c, i, arr) => {
+            if (i < arr.length - 1) {
+              p[c] = { ...p[c] };
+            } else {
+              p[c] = multiple && typeof value === "string" ? [value] : value;
+            }
+            return p[c];
+          }, req.body);
+
+          delete req.body[key];
+        }
+      });
+
       if (Object.entries(req.files || {}).length) {
         Object.entries(req.files).forEach(([fieldname, files]) => {
           files.forEach((file) => {
@@ -203,7 +236,9 @@ const uploadNew = (fields, uploadPath, options) => {
                 } else {
                   p[c] = multiple
                     ? [
-                        ...(req.body[fieldname] || []),
+                        ...(typeof req.body[fieldname] === "string"
+                          ? [req.bdoy.fieldname]
+                          : req.body[fieldname] || []),
                         ...(p[c] || []),
                         {
                           name: file.originalname,
@@ -246,39 +281,6 @@ const uploadNew = (fields, uploadPath, options) => {
           }
         });
       }
-
-      Object.entries(req.body).forEach(([key, value]) => {
-        if (typeof value === "string" && value.isJSON()) {
-          req.body[key] = JSON.parse(value);
-        }
-      });
-
-      Object.entries(req.body).forEach(([key, value]) => {
-        if (/__\d__/.test(key)) {
-          key.split("__").reduce((p, c, i, arr) => {
-            if (!isNaN(+c)) {
-              const key = arr[i - 1];
-              p[key][+c][arr[i + 1]] = value;
-            }
-            delete p[key];
-            return p;
-          }, req.body);
-        }
-        if (key.includes(".")) {
-          const multiple =
-            fields.length && fields.find((item) => item.name === key)?.multiple;
-          key.split(".").reduce((p, c, i, arr) => {
-            if (i < arr.length - 1) {
-              p[c] = { ...p[c] };
-            } else {
-              p[c] = multiple && typeof value === "string" ? [value] : value;
-            }
-            return p[c];
-          }, req.body);
-
-          delete req.body[key];
-        }
-      });
 
       if (err) {
         if (err.code === "LIMIT_FILE_SIZE")

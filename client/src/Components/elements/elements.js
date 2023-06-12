@@ -548,7 +548,6 @@ export const Radio = ({
   formOptions,
   name,
   options,
-  onChange,
   error,
 }) => {
   return (

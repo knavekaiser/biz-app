@@ -97,6 +97,66 @@ const parseHtml = async (url, html) => {
     console.log(err);
   }
 };
+const fetchContext = async (url) => {
+  let topic, content;
+  if (true || new RegExp(/\.(pdf|docx)$/i).test(url)) {
+    await fetch(url)
+      .then(async (res) => {
+        if (res.status === 200) {
+          const contentType = res.headers.get("content-type");
+          topic = url.replace(/.*\//, "");
+          if (contentType.includes("text/html")) {
+            content = await parseHtml(res.url, await res.text());
+          } else if (contentType.includes("text/plain")) {
+            content = await res.text();
+          } else if (contentType.startsWith("application/")) {
+            const file = await res.arrayBuffer();
+            content = await getContext({
+              ext: url.replace(/.+\./, ""),
+              file,
+            });
+          }
+        } else {
+          error = `Request failed with ${res.status}`;
+        }
+      })
+      .catch((err) => {
+        error = err.message;
+      });
+    if (!topic) {
+      topic = url;
+    }
+  } else {
+    const browser = await puppeteer.launch({ headless: "new" });
+    const page = await browser.newPage();
+    await page._client.send("Page.setDownloadBehavior", {
+      behavior: "allow",
+      downloadPath: __tempDir,
+    });
+    await page.goto(url, { waitUntil: "networkidle0" });
+
+    const download = await page.waitForDownload();
+    const mimeType = download.headers["content-type"];
+
+    if (mimeType) {
+      const filePath = download.suggestedFilename;
+      // extract the content
+      content = await getContext({
+        ext: filePath.replace(/.+\./, ""),
+        file: filePath,
+      });
+
+      // delete file
+      await fileHelper.deleteFiles(filePath);
+    } else if (mimeType) {
+      content = await parseHtml(res.url, await page.content());
+    }
+
+    topic = (await page.title()) || url.replace(/.*\//, "");
+    await browser.close();
+  }
+  return { topic, content };
+};
 
 exports.initChat = async (req, res) => {
   try {
@@ -113,76 +173,25 @@ exports.initChat = async (req, res) => {
       const doc = await FaqDoc.findOne({ topic: req.body.topic });
       topic = doc.topic;
 
-      for (let i = 0; i < doc.files.length; i++) {
+      for (let i = 0; i < doc.files?.length; i++) {
         const file = doc.files[i];
-        context += await getContext({
-          ext: file.url.replace(/.+\./, ""),
-          path: __appDir + file.url,
-        });
+        context +=
+          (await getContext({
+            ext: file.url.replace(/.+\./, ""),
+            path: __appDir + file.url,
+          })) + "\n\n";
+      }
+      for (let i = 0; i < doc.urls?.length; i++) {
+        const url = doc.urls[i];
+
+        const result = await fetchContext(url);
+        context += result.content + "\n\n";
       }
     } else if (req.body.url) {
-      if (true || new RegExp(/\.(pdf|docx)$/i).test(req.body.url)) {
-        await fetch(req.body.url)
-          .then(async (res) => {
-            if (res.status === 200) {
-              const contentType = res.headers.get("content-type");
-              topic = req.body.url.replace(/.*\//, "");
-              if (contentType.includes("text/html")) {
-                context = await parseHtml(res.url, await res.text());
-              } else if (contentType.includes("text/plain")) {
-                context = await res.text();
-              } else if (contentType.startsWith("application/")) {
-                const file = await res.arrayBuffer();
-                context = await getContext({
-                  ext: req.body.url.replace(/.+\./, ""),
-                  file,
-                });
-              }
-            } else {
-              error = `Request failed with ${res.status}`;
-            }
-          })
-          .catch((err) => {
-            error = err.message;
-          });
-        if (!topic) {
-          topic = req.body.url;
-        }
-      } else {
-        const browser = await puppeteer.launch({ headless: "new" });
-        const page = await browser.newPage();
-        await page._client.send("Page.setDownloadBehavior", {
-          behavior: "allow",
-          downloadPath: __tempDir,
-        });
-        await page.goto(req.body.url, { waitUntil: "networkidle0" });
-
-        const download = await page.waitForDownload();
-        const mimeType = download.headers["content-type"];
-
-        console.log(mimeType);
-
-        if (mimeType) {
-          const filePath = download.suggestedFilename;
-          // extract the content
-          context = await getContext({
-            ext: filePath.replace(/.+\./, ""),
-            file: filePath,
-          });
-
-          // delete file
-          await fileHelper.deleteFiles(filePath);
-        } else if (mimeType) {
-          context = await parseHtml(res.url, await page.content());
-        }
-
-        topic = (await page.title()) || req.body.url.replace(/.*\//, "");
-        await browser.close();
-      }
+      const result = await fetchContext(req.body.url);
+      topic = result.topic;
+      context = result.content;
     }
-
-    // console.log({ topic, context });
-    // return responseFn.error(res, {}, "testgin");
 
     if (!context.trim().length) {
       return responseFn.error(res, {}, error);

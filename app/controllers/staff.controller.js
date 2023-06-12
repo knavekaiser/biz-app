@@ -1,6 +1,5 @@
 const {
-  appConfig,
-  appConfig: { responseFn, responseStr },
+  appConfig: { responseFn, responseStr, ...appConfig },
 } = require("../config");
 const {
   appHelper,

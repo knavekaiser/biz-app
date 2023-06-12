@@ -149,6 +149,7 @@ exports.homeStores = async (req, res) => {
       },
     ])
       .then(async (data) => {
+        console.log(data);
         responseFn.success(res, { data });
       })
       .catch((err) => responseFn.error(res, {}, err.message));

@@ -36,6 +36,19 @@
   display: grid;
   grid-gap: 1rem;
   padding: 1rem;
+  .docUrls {
+    display: grid;
+    grid-gap: 1rem;
+    .urlInput {
+      display: grid;
+      grid-gap: 1rem;
+      grid-template-columns: 1fr max-content max-content;
+      align-items: flex-end;
+    }
+    tr {
+      grid-template-columns: 1fr 3.5rem;
+    }
+  }
 }
 .termFormModal {
   width: 100%;

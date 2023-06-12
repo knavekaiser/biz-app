@@ -248,7 +248,7 @@ exports.updateBusiness = async (req, res) => {
 
     User.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
       .then(async (data) => {
-        const config = await new Config({ user: data._id }).save();
+        const config = await Config.findOne({ user: data._id });
         let plan = null;
         if (data.subscription?.plan) {
           plan = await SubPlan.findOne({ _id: data.subscription.plan });
