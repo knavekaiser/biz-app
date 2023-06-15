@@ -9,8 +9,8 @@ import { ProductThumb } from "./productThumbnail";
 import { BsArrowLeft } from "react-icons/bs";
 import { FiChevronRight } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
-import ComifyChat from "Components/comifyChat";
 import Filters from "./Filter";
+import { loadScript } from "helpers";
 
 const Home = () => {
   const [filters, setFilters] = useState({});
@@ -48,6 +48,13 @@ const Home = () => {
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
+
+    loadScript(endpoints.comifyChat).then(() => {
+      if (window.ComifyChat) {
+        const { default: mountComifyChat } = window.ComifyChat;
+        mountComifyChat();
+      }
+    });
   }, []);
 
   return (
@@ -88,7 +95,6 @@ const Home = () => {
           )}
         </div>
       </div>
-      <ComifyChat />
       <Footer />
     </>
   );

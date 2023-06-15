@@ -212,9 +212,9 @@ Context: ${context}`;
 
     const completion = await openai
       .createChatCompletion({
-        model: "gpt-3.5-turbo-0301",
+        model: "gpt-3.5-turbo-16k", //"gpt-3.5-turbo-0301",
         messages,
-        max_tokens: 50,
+        max_tokens: 100,
       })
       .catch((err) => console.log(err?.response.data));
 

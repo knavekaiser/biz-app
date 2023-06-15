@@ -59,6 +59,12 @@ const endpoints = {
   staffs: `${baseApiUrl}/api/staffs`,
   employees: `${baseApiUrl}/api/employees`,
   dynamicBulkCreate: `${baseApiUrl}/api/dynamic/:table/bulk-create`,
+
+  comifyChat: `${
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:8060"
+      : "https://comify.in"
+  }/assets/sdk/comify-chat-sdk-v0.9.0.js`,
 };
 
 export default endpoints;

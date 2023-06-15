@@ -1,5 +1,6 @@
 import { IoLogoWhatsapp } from "react-icons/io";
 import s from "./productThumbnail.module.scss";
+import { Prompt } from "Components/modal";
 
 function toNormalCase(str) {
   return str
@@ -12,15 +13,37 @@ function toNormalCase(str) {
 }
 
 export const ProductThumb = ({ order, business, product }) => {
+  const url =
+    product?.url || (business.domain ? "http://" + business.domain : null);
   return (
     <div className={`${s.productThumb}`}>
       <div className={s.thumbnailWrapper}>
-        <a href={product?.url || "http://" + business.domain}>
+        <a
+          href={url}
+          onClick={() => {
+            if (!url) {
+              return Prompt({
+                type: "error",
+                message: "The domain set up is in progress",
+              });
+            }
+          }}
+        >
           <img src={product.image} />
         </a>
       </div>
       <div className={s.productDetail}>
-        <a href={product?.url || "http://" + business.domain}>
+        <a
+          href={url}
+          onClick={() => {
+            if (!url) {
+              return Prompt({
+                type: "error",
+                message: "The domain set up is in progress",
+              });
+            }
+          }}
+        >
           <h4>{product.title}</h4>
         </a>
         {order?.map((item) => {
