@@ -270,7 +270,7 @@ exports.sendMessage = async (req, res) => {
 
     const completion = await openai
       .createChatCompletion({
-        model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo-16k", //"gpt-3.5-turbo-0301",
         messages: [
           ...chat.messages.map((item) => ({
             role: item.role,
@@ -283,7 +283,7 @@ exports.sendMessage = async (req, res) => {
             content: req.body.content,
           },
         ],
-        max_tokens: 50,
+        max_tokens: 100,
       })
       .catch((err) => console.log(err?.response.data));
 
