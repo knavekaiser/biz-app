@@ -100,7 +100,7 @@ const parseHtml = async (url, html) => {
   }
 };
 const fetchContext = async (url) => {
-  let topic, content;
+  let topic, content, error;
   if (true || new RegExp(/\.(pdf|docx)$/i).test(url)) {
     await fetch(url)
       .then(async (res) => {
@@ -157,7 +157,8 @@ const fetchContext = async (url) => {
     topic = (await page.title()) || url.replace(/.*\//, "");
     await browser.close();
   }
-  return { topic, content };
+
+  return { topic, error, content };
 };
 const countToken = (messages) => {
   const encoded = encode(messages);
@@ -196,10 +197,11 @@ exports.initChat = async (req, res) => {
     } else if (req.body.url) {
       const result = await fetchContext(req.body.url);
       topic = result.topic;
+      error = result.error;
       context = result.content;
     }
 
-    if (!context.trim().length) {
+    if (error || !context?.trim().length) {
       return responseFn.error(res, {}, error);
     }
 
