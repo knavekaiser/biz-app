@@ -27,11 +27,11 @@ const FullChat = ({ chat }) => {
             {chat.messages.length - 1}
           </p>
           <p>
-            <strong>Assistant Reponse: </strong>
+            <strong>Assistant Response: </strong>
             {chat.messages.filter((item) => item.role === "assistant").length}
           </p>
           <p>
-            <strong>Total Liked Messaeg: </strong>
+            <strong>Total Liked Messages: </strong>
             {
               chat.messages.filter(
                 (item) => item.role === "assistant" && item.like === true
@@ -39,7 +39,7 @@ const FullChat = ({ chat }) => {
             }
           </p>
           <p>
-            <strong>Total Disliked Messaeg: </strong>
+            <strong>Total Disliked Messages: </strong>
             {
               chat.messages.filter(
                 (item) => item.role === "assistant" && item.like === false
