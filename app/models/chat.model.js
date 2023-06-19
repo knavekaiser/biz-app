@@ -4,6 +4,7 @@ module.exports = mongoose.model(
     {
       topic: { type: String, required: true },
       url: { type: String },
+      business: { type: Schema.Types.ObjectId, ref: "User" },
       user: {
         name: { type: String, required: true },
         email: { type: String, required: true },

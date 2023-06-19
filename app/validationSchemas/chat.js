@@ -7,12 +7,20 @@ module.exports = {
       topic: yup.string().max(60), // check if the doc exists
       name: yup.string().max(60).required(),
       email: yup.string().max(150).email().required(),
-      message: yup.string().max(250).required(),
+      message: yup
+        .string()
+        .trim()
+        .max(250, "Message must be less than 250 characters long")
+        .required(),
     }),
   }),
   sendMessage: yup.object({
     body: yup.object({
-      content: yup.string().max(250).required(),
+      content: yup
+        .string()
+        .trim()
+        .max(250, "Message must be less than 250 characters long")
+        .required(),
     }),
     params: yup.object({
       _id: yup.string().required(), // check if the chat exists

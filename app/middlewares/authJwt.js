@@ -8,12 +8,12 @@ const { dbHelper } = require("../helpers");
 const { responseStr } = require("../config/app.config");
 
 verifyToken = async (req, res, next) => {
-  // let token = req.cookies.access_token;
-  const token = req.headers["x-access-token"];
+  const token = req.cookies.access_token;
+  // const token = req.headers["x-access-token"];
   const business_id = req.headers["x-business-id"];
 
   if (!token) {
-    return responseFn.error(res, {}, "No token provided!", 403);
+    return responseFn.error(res, {}, "No token provided!", 401);
   }
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {

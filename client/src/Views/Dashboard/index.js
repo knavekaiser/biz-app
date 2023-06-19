@@ -24,6 +24,7 @@ const Employees = lazy(() => import("./Employees"));
 const StoreListings = lazy(() => import("./Stores"));
 const SubCategories = lazy(() => import("./SubCategories"));
 const SubPlans = lazy(() => import("./SubPlans"));
+const Chats = lazy(() => import("./Chats"));
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -48,6 +49,7 @@ const Dashboard = () => {
               { label: "Subscription Plans", path: paths.subPlans },
               // { label: "Categories", path: paths.categories },
               { label: "Sub Categories", path: paths.subCategories },
+              { label: "Chats", path: paths.chats },
               {
                 label: "Manage Data",
                 path: paths.dynamicTables.replace("/*", ""),
@@ -104,6 +106,14 @@ const Dashboard = () => {
             element={
               <Suspense fallback={<LoadingSaklleton />}>
                 <AdminDynamicTables />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.chats}
+            element={
+              <Suspense fallback={<LoadingSaklleton />}>
+                <Chats />
               </Suspense>
             }
           />
@@ -171,6 +181,9 @@ const Dashboard = () => {
                     path: paths.dynamicTables.replace("/*", ""),
                   },
                 ]
+              : []),
+            ...(checkPermission("chat_read")
+              ? [{ label: "Chats", path: paths.chats }]
               : []),
             ...(checkPermission("role_read")
               ? [{ label: "Roles", path: paths.roles }]
@@ -274,6 +287,16 @@ const Dashboard = () => {
             element={
               <Suspense fallback={<LoadingSaklleton />}>
                 <Employees />
+              </Suspense>
+            }
+          />
+        )}
+        {checkPermission("chat_read") && (
+          <Route
+            path={paths.chats}
+            element={
+              <Suspense fallback={<LoadingSaklleton />}>
+                <Chats />
               </Suspense>
             }
           />

@@ -18,7 +18,6 @@ exports.findAll = async (req, res) => {
     if (req.params._id) {
       conditions._id = ObjectId(req.params._id);
     }
-    console.log(conditions);
     SubPlan.aggregate([{ $match: conditions }, { $project: { __v: 0 } }])
       .then((data) => {
         responseFn.success(res, { data });

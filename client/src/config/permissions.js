@@ -39,6 +39,11 @@ const paths = [
     value: "employee",
     actions: ["read", "create", "update", null],
   },
+  {
+    label: "Chat",
+    value: "chat",
+    actions: ["read", "delete"],
+  },
 ];
 
 export default paths;

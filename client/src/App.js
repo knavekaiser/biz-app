@@ -17,7 +17,7 @@ function resizeWindow() {
 }
 
 function App() {
-  const { user, setUser, userType } = useContext(SiteContext);
+  const { setUser, userType } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,9 +27,9 @@ function App() {
     window.addEventListener("resize", () => resizeWindow());
     resizeWindow();
 
-    if (!sessionStorage.getItem("access_token")) {
-      return;
-    }
+    // if (!document.cookie.includes("access_token")) {
+    //   return;
+    // }
 
     getProfile()
       .then(({ data }) => {

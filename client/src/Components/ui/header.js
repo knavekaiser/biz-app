@@ -19,7 +19,7 @@ const Header = ({ home, filters, setFilters }) => {
   const [style, setStyle] = useState({});
   const iconRef = useRef();
   const { post: logout } = useFetch(endpoints[`${userType}Logout`]);
-  const naviage = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const boundingBox = iconRef.current.getBoundingClientRect();
@@ -77,7 +77,7 @@ const Header = ({ home, filters, setFilters }) => {
               onClick={() => {
                 setOpen(false);
                 setBusiness(null);
-                naviage(paths.businesses);
+                navigate(paths.businesses);
               }}
             >
               Switch Business
@@ -99,8 +99,7 @@ const Header = ({ home, filters, setFilters }) => {
                   if (data.success) {
                     setUser(null);
                     setConfig(null);
-                    sessionStorage.removeItem("access_token");
-                    naviage(paths.home);
+                    navigate(paths.home);
                   }
                 });
               }}

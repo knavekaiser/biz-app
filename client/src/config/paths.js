@@ -23,6 +23,7 @@ const paths = {
   categories: "categories",
   subCategories: "sub-categories",
   subPlans: "subscription-plans",
+  chats: "chats",
 
   settings: {
     baseUrl: "settings/*",

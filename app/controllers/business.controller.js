@@ -3,7 +3,6 @@ const {
 } = require("../config");
 const {
   appHelper,
-  smsHelper,
   appHelper: { genId },
   dbHelper,
   fileHelper,

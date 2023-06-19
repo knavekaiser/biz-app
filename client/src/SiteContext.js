@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 export const SiteContext = createContext();
@@ -32,27 +31,30 @@ export const Provider = ({ children }) => {
 
   useEffect(() => {
     if (business) {
-      sessionStorage.setItem("business_id", business.business._id);
+      localStorage.setItem("business_id", business.business._id);
     } else {
-      sessionStorage.removeItem("business_id");
+      localStorage.removeItem("business_id");
     }
   }, [business]);
 
-  const { get: getConfig } = useFetch(endpoints.userConfig);
   useEffect(() => {
     if (!!(business || user) && !config) {
       if (user?.userType === "business") {
-        getConfig().then(({ data }) => {
-          if (data.success) {
-            setConfig(data.data);
-          }
-        });
+        fetch(endpoints.userConfig)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setConfig(data.data);
+            }
+          });
       } else if (business) {
-        getConfig().then(({ data }) => {
-          if (data.success) {
-            setConfig(data.data);
-          }
-        });
+        fetch(endpoints.userConfig)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              setConfig(data.data);
+            }
+          });
       }
     } else if (user) {
       if (user.userType === "business") {

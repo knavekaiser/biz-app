@@ -12,6 +12,8 @@ const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const fs = require("fs");
 const { fileHelper } = require("../helpers");
+const { default: mongoose } = require("mongoose");
+const { encode } = require("gpt-3-encoder");
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -157,6 +159,10 @@ const fetchContext = async (url) => {
   }
   return { topic, content };
 };
+const countToken = (messages) => {
+  const encoded = encode(messages);
+  return encoded.length;
+};
 
 exports.initChat = async (req, res) => {
   try {
@@ -223,6 +229,7 @@ Context: ${context}`;
       const chat = await new Chat({
         topic,
         url: req.body.url,
+        business: req.business?._id,
         user: {
           name: req.body.name,
           email: req.body.email,
@@ -264,9 +271,47 @@ exports.getChat = async (req, res) => {
   }
 };
 
+exports.getChats = async (req, res) => {
+  try {
+    const conditions = {};
+    if (["business", "staff"].includes(req.authToken.userType)) {
+      conditions.business = req.business?._id || req.authUser._id;
+    }
+
+    Chat.find(conditions)
+      .populate("business", "_id name phone email")
+      .then((data) => responseFn.success(res, { data }))
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.sendMessage = async (req, res) => {
   try {
     const chat = await Chat.findOne({ _id: req.params._id });
+
+    // const tokenCount = countToken();
+
+    // return responseFn.error(res, {}, "Working on it");
+
+    await Chat.updateOne(
+      { _id: req.params._id },
+      {
+        $push: {
+          messages: {
+            $each: [
+              {
+                role: "user",
+                name: "Guest",
+                content: req.body.content,
+              },
+              // message,
+            ],
+          },
+        },
+      }
+    );
 
     const completion = await openai
       .createChatCompletion({
@@ -289,17 +334,18 @@ exports.sendMessage = async (req, res) => {
 
     if (completion?.data?.id) {
       const message = completion.data.choices[0]?.message;
+      message._id = mongoose.Types.ObjectId();
       await Chat.updateOne(
         { _id: req.params._id },
         {
           $push: {
             messages: {
               $each: [
-                {
-                  role: "user",
-                  name: "Guest",
-                  content: req.body.content,
-                },
+                // {
+                //   role: "user",
+                //   name: "Guest",
+                //   content: req.body.content,
+                // },
                 message,
               ],
             },
@@ -332,6 +378,22 @@ exports.vote = async (req, res) => {
         return responseFn.error(res, {}, responseStr.record_not_found);
       })
       .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+exports.delete = async (req, res) => {
+  try {
+    if (!req.params._id && !req.body.ids?.length) {
+      return responseFn.error(res, {}, responseStr.select_atleast_one_record);
+    }
+    Chat.deleteMany({
+      _id: { $in: [...(req.body.ids || []), req.params._id] },
+      user: req.business?._id || req.authUser._id,
+    })
+      .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
+      .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

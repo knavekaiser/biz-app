@@ -50,6 +50,7 @@ const endpoints = {
   adSchemas: `${baseApiUrl}/api/ad-schemas`,
 
   userConfig: `${baseApiUrl}/api/user-config`,
+  chats: `${baseApiUrl}/api/chats`,
   collections: `${baseApiUrl}/api/collections`,
   schemaTemplates: `${baseApiUrl}/api/collections/templates`,
   dynamic: `${baseApiUrl}/api/dynamic`,

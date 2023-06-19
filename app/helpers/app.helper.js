@@ -15,7 +15,7 @@ exports.signIn = (res, user, userType) => {
   const token = signToken({ sub: user._id, userType });
   ["password", "__v", "updatedAt"].forEach((key) => delete user[key]);
   res.cookie("access_token", token, {
-    maxAge: 50000,
+    maxAge: 1000 * 60 * 60 * 24 * 60, // 60 days
     httpOnly: true,
     sameSite: "strict",
   });

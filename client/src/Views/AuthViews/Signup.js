@@ -43,7 +43,6 @@ const Form = () => {
           if (data.success) {
             setUser(data.data);
             localStorage.setItem("userType", data.data.userType);
-            sessionStorage.setItem("access_token", data.token);
             navigate(paths.dashboard, { replace: true });
           } else {
             Prompt({

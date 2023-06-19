@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useContext } from "react";
+import { paths } from "config";
+import { useNavigate } from "react-router-dom";
+import { SiteContext } from "SiteContext";
+// import { Prompt } from "Components/modal";
 
 export const useFetch = (url, { headers: hookHeaders } = {}) => {
+  const navigate = useNavigate();
+  const { setUser, setConfig } = useContext(SiteContext);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
   const controller = useRef();
@@ -35,9 +41,8 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
             ...(!(typeof payload?.append === "function") && {
               "Content-Type": "application/json",
             }),
-            "x-access-token": sessionStorage.getItem("access_token"),
-            ...(sessionStorage.getItem("business_id") && {
-              "x-business-id": sessionStorage.getItem("business_id"),
+            ...(localStorage.getItem("business_id") && {
+              "x-business-id": localStorage.getItem("business_id"),
             }),
             ...hookHeaders,
             ...headers,
@@ -52,6 +57,22 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
         })
           .then(async (res) => {
             let data = await res.json();
+            if (res.status === 401) {
+              setUser(null);
+              setConfig(null);
+              navigate(paths.home);
+              return;
+
+              // return Prompt({
+              //   type: "error",
+              //   message: "Session has expired!",
+              //   callback: () => {
+              //     setUser(null);
+              //     setConfig(null);
+              //     navigate(paths.home);
+              //   },
+              // });
+            }
             setLoading(false);
             resolve({ res, data });
           })
