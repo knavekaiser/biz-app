@@ -2,7 +2,7 @@ const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 
-const { FaqDoc, Chat } = require("../models");
+const { FaqDoc, Chat, SubPlan } = require("../models");
 
 const { Configuration, OpenAIApi } = require("openai");
 const mammoth = require("mammoth");
@@ -22,7 +22,7 @@ const openai = new OpenAIApi(configuration);
 
 exports.getTopics = async (req, res) => {
   try {
-    const topics = await FaqDoc.find({ user_id: req.business?._id || null });
+    const topics = await FaqDoc.find({ user: req.business?._id || null });
 
     responseFn.success(res, { data: topics.map((item) => item.topic) });
   } catch (error) {
@@ -175,6 +175,7 @@ exports.initChat = async (req, res) => {
     let context = "";
     let topic = "";
     let error = "";
+    let max_tokens = 100;
 
     if (req.body.topic) {
       const doc = await FaqDoc.findOne({ topic: req.body.topic });
@@ -205,6 +206,12 @@ exports.initChat = async (req, res) => {
       return responseFn.error(res, {}, error);
     }
 
+    if (req.business?.subPlan) {
+      await SubPlan.findOne({ _id: req.business.subPlan }).then((subPlan) => {
+        if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
+      });
+    }
+
     const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide you with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If your question is about ${topic}, You will use the context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
 
 Context: ${context}`;
@@ -222,7 +229,7 @@ Context: ${context}`;
       .createChatCompletion({
         model: "gpt-3.5-turbo-16k", //"gpt-3.5-turbo-0301",
         messages,
-        max_tokens: 100,
+        max_tokens,
       })
       .catch((err) => console.log(err?.response.data));
 
@@ -263,6 +270,7 @@ exports.getChat = async (req, res) => {
             _id: chat._id,
             user: chat.user,
             topic: chat.topic,
+            url: chat.url,
             messages: chat.messages.filter((item) => item.name !== "System"),
           },
         })
@@ -315,6 +323,14 @@ exports.sendMessage = async (req, res) => {
       }
     );
 
+    let max_tokens = 100;
+
+    if (req.business?.subPlan) {
+      await SubPlan.findOne({ _id: req.business.subPlan }).then((subPlan) => {
+        if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
+      });
+    }
+
     const completion = await openai
       .createChatCompletion({
         model: "gpt-3.5-turbo-16k", //"gpt-3.5-turbo-0301",
@@ -330,7 +346,7 @@ exports.sendMessage = async (req, res) => {
             content: req.body.content,
           },
         ],
-        max_tokens: 100,
+        max_tokens,
       })
       .catch((err) => console.log(err?.response.data));
 

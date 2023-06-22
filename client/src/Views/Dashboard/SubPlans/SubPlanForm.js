@@ -23,6 +23,11 @@ const schema = yup.object({
     .min(1, "Please enter more than 0")
     .required()
     .typeError("Please enter a valid number"),
+  maxAiChatToken: yup
+    .number()
+    .min(1, "Please enter more than 0")
+    .required()
+    .typeError("Please enter a valid number"),
 });
 
 const Form = ({ edit, onSuccess }) => {
@@ -42,12 +47,19 @@ const Form = ({ edit, onSuccess }) => {
   } = useFetch(endpoints.subPlans + `/${edit?._id || ""}`);
 
   useEffect(() => {
-    reset({ ...edit, maxProduct: edit?.features?.maxProduct });
+    reset({
+      ...edit,
+      maxProduct: edit?.features?.maxProduct,
+      maxAiChatToken: edit?.features?.maxAiChatToken,
+    });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        values.features = { maxProduct: values.maxProduct };
+        values.features = {
+          maxProduct: values.maxProduct,
+          maxAiChatToken: values.maxAiChatToken,
+        };
         delete values.maxProduct;
         (edit ? update : save)({ ...values })
           .then(({ data }) => {
@@ -82,6 +94,13 @@ const Form = ({ edit, onSuccess }) => {
         type="number"
         required
         error={errors.maxProduct}
+      />
+      <Input
+        label="Max AI Chat Token"
+        {...register("maxAiChatToken")}
+        type="number"
+        required
+        error={errors.maxAiChatToken}
       />
       <div className="btns">
         <button className="btn" disabled={loading}>
