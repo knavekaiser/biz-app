@@ -197,7 +197,7 @@ exports.initChat = async (req, res) => {
       }
     } else if (req.body.url) {
       const result = await fetchContext(req.body.url);
-      topic = result.topic;
+      topic = result.topic || "certain document";
       error = result.error;
       context = result.content;
     }
@@ -215,6 +215,10 @@ exports.initChat = async (req, res) => {
     const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide you with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If your question is about ${topic}, You will use the context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
 
 Context: ${context}`;
+
+    if (topic === "certain document") {
+      topic = "URL";
+    }
 
     const messages = [
       { role: "user", name: "System", content: message },
@@ -250,6 +254,7 @@ Context: ${context}`;
           _id: chat._id,
           user: chat.user,
           topic: chat.topic,
+          url: chat.url,
           messages: chat.messages.filter((item) => item.name !== "System"),
         },
       });
