@@ -20,6 +20,7 @@ module.exports = {
       features: yup.object({
         maxProduct: yup.number().min(1).required(),
         maxAiChatToken: yup.number().min(1).required(),
+        maxAiChatContextToken: yup.number().min(1).required(),
       }),
     }),
   }),

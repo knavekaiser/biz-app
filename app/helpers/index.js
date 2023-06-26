@@ -103,4 +103,5 @@ module.exports = {
   smsHelper: require("./sms.helper"),
   dbHelper: require("./db.helper"),
   fileHelper: require("./file.helper"),
+  aiHelper: require("./ai.helper"),
 };

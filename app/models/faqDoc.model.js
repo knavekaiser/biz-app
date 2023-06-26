@@ -2,7 +2,7 @@ module.exports = mongoose.model(
   "FAQ Document",
   new Schema(
     {
-      user: { type: String, required: true },
+      user: { type: Schema.Types.ObjectId, ref: "User", required: true },
       topic: { type: String, required: true },
       description: { type: String },
       files: [
@@ -14,6 +14,7 @@ module.exports = mongoose.model(
         }),
       ],
       urls: [{ type: String }],
+      tokenCount: { type: Number, default: 0, required: true },
     },
     { timestamps: true }
   )

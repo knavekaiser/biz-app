@@ -66,19 +66,27 @@ const Docs = ({ docs, setDocs }) => {
   return (
     <>
       <div className="flex justify-space-between align-center">
-        <h3>FAQ Documents</h3>
+        <h3>AI Chat Knowledge Base</h3>
         <button type="button" className="btn" onClick={() => setAddDoc(true)}>
-          Add Document
+          Add New Topic
         </button>
       </div>
       <Table
         className={s.faqDocs}
-        columns={[{ label: "Topic" }, { label: "Files" }, { label: "Action" }]}
+        columns={[
+          { label: "Topic" },
+          { label: "Files" },
+          { label: "URLs" },
+          { label: "Token Count" },
+          { label: "Action" },
+        ]}
       >
         {docs.map((item, i) => (
           <tr key={i}>
             <td>{item.topic}</td>
             <td>{item.files.length}</td>
+            <td>{item.urls.length}</td>
+            <td>{item.tokenCount}</td>
             <TableActions
               actions={[
                 {
@@ -122,7 +130,7 @@ const Docs = ({ docs, setDocs }) => {
       </Table>
       <Modal
         head
-        label={edit ? "Update Document" : "Add Document"}
+        label={edit ? "Update Topic" : "Add Topic"}
         open={addDoc}
         setOpen={() => {
           setAddDoc(false);
@@ -194,7 +202,7 @@ const DocForm = ({ edit, onSuccess }) => {
         };
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
-          if (key === "files") {
+          if (key === "files" && value) {
             const oldFiles = value.filter((item) => item.url);
             const newFiles = value.filter((item) => !item.url);
 

@@ -1,9 +1,10 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { fileHelper } = require("../helpers");
+const { fileHelper, aiHelper } = require("../helpers");
+const { countToken } = require("../helpers/ai.helper");
 
-const { FaqDoc } = require("../models");
+const { FaqDoc, SubPlan } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
@@ -17,6 +18,25 @@ exports.findAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+    const subPlan = await SubPlan.findOne({
+      _id: req.business.subscription?.plan,
+    });
+    const context = await aiHelper.getContext({
+      files: req.body.files || [],
+      urls: req.body.urls || [],
+    });
+    const tokenCount = countToken(context);
+    if (tokenCount > subPlan?.features.maxAiChatContextToken) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.max_context_token_limit
+          .replace("{TOKEN_COUNT}", tokenCount)
+          .replace("{MAX_TOKEN_COUNT}", subPlan?.features.maxAiChatContextToken)
+      );
+    }
+
+    req.body.tokenCount = tokenCount;
     new FaqDoc({
       ...req.body,
       user: req.business?._id || req.authUser._id,
@@ -35,6 +55,9 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const doc = await FaqDoc.findOne({ _id: req.params._id });
+    const subPlan = await SubPlan.findOne({
+      _id: req.business.subscription?.plan,
+    });
 
     let filesToRemove = [];
     if (req.body.files) {
@@ -44,6 +67,23 @@ exports.update = async (req, res) => {
         )
       );
     }
+
+    const context = await aiHelper.getContext({
+      files: req.body.files || [],
+      urls: req.body.urls || [],
+    });
+    const tokenCount = countToken(context);
+    if (tokenCount > subPlan?.features.maxAiChatContextToken) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.max_context_token_limit
+          .replace("{TOKEN_COUNT}", tokenCount)
+          .replace("{MAX_TOKEN}", subPlan?.features.maxAiChatContextToken)
+      );
+    }
+
+    req.body.tokenCount = tokenCount;
     FaqDoc.findOneAndUpdate(
       { _id: req.params._id, user: req.business?._id || req.authUser._id },
       req.body,

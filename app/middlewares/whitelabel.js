@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");

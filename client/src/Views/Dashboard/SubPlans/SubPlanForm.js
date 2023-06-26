@@ -28,6 +28,11 @@ const schema = yup.object({
     .min(1, "Please enter more than 0")
     .required()
     .typeError("Please enter a valid number"),
+  maxAiChatContextToken: yup
+    .number()
+    .min(1, "Please enter more than 0")
+    .required()
+    .typeError("Please enter a valid number"),
 });
 
 const Form = ({ edit, onSuccess }) => {
@@ -51,6 +56,7 @@ const Form = ({ edit, onSuccess }) => {
       ...edit,
       maxProduct: edit?.features?.maxProduct,
       maxAiChatToken: edit?.features?.maxAiChatToken,
+      maxAiChatContextToken: edit?.features?.maxAiChatContextToken,
     });
   }, [edit]);
   return (
@@ -59,6 +65,7 @@ const Form = ({ edit, onSuccess }) => {
         values.features = {
           maxProduct: values.maxProduct,
           maxAiChatToken: values.maxAiChatToken,
+          maxAiChatContextToken: values.maxAiChatContextToken,
         };
         delete values.maxProduct;
         (edit ? update : save)({ ...values })
@@ -101,6 +108,13 @@ const Form = ({ edit, onSuccess }) => {
         type="number"
         required
         error={errors.maxAiChatToken}
+      />
+      <Input
+        label="Max AI Chat Context Token"
+        {...register("maxAiChatContextToken")}
+        type="number"
+        required
+        error={errors.maxAiChatContextToken}
       />
       <div className="btns">
         <button className="btn" disabled={loading}>

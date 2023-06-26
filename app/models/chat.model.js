@@ -16,6 +16,7 @@ module.exports = mongoose.model(
             name: { type: String },
             content: { type: String, required: true },
             like: { type: Boolean, required: false, default: null },
+            token: { type: Number, required: false },
           },
           { timestamps: true }
         ),

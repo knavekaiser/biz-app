@@ -8,6 +8,11 @@ module.exports = mongoose.model(
       features: {
         maxProduct: { type: Schema.Types.Number, min: 0, required: true },
         maxAiChatToken: { type: Schema.Types.Number, min: 0, required: true },
+        maxAiChatContextToken: {
+          type: Schema.Types.Number,
+          min: 0,
+          required: true,
+        },
       },
       // dateTime: { type: Schema.Types.Date, required: true },
       // gst: { type: Schema.Types.Number, min: 0, required: true },

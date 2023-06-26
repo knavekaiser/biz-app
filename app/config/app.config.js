@@ -54,6 +54,7 @@ module.exports = {
     domain_not_specified: "Domain not specified",
     max_product_limit_reached:
       "Maximum number product reached. Please upgrade your account to add more products.",
+    max_context_token_limit: `Too many tokens in context! Your message has {TOKEN_COUNT} tokens. Please reduce it to {MAX_TOKEN} tokens or less. Upgrade your account for longer context.`,
 
     file_too_large:
       "File is too large. Please provide files that are less that {maxSize}",

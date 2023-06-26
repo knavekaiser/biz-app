@@ -43,7 +43,7 @@ const Settings = () => {
           { label: "Bank Detail", path: "bank-details" },
           { label: "Owner Detail", path: "owner-details" },
           { label: "Terms & Conditions", path: "terms-and-conditions" },
-          { label: "Documents", path: "documents" },
+          { label: "AI Chat Knowledge Base", path: "ai-chat-knowledge-base" },
           { label: "Configurations", path: "config" },
           { label: "Site Configurations", path: "site-config" },
         ]}
@@ -71,7 +71,7 @@ const Settings = () => {
           element={<SiteConfig next={next} />}
         />
         <Route
-          path={paths.settings.documents}
+          path={paths.settings.aiChatKnowledgeBase}
           element={<Documents next={next} />}
         />
       </Routes>

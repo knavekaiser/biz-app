@@ -42,6 +42,7 @@ const Chats = () => {
           ...(user.userType === "admin" ? [{ label: "Business" }] : []),
           { label: "Topic" },
           { label: "Total Messages" },
+          { label: "Token Usage" },
           { label: "Action" },
         ]}
       >
@@ -54,6 +55,7 @@ const Chats = () => {
             {user.userType === "admin" && <td>{item.business?.name}</td>}
             <td>{item.topic}</td>
             <td>{item.messages.length - 1}</td>
+            <td>{item.tokenUsage}</td>
             <TableActions
               className={s.actions}
               actions={[
