@@ -21,9 +21,6 @@ exports.initChat = async (req, res) => {
     if (!req.body.topic && !req.body.url) {
       return responseFn.error(res, {}, responseStr.include_either_topic_or_url);
     }
-    const subPlan = await SubPlan.findOne({
-      _id: req.business.subscription?.plan,
-    });
 
     // get text content from documents
     let context = "";
@@ -51,10 +48,15 @@ exports.initChat = async (req, res) => {
     }
 
     const tokenCount = await aiHelper.countToken(context);
-    if (tokenCount > subPlan?.features.maxAiChatContextToken) {
-      return responseFn.error(res, {});
+    if (req.business?.subscription.plan) {
+      const subPlan = await SubPlan.findOne({
+        _id: req.business.subscription?.plan,
+      });
+      if (tokenCount > subPlan?.features.maxAiChatContextToken) {
+        return responseFn.error(res, {});
+      }
+      if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
     }
-    if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
 
     const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide you with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If your question is about ${topic}, You will use the given context to answer the query. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can assist you with?". and keep the answers concise.
 
@@ -167,10 +169,12 @@ exports.sendMessage = async (req, res) => {
 
     let max_tokens = 100;
 
-    if (req.business?.subPlan) {
-      await SubPlan.findOne({ _id: req.business.subPlan }).then((subPlan) => {
-        if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
-      });
+    if (req.business?.subscription.plan) {
+      await SubPlan.findOne({ _id: req.business.subscription.plan }).then(
+        (subPlan) => {
+          if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
+        }
+      );
     }
 
     aiHelper
