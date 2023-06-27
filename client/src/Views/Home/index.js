@@ -51,10 +51,15 @@ const Home = () => {
 
     loadScript(endpoints.comifyChat).then(() => {
       if (window.ComifyChat) {
-        const { default: mountComifyChat } = window.ComifyChat;
+        const { default: mountComifyChat, unmountComifyChat } =
+          window.ComifyChat;
         mountComifyChat();
       }
     });
+
+    return () => {
+      unmountComifyChat();
+    };
   }, []);
 
   return (

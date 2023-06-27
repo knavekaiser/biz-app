@@ -38,23 +38,24 @@ export const Provider = ({ children }) => {
   }, [business]);
 
   useEffect(() => {
+    const getConfig = () => {
+      fetch(endpoints.userConfig, {
+        headers: {
+          "x-business-id": localStorage.getItem("business_id"),
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setConfig(data.data);
+          }
+        });
+    };
     if (!!(business || user) && !config) {
       if (user?.userType === "business") {
-        fetch(endpoints.userConfig)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setConfig(data.data);
-            }
-          });
+        getConfig();
       } else if (business) {
-        fetch(endpoints.userConfig)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success) {
-              setConfig(data.data);
-            }
-          });
+        getConfig();
       }
     } else if (user) {
       if (user.userType === "business") {
