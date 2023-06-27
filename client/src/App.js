@@ -7,6 +7,8 @@ import { Prompt } from "Components/modal";
 import { CgSpinner } from "react-icons/cg";
 import { useFetch } from "hooks";
 
+import { loadScript } from "helpers";
+
 const Dashboard = lazy(() => import("Views/Dashboard"));
 const Home = lazy(() => import("Views/Home"));
 const AuthView = lazy(() => import("Views/AuthViews"));
@@ -43,6 +45,13 @@ function App() {
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
+
+    loadScript(endpoints.comifyChat).then(() => {
+      if (window.ComifyChat) {
+        const { default: mountComifyChat } = window.ComifyChat;
+        mountComifyChat();
+      }
+    });
   }, []);
 
   return (

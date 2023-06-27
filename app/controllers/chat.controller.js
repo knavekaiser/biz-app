@@ -122,6 +122,7 @@ exports.getChat = async (req, res) => {
             topic: chat.topic,
             url: chat.url,
             messages: chat.messages.filter((item) => item.name !== "System"),
+            createdAt: chat.createdAt,
           },
         })
       )
@@ -195,6 +196,8 @@ exports.sendMessage = async (req, res) => {
       )
       .then(async ({ message, usage }) => {
         message._id = mongoose.Types.ObjectId();
+        message.createdAt = messageDate;
+        message.updatedAt = messageDate;
         await Chat.updateOne(
           { _id: req.params._id },
           {
@@ -205,8 +208,6 @@ exports.sendMessage = async (req, res) => {
                     role: "user",
                     name: "Guest",
                     content: req.body.content,
-                    createdAt: messageDate,
-                    updatedAt: messageDate,
                     token: usage.prompt_tokens,
                   },
                   { ...message, token: usage.completion_tokens },
