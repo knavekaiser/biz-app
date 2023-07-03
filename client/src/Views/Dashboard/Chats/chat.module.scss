@@ -25,6 +25,13 @@
   max-width: 55rem;
 }
 
+.chatContext {
+  padding: 1rem;
+  display: grid;
+  grid-gap: 1rem;
+  max-width: 65rem;
+}
+
 .fullChat {
   display: grid;
   grid-template-columns: 20rem 1fr;

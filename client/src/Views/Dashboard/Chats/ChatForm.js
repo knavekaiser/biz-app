@@ -2,8 +2,10 @@ import { HiThumbDown, HiThumbUp } from "react-icons/hi";
 import s from "./chat.module.scss";
 import { Moment } from "Components/elements";
 import { Fragment, useState } from "react";
+import { Modal } from "Components/modal";
 
 const FullChat = ({ chat }) => {
+  const [viewContext, setViewContext] = useState(false);
   return (
     <div className={`grid gap-1 ${s.fullChat}`}>
       <div className={`grid p-1 gap-1 ${s.detail}`}>
@@ -47,6 +49,10 @@ const FullChat = ({ chat }) => {
             }
           </p>
         </div>
+
+        <button className="btn" onClick={() => setViewContext(!viewContext)}>
+          View Context
+        </button>
       </div>
       <div className={s.messages}>
         {chat.messages
@@ -69,6 +75,16 @@ const FullChat = ({ chat }) => {
             </Fragment>
           ))}
       </div>
+
+      {viewContext && (
+        <Modal open={viewContext} setOpen={setViewContext} head label="Context">
+          <div className={s.chatContext}>
+            {chat.messages[0]?.content
+              .split("\n")
+              .map((item, i) => (item ? <p key={i}>{item}</p> : null))}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
