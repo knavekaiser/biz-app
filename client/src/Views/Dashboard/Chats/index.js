@@ -104,7 +104,7 @@ const Chats = () => {
       <Modal
         open={chat}
         head
-        label={`${chat ? "View / Update" : "Add"} Chat`}
+        label={`Chat`}
         className={s.fullChatModal}
         setOpen={() => setChat(null)}
       >

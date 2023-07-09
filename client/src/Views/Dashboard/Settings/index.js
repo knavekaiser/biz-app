@@ -125,6 +125,7 @@ const BusinessInformation = ({ next }) => {
         pan: client.pan || "",
         ifsc: client.ifsc || "",
         domain: client.domain || "",
+        chatbotDomain: client.chatbot?.domain || "",
         favicon: client.favicon ? [client.favicon] : [],
       });
       if (client?.address?.latitude && client?.address?.longitude) {
@@ -177,6 +178,15 @@ const BusinessInformation = ({ next }) => {
         formData.append(`pan`, values.pan);
         formData.append(`ifsc`, values.ifsc);
         formData.append(`domain`, values.domain);
+        if (values.chatbotDomain) {
+          formData.append(
+            "chatbotDomain",
+            values.chatbotDomain.replace(
+              /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
+              "$1"
+            )
+          );
+        }
         formData.append(`whatsappNumber`, values.whatsappNumber);
         formData.append("description", values.description);
 
@@ -270,6 +280,11 @@ const BusinessInformation = ({ next }) => {
         error={errors.description}
       />
       <Input label="Domain" {...register("domain")} error={errors.domain} />
+      <Input
+        label="Chatbot Domain"
+        {...register("chatbotDomain")}
+        error={errors.chatbotDomain}
+      />
       <Input label="GSTIN" {...register("gstin")} error={errors.gstin} />
       <Input label="PAN" {...register("pan")} error={errors.pan} />
       <Input label="IFSC" {...register("ifsc")} error={errors.ifsc} />

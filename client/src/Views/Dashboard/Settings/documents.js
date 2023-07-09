@@ -9,7 +9,6 @@ import {
   TableActions,
   Input,
   FileInputNew,
-  CustomRadio,
 } from "Components/elements";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import * as yup from "yup";

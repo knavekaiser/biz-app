@@ -6,13 +6,28 @@ const {
   appHelper: { genId },
   dbHelper,
   fileHelper,
+  emailHelper,
 } = require("../helpers");
 
 const { User, Otp, Config, Collection, SubPlan } = require("../models");
 
 exports.signup = async (req, res) => {
   try {
+    if (!req.body.phone && !req.body.email) {
+      return responseFn.error(res, {}, "Email or Phone is required", 400);
+    }
     req.body.password = appHelper.generateHash(req.body.password);
+
+    const subPlan = await SubPlan.findOne({ name: "14 Days Trial" });
+    if (subPlan) {
+      req.body.subscription = {
+        plan: subPlan._id,
+        metadata: {
+          startDate: new Date(),
+          endDate: new Date().add(subPlan.duration + "D"),
+        },
+      };
+    }
 
     new User({ ...req.body })
       .save()
@@ -21,6 +36,7 @@ exports.signup = async (req, res) => {
         await Collection.insertMany(
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
+
         return appHelper.signIn(res, user._doc, "business");
       })
       .catch((err) => {
@@ -33,12 +49,29 @@ exports.signup = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const user = await User.findOne({ phone: req.body.phone });
+    if (!req.body.phone && !req.body.email) {
+      return responseFn.error(res, {}, "Email or Phone is required", 400);
+    }
+    const condition = {};
+    if (req.body.phone) {
+      condition.phone = req.body.phone;
+    } else if (req.body.email) {
+      condition.email = req.body.email;
+    }
+    const user = await User.findOne(condition);
 
-    if (user && appHelper.compareHash(req.body.password, user.password)) {
+    if (
+      user &&
+      appHelper.compareHash(req.body.password.toString(), user.password)
+    ) {
       return appHelper.signIn(res, user._doc, "business");
     } else {
-      return responseFn.error(res, {}, responseStr.invalid_cred);
+      return responseFn.error(
+        res,
+        { type: "cred_error" },
+        responseStr.invalid_cred,
+        400
+      );
     }
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -47,7 +80,16 @@ exports.login = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const user = await User.findOne({ phone: req.body.phone });
+    if (!req.body.phone && !req.body.email) {
+      return responseFn.error(res, {}, "Email or Phone is required", 400);
+    }
+    const conditions = {};
+    if (req.body.phone) {
+      conditions.phone = req.body.phone;
+    } else if (req.body.email) {
+      conditions.email = req.body.email;
+    }
+    const user = await User.findOne(conditions);
 
     if (user) {
       const otp = genId(6, { numbers: true });
@@ -57,22 +99,67 @@ exports.forgotPassword = async (req, res) => {
       })
         .save()
         .then(async (otpRec) => {
-          // smsHelper.send()
-          const result = { success: true };
-          if (result.success) {
-            return responseFn.success(
-              res,
-              {
-                data: {
-                  phone: user.phone,
-                  timeout: appConfig.otpTimeout,
+          if (req.body.phone) {
+            // smsHelper.send()
+            const result = { success: true };
+            if (result.success) {
+              return responseFn.success(
+                res,
+                {
+                  data: {
+                    phone: user.phone,
+                    timeout: appConfig.otpTimeout,
+                  },
                 },
-              },
-              responseStr.otp_sent + ` (use ${otp})`
-            );
-          } else {
-            await Otp.deleteOne({ _id: otpRec._id });
-            return responseFn.error(res, {}, responseStr.otp_sms_failed);
+                responseStr.otp_sent + ` (use ${otp})`
+              );
+            } else {
+              await Otp.deleteOne({ _id: otpRec._id });
+              return responseFn.error(res, {}, responseStr.otp_sms_failed);
+            }
+          } else if (req.body.email) {
+            emailHelper
+              .sendEmail({
+                to: user.email,
+                templateName: "password_reset",
+                values: {
+                  "{USER_NAME}": user.name,
+                  "{EXP}": `${appConfig.otpTimeout / 60} minutes`,
+                  "{URL}":
+                    req.headers.origin +
+                    "/reset-password" +
+                    "?token=" +
+                    appHelper.encryptString(
+                      `${user._id}-${otp}-${(
+                        new Date().getTime() +
+                        appConfig.otpTimeout * 1000
+                      )
+                        .toString(32)
+                        .toUpperCase()}`
+                    ),
+                },
+              })
+              .then(async (data) => {
+                if (data.success) {
+                  return responseFn.success(
+                    res,
+                    {
+                      data: {
+                        phone: user.phone,
+                        timeout: appConfig.otpTimeout,
+                      },
+                    },
+                    responseStr.otp_sent + ` (use ${otp})`
+                  );
+                } else {
+                  await Otp.deleteOne({ _id: otpRec._id });
+                  return responseFn.error(res, {}, responseStr.otp_sms_failed);
+                }
+              })
+              .catch(async (err) => {
+                await Otp.deleteOne({ _id: otpRec._id });
+                return responseFn.error(res, {}, responseStr.otp_sms_failed);
+              });
           }
         })
         .catch(async (err) => {
@@ -87,7 +174,9 @@ exports.forgotPassword = async (req, res) => {
                     (new Date() - new Date(otpRec.createdAt)) / 1000
                 ),
               },
-              responseStr.otp_sent_already
+              req.body.phone
+                ? responseStr.otp_sent_already
+                : responseStr.email_sent_already
             );
           }
           return responseFn.error(res, {}, error.message, 500);
@@ -100,14 +189,70 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
+exports.validatePassToken = async (req, res) => {
+  try {
+    code = appHelper.decryptString(req.body.token);
+    if (!code) {
+      return responseFn.error(
+        res,
+        { type: "otp_expired" },
+        responseStr.token_not_found,
+        400
+      );
+    }
+    let [_id, otp, exp] = code.split("-");
+    const otpRec = await Otp.findOne({ user: _id });
+    if (!otpRec) {
+      return responseFn.error(
+        res,
+        { type: "otp_expired" },
+        responseStr.token_not_found,
+        400
+      );
+    }
+    responseFn.success(res, {}, responseFn.token_valid);
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.resetPassword = async (req, res) => {
   try {
-    const user = await User.findOne({ phone: req.body.phone });
+    if (!req.body.phone && !req.body.token) {
+      return responseFn.error(res, {}, "Token or Phone is required", 400);
+    }
+    let user = null;
+    let code = req.body.code || null;
+
+    if (req.body.phone) {
+      user = await User.findOne({ phone: req.body.phone });
+    } else if (req.body.token) {
+      const _code = appHelper.decryptString(req.body.token);
+      if (!_code) {
+        return responseFn.error(
+          res,
+          { type: "otp_expired" },
+          responseStr.token_not_found,
+          400
+        );
+      }
+      let [_id, otp, exp] = _code.split("-");
+      user = await User.findOne({ _id });
+      code = otp;
+    }
     const otpRec = await Otp.findOne({ user: user._id });
     if (!otpRec) {
-      return responseFn.error(res, {}, responseStr.otp_not_found);
+      return responseFn.error(
+        res,
+        { type: "otp_expired" },
+        req.body.phone
+          ? responseStr.otp_not_found
+          : responseStr.token_not_found,
+        400
+      );
     }
-    if (appHelper.compareHash(req.body.code, otpRec.code)) {
+
+    if (appHelper.compareHash(code, otpRec.code)) {
       await User.updateOne(
         { _id: user._id },
         { password: appHelper.generateHash(req.body.password) }
@@ -156,7 +301,12 @@ exports.profile = (req, res) => {
     User.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
       .then(async (data) =>
         responseFn.success(res, {
-          data: { ...data._doc, userType: "business" },
+          data: {
+            ...data._doc,
+            userType: "business",
+            chatbot: data.chatbots?.[0] || null,
+            chatbots: undefined,
+          },
         })
       )
       .catch((error) => responseFn.error(res, {}, error.message, 500));
@@ -165,10 +315,26 @@ exports.profile = (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+exports.updateProfile = async (req, res) => {
   try {
     if (req.body.password) {
-      req.body.password = appHelper.generateHash(req.body.password);
+      if (
+        appHelper.compareHash(
+          req.body.oldPassword.toString(),
+          req.authUser.password
+        )
+      ) {
+        req.body.password = appHelper.generateHash(
+          req.body.password.toString()
+        );
+      } else {
+        return responseFn.error(
+          res,
+          { type: "cred_error" },
+          responseStr.invalid_cred,
+          400
+        );
+      }
     }
     const filesToDelete = [];
     if (req.body.logo && user.logo) {
@@ -183,6 +349,9 @@ exports.update = async (req, res) => {
         signature: req.body.ownerSignature,
       };
     }
+    if (req.body.chatbotDomain) {
+      req.body.chatbots = [{ domain: req.body.chatbotDomain }];
+    }
     User.findOneAndUpdate({ _id: req.authUser._id }, req.body, { new: true })
       .then((data) => {
         fileHelper.deleteFiles(filesToDelete);
@@ -194,6 +363,8 @@ exports.update = async (req, res) => {
               password: undefined,
               __v: undefined,
               updatedAt: undefined,
+              chatbot: data.chatbots?.[0] || null,
+              chatbots: undefined,
             },
           },
           responseStr.record_updated
@@ -244,6 +415,9 @@ exports.updateBusiness = async (req, res) => {
       };
       delete req.body.subPlan;
     }
+    if (req.body.chatbotDomain) {
+      req.body.chatbots = [{ domain: req.body.chatbotDomain }];
+    }
 
     User.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
       .then(async (data) => {
@@ -263,6 +437,8 @@ exports.updateBusiness = async (req, res) => {
               updatedAt: undefined,
               config,
               subscription: { ...data.subscription, plan },
+              chatbot: data.chatbots?.[0] || null,
+              chatbots: undefined,
             },
           },
           responseStr.record_updated
@@ -295,12 +471,52 @@ exports.find = async (req, res) => {
     if ("_id" in req.query && mongoose.isValidObjectId(req.query._id)) {
       conditions._id = req.query._id;
     }
-    const attributes =
-      req.authToken.userType === "admin"
-        ? "-password -__v"
-        : "username name motto phone email domain logo";
-    User.find(conditions, attributes)
-      .populate("subscription.plan")
+
+    const pipeline = [{ $match: conditions }];
+    if (req.authToken.userType === "admin") {
+      pipeline.push({ $project: { password: 0, __v: 0 } });
+    } else {
+      pipeline.push({
+        $project: {
+          username: 1,
+          name: 1,
+          motto: 1,
+          phone: 1,
+          email: 1,
+          domain: 1,
+          logo: 1,
+          chatbots: 1,
+        },
+      });
+    }
+
+    pipeline.push(
+      ...[
+        { $addFields: { chatbot: { $first: "$chatbots" } } },
+        { $unset: "chatbots" },
+      ]
+    );
+
+    pipeline.push(
+      ...[
+        {
+          $lookup: {
+            from: "subscriptionplans",
+            localField: "subscription.plan",
+            foreignField: "_id",
+            as: "subscription.plan",
+          },
+        },
+        {
+          $unwind: {
+            path: "$subscription.plan",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]
+    );
+
+    User.aggregate(pipeline)
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -341,6 +557,8 @@ exports.createBusiness = async (req, res) => {
             __v: undefined,
             config,
             subscription: { ...user.subscription, plan },
+            chatbot: user.chatbots?.[0] || null,
+            chatbots: undefined,
           },
         });
       })

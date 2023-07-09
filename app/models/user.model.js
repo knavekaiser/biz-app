@@ -16,8 +16,8 @@ module.exports = mongoose.model(
       phone: {
         type: Schema.Types.String,
         min: 8,
-        required: true,
         unique: [true, "Phone is already in use"],
+        sparse: true,
       },
       whatsappNumber: { type: Schema.Types.String, min: 8 },
       password: { type: Schema.Types.String, min: 10, required: true },
@@ -55,6 +55,14 @@ module.exports = mongoose.model(
       ifsc: { type: Schema.Types.String },
       description: { type: Schema.Types.String },
       terms: [],
+      chatbots: [
+        new Schema({
+          domain: {
+            type: Schema.Types.String,
+            required: true,
+          },
+        }),
+      ],
       subscription: {
         plan: {
           type: Schema.Types.ObjectId,

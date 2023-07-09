@@ -8,8 +8,47 @@ const { FaqDoc, SubPlan } = require("../models");
 
 exports.findAll = async (req, res) => {
   try {
-    FaqDoc.find({ user: req.business?._id || req.authUser._id })
-      .then((data) => responseFn.success(res, { data }))
+    let { page, pageSize } = req.query;
+    page = +page;
+    pageSize = +pageSize;
+
+    const condition = { user: req.business?._id || req.authUser._id };
+    if (req.query.topic) {
+      condition.topic = { $regex: req.query.topic, $options: "i" };
+    }
+    const pipeline = [{ $match: condition }];
+    if (page && pageSize) {
+      pipeline.push(
+        ...[
+          { $skip: (page - 1) * pageSize },
+          { $limit: pageSize },
+          {
+            $facet: {
+              records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
+              metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
+            },
+          },
+        ]
+      );
+    }
+
+    FaqDoc.aggregate(pipeline)
+      .then((data) =>
+        responseFn.success(
+          res,
+          page && pageSize
+            ? {
+                data: data[0].records,
+                metadata: {
+                  ...data[0].metadata[0],
+                  _id: undefined,
+                  page,
+                  pageSize,
+                },
+              }
+            : { data }
+        )
+      )
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -19,7 +58,7 @@ exports.findAll = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const subPlan = await SubPlan.findOne({
-      _id: req.business.subscription?.plan,
+      _id: (req.business || req.authUser).subscription?.plan,
     });
     const context = await aiHelper.getContext({
       files: req.body.files || [],
@@ -56,7 +95,7 @@ exports.update = async (req, res) => {
   try {
     const doc = await FaqDoc.findOne({ _id: req.params._id });
     const subPlan = await SubPlan.findOne({
-      _id: req.business.subscription?.plan,
+      _id: (req.business || req.authUser).subscription?.plan,
     });
 
     let filesToRemove = [];

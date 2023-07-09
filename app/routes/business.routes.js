@@ -15,6 +15,11 @@ module.exports = function (app) {
     controller.forgotPassword
   );
   routerExcl.post(
+    "/validate-password-reset-token",
+    validate(schema.validatePassToken),
+    controller.validatePassToken
+  );
+  routerExcl.post(
     "/reset-password",
     validate(schema.resetPassword),
     controller.resetPassword
@@ -35,11 +40,13 @@ module.exports = function (app) {
         override: true,
       }
     ),
-    validate(schema.update),
-    controller.update
+    validate(schema.updateProfile),
+    controller.updateProfile
   );
 
   app.use("/api/business", routerExcl);
+
+  //-------------------------- Management
 
   router.get("/find", authJwt.verifyToken, controller.find);
   router.post(
@@ -60,7 +67,7 @@ module.exports = function (app) {
         override: true,
       }
     ),
-    validate(schema.update),
+    validate(schema.updateBusiness),
     controller.updateBusiness
   );
   app.use("/api/businesses", router);

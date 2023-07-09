@@ -1,8 +1,8 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const { SignJWT } = require("jose");
+const crypto = require("crypto");
 
 const {
-  authConfig,
   appConfig,
   appConfig: { responseFn },
 } = require("../config");
@@ -11,39 +11,41 @@ exports.generateHash = (string) => bcrypt.hashSync(string, 8);
 
 exports.compareHash = (password, hash) => bcrypt.compareSync(password, hash);
 
-exports.signIn = (res, user, userType) => {
-  const token = signToken({ sub: user._id, userType });
+exports.signIn = async (res, user, userType) => {
+  const token = await signToken({ sub: user._id, userType });
   ["password", "__v", "updatedAt"].forEach((key) => delete user[key]);
   res.cookie("access_token", token, {
     maxAge: 1000 * 60 * 60 * 24 * 60, // 60 days
     httpOnly: true,
-    sameSite: "strict",
+    sameSite: "Strict",
   });
-  responseFn.success(res, { data: { ...user, userType }, token: token });
+  responseFn.success(res, {
+    data: {
+      ...user,
+      userType,
+      ...(userType === "business" && {
+        chatbot: user.chatbots?.[0] || null,
+        chatbots: undefined,
+      }),
+    },
+    token,
+  });
 };
 
 exports.json = (data) => JSON.parse(JSON.stringify(data));
 
-exports.decodeToken = (token) => {
-  if (!token) {
-    return { status: false, message: "Invalid access!", statusCode: 200 };
-  }
-  return jwt.verify(token, authConfig.secret, (err, decoded) => {
-    if (err) {
-      return { status: false, message: "Unauthorized!", statusCode: 200 };
-    }
-    return { status: true, data: { ...decoded } };
-  });
-};
+const signToken = async (data) => {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-const signToken = (data) => {
-  return jwt.sign(
-    {
-      iss: appConfig.appName,
-      ...data,
-    },
-    process.env.JWT_SECRET
-  );
+  const jwt = await new SignJWT(data)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setIssuer(appConfig.appName)
+    .setAudience(data._id)
+    .setExpirationTime("60 days")
+    .sign(secret);
+
+  return jwt;
 };
 
 exports.genId = (l, { uppercase, lowercase, letters, numbers } = {}) => {
@@ -66,6 +68,42 @@ exports.genId = (l, { uppercase, lowercase, letters, numbers } = {}) => {
   }
 
   return id;
+};
+
+const key = crypto
+  .createHash("sha512")
+  .update(process.env.ENCRYPTION_KEY)
+  .digest("hex")
+  .substring(0, 32);
+const encryptionIV = crypto
+  .createHash("sha512")
+  .update(process.env.ENCRYPTION_IV)
+  .digest("hex")
+  .substring(0, 16);
+const ecnryption_method = "aes-256-cbc";
+
+exports.encryptString = (data) => {
+  const cipher = crypto.createCipheriv(ecnryption_method, key, encryptionIV);
+  return Buffer.from(
+    cipher.update(data, "utf8", "hex") + cipher.final("hex")
+  ).toString("base64");
+};
+
+exports.decryptString = (encryptedData) => {
+  try {
+    const buff = Buffer.from(encryptedData, "base64");
+    const decipher = crypto.createDecipheriv(
+      ecnryption_method,
+      key,
+      encryptionIV
+    );
+    return (
+      decipher.update(buff.toString("utf8"), "hex", "utf8") +
+      decipher.final("utf8")
+    );
+  } catch (err) {
+    return null;
+  }
 };
 
 exports.normalizeDomain = (url) =>

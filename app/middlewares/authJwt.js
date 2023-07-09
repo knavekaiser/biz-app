@@ -1,25 +1,26 @@
-const jwt = require("jsonwebtoken");
 const {
   appConfig: { responseFn },
 } = require("../config");
+const { jwtVerify } = require("jose");
 
 const { User, Staff, Role, Admin, SubPlan } = require("../models");
 const { dbHelper } = require("../helpers");
 const { responseStr } = require("../config/app.config");
 
 verifyToken = async (req, res, next) => {
-  const token = req.cookies.access_token;
-  // const token = req.headers["x-access-token"];
+  const token = req.cookies.access_token || req.headers["x-access-token"];
   const business_id = req.headers["x-business-id"];
 
   if (!token) {
+    res.clearCookie("access_token");
     return responseFn.error(res, {}, "No token provided!", 401);
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-    if (err) {
-      return responseFn.error(res, {}, "Unauthorized!", 401);
-    }
+  try {
+    const { payload: decoded } = await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET)
+    );
 
     let Model = User;
     if (req.business) {
@@ -29,6 +30,7 @@ verifyToken = async (req, res, next) => {
       if (model) {
         Model = model;
       } else {
+        res.clearCookie("access_token");
         return responseFn.error(res, {}, "Unauthorized!", 401);
       }
     } else if (decoded.userType === "staff") {
@@ -37,13 +39,15 @@ verifyToken = async (req, res, next) => {
       Model = Admin;
     }
     const user = await Model.findOne({ _id: decoded.sub });
+    if (!user) {
+      res.clearCookie("access_token");
+      return responseFn.error(res, {}, "Unauthorized!", 401);
+    }
+
     if (decoded.userType === "business" && user?.subscription?.plan) {
       req.subPlan = await SubPlan.findOne({ _id: user.subscription.plan });
     }
 
-    if (!user) {
-      return responseFn.error(res, {}, "Unauthorized!", 401);
-    }
     if (["staff", "admin"].includes(decoded.userType) && business_id) {
       req.business = await User.findOne({ _id: business_id });
       if (req.business?.subscription?.plan) {
@@ -65,7 +69,10 @@ verifyToken = async (req, res, next) => {
     req.authUser = user;
     req.authToken = decoded;
     next();
-  });
+  } catch (err) {
+    res.clearCookie("access_token");
+    return responseFn.error(res, {}, "Unauthorized!", 401);
+  }
 };
 
 checkPermission = (permission) => {
@@ -83,5 +90,23 @@ checkPermission = (permission) => {
   };
 };
 
-const authJwt = { verifyToken, checkPermission };
-module.exports = authJwt;
+verifyOrigin = async (req, res, next) => {
+  try {
+    const origin = (req.headers.origin || "").replace(
+      /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
+      "$1"
+    );
+    req.business = (
+      await User.aggregate([{ $match: { "chatbots.domain": origin } }])
+    )[0];
+    if (!req.business) {
+      return responseFn.error(res, {}, "Unauthorized!", 401);
+    }
+
+    next();
+  } catch (err) {
+    return responseFn.error(res, {}, "Unauthorized!", 401);
+  }
+};
+
+module.exports = { verifyToken, checkPermission, verifyOrigin };

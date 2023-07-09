@@ -5,7 +5,7 @@ module.exports = mongoose.model(
   new Schema(
     {
       user: {
-        type: String,
+        type: Schema.Types.ObjectId,
         required: true,
         unique: true,
       },

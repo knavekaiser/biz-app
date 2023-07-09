@@ -4,11 +4,14 @@ const {
 
 exports.validate = (schema) => async (req, res, next) => {
   try {
-    const values = await schema.validate({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    });
+    const values = await schema.validate(
+      {
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      },
+      { context: { req } }
+    );
 
     // req.body = values.body;
     // req.query = values.query;
@@ -16,6 +19,14 @@ exports.validate = (schema) => async (req, res, next) => {
 
     return next();
   } catch (err) {
-    return responseFn.error(res, {}, err.message);
+    return responseFn.error(
+      res,
+      {
+        type: "field_validation",
+        field: err.params.path,
+      },
+      err.message,
+      400
+    );
   }
 };

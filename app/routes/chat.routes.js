@@ -5,21 +5,38 @@ const router = require("express").Router();
 const adminRouter = require("express").Router();
 
 module.exports = function (app) {
-  router.get("/topics", whitelabel.getBusiness, controller.getTopics);
-  router.get("/:_id", whitelabel.getBusinessOptinal, controller.getChat);
+  router.get(
+    "/topics",
+    // whitelabel.getBusiness,
+    authJwt.verifyOrigin,
+    controller.getTopics
+  );
+  router.get(
+    "/:_id",
+    // whitelabel.getBusinessOptinal,
+    authJwt.verifyOrigin,
+    controller.getChat
+  );
   router.post(
     "/",
-    whitelabel.getBusinessOptinal,
+    // whitelabel.getBusinessOptinal,
     validate(schema.initChat),
+    authJwt.verifyOrigin,
     controller.initChat
   );
   router.post(
     "/:_id",
-    whitelabel.getBusinessOptinal,
+    // whitelabel.getBusinessOptinal,
+    authJwt.verifyOrigin,
     validate(schema.sendMessage),
     controller.sendMessage
   );
-  router.post("/:chat_id/:message_id", validate(schema.vote), controller.vote);
+  router.post(
+    "/:chat_id/:message_id",
+    authJwt.verifyOrigin,
+    validate(schema.vote),
+    controller.vote
+  );
 
   app.use("/api/chat", router);
 

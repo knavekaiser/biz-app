@@ -19,7 +19,26 @@ String.prototype.isJSON = function () {
   return true;
 };
 
+const parseTimeShorthand = (time) => {
+  if (time.match(/[0-9]+s/)) {
+    time = `${parseInt(time)}`; // second
+  } else if (time.match(/[0-9]+m/)) {
+    time = `0 ${parseInt(time)}`; // minute
+  } else if (time.match(/[0-9]+h/)) {
+    time = `0 0 ${parseInt(time)}`; // hour
+  } else if (time.match(/[0-9]+D/)) {
+    time = `0 0 0 ${parseInt(time)}`; // day
+  } else if (time.match(/[0-9]+M/)) {
+    time = `0 0 0 0 ${parseInt(time)}`; // month
+  } else if (time.match(/[0-9]+Y/)) {
+    time = `0 0 0 0 0 ${parseInt(time)}`; // year
+  }
+  return time;
+};
 Date.prototype.deduct = function (time) {
+  if (time.match(/[a-z]/gi)) {
+    time = parseTimeShorthand(time);
+  }
   const [sec, min, hour, day, month, year] = time
     .split(" ")
     .map((t) => parseInt(t))
@@ -48,6 +67,10 @@ Date.prototype.deduct = function (time) {
   return date;
 };
 Date.prototype.add = function (time) {
+  if (time.match(/[a-z]/gi)) {
+    time = parseTimeShorthand(time);
+  }
+
   const [sec, min, hour, day, month, year] = time
     .split(" ")
     .map((t) => parseInt(t))
@@ -101,6 +124,7 @@ Object.prototype.findProperties = function (prop) {
 module.exports = {
   appHelper: require("./app.helper"),
   smsHelper: require("./sms.helper"),
+  emailHelper: require("./email.helper"),
   dbHelper: require("./db.helper"),
   fileHelper: require("./file.helper"),
   aiHelper: require("./ai.helper"),

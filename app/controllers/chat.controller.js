@@ -53,7 +53,11 @@ exports.initChat = async (req, res) => {
         _id: req.business.subscription?.plan,
       });
       if (tokenCount > subPlan?.features.maxAiChatContextToken) {
-        return responseFn.error(res, {});
+        return responseFn.error(
+          res,
+          {},
+          responseStr.error_occurred_contact_support
+        );
       }
       if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
     }
@@ -107,6 +111,7 @@ Context: ${context}`;
         responseFn.error(res, {});
       });
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -115,16 +120,24 @@ exports.getChat = async (req, res) => {
   try {
     Chat.findOne({ _id: req.params._id })
       .then((chat) =>
-        responseFn.success(res, {
-          data: {
-            _id: chat._id,
-            user: chat.user,
-            topic: chat.topic,
-            url: chat.url,
-            messages: chat.messages.filter((item) => item.name !== "System"),
-            createdAt: chat.createdAt,
-          },
-        })
+        chat
+          ? responseFn.success(res, {
+              data: {
+                _id: chat._id,
+                user: chat.user,
+                topic: chat.topic,
+                url: chat.url,
+                messages: chat.messages.filter(
+                  (item) => item.name !== "System"
+                ),
+                createdAt: chat.createdAt,
+              },
+            })
+          : responseFn.error(
+              res,
+              {},
+              responseStr.record_not_found.replace("Record", "Chat")
+            )
       )
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -134,12 +147,19 @@ exports.getChat = async (req, res) => {
 
 exports.getChats = async (req, res) => {
   try {
+    let { page, pageSize } = req.query;
+    page = +page;
+    pageSize = +pageSize;
+
     const conditions = {};
     if (["business", "staff"].includes(req.authToken.userType)) {
       conditions.business = req.business?._id || req.authUser._id;
     }
+    if (req.query.topic) {
+      conditions.topic = { $regex: req.query.topic, $options: "i" };
+    }
 
-    Chat.aggregate([
+    const pipeline = [
       { $match: conditions },
       { $sort: { createdAt: -1 } },
       { $set: { tokenUsage: { $sum: "$messages.token" } } },
@@ -155,8 +175,40 @@ exports.getChats = async (req, res) => {
         },
       },
       { $unwind: { path: "$business", preserveNullAndEmptyArrays: true } },
-    ])
-      .then((data) => responseFn.success(res, { data }))
+    ];
+
+    if (page && pageSize) {
+      pipeline.push(
+        ...[
+          { $skip: (page - 1) * pageSize },
+          { $limit: pageSize },
+          {
+            $facet: {
+              records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
+              metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
+            },
+          },
+        ]
+      );
+    }
+
+    Chat.aggregate(pipeline)
+      .then((data) =>
+        responseFn.success(
+          res,
+          page && pageSize
+            ? {
+                data: data[0].records,
+                metadata: {
+                  ...data[0].metadata[0],
+                  _id: undefined,
+                  page,
+                  pageSize,
+                },
+              }
+            : { data }
+        )
+      )
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -256,9 +308,15 @@ exports.delete = async (req, res) => {
     }
     Chat.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
+      business: req.business?._id || req.authUser._id,
     })
-      .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
+      .then((data) => {
+        if (data.deletedCount) {
+          responseFn.success(res, {}, responseStr.record_deleted);
+        } else {
+          responseFn.error(res, {}, responseStr.record_not_deleted);
+        }
+      })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
