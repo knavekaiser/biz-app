@@ -92,7 +92,7 @@ checkPermission = (permission) => {
 
 verifyOrigin = async (req, res, next) => {
   try {
-    const origin = (req.headers.origin || "").replace(
+    const origin = (req.headers.origin || req.headers.host || "").replace(
       /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
       "$1"
     );

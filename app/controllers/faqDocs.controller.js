@@ -71,7 +71,7 @@ exports.create = async (req, res) => {
         {},
         responseStr.max_context_token_limit
           .replace("{TOKEN_COUNT}", tokenCount)
-          .replace("{MAX_TOKEN_COUNT}", subPlan?.features.maxAiChatContextToken)
+          .replace("{MAX_TOKEN}", subPlan?.features.maxAiChatContextToken)
       );
     }
 
