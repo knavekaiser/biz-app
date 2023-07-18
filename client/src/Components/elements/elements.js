@@ -375,13 +375,13 @@ export const FileInputNew = ({
                 );
 
                 if (
-                  !file.size &&
+                  file.url &&
                   new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.name)
                 ) {
                   return (
                     <li className={s.file} key={i}>
                       <ClearBtn />
-                      <img src={file.name} />
+                      <img src={file.url} />
                     </li>
                   );
                 }

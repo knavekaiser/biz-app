@@ -30,4 +30,5 @@ module.exports = {
   SubPlan: require("./subPlan.model"),
   FaqDoc: require("./faqDoc.model"),
   Chat: require("./chat.model"),
+  DynamicPage: require("./dynamicPage.model"),
 };

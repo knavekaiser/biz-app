@@ -61,6 +61,14 @@ module.exports = mongoose.model(
             type: Schema.Types.String,
             required: true,
           },
+          primaryColor: {
+            type: Schema.Types.String,
+            default: null,
+          },
+          showTopic: {
+            type: Schema.Types.Boolean,
+            default: true,
+          },
         }),
       ],
       subscription: {

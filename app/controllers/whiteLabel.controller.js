@@ -7,13 +7,13 @@ const {
 } = require("../helpers");
 const { ObjectId } = require("mongodb");
 
-const { User, Config, Collection } = require("../models");
+const { User, Config, Collection, DynamicPage } = require("../models");
 
 exports.getSiteConfig = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
     const productCollection = await Collection.findOne({
       name: "Product",
@@ -42,6 +42,8 @@ exports.getSiteConfig = async (req, res) => {
           slogan: "$motto",
           logo: "$logo",
           whatsappNumber: "$whatsappNumber",
+          domain: "$domain",
+          chatbot: { $first: "$chatbots" },
           siteConfig: {
             productCard: "$config.siteConfig.productCard",
             currency: "$config.siteConfig.currency",
@@ -80,7 +82,7 @@ exports.sitemapUrls = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
     const { Model: Product } = await dbHelper.getModel(
       req.business._id + "_" + "Product"
@@ -107,34 +109,32 @@ exports.sitemapUrls = async (req, res) => {
   }
 };
 
-exports.getDynamicPageFiles = async (req, res) => {
+exports.getDynamicPages = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain === "localhost:3000") domain = "infinai.loca.lt";
+    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
-    const config = await Config.findOne({ user: req.business._id });
-
-    let files = null;
-    config.siteConfig.footer.sections.some((section) => {
-      const item = section.items.find(
-        (item) =>
-          item.href.replace("/", "") === req.params.pageId && item.files?.length
-      );
-      if (item) {
-        files = item.files;
-        return true;
-      }
-    });
-    if (files?.length) {
-      return responseFn.success(res, { data: files });
+    const condition = { user: req.business._id };
+    if (req.params.path) {
+      condition.path = { $in: [req.params.path, "/" + req.params.path] };
     }
-    return responseFn.error(
-      res,
-      {},
-      responseStr.record_not_found.replace("Record", "Page"),
-      400
-    );
+
+    DynamicPage.find(condition).then((pages) => {
+      if (req.params.path) {
+        if (pages.length) {
+          return responseFn.success(res, { data: pages[0] });
+        } else {
+          return responseFn.error(
+            res,
+            {},
+            responseStr.record_not_found.replace("Record", "Page"),
+            400
+          );
+        }
+      }
+      return responseFn.success(res, { data: pages });
+    });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

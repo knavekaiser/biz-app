@@ -350,7 +350,9 @@ exports.updateProfile = async (req, res) => {
       };
     }
     if (req.body.chatbotDomain) {
-      req.body.chatbots = [{ domain: req.body.chatbotDomain }];
+      req.body.chatbots = [
+        { ...req.authUser.chatbots?.[0]?._doc, domain: req.body.chatbotDomain },
+      ];
     }
     User.findOneAndUpdate({ _id: req.authUser._id }, req.body, { new: true })
       .then((data) => {
@@ -416,7 +418,9 @@ exports.updateBusiness = async (req, res) => {
       delete req.body.subPlan;
     }
     if (req.body.chatbotDomain) {
-      req.body.chatbots = [{ domain: req.body.chatbotDomain }];
+      req.body.chatbots = [
+        { ...user.chatbots?.[0]?._doc, domain: req.body.chatbotDomain },
+      ];
     }
 
     User.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })

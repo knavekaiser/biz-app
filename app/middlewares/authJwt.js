@@ -92,6 +92,7 @@ checkPermission = (permission) => {
 
 verifyOrigin = async (req, res, next) => {
   try {
+    const chatbot_id = req.headers["x-chatbot-id"];
     const origin = (req.headers.origin || req.headers.host || "").replace(
       /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
       "$1"
@@ -99,7 +100,10 @@ verifyOrigin = async (req, res, next) => {
     req.business = (
       await User.aggregate([{ $match: { "chatbots.domain": origin } }])
     )[0];
-    if (!req.business) {
+    req.chatbot = req.business?.chatbots?.find(
+      (bot) => bot._id.toString() === chatbot_id
+    );
+    if (!req.business && !req.chatbot) {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
 

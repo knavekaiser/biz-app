@@ -22,6 +22,7 @@ import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import TermsAndConditions from "./terms";
 import SiteConfig from "./siteConfig";
 import Documents from "./documents";
+import DynamicPages from "./dynamicPages";
 
 const businessInformationSchema = yup.object({
   name: yup.string().required(),
@@ -39,13 +40,23 @@ const Settings = () => {
     <div className={s.container}>
       <Tabs
         tabs={[
-          { label: "Business Information", path: "business-information" },
-          { label: "Bank Detail", path: "bank-details" },
-          { label: "Owner Detail", path: "owner-details" },
-          { label: "Terms & Conditions", path: "terms-and-conditions" },
-          { label: "AI Chat Knowledge Base", path: "ai-chat-knowledge-base" },
-          { label: "Configurations", path: "config" },
-          { label: "Site Configurations", path: "site-config" },
+          {
+            label: "Business Information",
+            path: paths.settings.businessInformation,
+          },
+          { label: "Bank Detail", path: paths.settings.bankDetails },
+          { label: "Owner Detail", path: paths.settings.ownerDetails },
+          {
+            label: "Terms & Conditions",
+            path: paths.settings.termsAndConditions,
+          },
+          {
+            label: "AI Chat Knowledge Base",
+            path: paths.settings.aiChatKnowledgeBase,
+          },
+          { label: "Configurations", path: paths.settings.config },
+          { label: "Site Configurations", path: paths.settings.siteConfig },
+          { label: "Dynamic Pages", path: paths.settings.dynamicPages },
         ]}
       />
       <Routes>
@@ -73,6 +84,10 @@ const Settings = () => {
         <Route
           path={paths.settings.aiChatKnowledgeBase}
           element={<Documents next={next} />}
+        />
+        <Route
+          path={paths.settings.dynamicPages}
+          element={<DynamicPages next={next} />}
         />
       </Routes>
     </div>

@@ -21,4 +21,6 @@ module.exports = function (app) {
   require("./subPlan.routes")(app);
   require("./chat.routes")(app);
   require("./faqDocs.routes")(app);
+  require("./dynamicPage.routes")(app);
+  require("./chatbot.routes")(app);
 };

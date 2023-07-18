@@ -18,8 +18,27 @@ exports.getTopics = async (req, res) => {
 
 exports.initChat = async (req, res) => {
   try {
-    if (!req.body.topic && !req.body.url) {
-      return responseFn.error(res, {}, responseStr.include_either_topic_or_url);
+    if (req.chatbot.showTopic) {
+      if (!req.body.topic && !req.body.url) {
+        return responseFn.error(
+          res,
+          {},
+          responseStr.include_either_topic_or_url
+        );
+      }
+    } else {
+      const availableTopics = await FaqDoc.find({ user: req.business._id });
+      if (availableTopics.length === 0) {
+        return responseFn.error(
+          res,
+          {},
+          responseStr.error_occurred_contact_support
+        );
+      }
+      req.body.topic = await aiHelper.getTopic({
+        topics: availableTopics,
+        message: req.body.message,
+      });
     }
 
     // get text content from documents
@@ -62,7 +81,9 @@ exports.initChat = async (req, res) => {
       if (subPlan?.maxAiChatToken) max_tokens = subPlan.maxAiChatToken;
     }
 
-    const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If the question is about ${topic}, You will use the given context to answer the question. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can help you with?". and keep the answers concise. and don't ask for context in the reply. keep in mind you are talking to the user/customer on behalf of the business.
+    const message = `You are an AI assistant here to help with ${topic} FAQs. You are equipped with knowledge about ${topic} to provide with accurate answers. If the question is not related to ${topic}, You will politely ask if I can help you with ${topic}. If the question is about ${topic}, You will use the given context to answer the question. In case the initial context doesn't cover the question, You will respond with "Sorry, I don't have the information you're looking for. Is there anything else I can help you with?".
+context may contain JSON data. in such case, you are to analyze that data and answer questions like "Give me the total number of sale", "Give me the first and last dates in the dataset", "Give me the highest spending user" etc. (keep in mind the data may be about anything. not just sales).
+keep the answers concise. and don't ask for context in the reply. keep in mind you are talking to the user/customer on behalf of the business.
 
 Context: ${context}`;
 

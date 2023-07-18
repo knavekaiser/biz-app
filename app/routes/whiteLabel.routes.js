@@ -7,9 +7,9 @@ module.exports = function (app) {
   router.get("/site-config", whitelabel.getBusiness, controller.getSiteConfig);
   router.get("/sitemap-urls", whitelabel.getBusiness, controller.sitemapUrls);
   router.get(
-    "/dynamic-page-files/:pageId",
+    "/dynamic-pages/:path?",
     whitelabel.getBusiness,
-    controller.getDynamicPageFiles
+    controller.getDynamicPages
   );
   router.get(
     "/elements/:table",

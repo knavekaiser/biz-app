@@ -35,6 +35,7 @@ const paths = {
     collections: "collections",
     aiChatKnowledgeBase: "ai-chat-knowledge-base",
     siteConfig: "site-config",
+    dynamicPages: "dynamic-pages",
   },
 };
 

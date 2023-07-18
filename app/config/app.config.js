@@ -81,5 +81,7 @@ module.exports = {
     /jpeg|jpg|png|webp|svg|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
   supportedFileSizes: 10, // 10MB
   supportedFileTypes:
-    /jpeg|jpg|png|webp|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document/,
+    /jpeg|jpg|png|webp|svg|pdf|ico|css|vnd\.openxmlformats\-officedocument\.wordprocessingml\.document|application\/vnd\.openxmlformats\-officedocument\.spreadsheetml\.sheet/,
 };
+
+// application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet

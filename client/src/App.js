@@ -48,8 +48,11 @@ function App() {
 
     loadScript(endpoints.comifyChat).then(() => {
       if (window.ComifyChat) {
-        const { default: mountComifyChat } = window.ComifyChat;
-        mountComifyChat();
+        const { default: mountInfinAI } = window.InfinAI;
+        mountInfinAI({
+          baseUrl: endpoints.baseUrl,
+          chatbotId: process.env.REACT_APP_INFINAI_CHAT_BOT,
+        });
       }
     });
   }, []);

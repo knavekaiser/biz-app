@@ -44,6 +44,11 @@ const paths = [
     value: "chat",
     actions: ["read", "delete"],
   },
+  {
+    label: "Dynamic Page",
+    value: "dynamic_page",
+    actions: ["read", "create", "update", "delete"],
+  },
 ];
 
 export default paths;

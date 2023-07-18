@@ -79,7 +79,6 @@ const SiteConfig = ({ next }) => {
     });
   }, [config]);
 
-  const businessType = watch("businessType");
   const sidebarFilters = watch("sidebarFilters");
   const recommendationFilters = watch("recommendationFilters");
   const comparisonFilters = watch("comparisonFilters");
@@ -204,14 +203,6 @@ const SiteConfig = ({ next }) => {
                 items: section.items.map((item) => ({
                   ...item,
                   condition: item.type === "dynamicPage",
-                  ...(item.type === "dynamicPage" && {
-                    files: (item.files || [])
-                      .filter(
-                        (item) =>
-                          item.uploadFilePath || typeof item === "string"
-                      )
-                      .map((file) => file.uploadFilePath || file),
-                  }),
                 })),
               })),
             },
@@ -238,24 +229,6 @@ const SiteConfig = ({ next }) => {
               file.uploadFilePath || file
             );
           }
-        });
-        values.footerElements.forEach((section, i) => {
-          section.items.forEach((item, j) => {
-            item.files.forEach((file) => {
-              if (file.type) {
-                formData.append(
-                  `dynamicPageFiles`,
-                  file,
-                  `siteConfig.footer.${section.title}.${item.label}.files___${file.name}`
-                );
-              } else {
-                // formData.append(
-                //   `siteConfig.footer.${section.title}.${item.label}.files`,
-                //   file.uploadFilePath || file
-                // );
-              }
-            });
-          });
         });
 
         updateConfig(formData)
@@ -1644,7 +1617,6 @@ const FooterElementForm = ({ edit, onSuccess }) => {
   const {
     handleSubmit,
     control,
-    watch,
     register,
     reset,
     formState: { errors },
@@ -1652,7 +1624,13 @@ const FooterElementForm = ({ edit, onSuccess }) => {
     resolver: useYup(
       yup.object({
         label: yup.string().required("Label is required"),
-        href: yup.string().required("URL is required"),
+        href: yup
+          .string()
+          .matches(
+            /^\/[a-zA-Z0-9\-._~!$&'()*+,;=:@]+$/,
+            "Invalid sub-path format"
+          )
+          .required("Field is required"),
       })
     ),
   });
@@ -1666,7 +1644,6 @@ const FooterElementForm = ({ edit, onSuccess }) => {
     });
   }, [edit]);
 
-  const linkType = watch("type");
   return (
     <form
       onSubmit={handleSubmit((values) => {
@@ -1688,24 +1665,12 @@ const FooterElementForm = ({ edit, onSuccess }) => {
           { label: "External Link", value: "externalLink" },
         ]}
       />
-      <Input {...register("href")} label="URL" error={errors.href} />
-
-      {linkType === "dynamicPage" && (
-        <div>
-          <FileInputNew
-            label="Page Files"
-            control={control}
-            name="files"
-            multiple
-            accept=".docx,.css"
-          />
-          <span>
-            <small>
-              <i>Please add one .docx file and one .css file</i>
-            </small>
-          </span>
-        </div>
-      )}
+      <Input
+        {...register("href")}
+        label="Path"
+        placeholder="/some-path"
+        error={errors.href}
+      />
 
       <div className="flex justify-center">
         <button className="btn">

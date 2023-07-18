@@ -4,6 +4,7 @@ const puppeteer = require("puppeteer");
 const cheerio = require("cheerio");
 const mammoth = require("mammoth");
 const PDFParser = require("pdf-parse");
+const xlsx = require("xlsx");
 const fs = require("fs");
 
 const fileHelper = require("./file.helper");
@@ -36,7 +37,7 @@ const parseHtml = async (url, html) => {
   }
 };
 
-const readContext = async ({ ext, path, file }) => {
+const readContext = async ({ filename, ext, path, file }) => {
   let context = "";
 
   if (ext === "docx") {
@@ -48,6 +49,32 @@ const readContext = async ({ ext, path, file }) => {
       .catch((error) => {
         console.error(error);
       });
+  } else if (ext === "xlsx") {
+    const workbook = path
+      ? xlsx.readFile(path)
+      : xlsx.read(file, { type: "buffer" });
+    let workbook_sheet = workbook.SheetNames;
+    context = JSON.stringify(
+      xlsx.utils.sheet_to_json(workbook.Sheets[workbook_sheet[0]], {
+        // Custom cell format parsers for date, time, and datetime columns
+        dateNF: "dd-mm-yyyy",
+        cellDates: true,
+        cellStyles: true,
+        raw: false,
+
+        // Function to parse time (hh:mm) columns
+        cellDates: true,
+        cellStyles: true,
+        raw: false,
+
+        // Function to parse datetime (DD-MM-YYYY hh:mm) columns
+        cellDates: true,
+        cellStyles: true,
+        raw: false,
+        strip: false,
+        dateNF: "dd-mm-yyyy hh:mm",
+      })
+    );
   } else if (ext === "txt") {
     if (file) {
       context = file.toString().trim() + "\n\n";
@@ -84,6 +111,12 @@ const readContext = async ({ ext, path, file }) => {
           });
       });
     }
+  }
+
+  if (filename) {
+    return `
+${filename} ->
+${context}`;
   }
 
   return context;
@@ -160,6 +193,7 @@ const getContext = async ({ files = [], urls = [] }) => {
         const file = files[i];
         context +=
           (await readContext({
+            filename: file.name,
             ext: file.url.replace(/.+\./, ""),
             path: __appDir + file.url,
           })) + "\n\n";
@@ -197,9 +231,35 @@ const generateResponse = async (messages, max_tokens = 100) => {
   });
 };
 
+const getTopic = async ({ topics, message }) => {
+  if (topics.length <= 1) {
+    return topics[0]?.topic || null;
+  }
+  const messages = [
+    {
+      role: "user",
+      name: "system",
+      content: `Identify the most suitable topic for a given message from a list. If the message doesn't match any topic, respond with the most general topic from the list. respond with only the topic itself, no extra text whatsoever.
+
+topics: ${topics.map((item) => item.topic).join(", ")}
+question: ${message}`,
+    },
+  ];
+  const _topic = await generateResponse(messages).then(
+    (res) => res.message.content
+  );
+  return (
+    topics.find((t) => _topic.toLowerCase().includes(t.topic.toLowerCase()))
+      ?.topic ||
+    topics[0]?.topic ||
+    null
+  );
+};
+
 module.exports = {
   countToken,
   fetchContext,
   getContext,
   generateResponse,
+  getTopic,
 };

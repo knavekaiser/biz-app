@@ -17,4 +17,5 @@ module.exports = {
   subPlan: require("./subPlan"),
   faqDocument: require("./faqDocument"),
   chat: require("./chat"),
+  dynamicPage: require("./dynamicPage"),
 };

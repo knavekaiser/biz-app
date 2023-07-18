@@ -292,7 +292,6 @@ const uploadNew = (fields, uploadPath, options) => {
               `${options.fileSize || 10}MB`
             )
           );
-        console.log(err);
         return responseFn.error(res, {}, err?.message || err);
       }
       next();

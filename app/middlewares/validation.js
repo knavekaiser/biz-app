@@ -1,6 +1,7 @@
 const {
   appConfig: { responseFn },
 } = require("../config");
+const { fileHelper } = require("../helpers");
 
 exports.validate = (schema) => async (req, res, next) => {
   try {
@@ -19,6 +20,18 @@ exports.validate = (schema) => async (req, res, next) => {
 
     return next();
   } catch (err) {
+    if (req.file) {
+      fileHelper.deleteFiles(req.file.path);
+    }
+    if (req.files) {
+      fileHelper.deleteFiles(
+        Object.values(req.files).reduce(
+          (p, files) => [...p, ...files.map((f) => f.path)],
+          []
+        )
+      );
+    }
+
     return responseFn.error(
       res,
       {
