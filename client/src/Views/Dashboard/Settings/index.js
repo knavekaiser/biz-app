@@ -56,7 +56,7 @@ const Settings = () => {
           },
           { label: "Configurations", path: paths.settings.config },
           { label: "Site Configurations", path: paths.settings.siteConfig },
-          { label: "Dynamic Pages", path: paths.settings.dynamicPages },
+          { label: "Blogs", path: paths.settings.dynamicPages },
         ]}
       />
       <Routes>

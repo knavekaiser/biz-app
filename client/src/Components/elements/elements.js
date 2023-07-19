@@ -387,6 +387,18 @@ export const FileInputNew = ({
                 }
 
                 if (
+                  file.uploadFilePath &&
+                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.name)
+                ) {
+                  return (
+                    <li className={s.file} key={i}>
+                      <ClearBtn />
+                      <img src={file.uploadFilePath} />
+                    </li>
+                  );
+                }
+
+                if (
                   new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file?.name)
                 ) {
                   const url = URL.createObjectURL(file);

@@ -43,7 +43,6 @@ module.exports = {
     password_reset_successful: "Password reset successful. Please Log in",
     otp_sms_failed: "Something went wrong. Please try again later.",
     email_doesnt_exists: "Email doesn't exists",
-    include_either_topic_or_url: "Please either include a topic or an URL",
 
     record_created: "Record created successfully",
     record_updated: "Record updated successfully",

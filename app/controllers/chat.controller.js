@@ -8,7 +8,10 @@ const { default: mongoose } = require("mongoose");
 
 exports.getTopics = async (req, res) => {
   try {
-    const topics = await FaqDoc.find({ user: req.business?._id || null });
+    const topics = await FaqDoc.find({
+      user: req.business?._id || null,
+      showOnChat: true,
+    });
 
     responseFn.success(res, { data: topics.map((item) => item.topic) });
   } catch (error) {
@@ -18,15 +21,7 @@ exports.getTopics = async (req, res) => {
 
 exports.initChat = async (req, res) => {
   try {
-    if (req.chatbot.showTopic) {
-      if (!req.body.topic && !req.body.url) {
-        return responseFn.error(
-          res,
-          {},
-          responseStr.include_either_topic_or_url
-        );
-      }
-    } else {
+    if (!req.body.topic) {
       const availableTopics = await FaqDoc.find({ user: req.business._id });
       if (availableTopics.length === 0) {
         return responseFn.error(
@@ -55,12 +50,13 @@ exports.initChat = async (req, res) => {
         files: doc.files,
         urls: doc.urls,
       });
-    } else if (req.body.url) {
-      const result = await aiHelper.fetchContext(req.body.url);
-      topic = result.topic || "certain document";
-      error = result.error;
-      context = result.content;
     }
+    //  else if (req.body.url) {
+    //   const result = await aiHelper.fetchContext(req.body.url);
+    //   topic = result.topic || "certain document";
+    //   error = result.error;
+    //   context = result.content;
+    // }
 
     if (error || !context?.trim().length) {
       return responseFn.error(res, {}, error);
@@ -109,7 +105,7 @@ Context: ${context}`;
         messages.push(message);
         const chat = await new Chat({
           topic,
-          url: req.body.url,
+          // url: req.body.url,
           business: req.business?._id,
           user: {
             name: req.body.name,

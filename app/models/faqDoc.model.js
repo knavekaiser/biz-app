@@ -5,6 +5,7 @@ module.exports = mongoose.model(
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
       topic: { type: String, required: true },
       description: { type: String },
+      showOnChat: { type: Schema.Types.Boolean, default: true },
       files: [
         new Schema({
           name: { type: String, required: true },

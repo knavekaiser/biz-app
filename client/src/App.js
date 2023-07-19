@@ -47,7 +47,7 @@ function App() {
       .catch((err) => Prompt({ type: "error", message: err.message }));
 
     loadScript(endpoints.comifyChat).then(() => {
-      if (window.ComifyChat) {
+      if (window.InfinAI) {
         const { default: mountInfinAI } = window.InfinAI;
         mountInfinAI({
           baseUrl: endpoints.baseUrl,

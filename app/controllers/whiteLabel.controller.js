@@ -13,7 +13,7 @@ exports.getSiteConfig = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
+    // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
     const productCollection = await Collection.findOne({
       name: "Product",
@@ -82,7 +82,7 @@ exports.sitemapUrls = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
+    // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
     const { Model: Product } = await dbHelper.getModel(
       req.business._id + "_" + "Product"
@@ -113,7 +113,7 @@ exports.getDynamicPages = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
-    if (domain.includes("localhost:")) domain = "infinai.loca.lt";
+    // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
     const condition = { user: req.business._id };
     if (req.params.path) {

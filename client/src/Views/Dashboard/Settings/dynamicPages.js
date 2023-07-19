@@ -158,8 +158,11 @@ const pageSchema = yup.object({
   description: yup.string(),
   path: yup
     .string()
-    .matches(/^\/[a-zA-Z0-9\-._~!$&'()*+,;=:@]+$/, "Invalid sub-path format")
-    .required(),
+    .test("is-valid-sub-path", "Invalid sub-path format", function (value) {
+      if (value === undefined || value === "") return true; // Allow undefined values (optional)
+      return /^\/[a-zA-Z0-9\-._~!$&'()*+,;=:@]+$/.test(value);
+    }),
+  // .required(),
   thumbnail: yup.array().of(yup.mixed()),
   files: yup.array().of(yup.mixed()),
 });
@@ -190,9 +193,14 @@ const PageForm = ({ edit, onSuccess }) => {
       onSubmit={handleSubmit((values) => {
         const payload = {
           ...values,
+          path:
+            values.path ||
+            "/" +
+              values.title
+                .replaceAll(" ", "-")
+                .replace(/[^a-zA-Z0-9\-._~!$&'()*+,;=:@\/]/g, ""),
           // files: values.files,
         };
-        console.log(payload);
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
           if (["thumbnail", "files"].includes(key) && value?.length) {
