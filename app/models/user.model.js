@@ -65,6 +65,10 @@ module.exports = mongoose.model(
             type: Schema.Types.String,
             default: null,
           },
+          avatar: {
+            type: Schema.Types.String,
+            default: null,
+          },
           showTopic: {
             type: Schema.Types.Boolean,
             default: true,

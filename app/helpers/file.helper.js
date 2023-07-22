@@ -8,6 +8,7 @@ exports.deleteFiles = (paths) => {
   if (Array.isArray(paths)) {
     paths.forEach((path) => {
       fs.unlink(uploadDir + path.replace(pathRegx, ""), (err) => {
+        console.log(err);
         // store reminder to remove this file later
       });
     });
