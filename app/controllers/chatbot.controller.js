@@ -70,7 +70,7 @@ exports.updateChatbot = async (req, res) => {
       { "chatbots.$": 1 }
     ).then((user) => user?.chatbots?.[0]);
     const filesToDelete = [];
-    if (req.files.avatar?.length && chatbot?.avatar) {
+    if (req.files?.avatar?.length && chatbot?.avatar) {
       filesToDelete.push(chatbot.avatar);
     } else if (req.body.avatar === null && chatbot?.avatar) {
       filesToDelete.push(chatbot.avatar);

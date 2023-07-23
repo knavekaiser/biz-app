@@ -29,7 +29,16 @@ exports.signup = async (req, res) => {
       };
     }
 
-    new User({ ...req.body })
+    new User({
+      ...req.body,
+      chatbots: [
+        {
+          domain: null,
+          primaryColor: null,
+          avatar: null,
+        },
+      ],
+    })
       .save()
       .then(async (user) => {
         await new Config({ user: user._id }).save();
