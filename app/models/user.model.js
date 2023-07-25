@@ -61,6 +61,10 @@ module.exports = mongoose.model(
             type: Schema.Types.String,
             required: true,
           },
+          display_name: {
+            type: Schema.Types.String,
+            required: true,
+          },
           primaryColor: {
             type: Schema.Types.String,
             default: null,

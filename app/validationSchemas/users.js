@@ -34,6 +34,27 @@ const updateUser = {
       return schema;
     }
   }),
+  chatbotDomain: yup
+    .string()
+    .max(75)
+    .test("domain", "Domain already in use", async function (v) {
+      if (!v) {
+        return true;
+      }
+      return await User.aggregate([
+        {
+          $match: {
+            _id: {
+              $ne: ObjectId(
+                this.options.context.req.params._id ||
+                  this.options.context.req.authUser._id
+              ),
+            },
+            "chatbots.domain": v,
+          },
+        },
+      ]).then(([chatbot]) => !chatbot);
+    }),
 };
 
 module.exports = {

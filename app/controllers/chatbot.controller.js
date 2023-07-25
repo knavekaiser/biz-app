@@ -19,6 +19,31 @@ exports.getChatbot = async (req, res) => {
   }
 };
 
+exports.getChatbotByDomain = async (req, res) => {
+  try {
+    const chatbot = await User.aggregate([
+      { $match: { "chatbots.domain": req.params.domain } },
+    ]).then(
+      ([business]) =>
+        business?.chatbots?.find((item) => item.domain === req.params.domain) ||
+        null
+    );
+
+    if (chatbot) {
+      return responseFn.success(res, {
+        data: chatbot,
+      });
+    }
+    return responseFn.error(
+      res,
+      {},
+      responseStr.record_not_found.replace("Record", "Chatbot")
+    );
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.getChatbots = async (req, res) => {
   try {
     if (req.authToken.userType === "business") {
@@ -56,15 +81,17 @@ exports.updateChatbot = async (req, res) => {
       condition.user = req.business._id;
     }
     const updates = {};
-    ["domain", "primaryColor", "showTopic", "avatar"].forEach((key) => {
-      if (key in req.body) {
-        if (key === "avatar") {
-          updates[`chatbots.$.${key}`] = req.body[key]?.url || req.body[key];
-          return;
+    ["domain", "primaryColor", "showTopic", "avatar", "display_name"].forEach(
+      (key) => {
+        if (key in req.body) {
+          if (key === "avatar") {
+            updates[`chatbots.$.${key}`] = req.body[key]?.url || req.body[key];
+            return;
+          }
+          updates[`chatbots.$.${key}`] = req.body[key];
         }
-        updates[`chatbots.$.${key}`] = req.body[key];
       }
-    });
+    );
     const chatbot = await User.findOne(
       { "chatbots._id": req.params._id },
       { "chatbots.$": 1 }

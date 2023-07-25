@@ -6,6 +6,7 @@ const { jwtVerify } = require("jose");
 const { User, Staff, Role, Admin, SubPlan } = require("../models");
 const { dbHelper } = require("../helpers");
 const { responseStr } = require("../config/app.config");
+const { ObjectId } = require("mongodb");
 
 verifyToken = async (req, res, next) => {
   const token = req.cookies.access_token || req.headers["x-access-token"];
@@ -93,15 +94,17 @@ checkPermission = (permission) => {
 verifyOrigin = async (req, res, next) => {
   try {
     const chatbot_id = req.headers["x-chatbot-id"];
-    const origin = (req.headers.origin || req.headers.host || "").replace(
-      /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
-      "$1"
-    );
+    // const origin = (req.headers.origin || req.headers.host || "").replace(
+    //   /^(?:https?:\/\/)?(?:www\.)?([^\/?]+)(?:\/[^?]+)?.*/,
+    //   "$1"
+    // );
     req.business = (
-      await User.aggregate([{ $match: { "chatbots.domain": origin } }])
+      await User.aggregate([
+        { $match: { "chatbots._id": ObjectId(chatbot_id) } },
+      ])
     )[0];
     req.chatbot = req.business?.chatbots?.find(
-      (bot) => bot._id.toString() === chatbot_id
+      (bot) => bot._id === ObjectId(chatbot_id)
     );
     if (!req.business && !req.chatbot) {
       return responseFn.error(res, {}, "Unauthorized!", 401);

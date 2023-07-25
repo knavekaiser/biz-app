@@ -1,6 +1,6 @@
 const { authJwt, validate, file } = require("../middlewares");
 const controller = require("../controllers/chatbot.controller");
-const { chat: schema } = require("../validationSchemas");
+const { chatbot: schema } = require("../validationSchemas");
 const { appConfig } = require("../config");
 const router = require("express").Router();
 const routerPublic = require("express").Router();
@@ -14,13 +14,18 @@ module.exports = function (app) {
       fileSize: appConfig.supportedImageSizes,
       fileTypes: appConfig.supportedImageTypes,
     }),
-    // validate(schema.sendMessage),
+    validate(schema.update),
     controller.updateChatbot
   );
 
   app.use("/api/chatbots", router);
 
   // ---------------------------------- Public
+  routerPublic.get(
+    "/get-chatbot/by-domain/:domain",
+    // authJwt.verifyOrigin,
+    controller.getChatbotByDomain
+  );
   routerPublic.get(
     "/get-chatbot/:chatbot_id",
     authJwt.verifyOrigin,
