@@ -91,6 +91,39 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.generateUserContext = async (req, res) => {
+  try {
+    const faqDoc = await FaqDoc.findOne({ _id: req.params._id });
+
+    const context = await aiHelper.getContext({
+      files: faqDoc.files,
+      urls: faqDoc.urls,
+    });
+
+    const messages = [
+      {
+        role: "system",
+        content: `${req.body.prompt}
+
+${context}`,
+      },
+    ];
+    const contextForUsers = await aiHelper
+      .generateResponse(messages, 100)
+      .then((data) => data?.message?.content);
+
+    req.body.contextForUsers = contextForUsers;
+
+    if (!contextForUsers) {
+      return responseFn.error(res, {});
+    }
+
+    responseFn.success(res, { data: { contextForUsers } });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.update = async (req, res) => {
   try {
     const doc = await FaqDoc.findOne({ _id: req.params._id });

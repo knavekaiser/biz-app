@@ -15,6 +15,7 @@ module.exports = mongoose.model(
         }),
       ],
       urls: [{ type: String }],
+      contextForUsers: { type: String, required: true, max: 200 },
       tokenCount: { type: Number, default: 0, required: true },
     },
     { timestamps: true }

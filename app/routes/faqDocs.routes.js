@@ -22,6 +22,12 @@ module.exports = function (app) {
     validate(schema.create),
     controller.create
   );
+  router.post(
+    "/:_id/generate-user-context",
+    authJwt.verifyToken,
+    validate(schema.generateUserContext),
+    controller.generateUserContext
+  );
   router.put(
     "/:_id",
     authJwt.verifyToken,

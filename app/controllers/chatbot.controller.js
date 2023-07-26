@@ -3,16 +3,36 @@ const {
 } = require("../config");
 const { ObjectId } = require("mongodb");
 
-const { User } = require("../models");
+const { User, FaqDoc } = require("../models");
 const { fileHelper } = require("../helpers");
 
 exports.getChatbot = async (req, res) => {
   try {
+    const topics = await FaqDoc.find(
+      {
+        user: req.business._id,
+        showOnChat: true,
+      },
+      "topic contextForUsers"
+    );
+    const chatbot = req.business.chatbots?.find(
+      (bot) => bot._id.toString() === req.params.chatbot_id.toString()
+    );
+    if (!chatbot) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.record_not_found.replace("Record", "Chatbot")
+      );
+    }
     return responseFn.success(res, {
-      data:
-        req.business.chatbots?.find(
-          (bot) => bot._id.toString() === req.params.chatbot_id.toString()
-        ) || null,
+      data: {
+        ...chatbot,
+        topics: topics.map((item) => ({
+          topic: item.topic,
+          contextForUsers: item.contextForUsers,
+        })),
+      },
     });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

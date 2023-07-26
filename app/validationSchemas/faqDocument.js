@@ -1,4 +1,5 @@
 const yup = require("yup");
+const { FaqDoc } = require("../models");
 
 module.exports = {
   create: yup.object({
@@ -9,7 +10,8 @@ module.exports = {
         .array()
         .of(yup.string().url())
         .typeError("urls must be an array"),
-      description: yup.string(),
+      contextForUsers: yup.string().max(200),
+      description: yup.string().max(200),
     }),
   }),
   update: yup.object({
@@ -20,7 +22,20 @@ module.exports = {
         .array()
         .of(yup.string().url())
         .typeError("urls must be an array"),
-      description: yup.string(),
+      contextForUsers: yup.string().max(200),
+      description: yup.string().max(200),
+    }),
+  }),
+  generateUserContext: yup.object({
+    body: yup.object({
+      prompt: yup.string().max(300).required(),
+    }),
+    params: yup.object({
+      _id: yup
+        .string()
+        .objectId()
+        .test("check", "Topic not found", (v) => FaqDoc.findOne({ _id: v }))
+        .required(),
     }),
   }),
 };
