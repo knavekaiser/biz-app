@@ -59,7 +59,6 @@ module.exports = mongoose.model(
         new Schema({
           domain: {
             type: Schema.Types.String,
-            required: true,
           },
           display_name: {
             type: Schema.Types.String,

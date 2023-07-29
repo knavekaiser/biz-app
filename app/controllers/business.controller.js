@@ -33,6 +33,7 @@ exports.signup = async (req, res) => {
       ...req.body,
       chatbots: [
         {
+          display_name: req.body.name,
           domain: null,
           primaryColor: null,
           avatar: null,
@@ -552,7 +553,17 @@ exports.createBusiness = async (req, res) => {
       delete req.body.subPlan;
     }
 
-    new User({ ...req.body })
+    new User({
+      ...req.body,
+      chatbots: [
+        {
+          display_name: req.body.name,
+          domain: null,
+          primaryColor: null,
+          avatar: null,
+        },
+      ],
+    })
       .save()
       .then(async (user) => {
         const config = await new Config({ user: user._id }).save();

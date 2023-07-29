@@ -23,4 +23,5 @@ module.exports = function (app) {
   require("./faqDocs.routes")(app);
   require("./dynamicPage.routes")(app);
   require("./chatbot.routes")(app);
+  require("./report.routes")(app);
 };
