@@ -23,7 +23,7 @@ const splitter = new CharacterTextSplitter({
   chunkSize: 1536,
   chunkOverlap: 200,
 });
-const pineconeIndexName = "infinai-chat-context";
+const pineconeIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
 const pinecone = new PineconeClient();
 let pineconeIndex = null;
 pinecone
@@ -235,7 +235,6 @@ const getContext = async ({ files = [], urls = [] }) => {
       }
       for (let i = 0; i < urls?.length; i++) {
         const url = urls[i];
-        console.log("url", i);
 
         const { error, content } = await fetchContext(url);
         if (error) throw new Error(error);
@@ -354,7 +353,7 @@ const getPartialContext = async ({ userId, topicId, msg }) => {
     .then((res) => res.data.data[0].embedding);
   const queryResponse = await pineconeIndex.query({
     queryRequest: {
-      topK: 1,
+      topK: 2,
       vector: queryEmbeddings,
       includeMetadata: true,
       // includeValues: false,
