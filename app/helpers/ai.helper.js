@@ -6,14 +6,49 @@ const mammoth = require("mammoth");
 const PDFParser = require("pdf-parse");
 const xlsx = require("xlsx");
 const fs = require("fs");
+const { CharacterTextSplitter } = require("langchain/text_splitter");
+const { PineconeClient } = require("@pinecone-database/pinecone");
+const { ObjectId } = require("mongodb");
 
 const fileHelper = require("./file.helper");
 
 const { Configuration, OpenAIApi } = require("openai");
+const { FaqDoc } = require("../models");
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+const splitter = new CharacterTextSplitter({
+  chunkSize: 1536,
+  chunkOverlap: 200,
+});
+const pineconeIndexName = "infinai-chat-context";
+const pinecone = new PineconeClient();
+let pineconeIndex = null;
+pinecone
+  .init({
+    apiKey: process.env.PINECONE_API_KEY,
+    environment: process.env.PINECONE_ENVIRONMENT,
+  })
+  .then(async (res) => {
+    pineconeIndex = pinecone.Index(pineconeIndexName);
+    const indexesList = await pinecone.listIndexes();
+    // await pinecone.deleteIndex({
+    //   indexName: pineconeIndexName,
+    // });
+    if (!indexesList.includes(pineconeIndexName)) {
+      await pinecone.createIndex({
+        createRequest: {
+          name: pineconeIndexName,
+          dimension: 1536,
+          // metadataConfig: {
+          //   indexed: ["color"],
+          // },
+        },
+      });
+    }
+  });
 
 const countToken = (messages) => {
   const encoded = encode(messages);
@@ -200,6 +235,7 @@ const getContext = async ({ files = [], urls = [] }) => {
       }
       for (let i = 0; i < urls?.length; i++) {
         const url = urls[i];
+        console.log("url", i);
 
         const { error, content } = await fetchContext(url);
         if (error) throw new Error(error);
@@ -256,10 +292,104 @@ question: ${message}`,
   );
 };
 
+const removeVectors = async (ids) => {
+  await pineconeIndex.delete1({ ids });
+};
+
+const pushToPinecone = async ({
+  metadata,
+  oldVectorIds,
+  files = [],
+  urls = [],
+}) => {
+  if (oldVectorIds?.length) {
+    await pineconeIndex.delete1({ ids: oldVectorIds });
+  }
+  const vectorIds = [];
+  for (let i = 0; i < files.length + urls.length; i++) {
+    const item = [...files, ...urls][i];
+    const context = await getContext({
+      [typeof item === "string" ? "urls" : "files"]: [item],
+    });
+    const chunks = await splitter.createDocuments([context]);
+    const embeddings = await openai
+      .createEmbedding({
+        model: "text-embedding-ada-002",
+        input: chunks.map((item) => item.pageContent.replace(/\n/g, " ")),
+      })
+      .then((res) => res.data.data.map((item) => item.embedding));
+
+    const batchsize = 100;
+    let batch = [];
+    let newIds = Array.from({ length: chunks.length }, () => ObjectId());
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      batch.push({
+        id: newIds[i],
+        values: embeddings[i],
+        metadata: {
+          ...metadata,
+          loc: JSON.stringify(chunk.metadata.loc),
+          pageContent: chunk.pageContent,
+        },
+      });
+
+      if (batch.length === batchsize || i === chunks.length - 1) {
+        await pineconeIndex.upsert({ upsertRequest: { vectors: batch } });
+        batch = [];
+        vectorIds.push(...newIds);
+        newIds = [];
+      }
+    }
+  }
+  await FaqDoc.findOneAndUpdate({ _id: metadata.topicId }, { vectorIds });
+};
+
+const getPartialContext = async ({ userId, topicId, msg }) => {
+  const queryEmbeddings = await openai
+    .createEmbedding({
+      model: "text-embedding-ada-002",
+      input: msg,
+    })
+    .then((res) => res.data.data[0].embedding);
+  const queryResponse = await pineconeIndex.query({
+    queryRequest: {
+      topK: 1,
+      vector: queryEmbeddings,
+      includeMetadata: true,
+      // includeValues: false,
+      filter: {
+        userId,
+        topicId,
+      },
+    },
+  });
+  const context = queryResponse.matches
+    .map((match) => match.metadata.pageContent)
+    .join(" ");
+
+  return [
+    {
+      role: "user",
+      name: "System",
+      content: `Context:
+  ${context}`,
+    },
+    {
+      role: "user",
+      name: "Guest",
+      content: msg,
+    },
+  ];
+};
+
 module.exports = {
   countToken,
   fetchContext,
   getContext,
   generateResponse,
   getTopic,
+  pushToPinecone,
+  getPartialContext,
+  removeVectors,
 };

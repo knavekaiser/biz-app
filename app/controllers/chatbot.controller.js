@@ -13,7 +13,7 @@ exports.getChatbot = async (req, res) => {
         user: req.business._id,
         showOnChat: true,
       },
-      "topic contextForUsers"
+      "topic paths contextForUsers"
     );
     const chatbot = req.business.chatbots?.find(
       (bot) => bot._id.toString() === req.params.chatbot_id.toString()
@@ -31,6 +31,7 @@ exports.getChatbot = async (req, res) => {
         topics: topics.map((item) => ({
           topic: item.topic,
           contextForUsers: item.contextForUsers,
+          paths: item.paths,
         })),
       },
     });

@@ -17,18 +17,12 @@ exports.findAll = async (req, res) => {
     }
     const pipeline = [{ $match: condition }];
     if (page && pageSize) {
-      pipeline.push(
-        ...[
-          { $skip: (page - 1) * pageSize },
-          { $limit: pageSize },
-          {
-            $facet: {
-              records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
-              metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
-            },
-          },
-        ]
-      );
+      pipeline.push({
+        $facet: {
+          records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
+          metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
+        },
+      });
     }
 
     DynamicPage.aggregate(pipeline)

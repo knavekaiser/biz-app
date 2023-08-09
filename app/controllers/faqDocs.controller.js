@@ -2,7 +2,6 @@ const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
 const { fileHelper, aiHelper } = require("../helpers");
-const { countToken } = require("../helpers/ai.helper");
 
 const { FaqDoc, SubPlan } = require("../models");
 
@@ -18,18 +17,12 @@ exports.findAll = async (req, res) => {
     }
     const pipeline = [{ $match: condition }];
     if (page && pageSize) {
-      pipeline.push(
-        ...[
-          { $skip: (page - 1) * pageSize },
-          { $limit: pageSize },
-          {
-            $facet: {
-              records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
-              metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
-            },
-          },
-        ]
-      );
+      pipeline.push({
+        $facet: {
+          records: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
+          metadata: [{ $group: { _id: null, total: { $sum: 1 } } }],
+        },
+      });
     }
 
     FaqDoc.aggregate(pipeline)
@@ -64,7 +57,7 @@ exports.create = async (req, res) => {
       files: req.body.files || [],
       urls: req.body.urls || [],
     });
-    const tokenCount = countToken(context);
+    const tokenCount = aiHelper.countToken(context);
     if (tokenCount > subPlan?.features.maxAiChatContextToken) {
       return responseFn.error(
         res,
@@ -76,12 +69,24 @@ exports.create = async (req, res) => {
     }
 
     req.body.tokenCount = tokenCount;
+    let newDoc = null;
     new FaqDoc({
       ...req.body,
       user: req.business?._id || req.authUser._id,
     })
       .save()
-      .then(async (data) => responseFn.success(res, { data }))
+      .then(async (data) => {
+        newDoc = data;
+        return aiHelper.pushToPinecone({
+          files: req.body.files || [],
+          urls: req.body.urls || [],
+          metadata: {
+            topicId: data._id,
+            userId: data.user,
+          },
+        });
+      })
+      .then(() => responseFn.success(res, { data: newDoc }))
       .catch((err) => {
         responseFn.error(res, {}, err.message);
         // remove uploaded files
@@ -124,6 +129,20 @@ ${context}`,
   }
 };
 
+const compareArr = (arr1, arr2) =>
+  arr1.length === arr2.length &&
+  arr1.every((item, index) => item === arr2[index]);
+
+const compareArrWithObj = (arr1, arr2) =>
+  arr1.length === arr2.length &&
+  arr1.every((obj1) =>
+    arr2.some(
+      (obj2) =>
+        obj2.url === obj1.url &&
+        Object.keys(obj2).every((key) => obj2[key] === obj1[key])
+    )
+  );
+
 exports.update = async (req, res) => {
   try {
     const doc = await FaqDoc.findOne({ _id: req.params._id });
@@ -144,7 +163,7 @@ exports.update = async (req, res) => {
       files: req.body.files || [],
       urls: req.body.urls || [],
     });
-    const tokenCount = countToken(context);
+    const tokenCount = aiHelper.countToken(context);
     if (tokenCount > subPlan?.features.maxAiChatContextToken) {
       return responseFn.error(
         res,
@@ -161,7 +180,22 @@ exports.update = async (req, res) => {
       req.body,
       { new: true }
     )
-      .then((data) => {
+      .then(async (data) => {
+        if (
+          !data.vectorIds?.length ||
+          !compareArr(doc.urls, data.urls) ||
+          !compareArrWithObj(doc.files, data.files)
+        ) {
+          await aiHelper.pushToPinecone({
+            files: req.body.files || [],
+            urls: req.body.urls || [],
+            oldVectorIds: data.vectorIds,
+            metadata: {
+              topicId: doc._id,
+              userId: doc.user,
+            },
+          });
+        }
         responseFn.success(res, { data }, responseStr.record_updated);
         if (filesToRemove.length) {
           fileHelper.deleteFiles(filesToRemove.map((item) => item.url));
@@ -184,10 +218,10 @@ exports.delete = async (req, res) => {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
 
-    const files = await FaqDoc.find({
+    const doc = await FaqDoc.find({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
       user: req.business?._id || req.authUser._id,
-    }).then((data) => data.map((item) => item.files).flat());
+    });
 
     FaqDoc.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
@@ -195,7 +229,13 @@ exports.delete = async (req, res) => {
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);
-        fileHelper.deleteFiles(files.map((item) => item.url));
+        fileHelper.deleteFiles(
+          doc
+            .map((item) => item.files)
+            .flat()
+            .map((item) => item.url)
+        );
+        aiHelper.removeVectors(doc.map((item) => item.vectorIds).flat());
       })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {

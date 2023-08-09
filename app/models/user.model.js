@@ -1,6 +1,4 @@
-const {
-  appHelper: { normalizeDomain },
-} = require("../helpers");
+const { normalizeDomain } = require("../helpers/app.helper");
 
 module.exports = mongoose.model(
   "User",
