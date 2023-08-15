@@ -8,13 +8,39 @@ const { fileHelper } = require("../helpers");
 
 exports.getChatbot = async (req, res) => {
   try {
-    const topics = await FaqDoc.find(
+    const topics = await FaqDoc.aggregate([
       {
-        user: req.business._id,
-        showOnChat: true,
+        $match: {
+          user: req.business._id,
+          showOnChat: true,
+          parentTopic: null,
+        },
       },
-      "topic paths contextForUsers"
-    );
+      {
+        $lookup: {
+          from: "faq documents",
+          localField: "_id",
+          foreignField: "parentTopic",
+          as: "subTopics",
+        },
+      },
+      {
+        $set: {
+          subTopics: {
+            $map: {
+              input: "$subTopics",
+              as: "subTopic",
+              in: {
+                _id: "$$subTopic._id",
+                contextForUsers: "$$subTopic.contextForUsers",
+                topic: "$$subTopic.topic",
+                paths: "$$subTopic.paths",
+              },
+            },
+          },
+        },
+      },
+    ]);
     const chatbot = req.business.chatbots?.find(
       (bot) => bot._id.toString() === req.params.chatbot_id.toString()
     );
@@ -29,9 +55,11 @@ exports.getChatbot = async (req, res) => {
       data: {
         ...chatbot,
         topics: topics.map((item) => ({
+          _id: item._id,
           topic: item.topic,
           contextForUsers: item.contextForUsers,
           paths: item.paths,
+          subTopics: item.subTopics,
         })),
       },
     });

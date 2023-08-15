@@ -4,6 +4,8 @@ module.exports = mongoose.model(
     {
       topic: { type: String, required: true },
       faqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },
+      parentTopic: { type: String },
+      parentFaqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },
       url: { type: String },
       business: { type: Schema.Types.ObjectId, ref: "User" },
       user: {

@@ -42,6 +42,9 @@ exports.initChat = async (req, res) => {
     let topic = doc.topic;
     let max_tokens = 100;
     let messages = [];
+    let parentDoc = req.body.parentTopic
+      ? await FaqDoc.findOne({ topic: req.body.parentTopic })
+      : null;
 
     let resp = null;
 
@@ -115,7 +118,10 @@ exports.initChat = async (req, res) => {
       const chat = await new Chat({
         topic,
         faqDoc: doc._id,
-        // url: req.body.url,
+        ...(parentDoc && {
+          parentTopic: parentDoc.topic,
+          parentFaqDoc: parentDoc._id,
+        }),
         business: req.business?._id,
         fullContext: doc.tokenCount < 4000,
         user: {
@@ -128,8 +134,9 @@ exports.initChat = async (req, res) => {
         data: {
           _id: chat._id,
           user: chat.user,
-          topic: chat.topic,
-          url: chat.url,
+          ...(chat.parentTopic
+            ? { topic: chat.parentTopic, subTopic: chat.topic }
+            : { topic: chat.topic }),
           messages: chat.messages.filter((item) => item.name !== "System"),
         },
       });
@@ -150,8 +157,9 @@ exports.getChat = async (req, res) => {
               data: {
                 _id: chat._id,
                 user: chat.user,
-                topic: chat.topic,
-                url: chat.url,
+                ...(chat.parentTopic
+                  ? { topic: chat.parentTopic, subTopic: chat.topic }
+                  : { topic: chat.topic }),
                 messages: chat.messages.filter(
                   (item) => item.name !== "System"
                 ),

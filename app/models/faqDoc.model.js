@@ -3,6 +3,11 @@ module.exports = mongoose.model(
   new Schema(
     {
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      parentTopic: {
+        type: Schema.Types.ObjectId,
+        ref: "FAQ Document",
+        default: null,
+      },
       topic: { type: String, required: true },
       description: { type: String },
       showOnChat: { type: Schema.Types.Boolean, default: true },

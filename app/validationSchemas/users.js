@@ -13,7 +13,7 @@ const updateUser = {
   ownerDetails: yup.object({
     name: yup.string(),
     phone: yup.string(),
-    email: yup.string(),
+    email: yup.string().email(),
     signature: yup.string(),
   }),
   address: yup.object(),
@@ -71,7 +71,11 @@ module.exports = {
         .string()
         .email()
         .test("checkEmail", "Email already in use", (v) =>
-          !v ? true : User.findOne({ email: v }).then((user) => !user)
+          !v
+            ? true
+            : User.findOne({ email: { $regex: new RegExp(v, "i") } }).then(
+                (user) => !user
+              )
         ),
       password: commonYup.password.required(),
       subscription: yup.string().none(),
@@ -126,7 +130,7 @@ module.exports = {
         .test(
           "checkEmail",
           "Account not found",
-          (v) => !v || User.findOne({ email: v })
+          (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
         ),
     }),
   }),
@@ -146,7 +150,7 @@ module.exports = {
         .test(
           "checkEmail",
           "Account not found",
-          (v) => !v || User.findOne({ email: v })
+          (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
         ),
       code: yup
         .string()
@@ -186,9 +190,10 @@ module.exports = {
             "Email is already in use",
             (v) =>
               !v ||
-              User.findOne({ email: v, _id: { $ne: req.authUser._id } }).then(
-                (user) => !user
-              )
+              User.findOne({
+                email: { $regex: new RegExp(v, "i") },
+                _id: { $ne: req.authUser._id },
+              }).then((user) => !user)
           );
         }),
       ...updateUser,
@@ -203,9 +208,10 @@ module.exports = {
           "Phone number is already in use",
           (v) =>
             !v ||
-            User.findOne({ phone: v, _id: { $ne: req.params._id } }).then(
-              (user) => !user
-            )
+            User.findOne({
+              phone: { $regex: new RegExp(v, "i") },
+              _id: { $ne: req.params._id },
+            }).then((user) => !user)
         );
       }),
       email: yup
@@ -217,9 +223,10 @@ module.exports = {
             "Email is already in use",
             (v) =>
               !v ||
-              User.findOne({ email: v, _id: { $ne: req.params._id } }).then(
-                (user) => !user
-              )
+              User.findOne({
+                email: { $regex: new RegExp(v, "i") },
+                _id: { $ne: req.params._id },
+              }).then((user) => !user)
           );
         }),
       ...updateUser,

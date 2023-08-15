@@ -11,6 +11,12 @@ module.exports = {
         .test("checkTopic", "Topic not found", (v) =>
           v ? FaqDoc.findOne({ topic: v }) : true
         ),
+      parentTopic: yup
+        .string()
+        .max(60)
+        .test("checkParentTopic", "Topic not found", (v) =>
+          v ? FaqDoc.findOne({ topic: v }) : true
+        ),
       name: yup.string().max(60).required(),
       email: yup.string().max(150).email().required(),
       message: yup
