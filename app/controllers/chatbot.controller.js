@@ -130,17 +130,22 @@ exports.updateChatbot = async (req, res) => {
       condition.user = req.business._id;
     }
     const updates = {};
-    ["domain", "primaryColor", "showTopic", "avatar", "display_name"].forEach(
-      (key) => {
-        if (key in req.body) {
-          if (key === "avatar") {
-            updates[`chatbots.$.${key}`] = req.body[key]?.url || req.body[key];
-            return;
-          }
-          updates[`chatbots.$.${key}`] = req.body[key];
+    [
+      "domain",
+      "primaryColor",
+      "showTopic",
+      "avatar",
+      "display_name",
+      "autoOpenAfter",
+    ].forEach((key) => {
+      if (key in req.body) {
+        if (key === "avatar") {
+          updates[`chatbots.$.${key}`] = req.body[key]?.url || req.body[key];
+          return;
         }
+        updates[`chatbots.$.${key}`] = req.body[key];
       }
-    );
+    });
     const chatbot = await User.findOne(
       { "chatbots._id": req.params._id },
       { "chatbots.$": 1 }

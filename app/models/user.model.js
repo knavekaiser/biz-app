@@ -74,6 +74,10 @@ module.exports = mongoose.model(
             type: Schema.Types.Boolean,
             default: true,
           },
+          autoOpenAfter: {
+            type: Schema.Types.String,
+            default: null,
+          },
         }),
       ],
       subscription: {
