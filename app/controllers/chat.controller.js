@@ -280,7 +280,14 @@ exports.sendMessage = async (req, res) => {
       messages = await aiHelper.getPartialContext({
         userId: chat.business,
         topicId: chat.faqDoc,
-        msg: req.body.content,
+        msg:
+          chat.messages
+            .filter((msg) => msg.name === "Guest")
+            .slice(-5)
+            .map((msg) => msg.content)
+            .join("\n") +
+          "\n" +
+          req.body.content,
       });
       resp = await aiHelper.generateResponse(
         [
