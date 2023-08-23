@@ -56,6 +56,7 @@ exports.create = async (req, res) => {
     const context = await aiHelper.getContext({
       files: req.body.files || [],
       urls: req.body.urls || [],
+      content: req.body.content,
     });
     const tokenCount = aiHelper.countToken(context);
     if (tokenCount > subPlan?.features.maxAiChatContextToken) {
@@ -103,6 +104,7 @@ exports.generateUserContext = async (req, res) => {
     const context = await aiHelper.getContext({
       files: faqDoc.files,
       urls: faqDoc.urls,
+      content: faqDoc.content,
     });
 
     const messages = [
@@ -162,6 +164,7 @@ exports.update = async (req, res) => {
     const context = await aiHelper.getContext({
       files: req.body.files || [],
       urls: req.body.urls || [],
+      content: req.body.content,
     });
     const tokenCount = aiHelper.countToken(context);
     if (tokenCount > subPlan?.features.maxAiChatContextToken) {

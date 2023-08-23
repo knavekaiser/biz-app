@@ -26,6 +26,7 @@ module.exports = {
         .array()
         .of(yup.string().url())
         .typeError("urls must be an array"),
+      content: yup.string().nullable(),
       contextForUsers: yup.string().max(200),
       description: yup.string().max(200),
     }),
@@ -54,6 +55,7 @@ module.exports = {
         .of(yup.string().url())
         .typeError("urls must be an array"),
       contextForUsers: yup.string().max(200),
+      content: yup.string().nullable(),
       description: yup.string().max(200),
       parentTopic: yup
         .string()

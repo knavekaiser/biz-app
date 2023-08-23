@@ -219,9 +219,9 @@ const fetchContext = async (url) => {
   return { topic, error, content };
 };
 
-const getContext = async ({ files = [], urls = [] }) => {
+const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
   return new Promise(async (resolve, reject) => {
-    let context = "";
+    let context = rawCotent + "";
 
     try {
       for (let i = 0; i < files?.length; i++) {

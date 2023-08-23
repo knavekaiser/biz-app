@@ -20,6 +20,7 @@ module.exports = mongoose.model(
         }),
       ],
       urls: [{ type: String }],
+      content: { type: String, default: null },
       paths: [{ type: String }],
       contextForUsers: { type: String, max: 200 },
       tokenCount: { type: Number, default: 0, required: true },
