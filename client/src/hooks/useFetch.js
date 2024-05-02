@@ -78,7 +78,12 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
           })
           .catch((err) => {
             setLoading(false);
-            if (["The user aborted a request."].includes(err?.message)) {
+            if (
+              [
+                "The user aborted a request.",
+                "signal is aborted without reason",
+              ].includes(err?.message)
+            ) {
               // user aborted
             } else {
               setError(err);

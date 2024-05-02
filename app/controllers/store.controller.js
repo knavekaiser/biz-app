@@ -458,13 +458,13 @@ exports.locations = async (req, res) => {
           match:
             data
               .filter((item) => item.type === "city")
-              .find((item) => item.label === userAddress.city) ||
+              .find((item) => item.label === userAddress?.city) ||
             data
               .filter((item) => item.type === "city")
-              .find((item) => item.county === userAddress.county) ||
+              .find((item) => item.county === userAddress?.county) ||
             data
               .filter((item) => item.type === "state")
-              .find((item) => item.label === userAddress.state),
+              .find((item) => item.label === userAddress?.state),
         }),
       });
     });

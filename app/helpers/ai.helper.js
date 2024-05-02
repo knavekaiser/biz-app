@@ -38,15 +38,15 @@ pinecone
     //   indexName: pineconeIndexName,
     // });
     if (!indexesList.includes(pineconeIndexName)) {
-      await pinecone.createIndex({
-        createRequest: {
-          name: pineconeIndexName,
-          dimension: 1536,
-          // metadataConfig: {
-          //   indexed: ["color"],
-          // },
-        },
-      });
+      // await pinecone.createIndex({
+      //   createRequest: {
+      //     name: pineconeIndexName,
+      //     dimension: 1536,
+      // metadataConfig: {
+      //   indexed: ["color"],
+      // },
+      //   },
+      // });
     }
   });
 
