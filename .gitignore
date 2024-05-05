@@ -9,11 +9,12 @@
 /coverage
 
 # production
-/client/build
+# /client/build
 
 /assets/uploads/*
 
 /client/.env
+/client/.env.production
 
 # misc
 .DS_Store
