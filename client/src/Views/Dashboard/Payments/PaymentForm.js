@@ -124,7 +124,7 @@ const Form = ({ edit, payments, onSuccess }) => {
             <h3>Payment Information</h3>
             <Detail
               label="Inv No"
-              value={`${edit.no}${config.print?.paymentNoSuffix || ""}`}
+              value={`${edit.no}${config?.print?.paymentNoSuffix || ""}`}
             />
             <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
             <Detail

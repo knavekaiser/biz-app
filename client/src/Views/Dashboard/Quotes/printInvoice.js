@@ -16,29 +16,27 @@ const Detail = ({ label, value }) => {
 
 const PrintInvoice = forwardRef(({ quote, user }, ref) => {
   const { config } = useContext(SiteContext);
-  console.log({ config, quote, user });
   const [itemsStyle, setItemsStyle] = useState(null);
   useEffect(() => {
-    if (!config?.printQuote) {
-      return;
+    if (config?.printQuote) {
+      const itemColumnSort = ["no", "product", "qty", "unit", "total"];
+      const columns = [
+        ...config.printQuote.itemColumns
+          .sort((a, b) =>
+            itemColumnSort.indexOf(a) > itemColumnSort.indexOf(b) ? 1 : -1
+          )
+          .filter((col) => !["no", "product"].includes(col)),
+      ];
+      setItemsStyle({
+        gridTemplateColumns: `${
+          config.printQuote.itemColumns.includes("no") ? "3rem" : ""
+        } ${
+          config.printQuote.itemColumns.includes("product")
+            ? 42 - 6 * columns.length + "rem"
+            : ""
+        } repeat(auto-fit, minmax(86px, 1fr))`,
+      });
     }
-    const itemColumnSort = ["no", "product", "qty", "unit", "total"];
-    const columns = [
-      ...config.printQuote.itemColumns
-        .sort((a, b) =>
-          itemColumnSort.indexOf(a) > itemColumnSort.indexOf(b) ? 1 : -1
-        )
-        .filter((col) => !["no", "product"].includes(col)),
-    ];
-    setItemsStyle({
-      gridTemplateColumns: `${
-        config.printQuote.itemColumns.includes("no") ? "3rem" : ""
-      } ${
-        config.printQuote.itemColumns.includes("product")
-          ? 42 - 6 * columns.length + "rem"
-          : ""
-      } repeat(auto-fit, minmax(86px, 1fr))`,
-    });
   }, [quote]);
 
   if (!config?.printQuote) {

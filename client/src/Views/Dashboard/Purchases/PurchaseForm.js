@@ -105,7 +105,7 @@ const Form = ({ edit, purchases, onSuccess }) => {
             <h3>Purchase Information</h3>
             <Detail
               label="Inv No"
-              value={`${edit.no}${config.print?.purchaseNoSuffix || ""}`}
+              value={`${edit.no}${config?.print?.purchaseNoSuffix || ""}`}
             />
             <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
             <Detail
@@ -316,7 +316,7 @@ const ItemForm = ({ edit, purchases, onSuccess }) => {
         control={control}
         name="unit"
         formOptions={{ required: true }}
-        options={config.unitsOfMeasure.map((unit) => ({
+        options={config?.unitsOfMeasure.map((unit) => ({
           label: unit,
           value: unit,
         }))}

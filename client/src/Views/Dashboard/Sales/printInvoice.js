@@ -18,24 +18,34 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
   const { config } = useContext(SiteContext);
   const [itemsStyle, setItemsStyle] = useState(null);
   useEffect(() => {
-    const itemColumnSort = ["no", "product", "qty", "unit", "total"];
-    const columns = [
-      ...config.print.itemColumns
-        .sort((a, b) =>
-          itemColumnSort.indexOf(a) > itemColumnSort.indexOf(b) ? 1 : -1
-        )
-        .filter((col) => !["no", "product"].includes(col)),
-    ];
-    setItemsStyle({
-      gridTemplateColumns: `${
-        config.print.itemColumns.includes("no") ? "3rem" : ""
-      } ${
-        config.print.itemColumns.includes("product")
-          ? 42 - 6 * columns.length + "rem"
-          : ""
-      } repeat(auto-fit, minmax(86px, 1fr))`,
-    });
+    if (config?.print) {
+      const itemColumnSort = ["no", "product", "qty", "unit", "total"];
+      const columns = [
+        ...config.print.itemColumns
+          .sort((a, b) =>
+            itemColumnSort.indexOf(a) > itemColumnSort.indexOf(b) ? 1 : -1
+          )
+          .filter((col) => !["no", "product"].includes(col)),
+      ];
+      setItemsStyle({
+        gridTemplateColumns: `${
+          config.print.itemColumns.includes("no") ? "3rem" : ""
+        } ${
+          config.print.itemColumns.includes("product")
+            ? 42 - 6 * columns.length + "rem"
+            : ""
+        } repeat(auto-fit, minmax(86px, 1fr))`,
+      });
+    }
   }, [sale]);
+
+  if (!config?.print) {
+    return (
+      <div className={s.print} ref={ref}>
+        <p>Please update print configuration in the settings.</p>
+      </div>
+    );
+  }
   return (
     <div className={s.print} ref={ref}>
       <header>
@@ -79,7 +89,7 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
             </>
           )}
           <Detail label="IFSC" value={user.ifsc} />
-          <Detail label="Address" value={user.address} />
+          <Detail label="Address" value={user.address?.street || ""} />
           <Detail label="Phone" value={user.phone} />
           <Detail label="Email" value={user.email} />
         </div>

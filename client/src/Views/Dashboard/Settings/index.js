@@ -584,9 +584,9 @@ const Config = ({ next }) => {
         nextPurchaseNo: config.nextPurchaseNo,
         nextReceiptNo: config.nextReceiptNo,
         printQuoteCurrency:
-          config.printQuote?.currency || config.print.currency,
+          config?.printQuote?.currency || config.print.currency,
         printQuoteItemColumns:
-          config.printQuote?.itemColumns || config.print.itemColumns,
+          config?.printQuote?.itemColumns || config.print.itemColumns,
         printQuoteBusinessInfo: config.printQuote.businessInfo,
         printCurrency: config.print.currency,
         printItemColumns: config.print.itemColumns,

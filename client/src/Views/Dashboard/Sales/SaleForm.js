@@ -106,7 +106,7 @@ const Form = ({ edit, sales, onSuccess }) => {
             <Detail label="Status" value={edit.status} />
             <Detail
               label="Inv No"
-              value={`${edit.no}${config.print?.invoiceNoSuffix || ""}`}
+              value={`${edit.no}${config?.print?.invoiceNoSuffix || ""}`}
               className="flex justify-space-between"
             />
             <Detail
