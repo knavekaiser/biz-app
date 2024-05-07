@@ -18,7 +18,7 @@ import s from "./quotes.module.scss";
 import { useReactToPrint } from "react-to-print";
 import { endpoints } from "config";
 
-// import PrintInvoice from "./printInvoice";
+import PrintInvoice from "./printInvoice";
 
 const mainSchema = yup.object({
   date: yup.string().required(),
@@ -232,13 +232,11 @@ const Form = ({ edit, quotes, onSuccess }) => {
       )}
       {err && <p className="error">{err}</p>}
 
-      {
-        // edit && (
-        // <div style={{ display: "none" }}>
-        //   <PrintInvoice ref={printRef} quote={edit} user={user} />
-        // </div>
-        // )
-      }
+      {edit && (
+        <div style={{ display: "none" }}>
+          <PrintInvoice ref={printRef} quote={edit} user={user} />
+        </div>
+      )}
 
       {!viewOnly && (
         <>

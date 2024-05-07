@@ -16,6 +16,7 @@ const Detail = ({ label, value }) => {
 
 const PrintInvoice = forwardRef(({ quote, user }, ref) => {
   const { config } = useContext(SiteContext);
+  console.log({ config, quote, user });
   const [itemsStyle, setItemsStyle] = useState(null);
   useEffect(() => {
     if (!config?.printQuote) {
