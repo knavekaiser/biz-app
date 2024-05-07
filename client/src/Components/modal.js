@@ -62,12 +62,15 @@ export const Modal = forwardRef(
   }
 );
 
+let root = null;
 export const Prompt = ({ className, type, message, btns, callback }) => {
   if (type === "error") {
     // console.trace(message);
   }
   const container = document.querySelector("#prompt");
-  const root = ReactDOMClient.createRoot(container);
+  if (!root) {
+    root = ReactDOMClient.createRoot(container);
+  }
   const cleanup = () => root.render(<></>);
   const confirm = () => {
     callback();

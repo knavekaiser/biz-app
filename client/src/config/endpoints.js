@@ -65,7 +65,7 @@ const endpoints = {
   comifyChat: `${
     process.env.NODE_ENV === "development"
       ? "http://localhost:8060"
-      : "https://comify.in"
+      : "https://biz.infinai.in"
   }/assets/sdk/infinai-chat-sdk-v0.9.0.js`,
 };
 

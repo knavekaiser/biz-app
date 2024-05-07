@@ -195,7 +195,7 @@ export const SearchField = ({
         backdropClass={s.searchFieldModalBackdrop}
         style={style}
         onBackdropClick={() => setShowResult(false)}
-        clickThroughBackdrop={true}
+        // clickThroughBackdrop={true}
       >
         <ul className={s.options}>
           {data.map((item, i) => (
