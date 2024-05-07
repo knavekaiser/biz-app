@@ -100,7 +100,7 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
             <Detail label="IFSC" value={user.ifsc} />
           )}
           {config.printQuote.businessInfo.includes("address") && (
-            <Detail label="Address" value={user.address} />
+            <Detail label="Address" value={`${user.address?.street || ""}`} />
           )}
           {config.printQuote.businessInfo.includes("phone") && (
             <Detail label="Phone" value={user.phone} />
