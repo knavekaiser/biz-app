@@ -1,4 +1,4 @@
-const baseApiUrl = "";
+const baseApiUrl = "https://biz.infinai.in";
 
 const endpoints = {
   baseApiUrl,

@@ -44,6 +44,7 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
             ...(localStorage.getItem("business_id") && {
               "x-business-id": localStorage.getItem("business_id"),
             }),
+            "x-access-token": localStorage.getItem("access_token"),
             ...hookHeaders,
             ...headers,
           },

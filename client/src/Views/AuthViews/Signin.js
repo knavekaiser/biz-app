@@ -35,6 +35,7 @@ const Form = () => {
             if (data.success) {
               setUser(data.data);
               localStorage.setItem("userType", data.data.userType);
+              localStorage.setItem("access_token", data.token);
               const path = ["/signin", "/signup"].includes(location.pathname)
                 ? paths.home
                 : location.pathname || paths.home;

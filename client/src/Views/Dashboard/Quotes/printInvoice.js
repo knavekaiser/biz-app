@@ -18,6 +18,9 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
   const { config } = useContext(SiteContext);
   const [itemsStyle, setItemsStyle] = useState(null);
   useEffect(() => {
+    if (!config?.printQuote) {
+      return;
+    }
     const itemColumnSort = ["no", "product", "qty", "unit", "total"];
     const columns = [
       ...config.printQuote.itemColumns
@@ -36,6 +39,14 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
       } repeat(auto-fit, minmax(86px, 1fr))`,
     });
   }, [quote]);
+
+  if (!config?.printQuote) {
+    return (
+      <div className={s.print} ref={ref}>
+        <p>Please update print configuration in the settings.</p>
+      </div>
+    );
+  }
   return (
     <div className={s.print} ref={ref}>
       <header>
