@@ -48,7 +48,7 @@ const Dashboard = () => {
               { label: "Stores", path: paths.storeListings },
               { label: "Subscription Plans", path: paths.subPlans },
               // { label: "Categories", path: paths.categories },
-              { label: "Sub Categories", path: paths.subCategories },
+              // { label: "Sub Categories", path: paths.subCategories },
               { label: "Chats", path: paths.chats },
               {
                 label: "Manage Data",
@@ -60,14 +60,14 @@ const Dashboard = () => {
         </div>
         <Routes>
           {/* <Route path={paths.stores} element={<Stores />} /> */}
-          <Route
+          {/* <Route
             path={paths.subCategories}
             element={
               <Suspense fallback={<LoadingSaklleton />}>
                 <SubCategories />
               </Suspense>
             }
-          />
+          /> */}
           <Route
             path={paths.subPlans}
             element={

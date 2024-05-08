@@ -82,7 +82,7 @@ const DynamicTablePage = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex justify-space-between">
-        <h2>All {table}(s)</h2>
+        <h2>{table}</h2>
         <div className="flex gap-1">
           {/* <ImportExport
             exportUrl={`${endpoints.adminDynamic}/${table}`}
@@ -114,6 +114,7 @@ const DynamicTablePage = () => {
         </div>
       </div>
       <DynamicTable
+        admin
         fields={collection?.fields}
         loading={gettingCollection}
         url={`${endpoints.adminDynamic}/${table}`}

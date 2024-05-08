@@ -12,6 +12,10 @@ Number.prototype.fix = function (n, locale) {
   return +this.toFixed(n);
 };
 
+Number.prototype.clamp = function (min, max) {
+  return Math.min(Math.max(this, min), max);
+};
+
 Number.prototype.pad = function (l) {
   let ziros = "";
   for (let i = 0; i < l; i++) ziros += "0";

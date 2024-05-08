@@ -33,6 +33,7 @@ import { SiteContext } from "SiteContext";
 import { endpoints } from "config";
 
 export const Table = ({
+  admin,
   columns,
   className,
   theadTrStyle,
@@ -119,6 +120,7 @@ export const Table = ({
             <tr className={s.filters}>
               <td>
                 <Filters
+                  admin={admin}
                   filterFields={filterFields}
                   filters={filters}
                   setFilters={setFilters}
@@ -213,7 +215,7 @@ export const Table = ({
   );
 };
 
-const Filters = ({ filterFields, filters, setFilters }) => {
+const Filters = ({ admin, filterFields, filters, setFilters }) => {
   const { handleSubmit, register, control, reset, watch } = useForm();
 
   const fields = filterFields.map((field, i) => {
@@ -320,7 +322,9 @@ const Filters = ({ filterFields, filters, setFilters }) => {
             options: field.options || [],
           })}
           {...(field.optionType === "collection" && {
-            url: `${endpoints.dynamic}/${field.collection}`,
+            url: `${admin ? endpoints.adminDynamic : endpoints.dynamic}/${
+              field.collection
+            }`,
           })}
           getQuery={(inputValue, selected) => ({
             ...(inputValue && { [field.optionLabel]: inputValue }),
@@ -382,19 +386,13 @@ export const TableActions = ({ actions, className }) => {
       setStyle({
         position: "absolute",
         right: window.innerWidth - (x + width),
-        top: Math.max(
-          Math.min(
-            y + height,
-            window.innerHeight -
-              ((popupContainerRef.current?.querySelector("button")
-                .clientHeight || 35) *
-                actions.length +
-                8)
-          ),
-          8
-        ),
-        // width: width,
-        // height: 28 * actions.length,
+        top: (
+          window.innerHeight -
+          ((popupContainerRef.current?.querySelector("button").clientHeight ||
+            35) *
+            actions.length +
+            8)
+        ).clamp(8, y + height),
         maxHeight: window.innerHeight - 16,
       });
     }
@@ -455,6 +453,7 @@ export const TableActions = ({ actions, className }) => {
 };
 
 export const DynamicTable = ({
+  admin,
   fields = [],
   data = [],
   url,
@@ -588,6 +587,7 @@ export const DynamicTable = ({
 
   return url ? (
     <Table
+      admin={admin}
       loading={loading}
       url={url}
       pagination={pagination}
@@ -607,6 +607,7 @@ export const DynamicTable = ({
     />
   ) : (
     <Table
+      admin={admin}
       loading={loading}
       className={className}
       columns={[

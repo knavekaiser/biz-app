@@ -45,7 +45,7 @@ const endpoints = {
   dynamicPages: `${baseApiUrl}/api/manage-dynamic-pages`,
 
   homeStores: `${baseApiUrl}/api/home/stores`,
-  homeCategories: `${baseApiUrl}/api/home/categories`,
+  homeCategories: `${baseApiUrl}/api/home/store-categories`,
   homeConfig: `${baseApiUrl}/api/home/config`,
   homeLocations: `${baseApiUrl}/api/home/locations`,
   adSchemas: `${baseApiUrl}/api/ad-schemas`,

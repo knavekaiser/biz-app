@@ -157,9 +157,9 @@ exports.homeStores = async (req, res) => {
   }
 };
 
-exports.homeCategories = async (req, res) => {
+exports.homeStoreCategories = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getAdminModel("Category");
+    const { Model } = await dbHelper.getAdminModel("Store Category");
     if (!Model) {
       return responseFn.error(
         res,
@@ -170,8 +170,8 @@ exports.homeCategories = async (req, res) => {
     Model.aggregate([
       {
         $lookup: {
-          from: "adschemas",
-          localField: "name",
+          from: "Admin_Store Subcategory",
+          localField: "_id",
           foreignField: "category",
           as: "subCategories",
         },

@@ -262,7 +262,7 @@ const ItemForm = ({ edit, setEdit, payments, purchases, onSuccess }) => {
           </button>
         </div>
       ) : (
-        <button className="btn">Add</button>
+        <button className="btn">{edit ? "Update" : "Add"}</button>
       )}
     </form>
   );

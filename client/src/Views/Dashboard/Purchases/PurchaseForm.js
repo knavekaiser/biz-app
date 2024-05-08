@@ -321,7 +321,7 @@ const ItemForm = ({ edit, purchases, onSuccess }) => {
           value: unit,
         }))}
       />
-      <button className="btn">Add</button>
+      <button className="btn">{edit ? "Update" : "Add"}</button>
     </form>
   );
 };

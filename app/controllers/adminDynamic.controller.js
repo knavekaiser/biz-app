@@ -56,7 +56,7 @@ exports.findAll = async (req, res) => {
       .forEach((field) => {
         pipeline.push({
           $lookup: {
-            from: `${req.authUser._id}_${field.collection}`,
+            from: `Admin_${field.collection}`,
             let: { fieldName: `$${field.name}` },
             pipeline: [
               {
@@ -84,6 +84,7 @@ exports.findAll = async (req, res) => {
           });
         }
       });
+
     if (page && pageSize) {
       pipeline.push(
         ...[
@@ -97,12 +98,6 @@ exports.findAll = async (req, res) => {
         ]
       );
     }
-    // pipeline = dbHelper.getDynamicPipeline({
-    //   fields: collection.fields,
-    //   pipeline,
-    //   business_id: req.business?._id || req.authUser._id,
-    //   table: req.params.table,
-    // });
 
     Model.aggregate(pipeline)
       .then((data) => {
@@ -152,7 +147,7 @@ exports.create = async (req, res) => {
           dbHelper.getDynamicPipeline({
             fields: collection.fields,
             pipeline: [{ $match: { _id: data._id } }],
-            business_id: req.business?._id || req.authUser._id,
+            business_id: "Admin_",
             table: req.params.table,
           })
         );

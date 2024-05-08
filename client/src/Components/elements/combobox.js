@@ -26,38 +26,18 @@ export const Combobox = ({
   const [open, setOpen] = useState(false);
   const [style, setStyle] = useState({});
   const [hover, setHover] = useState();
-  // const clickHandlerAdded = useState(false);
   useEffect(() => {
     const { width, height, x, y } = container.current.getBoundingClientRect();
     setStyle({
       position: "absolute",
       left: x,
-      top: Math.max(
-        Math.min(
-          y + height,
-          window.innerHeight - Math.min(35 * (options?.length || 0) + 8, 320)
-        ),
-        8
-      ),
+      top: (
+        window.innerHeight - Math.min(35 * (options?.length || 0) + 8, 320)
+      ).clamp(8, y + height),
       width: width,
       maxHeight: Math.min(window.innerHeight - 16, 300),
     });
   }, [open, options]);
-  // useEffect(() => {
-  //   const clickHandler = (e) => {
-  //     console.log("clicked");
-  //     if (e.path && !e.path.includes(container.current)) {
-  //       setOpen(false);
-  //     }
-  //   };
-  //   if (!clickHandlerAdded.current) {
-  //     document.addEventListener("click", clickHandler);
-  //     clickHandlerAdded.current = true;
-  //     return () => {
-  //       document.removeEventListener("click", clickHandler);
-  //     };
-  //   }
-  // }, [open]);
   return (
     <Controller
       control={control}

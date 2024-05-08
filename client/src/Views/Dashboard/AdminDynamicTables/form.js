@@ -245,7 +245,7 @@ const defaultFields = [
   "subCategory",
 ];
 
-const FieldForm = ({
+export const FieldForm = ({
   edit,
   fields,
   editCollection,

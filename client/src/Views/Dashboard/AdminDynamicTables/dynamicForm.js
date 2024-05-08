@@ -24,6 +24,7 @@ import * as yup from "yup";
 import s from "./payments.module.scss";
 import { endpoints } from "config";
 import { SiteContext } from "SiteContext";
+import { FieldForm } from "./form";
 
 const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
   const {
@@ -324,6 +325,51 @@ const DynamicForm = ({
   const category = watch("category");
 
   useEffect(() => {
+    const defualtStoreSubcategoryFields = [
+      {
+        name: "title",
+        required: true,
+        label: "Title",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "text",
+      },
+      {
+        name: "description",
+        inputType: "text",
+        dataType: "string",
+        fieldType: "textarea",
+        label: "Description",
+        required: true,
+      },
+      {
+        name: "images",
+        required: true,
+        label: "Images",
+        dataType: "array",
+        fieldType: "input",
+        inputType: "file",
+        dataElementType: "string",
+        multiple: true,
+      },
+      {
+        name: "price",
+        inputType: "number",
+        dataType: "number",
+        fieldType: "input",
+        label: "Price",
+        required: true,
+        decimalPlaces: "0.00",
+      },
+      {
+        name: "whatsappNumber",
+        required: true,
+        label: "WhatsApp",
+        dataType: "string",
+        fieldType: "input",
+        inputType: "phone",
+      },
+    ];
     const _edit = { ...edit };
     if (edit) {
       collectionFields.forEach((field) => {
@@ -349,7 +395,17 @@ const DynamicForm = ({
         ) {
           _edit.addVariant = !!edit.variants?.length;
         }
+        if (
+          collection?.name === "Store Subcategory" &&
+          field.name === "fields"
+        ) {
+          _edit.fields = edit.fields || defualtStoreSubcategoryFields;
+        }
       });
+    } else {
+      if (collection?.name === "Store Subcategory") {
+        _edit.fields = defualtStoreSubcategoryFields;
+      }
     }
     reset(_edit);
   }, [edit]);
@@ -624,16 +680,13 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
 const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
   const [formOpen, setFormOpen] = useState(false);
   const [edit, setEdit] = useState(null);
-  const {
-    config: { siteConfig },
-  } = useContext(SiteContext);
+  const { config } = useContext(SiteContext);
   const orderFields =
     collection.name === "Order"
       ? collection.fields
           .find((item) => item.name === "products")
           .fields.filter((item) => !["product", "variant"].includes(item.name))
       : null;
-  console.log(orderFields, values);
   return (
     <section className={s.nestedTable} onSubmit={(e) => e.stopPropagation()}>
       <div className="flex justify-space-between align-center mb-1">
@@ -666,7 +719,7 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
                   ))}
                 </div>
                 <span className={s.price}>
-                  {siteConfig?.currency}{" "}
+                  {config?.siteConfig?.currency}{" "}
                   {(
                     (item.product.price + (item.variant?.price || 0)) *
                     (item.qty || 1)
@@ -679,7 +732,7 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
           <p className={s.subtotal}>
             Subtotal ({values.reduce((p, c) => p + (c.qty || 1), 0)} item):{" "}
             <strong>
-              {siteConfig.currency +
+              {config?.siteConfig.currency +
                 " " +
                 values
                   .reduce(
@@ -735,22 +788,52 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
         }}
         className={s.nestedObjectFormModal}
       >
-        <DynamicForm
-          edit={edit}
-          fields={field.fields}
-          onSubmit={(newObj) => {
-            if (edit) {
-              setValue(
-                field.name,
-                values.map((item) => (item._id === newObj._id ? newObj : item))
-              );
-              setEdit(null);
-            } else {
-              setValue(field.name, [...values, newObj]);
-            }
-            setFormOpen(false);
-          }}
-        />
+        {collection.name === "Store Subcategory" && field.name === "fields" ? (
+          <FieldForm
+            edit={edit}
+            key={edit ? "edit" : "add"}
+            fields={values}
+            editCollection={collection}
+            // collections={collections}
+            // productCollection={collections.find((c) => c?.name === "Product")}
+            onSuccess={(newField) => {
+              if (edit) {
+                setValue(
+                  field.name,
+                  values.map((item) =>
+                    item.name.toLowerCase() === newField.name.toLowerCase()
+                      ? newField
+                      : item
+                  )
+                );
+                setEdit(null);
+              } else {
+                setValue(field.name, [...values, newField]);
+              }
+              setFormOpen(false);
+            }}
+            // clear={() => setEdit(null)}
+          />
+        ) : (
+          <DynamicForm
+            edit={edit}
+            fields={field.fields}
+            onSubmit={(newObj) => {
+              if (edit) {
+                setValue(
+                  field.name,
+                  values.map((item) =>
+                    item._id === newObj._id ? newObj : item
+                  )
+                );
+                setEdit(null);
+              } else {
+                setValue(field.name, [...values, newObj]);
+              }
+              setFormOpen(false);
+            }}
+          />
+        )}
       </Modal>
     </section>
   );

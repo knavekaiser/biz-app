@@ -60,7 +60,7 @@ const Detail = ({ label, value, className }) => {
 };
 
 const Form = ({ edit, quotes, onSuccess }) => {
-  const { user, config, checkPermission } = useContext(SiteContext);
+  const { business, user, config, checkPermission } = useContext(SiteContext);
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
@@ -234,7 +234,11 @@ const Form = ({ edit, quotes, onSuccess }) => {
 
       {edit && (
         <div style={{ display: "none" }}>
-          <PrintInvoice ref={printRef} quote={edit} user={user} />
+          <PrintInvoice
+            ref={printRef}
+            quote={edit}
+            user={business?.business || user}
+          />
         </div>
       )}
 
@@ -357,7 +361,7 @@ const ItemForm = ({ edit, quotes, onSuccess }) => {
           value: unit,
         }))}
       />
-      <button className="btn">Add</button>
+      <button className="btn">{edit ? "Update" : "Add"}</button>
     </form>
   );
 };

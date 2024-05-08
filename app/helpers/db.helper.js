@@ -131,17 +131,17 @@ exports.getDynamicPipeline = ({
               as: field.name,
             },
           },
-          {
-            $set: {
-              author: {
-                $cond: {
-                  if: { $gt: [{ $size: "$author" }, 0] },
-                  then: { $arrayElemAt: ["$author", 0] },
-                  else: null,
-                },
-              },
-            },
-          },
+          // {
+          //   $set: {
+          //     author: {
+          //       $cond: {
+          //         if: { $gt: [{ $size: "$author" }, 0] },
+          //         then: { $arrayElemAt: ["$author", 0] },
+          //         else: null,
+          //       },
+          //     },
+          //   },
+          // },
         ]
       );
     });

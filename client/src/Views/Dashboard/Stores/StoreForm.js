@@ -42,7 +42,7 @@ const Form = ({ edit, onSuccess }) => {
     ),
   });
   const [categories, setCategories] = useState([]);
-  const [adSchemas, setAdSchemas] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const [productSchema, setProductSchema] = useState(null);
 
   const {
@@ -58,10 +58,10 @@ const Form = ({ edit, onSuccess }) => {
   const featured = watch("featured");
 
   const { get: getCategories, loading: loadingCategories } = useFetch(
-    endpoints.adminDynamic + "/Category"
+    endpoints.adminDynamic + "/Store Category"
   );
-  const { get: getAdSchemas, loading: loadingAdSchemas } = useFetch(
-    endpoints.adSchemas
+  const { get: getSubcategories, loading: loadingAdSchemas } = useFetch(
+    endpoints.adminDynamic + "/Store Subcategory"
   );
 
   useEffect(() => {
@@ -84,12 +84,12 @@ const Form = ({ edit, onSuccess }) => {
   }, []);
 
   useEffect(() => {
-    getAdSchemas({
+    getSubcategories({
       query: { category: category },
     })
       .then(({ data }) => {
         if (data.success) {
-          setAdSchemas(data.data);
+          setSubcategories(data.data);
           if (edit?.subCategory) {
             setProductSchema(
               data.data.find((item) => item.name === edit?.subCategory) || null
@@ -99,23 +99,6 @@ const Form = ({ edit, onSuccess }) => {
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, [category]);
-
-  useEffect(() => {
-    set_fields(
-      (productSchema?.fields || [])
-        .filter((item) => !item.subCategory || item.subCategory === subCategory)
-        .filter(
-          (item) =>
-            ![
-              "subCategory",
-              "category",
-              "variants",
-              "richtext",
-              "specification",
-            ].includes(item.name)
-        )
-    );
-  }, [productSchema, subCategory]);
 
   const startDate = watch("start");
   const endDate = watch("end");
@@ -208,19 +191,21 @@ const Form = ({ edit, onSuccess }) => {
           <Select
             disabled={edit?._id}
             control={control}
-            label="Sub Category"
-            options={adSchemas
-              .filter((item) => item.category === category)
+            label="Subcategory"
+            options={subcategories
+              .filter((item) => item.category?.name === category)
               .map((item) => ({
                 label: item.name,
-                value: item.name,
+                value: item._id,
+                fields: item.fields,
               }))}
             name="subCategory"
             onChange={(e) => {
               if (e.value) {
                 setProductSchema(
-                  adSchemas.find((item) => item.name === e.value)
+                  subcategories.find((item) => item.name === e.value)
                 );
+                set_fields(e.fields || []);
               }
             }}
             formOptions={{ required: true }}

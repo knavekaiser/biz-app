@@ -94,10 +94,21 @@ exports.delete = async (req, res) => {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
+    const collections = await AdminCollection.find({
+      _id: { $in: [...(req.body.ids || []), req.params.id] },
+    });
     AdminCollection.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
     })
-      .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
+      .then(async (num) => {
+        for (const collection of collections) {
+          mongoose.connection.db.dropCollection(
+            `Admin_${collection.name}`,
+            function (err, result) {}
+          );
+        }
+        responseFn.success(res, {}, responseStr.record_deleted);
+      })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

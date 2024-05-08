@@ -117,14 +117,9 @@ export const SearchField = ({
     setStyle({
       position: "absolute",
       left: x,
-      top: Math.max(
-        Math.min(
-          y + height,
-          window.innerHeight - Math.min(35 * (data.length || 0) + 8, 320)
-          // window.innerHeight - (35 * (options?.length || 0) + 8)
-        ),
-        8
-      ),
+      top: (
+        window.innerHeight - Math.min(35 * (data.length || 0) + 8, 320)
+      ).clamp(8, y + height),
       width: width,
       maxHeight: Math.min(window.innerHeight - 16, 300),
     });
@@ -1311,15 +1306,10 @@ export const Range = ({
         const track = trackRef.current;
         const boundingBox = track?.getBoundingClientRect();
         const evtX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-        const val = Math.max(
-          Math.min(
-            +((evtX - boundingBox.x - 10) / (boundingBox.width - 20)).toFixed(
-              2
-            ),
-            1
-          ),
-          0
-        );
+        const val = (+(
+          (evtX - boundingBox.x - 10) /
+          (boundingBox.width - 20)
+        ).toFixed(2)).clamp(0, 1);
         if (activeHandle === "min") {
           setMinPos(Math.min(maxPos, +(val * 100).toFixed(step)));
         }
@@ -1423,15 +1413,15 @@ export const Range = ({
                     onMouseDown={() => setActiveHandle("min")}
                     onTouchStart={() => setActiveHandle("min")}
                     style={{
-                      left: `${Math.min(98, Math.max(2, minPos))}%`,
+                      left: `${minPos.clamp(2, 98)}%`,
                       zIndex: minPos > 50 ? 2 : 1,
                     }}
                   />
                   <span
                     className={s.fill}
                     style={{
-                      left: `${Math.min(98, Math.max(2, minPos))}%`,
-                      right: `${Math.min(98, Math.max(2, 100 - maxPos))}%`,
+                      left: `${minPos.clamp(2, 98)}%`,
+                      right: `${(100 - maxPos).clamp(2, 98)}%`,
                     }}
                   />
                   <span
@@ -1439,7 +1429,7 @@ export const Range = ({
                     onMouseDown={() => setActiveHandle("max")}
                     onTouchStart={() => setActiveHandle("max")}
                     style={{
-                      left: `${Math.min(98, Math.max(2, maxPos))}%`,
+                      left: `${maxPos.clamp(2, 98)}%`,
                       zIndex: maxPos < 50 ? 2 : 1,
                     }}
                   />

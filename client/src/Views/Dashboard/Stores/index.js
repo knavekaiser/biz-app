@@ -56,7 +56,7 @@ const Filters = ({ filters, setFilters }) => {
       <Select
         control={control}
         label="Category"
-        url={endpoints.admin}
+        url={endpoints.adminDynamic + "/Store Category"}
         getQuery={(inputValue, selected) => ({
           ...(inputValue && { name: inputValue }),
           ...(selected && { _id: selected }),
@@ -65,7 +65,7 @@ const Filters = ({ filters, setFilters }) => {
           label: item.name,
           value: item._id,
         })}
-        name="business"
+        name="category"
         className={s.itemName}
       />
 
