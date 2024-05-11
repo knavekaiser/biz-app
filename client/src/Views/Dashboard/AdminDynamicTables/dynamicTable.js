@@ -84,17 +84,6 @@ const DynamicTablePage = () => {
       <div className="flex justify-space-between">
         <h2>{table}</h2>
         <div className="flex gap-1">
-          {/* <ImportExport
-            exportUrl={`${endpoints.adminDynamic}/${table}`}
-            importUrl={
-              checkPermission(`${business?.business._id}_${table}_create`)
-                ? `${endpoints.dynamicBulkCreate.replace(":table", table)}`
-                : null
-            }
-            collection={collection}
-            templateData={templateData}
-            onSuccess={() => setFilters((prev) => ({ ...prev }))}
-          /> */}
           <button
             className="btn m-a mr-0"
             onClick={() =>

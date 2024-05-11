@@ -31,6 +31,7 @@ import * as yup from "yup";
 import { Modal, Prompt } from "../modal";
 import { SiteContext } from "SiteContext";
 import { endpoints } from "config";
+import { ProductThumb } from "Views/Home/productThumbnail";
 
 export const Table = ({
   admin,
@@ -50,6 +51,9 @@ export const Table = ({
   filterFields,
   tfoot,
 }) => {
+  const { business } = useContext(SiteContext);
+  const [productView, setProductView] = useState("rows");
+  const [productTable, setProductTable] = useState(url?.endsWith("/Product"));
   const [filters, setFilters] = useState({});
   const { control, reset } = useForm();
   const [metadata, setMetadata] = useState({
@@ -120,6 +124,9 @@ export const Table = ({
             <tr className={s.filters}>
               <td>
                 <Filters
+                  productTable={productTable}
+                  productView={productView}
+                  setProductView={setProductView}
                   admin={admin}
                   filterFields={filterFields}
                   filters={filters}
@@ -128,22 +135,27 @@ export const Table = ({
               </td>
             </tr>
           ) : null}
-          <tr style={theadTrStyle}>
-            {columns.map((column, i) => (
-              <th
-                key={i}
-                className={`${column.action ? s.action : ""} ${
-                  column.className || ""
-                }`}
-                style={{ ...column.style }}
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
+          {productTable && productView === "grid" ? null : (
+            <tr style={theadTrStyle}>
+              {columns.map((column, i) => (
+                <th
+                  key={i}
+                  className={`${column.action ? s.action : ""} ${
+                    column.className || ""
+                  }`}
+                  style={{ ...column.style }}
+                >
+                  {column.label}
+                </th>
+              ))}
+            </tr>
+          )}
         </thead>
       )}
-      <tbody ref={tbody}>
+      <tbody
+        ref={tbody}
+        className={productTable && productView === "grid" ? s.productGrid : ""}
+      >
         {loading || loadingData ? (
           <tr className={s.loading}>
             <td>
@@ -153,7 +165,23 @@ export const Table = ({
             </td>
           </tr>
         ) : (children || dynamicData).length > 0 ? (
-          <>{children || dynamicData.map((item, i) => renderRow(item, i))}</>
+          <>
+            {children ||
+              dynamicData.map((item, i) =>
+                productTable && productView === "grid" ? (
+                  <tr key={item._id}>
+                    <td>
+                      <ProductThumb
+                        business={business.business}
+                        product={item}
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  renderRow(item, i)
+                )
+              )}
+          </>
         ) : (
           <tr className={s.placeholder} style={tbodyTrStyle}>
             <td>{placeholder || "Nothing yet..."}</td>
@@ -215,7 +243,15 @@ export const Table = ({
   );
 };
 
-const Filters = ({ admin, filterFields, filters, setFilters }) => {
+const Filters = ({
+  productTable,
+  productView,
+  setProductView,
+  admin,
+  filterFields,
+  filters,
+  setFilters,
+}) => {
   const { handleSubmit, register, control, reset, watch } = useForm();
 
   const fields = filterFields.map((field, i) => {
@@ -358,6 +394,17 @@ const Filters = ({ admin, filterFields, filters, setFilters }) => {
     >
       {fields}
       <div className="btns">
+        {productTable && (
+          <button
+            title={`View in ${productView === "rows" ? "grid" : "row"}`}
+            className="btn"
+            onClick={() => {
+              setProductView((prev) => (prev === "rows" ? "grid" : "rows"));
+            }}
+          >
+            {`View in ${productView === "rows" ? "grid" : "row"}`}
+          </button>
+        )}
         <button className={"btn"}>Search</button>
         <button
           className={"btn"}

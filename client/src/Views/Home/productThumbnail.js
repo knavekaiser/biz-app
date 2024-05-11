@@ -29,7 +29,7 @@ export const ProductThumb = ({ order, business, product }) => {
             }
           }}
         >
-          <img src={product.image} />
+          <img src={product.images[0]} />
         </a>
       </div>
       <div className={s.productDetail}>
