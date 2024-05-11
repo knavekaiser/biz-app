@@ -172,10 +172,7 @@ export const Table = ({
                 productTable && productView === "grid" ? (
                   <tr key={item._id}>
                     <td>
-                      <ProductThumb
-                        business={business.business}
-                        product={item}
-                      />
+                      <ProductThumb product={item} />
                     </td>
                   </tr>
                 ) : (

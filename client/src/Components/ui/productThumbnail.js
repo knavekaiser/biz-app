@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 
 export const ProductThumb = ({ product }) => {
   const { business } = useContext(SiteContext);
+  // console.log("business", business);
   return (
     <div className={`${s.productThumb}`}>
       <Link to={`/item/${product._id}`}>
@@ -60,7 +61,7 @@ export const ProductThumb = ({ product }) => {
           {business?.config?.productCard?.map((item) => {
             if (
               item === "whatsappNumber" &&
-              (business.whatsappNumber || product.whatsappNumber)
+              (business?.business?.whatsappNumber || product.whatsappNumber)
             ) {
               return (
                 <button
@@ -73,7 +74,9 @@ export const ProductThumb = ({ product }) => {
                     e.preventDefault();
                     const a = document.createElement("a");
                     a.href = `whatsapp://send/?${new URLSearchParams({
-                      phone: business.whatsappNumber || product.whatsappNumber,
+                      phone:
+                        business?.business?.whatsappNumber ||
+                        product.whatsappNumber,
                       text: `I am interested to know more about this ${product.title}\n${window.location.origin}/item/${product._id}`,
                     }).toString()}`;
                     a.rel = "noreferrer";
