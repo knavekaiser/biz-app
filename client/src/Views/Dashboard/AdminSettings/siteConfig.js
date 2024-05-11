@@ -42,7 +42,7 @@ const SiteConfig = () => {
   }, [storeConfig]);
 
   const category = watch("category");
-  const subCategory = watch("subCategory");
+  const subcategory = watch("subcategory");
 
   const sidebarFilters = watch("sidebarFilters");
 
@@ -97,13 +97,13 @@ const SiteConfig = () => {
             label: item.name,
             value: item.name,
           }))}
-          onChange={() => setValue("subCategory", "")}
+          onChange={() => setValue("subcategory", "")}
         />
 
         <Select
-          label="Sub Category"
+          label="Subcategory"
           control={control}
-          name="subCategory"
+          name="subcategory"
           options={(
             categories.find((item) => item.name === category)?.subCategories ||
             []
@@ -126,7 +126,7 @@ const SiteConfig = () => {
         />
       </div>
 
-      {category && subCategory && (
+      {category && subcategory && (
         <div>
           <div className="flex gap-1 justify-space-between align-center mb-1">
             <h5>Sidebar filters</h5>
@@ -149,7 +149,7 @@ const SiteConfig = () => {
             {sidebarFilters
               ?.find(
                 (item) =>
-                  item.category === category && item.subCategory === subCategory
+                  item.category === category && item.subcategory === subcategory
               )
               ?.filters?.map((item, i) => (
                 <tr key={i}>
@@ -173,7 +173,7 @@ const SiteConfig = () => {
           value={
             sidebarFilters?.find(
               (item) =>
-                item.category === category && item.subCategory === subCategory
+                item.category === category && item.subcategory === subcategory
             )?.filters
           }
           onSuccess={(values) => {
@@ -182,10 +182,10 @@ const SiteConfig = () => {
                 (item) =>
                   !(
                     item.category === category &&
-                    item.subCategory === subCategory
+                    item.subcategory === subcategory
                   )
               ),
-              { category, subCategory, filters: values },
+              { category, subcategory: subcategory, filters: values },
             ]);
             setUpdateSidebarFilters(false);
           }}

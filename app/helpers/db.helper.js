@@ -514,7 +514,7 @@ exports.defaultSchemas = [
     ],
   },
   {
-    name: "Sub Category",
+    name: "Subcategory",
     fields: [
       {
         unique: false,
@@ -560,15 +560,15 @@ exports.defaultSchemas = [
       },
       {
         unique: false,
-        name: "subCategory",
+        name: "subcategory",
         required: false,
-        label: "Sub Category",
+        label: "Subcategory",
         dataType: "string",
         fieldType: "select",
         inputType: "text",
         multiple: false,
         optionType: "collection",
-        collection: "Sub Category",
+        collection: "Subcategory",
         optionLabel: "name",
         optionValue: "name",
       },

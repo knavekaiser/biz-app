@@ -338,7 +338,7 @@ const DynamicForm = ({
   });
 
   const addVariant = watch("addVariant");
-  const subCategory = watch("subCategory");
+  const subcategory = watch("subcategory");
 
   useEffect(() => {
     const _edit = { ...edit, addNew: false };
@@ -413,14 +413,14 @@ const DynamicForm = ({
     }
   }, [prefill]);
   useEffect(() => {
-    if (subCategory) {
+    if (subcategory) {
       set_fields(
         collectionFields
           .filter(
-            (item) => !item.subCategory || item.subCategory === subCategory
+            (item) => !item.subcategory || item.subcategory === subcategory
           )
           .sort((a, b) => {
-            if (["category", "subCategory"].includes(a.name)) {
+            if (["category", "subcategory"].includes(a.name)) {
               return -1;
             }
             return 1;
@@ -429,11 +429,11 @@ const DynamicForm = ({
     } else {
       set_fields(
         collectionFields.filter((item) =>
-          ["category", "subCategory"].includes(item.name)
+          ["category", "subcategory"].includes(item.name)
         )
       );
     }
-  }, [subCategory]);
+  }, [subcategory]);
 
   return (
     <form
@@ -465,7 +465,7 @@ const DynamicForm = ({
       {fields}
 
       {collection?.name === "Product" &&
-        subCategory &&
+        subcategory &&
         collection?.fields.some((item) => "variantArray" === item.dataType) && (
           <Checkbox {...register("addVariant")} label="Add Variant" />
         )}

@@ -145,7 +145,7 @@ const Form = ({ edit, collections, onSuccess }) => {
         className={s.fields}
         columns={[
           { label: "Name" },
-          ...(edit?.name === "Product" ? [{ label: "Sub Category" }] : []),
+          ...(edit?.name === "Product" ? [{ label: "Subcategory" }] : []),
           { label: "Data Type" },
           { label: "Label" },
           { label: "Field Type" },
@@ -160,7 +160,7 @@ const Form = ({ edit, collections, onSuccess }) => {
             <td>
               <span className="ellipsis">{item.name}</span>
             </td>
-            {edit?.name === "Product" && <td>{item.subCategory}</td>}
+            {edit?.name === "Product" && <td>{item.subcategory}</td>}
             <td>{item.dataType}</td>
             <td>{item.label}</td>
             <td>{item.fieldType}</td>
@@ -242,7 +242,7 @@ const defaultFields = [
   "price",
   "whatsappNumber",
   "category",
-  "subCategory",
+  "subcategory",
 ];
 
 export const FieldForm = ({
@@ -299,11 +299,11 @@ export const FieldForm = ({
         const data = {};
         Object.entries(values).forEach(([key, value]) => {
           if (
-            (key === "subCategory" &&
+            (key === "subcategory" &&
               !defaultFields
-                .filter((item) => item !== "subCategory")
+                .filter((item) => item !== "subcategory")
                 .includes(key)) ||
-            key !== "subCategory"
+            key !== "subcategory"
           ) {
             data[key] = value;
           }
@@ -314,7 +314,7 @@ export const FieldForm = ({
       }
       reset({
         category: "",
-        subCategory: "",
+        subcategory: "",
         name: "",
         inputType: "",
         dataType: "",
@@ -350,9 +350,9 @@ export const FieldForm = ({
             {editCollection?.name === "Product" &&
               !defaultFields.includes(name) && (
                 <Select
-                  label="Sub Category"
+                  label="Subcategory"
                   control={control}
-                  url={endpoints.adminDynamic + "/Sub Category"}
+                  url={endpoints.adminDynamic + "/Subcategory"}
                   getQuery={(inputValue, selected) => ({
                     ...(inputValue && { name: inputValue }),
                     ...(selected && { name: selected }),
@@ -361,7 +361,7 @@ export const FieldForm = ({
                     label: item.name,
                     value: item.name,
                   })}
-                  name="subCategory"
+                  name="subcategory"
                 />
               )}
 

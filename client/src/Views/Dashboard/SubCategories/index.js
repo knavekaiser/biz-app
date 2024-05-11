@@ -74,7 +74,7 @@ const Collections = () => {
                   callBack: () =>
                     Prompt({
                       type: "confirmation",
-                      message: `Are you sure you want to remove this Sub Category?`,
+                      message: `Are you sure you want to remove this Subcategory?`,
                       callback: () => {
                         deleteSchema(
                           {},
@@ -110,7 +110,7 @@ const Collections = () => {
 
       <Modal
         head
-        label={`${edit?._id ? "Update" : "Add"} Sub Category`}
+        label={`${edit?._id ? "Update" : "Add"} Subcategory`}
         open={!!edit}
         setOpen={() => {
           setEdit(null);

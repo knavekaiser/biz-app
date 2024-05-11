@@ -131,7 +131,7 @@ const Sidebar = ({ filters, setFilters, config }) => {
       config?.sidebarFilters?.find(
         (item) =>
           item.category === filters.category &&
-          item.subCategory === filters.subCategory
+          item.subcategory === filters.subcategory
       )?.filters?.length > 0 ? (
         <div
           className={`flex align-center gap_5 ${
@@ -141,14 +141,14 @@ const Sidebar = ({ filters, setFilters, config }) => {
             setSchema(null);
             setFilters((prev) => ({
               category: prev.category,
-              subCategory: undefined,
+              subcategory: undefined,
             }));
           }}
         >
           <BsArrowLeft style={{ fontSize: "1.3em" }} />{" "}
           <div className="flex align-center gap_5">
             <p className="flex align-center gap_5">
-              {filters.category} <FiChevronRight /> {filters.subCategory}
+              {filters.category} <FiChevronRight /> {filters.subcategory}
             </p>
           </div>
           <button
@@ -165,7 +165,7 @@ const Sidebar = ({ filters, setFilters, config }) => {
               config?.sidebarFilters?.find(
                 (item) =>
                   item.category === filters.category &&
-                  item.subCategory === filters.subCategory
+                  item.subcategory === filters.subcategory
               )?.filters || []
             }
           />
@@ -211,18 +211,18 @@ const Sidebar = ({ filters, setFilters, config }) => {
                       <li key={subCat.name}>
                         <Checkbox
                           label={subCat.name}
-                          checked={filters.subCategory === subCat.name}
+                          checked={filters.subcategory === subCat.name}
                           onChange={(e) => {
-                            if (filters.subCategory === subCat.name) {
+                            if (filters.subcategory === subCat.name) {
                               setFilters((prev) => ({
                                 ...prev,
-                                subCategory: undefined,
+                                subcategory: undefined,
                               }));
                             } else {
                               setFilters((prev) => ({
                                 ...prev,
                                 category: cat.name,
-                                subCategory: subCat.name,
+                                subcategory: subCat.name,
                               }));
                             }
                             setSchema(e.target.checked ? subCat.fields : null);

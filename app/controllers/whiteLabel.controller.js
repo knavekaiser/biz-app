@@ -795,7 +795,7 @@ exports.categories = async (req, res) => {
     Category.aggregate([
       {
         $lookup: {
-          from: `${req.business._id}_Sub Category`,
+          from: `${req.business._id}_Subcategory`,
           localField: "name",
           foreignField: "category",
           as: "subCategories",

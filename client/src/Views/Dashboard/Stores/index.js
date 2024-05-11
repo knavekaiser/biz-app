@@ -148,7 +148,7 @@ const Stores = () => {
           { label: "Created At" },
           { label: "Business" },
           { label: "Category" },
-          { label: "Sub Category" },
+          { label: "Subcategory" },
           { label: "Created By" },
           { label: "Effective Period" },
           { label: "Featured" },
@@ -162,7 +162,7 @@ const Stores = () => {
             </td>
             <td>{item.business?.name}</td>
             <td>{item.category}</td>
-            <td>{item.subCategory}</td>
+            <td>{item.subcategory}</td>
             <td>{item.createdBy?.name}</td>
             <td>
               <Moment format="MMM DD, YY">{item.start}</Moment> -{" "}

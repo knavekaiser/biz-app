@@ -9,15 +9,15 @@ const fs = require("fs");
 const { CharacterTextSplitter } = require("langchain/text_splitter");
 const { PineconeClient } = require("@pinecone-database/pinecone");
 const { ObjectId } = require("mongodb");
+const dbHelper = require("./db.helper");
 
 const fileHelper = require("./file.helper");
 
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 const { FaqDoc } = require("../models");
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 const splitter = new CharacterTextSplitter({
   chunkSize: 1536,
@@ -248,7 +248,7 @@ const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
   });
 };
 
-const generateResponse = async (messages, max_tokens = 100) => {
+const generateResponseOld = async (messages, max_tokens = 100, metadata) => {
   return new Promise(async (resolve, reject) => {
     await openai
       .createChatCompletion({
@@ -263,6 +263,129 @@ const generateResponse = async (messages, max_tokens = 100) => {
         });
       })
       .catch((err) => reject(err?.response.data));
+  });
+};
+
+const getAction = async () => {
+  return async (business, pipeline = []) => {
+    const { Model } = await dbHelper.getModel(business._id + "_" + "Product");
+    return Model.aggregate([...pipeline]);
+  };
+};
+
+const generateResponse = async (messages, metadata = {}) => {
+  return new Promise(async (resolve, reject) => {
+    await openai.chat.completions
+      .create({
+        model: "gpt-4",
+        messages,
+        // max_tokens,
+      })
+      .then(async (completion) => {
+        const message = completion.choices[0]?.message;
+        if (message.content.includes(`"response_type": "action"`)) {
+          try {
+            message.content = JSON.stringify(JSON.parse(message.content));
+          } catch (err) {
+            console.log("fixing prompt", message.content);
+            const json = message.content
+              .match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/gm)
+              ?.map(JSON.parse);
+            if (json) {
+              message.content = JSON.stringify(json?.[0] || json);
+            }
+          }
+        }
+        if (
+          message?.content?.startsWith("{") &&
+          message?.content?.endsWith("}")
+        ) {
+          try {
+            console.log("raw", message.content);
+            let resp = {};
+            try {
+              resp = JSON.parse(message.content);
+            } catch (err) {
+              const fixPrompt = `Have a look at the following JSON. Check if there's any mistake. Please fix the problems and return the fixed JSON. If there aren't any problems, Just return the JSON. respond with JSON only. don't include anything else.`;
+              resp = await openai.chat.completions
+                .create({
+                  model: "gpt-4",
+                  messages: [
+                    {
+                      role: "user",
+                      name: "System",
+                      content: fixPrompt,
+                    },
+                    {
+                      role: "user",
+                      name: "System",
+                      content: `Todays Date: ${new Date().toISOString()}`,
+                    },
+                    {
+                      role: "user",
+                      name: "Guest",
+                      content: message.content,
+                    },
+                  ],
+                })
+                .then((completion) =>
+                  JSON.parse(completion.choices[0].message.content)
+                )
+                .catch((err) => {
+                  console.log("Error occurred when fixing JSON: ", err.message);
+                  return {};
+                });
+            }
+            console.log("parsed", resp);
+            if (resp.response_type === "action") {
+              const action = await getAction(resp.action, metadata.business);
+              if (action) {
+                if (resp.pipeline?.length) {
+                  resp.pipeline = resp.pipeline.filter(
+                    (item) => Object.keys(item).length > 0
+                  );
+                }
+                console.log("generated pipeline -> ", resp.pipeline);
+                const data = await action(
+                  metadata.business,
+                  resp.pipeline
+                ).catch((err) => {
+                  console.log(`Error occured on action: ${err.message}`);
+                  return [];
+                });
+                console.log("data ----------->", data?.length);
+                resolve({
+                  data,
+                  message,
+                  usage: completion.usage,
+                });
+              }
+            } else if (resp.response_type === "text") {
+              resolve({
+                message: resp.message,
+                usage: completion.usage,
+              });
+            }
+          } catch (err) {
+            console.log(err);
+            resolve({
+              message: {
+                role: "system",
+                content: "Something went wrong when performing the action.",
+              },
+              usage: completion.usage,
+            });
+          }
+        }
+        resolve({
+          message,
+          usage: completion.usage,
+        });
+      })
+      .catch((err) => {
+        console.log(err?.message);
+        reject(err?.response?.data || err.message);
+      });
   });
 };
 

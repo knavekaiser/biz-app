@@ -10,7 +10,7 @@ exports.homeStores = async (req, res) => {
   try {
     const {
       category,
-      subCategory,
+      subcategory,
       address_city,
       address_county,
       address_state,
@@ -28,8 +28,8 @@ exports.homeStores = async (req, res) => {
     if (category) {
       conditions.category = { $in: category.split(",") };
     }
-    if (subCategory) {
-      conditions.subCategory = { $in: subCategory.split(",") };
+    if (subcategory) {
+      conditions.subcategory = { $in: subcategory.split(",") };
     }
     const address = JSON.parse(
       JSON.stringify({
@@ -40,7 +40,7 @@ exports.homeStores = async (req, res) => {
       })
     );
     const productQuery = [];
-    const schema = await AdSchema.findOne({ category, name: subCategory });
+    const schema = await AdSchema.findOne({ category, name: subcategory });
     schema?.fields.forEach((field) => {
       if (field.name in query) {
         if (field.dataType === "string" || field.dataElementType === "string") {

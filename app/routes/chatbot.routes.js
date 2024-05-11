@@ -1,4 +1,4 @@
-const { authJwt, validate, file } = require("../middlewares");
+const { authJwt, validate, file, whitelabel } = require("../middlewares");
 const controller = require("../controllers/chatbot.controller");
 const { chatbot: schema } = require("../validationSchemas");
 const { appConfig } = require("../config");
@@ -27,8 +27,9 @@ module.exports = function (app) {
     controller.getChatbotByDomain
   );
   routerPublic.get(
-    "/get-chatbot/:chatbot_id",
-    authJwt.verifyOrigin,
+    "/get-chatbot",
+    whitelabel.getBusinessOptinal,
+    // authJwt.verifyOrigin,
     controller.getChatbot
   );
   app.use("/api", routerPublic);

@@ -41,9 +41,7 @@ exports.getChatbot = async (req, res) => {
         },
       },
     ]);
-    const chatbot = req.business.chatbots?.find(
-      (bot) => bot._id.toString() === req.params.chatbot_id.toString()
-    );
+    const chatbot = req.business.chatbots?.[0]?._doc || null;
     if (!chatbot) {
       return responseFn.error(
         res,

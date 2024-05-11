@@ -53,7 +53,7 @@ const Form = ({ edit, onSuccess }) => {
 
   const business = watch("business");
   const category = watch("category");
-  const subCategory = watch("subCategory");
+  const subcategory = watch("subcategory");
   const products = watch("products");
   const featured = watch("featured");
 
@@ -90,9 +90,9 @@ const Form = ({ edit, onSuccess }) => {
       .then(({ data }) => {
         if (data.success) {
           setSubcategories(data.data);
-          if (edit?.subCategory) {
+          if (edit?.subcategory) {
             setProductSchema(
-              data.data.find((item) => item.name === edit?.subCategory) || null
+              data.data.find((item) => item.name === edit?.subcategory) || null
             );
           }
         }
@@ -162,7 +162,7 @@ const Form = ({ edit, onSuccess }) => {
           name="business"
           // onChange={(e) => {
           //   if (!e?.value) {
-          //     setValue("subCategory", "");
+          //     setValue("subcategory", "");
           //   }
           // }}
           formOptions={{ required: true }}
@@ -180,7 +180,7 @@ const Form = ({ edit, onSuccess }) => {
             name="category"
             onChange={(e) => {
               if (!e?.value) {
-                setValue("subCategory", "");
+                setValue("subcategory", "");
               }
             }}
             formOptions={{ required: true }}
@@ -199,7 +199,7 @@ const Form = ({ edit, onSuccess }) => {
                 value: item._id,
                 fields: item.fields,
               }))}
-            name="subCategory"
+            name="subcategory"
             onChange={(e) => {
               if (e.value) {
                 setProductSchema(
@@ -212,7 +212,7 @@ const Form = ({ edit, onSuccess }) => {
           />
         )}
 
-        {category && subCategory && (
+        {category && subcategory && (
           <div className="grid gap-1">
             <Input
               type="date"
@@ -292,7 +292,7 @@ const Form = ({ edit, onSuccess }) => {
           </div>
         )}
 
-        {category && subCategory && _fields.length > 0 && (
+        {category && subcategory && _fields.length > 0 && (
           <CustomRadio
             control={control}
             name="order"

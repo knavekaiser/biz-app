@@ -1,7 +1,7 @@
 const {
   appConfig: { responseFn, responseStr },
 } = require("../config");
-const { aiHelper } = require("../helpers");
+const { aiHelper, dbHelper } = require("../helpers");
 
 const { FaqDoc, Chat, SubPlan } = require("../models");
 const { default: mongoose } = require("mongoose");
@@ -19,7 +19,7 @@ exports.getTopics = async (req, res) => {
   }
 };
 
-exports.initChat = async (req, res) => {
+exports.initChatOld = async (req, res) => {
   try {
     if (!req.body.topic) {
       const availableTopics = await FaqDoc.find({ user: req.business._id });
@@ -148,6 +148,226 @@ exports.initChat = async (req, res) => {
   }
 };
 
+exports.initChat = async (req, res) => {
+  try {
+    let messages = [];
+
+    let resp = null;
+
+    const { Model: ProductModel } = await dbHelper.getModel(
+      req.business._id + "_" + "Product"
+    );
+    const { Model: CategoryModel } = await dbHelper.getModel(
+      req.business._id + "_" + "Category"
+    );
+    const { Model: SubcategoryModel } = await dbHelper.getModel(
+      req.business._id + "_" + "Subcategory"
+    );
+    if (!ProductModel)
+      return responseFn.error(res, {}, responseStr.record_not_found);
+
+    const product = await ProductModel.findOne();
+
+    const prompt = `You are an AI assistant embedded within an e-commerce site. Your role is to help the user find what they looking for. Within this application, each Product possesses essential fields including ${Object.keys(
+      product?._doc || {}
+    ).join(", ")}. Here's what you are tasked to do:
+
+Offer pertinent information about the product upon request. For instance:
+a. Show me 5 green shirts.
+b. Show me few shirts under $500.
+
+When unable to provide an answer due to insufficient data, respond with JSON to run automated actions so you can get the data required to perform the analysis effectively.
+
+Here's an example of a Product:-
+${JSON.stringify(product._doc, null, 2)}
+
+Please note that the following example serves solely to illustrate the document structure. Avoid utilizing any of these specific values for queries or any other purposes.
+
+Possible product categories are:
+${await CategoryModel.find().then((data) =>
+  data
+    .map(
+      (cat, i) =>
+        `${i + 1}. ${JSON.stringify({ _id: cat._id, name: cat.name })}`
+    )
+    .join("\n")
+)}
+
+Possible product subcategories are:
+${await SubcategoryModel.find().then((data) =>
+  data
+    .map(
+      (subcat, i) =>
+        `${i + 1}. ${JSON.stringify({
+          _id: subcat._id,
+          category: subcat.category,
+          name: subcat.name,
+        })}`
+    )
+    .join("\n")
+)}
+
+
+Please respond exclusively in JSON format to execute predefined actions when data retrieval from the database is necessary for context or response. For instance, if asked "show me some shirts within $500", respond with valid JSON format similar to the following example:
+{ 
+  "response_type": "action",
+  "action": "Get Products",
+  "pipeline": [
+    {
+      "$match": {
+        "$expr": {
+          "$and": [
+            {
+              "$lte": [ "$price", 500 ]
+            }
+          ]
+        }
+      }
+    },
+    { "$count": "total_record" }
+  ]
+}.
+
+Please follow these rules when crafting action responses to ensure that your response is perfectly stringifiable and parsable:
+1. Refrain from utilizing inline functions such as ISODate(), Date(), or ObjectId(). Instead, opt for suitable operators like $dateFromString or $toObjectId.
+2. If you need to perform a mathematical equation in the query, such as for date comparisons, please use MongoDB operators like $add, $subtract, $multiply, etc. Do not pass mathematical equations directly like this '{ "$subtract": [ "$$NOW", 60 * 60 * 24 * 7 * 1000 * 3 ] }', as '60 * 60 * 24 * 7 * 1000 * 3' are not valid JSON, just write 1814400000 instead.
+3. Abstain from employing $lookup, as all 'foreign fields' will already be populated.
+4. Do not use following operators in the pipeline: $nin.
+5. Whenever querying any name, make sure the query is case-insensitive.
+6. The whole response must be valid JSON. Do not include any sort of explanation in the response. Keep it mind, the response will automatically be parsed and ran as queries.
+7. Never mix explanation and JSON in the same response.
+8. Never include python, javascript or any programming language code and or instruction in the response.
+
+Use "$$NOW" and similar operators instead of fixed dates and times when queried with a relative timeframe, such as:
+a. "Give me all the Taskss that were created in the past 5 days."
+b. "Give me all upcoming Taskss from the next 7 days."
+c. "List all the Taskss in the next 7 days."
+d. "How many Taskss are left today?"
+
+Here are the available actions:
+1. "Get Products"
+
+
+In the reply of action response, you will be given the data you queried. You are to answer the initial question comprehensively based on said data. Do not just return the raw data you just received.
+
+If you are told to list or show one or multiple products, you will respond only with the following JSON format so it can be rendered in the frontend properly:
+[
+  {
+    "_id": "663ed2e2c406fe695bc50411",
+    "title: "Red T-shirt",
+    "description": "This is a red T-shirt",
+    "images": [
+      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed07469a2e5a55bb64d7e.webp",
+      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed09969a2e5a55bb64da0.webp",
+    ],
+    "price": 500
+  },
+  {
+    "_id": "663ed07469a2e5a55bb64d80",
+    "title: "Blue T-shirt",
+    "description": "This is a blue T-shirt",
+    "images": [
+      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663edd77c858fe09c169654c.webp",
+      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed0ca69a2e5a55bb64dfc.webp",
+    ],
+    "price": 500
+  }
+]`;
+
+    messages = [
+      {
+        role: "user",
+        name: "System",
+        content: prompt,
+      },
+      {
+        role: "user",
+        name: "System",
+        content: `Todays Date: ${new Date().toISOString()}`,
+      },
+      {
+        role: "user",
+        name: "Guest",
+        content: req.body.message,
+      },
+    ];
+
+    resp = await aiHelper.generateResponse(messages, {
+      business: req.business,
+    });
+
+    if (resp) {
+      const { message, usage } = resp;
+      messages[0].token = usage.prompt_tokens;
+      message._id = mongoose.Types.ObjectId();
+      message.token = usage.completion_tokens;
+      message.action = "data" in resp;
+      messages.push(message);
+
+      let chat = await new Chat({
+        fullContext: true,
+        user: {
+          name: req.body.name,
+          email: req.body.email,
+        },
+        business: req.business?._id,
+        messages,
+      }).save();
+
+      if ("data" in resp) {
+        const newMessages = [
+          {
+            role: "user",
+            name: "System",
+            content: JSON.stringify(resp.data),
+          },
+        ];
+        resp = await aiHelper.generateResponse(
+          [...messages, ...newMessages].map((msg) => ({
+            role: msg.role,
+            name: msg.name,
+            content: msg.content,
+          })),
+          { business: req.business }
+        );
+        const { message, usage } = resp;
+        message._id = mongoose.Types.ObjectId();
+        message.createdAt = new Date();
+        message.updatedAt = new Date();
+
+        if (newMessages.length) {
+          newMessages[newMessages.length - 1].token = usage.prompt_tokens;
+          newMessages.push({ ...message, token: usage.completion_tokens });
+        }
+
+        await Chat.updateOne(
+          { _id: chat._id },
+          { $push: { messages: { $each: newMessages } } }
+        );
+
+        chat = await Chat.findOne({ _id: chat._id });
+      }
+      return responseFn.success(res, {
+        data: {
+          _id: chat._id,
+          user: chat.user,
+          title: chat.title,
+          ...(chat.parentTopic
+            ? { topic: chat.parentTopic, subTopic: chat.topic }
+            : { topic: chat.topic }),
+          messages: chat.messages.filter(
+            (item) => !(item.name === "System" || item.action)
+          ),
+        },
+      });
+    }
+    responseFn.error(res, {});
+  } catch (error) {
+    console.log(error);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 exports.getChat = async (req, res) => {
   try {
     Chat.findOne({ _id: req.params._id })
@@ -161,7 +381,7 @@ exports.getChat = async (req, res) => {
                   ? { topic: chat.parentTopic, subTopic: chat.topic }
                   : { topic: chat.topic }),
                 messages: chat.messages.filter(
-                  (item) => item.name !== "System"
+                  (item) => !(item.name === "System" || item.action)
                 ),
                 createdAt: chat.createdAt,
               },
@@ -274,7 +494,7 @@ exports.sendMessage = async (req, res) => {
             content: req.body.content,
           },
         ],
-        max_tokens
+        { business: req.business }
       );
     } else {
       messages = await aiHelper.getPartialContext({
@@ -298,7 +518,7 @@ exports.sendMessage = async (req, res) => {
           })),
           ...messages,
         ],
-        max_tokens
+        { business: req.business }
       );
     }
 

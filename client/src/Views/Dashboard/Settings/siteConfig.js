@@ -88,7 +88,7 @@ const SiteConfig = ({ next }) => {
   const landingPageShelves = watch("landingPageShelves");
   const footerElements = watch("footerElements");
   const category = watch("category");
-  const subCategory = watch("subCategory");
+  const subcategory = watch("subcategory");
 
   useEffect(() => {
     if (
@@ -409,7 +409,7 @@ const SiteConfig = ({ next }) => {
             className="btn"
             type="button"
             onClick={() => setUpdateSidebarFilters(true)}
-            disabled={!(category && subCategory)}
+            disabled={!(category && subcategory)}
           >
             Update Sidebar Filters
           </button>
@@ -429,14 +429,14 @@ const SiteConfig = ({ next }) => {
               label: item.name,
               value: item.name,
             })}
-            onChange={() => setValue("subCategory", "")}
+            onChange={() => setValue("subcategory", "")}
           />
           <Select
             disabled={!category}
-            label="Sub Category"
+            label="Subcategory"
             control={control}
-            name="subCategory"
-            url={`${endpoints.dynamic}/Sub Category`}
+            name="subcategory"
+            url={`${endpoints.dynamic}/Subcategory`}
             getQuery={(inputValue, selected) => ({
               category,
               ...(inputValue && { name: inputValue }),
@@ -449,7 +449,7 @@ const SiteConfig = ({ next }) => {
           />
         </div>
 
-        {category && subCategory ? (
+        {category && subcategory ? (
           <Table
             columns={[
               { label: "Field" },
@@ -460,7 +460,7 @@ const SiteConfig = ({ next }) => {
             {(sidebarFilters || [])
               .find(
                 (item) =>
-                  item.category === category && item.subCategory === subCategory
+                  item.category === category && item.subcategory === subcategory
               )
               ?.filters?.map((item, i) => (
                 <tr key={i}>
@@ -472,7 +472,7 @@ const SiteConfig = ({ next }) => {
           </Table>
         ) : (
           <p>
-            Please select category and sub category to update sidebar filters.
+            Please select category and subcategory to update sidebar filters.
           </p>
         )}
       </div>
@@ -684,16 +684,16 @@ const SiteConfig = ({ next }) => {
                 !(
                   ["richText"].includes(item.fieldType) ||
                   ["file"].includes(item.inputType) ||
-                  ["category", "subCategory", "variants"].includes(item.name)
+                  ["category", "subcategory", "variants"].includes(item.name)
                 )
             )
             .filter(
-              (item) => !item.subCategory || item.subCategory === subCategory
+              (item) => !item.subcategory || item.subcategory === subcategory
             )}
           value={
             (sidebarFilters || []).find(
               (item) =>
-                item.category === category && item.subCategory === subCategory
+                item.category === category && item.subcategory === subcategory
             )?.filters
           }
           onSuccess={(values) => {
@@ -702,10 +702,10 @@ const SiteConfig = ({ next }) => {
                 (item) =>
                   !(
                     item.category === category &&
-                    item.subCategory === subCategory
+                    item.subcategory === subcategory
                   )
               ),
-              { filters: values, category, subCategory },
+              { filters: values, category, subcategory: subcategory },
             ]);
             setUpdateSidebarFilters(false);
           }}

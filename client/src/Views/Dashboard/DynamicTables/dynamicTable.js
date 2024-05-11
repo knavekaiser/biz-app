@@ -194,7 +194,7 @@ const DynamicTablePage = () => {
             if (addNew) {
               setAddData({
                 category: newData.category,
-                subCategory: newData.subCategory,
+                subcategory: newData.subcategory,
                 title: newData.title,
                 price: newData.price,
                 description: newData.description,

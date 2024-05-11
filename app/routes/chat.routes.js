@@ -26,7 +26,7 @@ module.exports = function (app) {
   );
   router.post(
     "/:_id",
-    // whitelabel.getBusinessOptinal,
+    whitelabel.getBusinessOptinal,
     authJwt.verifyOrigin,
     validate(schema.sendMessage),
     controller.sendMessage

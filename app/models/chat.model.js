@@ -2,7 +2,7 @@ module.exports = mongoose.model(
   "Chat",
   new Schema(
     {
-      topic: { type: String, required: true },
+      topic: { type: String },
       faqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },
       parentTopic: { type: String },
       parentFaqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },
@@ -21,6 +21,7 @@ module.exports = mongoose.model(
             content: { type: String, required: true },
             like: { type: Boolean, required: false, default: null },
             token: { type: Number, required: false },
+            action: { type: Boolean, default: false },
           },
           { timestamps: true }
         ),

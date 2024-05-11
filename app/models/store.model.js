@@ -8,7 +8,7 @@ module.exports = mongoose.model(
         required: true,
       },
       category: { type: Schema.Types.String },
-      subCategory: { type: Schema.Types.String },
+      subcategory: { type: Schema.Types.String },
       start: { type: Schema.Types.Date },
       end: { type: Schema.Types.Date },
       featured: { type: Schema.Types.Boolean, default: false },
