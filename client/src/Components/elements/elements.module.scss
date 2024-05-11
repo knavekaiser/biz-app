@@ -799,6 +799,7 @@
         border: none;
       }
       display: grid;
+      grid-auto-rows: min-content;
       grid-template-columns: repeat(auto-fit, minmax(150px, 320px));
     }
   }

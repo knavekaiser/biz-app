@@ -347,8 +347,8 @@ exports.updateProfile = async (req, res) => {
       }
     }
     const filesToDelete = [];
-    if (req.body.logo && user.logo) {
-      filesToDelete.push(user.logo);
+    if (req.body.logo && req.authUser.logo) {
+      filesToDelete.push(req.authUser.logo);
     }
     if (req.body.ownerSignature) {
       if (req.authUser.ownerDetails.signature) {
@@ -524,6 +524,25 @@ exports.find = async (req, res) => {
         {
           $unwind: {
             path: "$subscription.plan",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ]
+    );
+
+    pipeline.push(
+      ...[
+        {
+          $lookup: {
+            from: "configs",
+            localField: "_id",
+            foreignField: "user",
+            as: "config",
+          },
+        },
+        {
+          $unwind: {
+            path: "$config",
             preserveNullAndEmptyArrays: true,
           },
         },

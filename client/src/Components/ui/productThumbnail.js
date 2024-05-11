@@ -7,17 +7,20 @@ import s from "./productThumbnail.module.scss";
 import { Link } from "react-router-dom";
 
 export const ProductThumb = ({ product }) => {
-  const { business } = useContext(SiteContext);
-  // console.log("business", business);
+  const { business, config, user } = useContext(SiteContext);
+  const siteConfig =
+    business?.business?.config?.siteConfig || config?.siteConfig;
+  const domain = business?.business?.domain || user?.domain;
+  // console.log("domain", domain);
   return (
     <div className={`${s.productThumb}`}>
-      <Link to={`/item/${product._id}`}>
+      <a target="_blank" href={`http://${domain}/item/${product._id}`}>
         <div className={s.thumbnailWrapper}>
           <img src={product.images[0]} alt={product.title} />
         </div>
         <div className={s.productDetail}>
           <h4>{product.title}</h4>
-          {business?.config?.productCard?.map((item) => {
+          {siteConfig?.productCard?.map((item) => {
             if (item === "whatsappNumber") {
               return null;
             }
@@ -26,13 +29,12 @@ export const ProductThumb = ({ product }) => {
                 return (
                   <span className={s.price} key={item}>
                     <span className={s.currentPrice}>
-                      {business?.config?.currency}{" "}
-                      {product.price.toLocaleString()}
+                      {siteConfig?.currency} {product.price.toLocaleString()}
                     </span>
 
                     {product.originalPrice > product.price && (
                       <span className={s.originalPrice}>
-                        {business?.config?.currency}{" "}
+                        {siteConfig?.currency}{" "}
                         {product.originalPrice.toLocaleString()}
                       </span>
                     )}
@@ -58,7 +60,7 @@ export const ProductThumb = ({ product }) => {
             }
             return null;
           })}
-          {business?.config?.productCard?.map((item) => {
+          {siteConfig?.productCard?.map((item) => {
             if (
               item === "whatsappNumber" &&
               (business?.business?.whatsappNumber || product.whatsappNumber)
@@ -160,7 +162,7 @@ export const ProductThumb = ({ product }) => {
             return null;
           })}
         </div>
-      </Link>
+      </a>
     </div>
   );
 };
