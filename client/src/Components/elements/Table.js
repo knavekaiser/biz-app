@@ -31,7 +31,8 @@ import * as yup from "yup";
 import { Modal, Prompt } from "../modal";
 import { SiteContext } from "SiteContext";
 import { endpoints } from "config";
-import { ProductThumb } from "Views/Home/productThumbnail";
+// import { ProductThumb } from "Views/Home/productThumbnail";
+import { ProductThumb } from "../ui/productThumbnail";
 
 export const Table = ({
   admin,

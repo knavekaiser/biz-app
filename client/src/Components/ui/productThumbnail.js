@@ -3,23 +3,16 @@ import { SiteContext } from "SiteContext";
 import { FiChevronDown } from "react-icons/fi";
 import { ImStarEmpty, ImStarFull } from "react-icons/im";
 import { IoLogoWhatsapp } from "react-icons/io";
-import Link from "next/link";
 import s from "./productThumbnail.module.scss";
-// import Image from "next/image";
+import { Link } from "react-router-dom";
 
 export const ProductThumb = ({ product }) => {
   const { business } = useContext(SiteContext);
-  console.log(product);
   return (
     <div className={`${s.productThumb}`}>
-      <Link href={`/item/${product._id}`}>
+      <Link to={`/item/${product._id}`}>
         <div className={s.thumbnailWrapper}>
-          <img
-            src={product.images[0]}
-            // height={328}
-            // width={328}
-            alt={product.title}
-          />
+          <img src={product.images[0]} alt={product.title} />
         </div>
         <div className={s.productDetail}>
           <h4>{product.title}</h4>
@@ -56,8 +49,6 @@ export const ProductThumb = ({ product }) => {
                 <div className={s.productSeller} key={item}>
                   <img
                     src={product.seller.logo || product.seller.profileImg}
-                    // height={20}
-                    // width={20}
                     alt={product.seller.name}
                   />
                   <span className={s.productSeller}>{product.seller.name}</span>
