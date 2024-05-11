@@ -172,7 +172,18 @@ export const Table = ({
                 productTable && productView === "grid" ? (
                   <tr key={item._id}>
                     <td>
-                      <ProductThumb product={item} />
+                      <ProductThumb
+                        product={item}
+                        onClick={() => {
+                          const editAction = actions(item)?.find(
+                            (ac) => ac.label === "Edit"
+                          )?.callBack;
+                          if (editAction) {
+                            editAction(item);
+                          }
+                          // console.log(editAction);
+                        }}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -644,6 +655,7 @@ export const DynamicTable = ({
       filters={filters}
       filterFields={filterFields || fields}
       renderRow={renderRow}
+      actions={actions}
       theadTrStyle={{
         gridTemplateColumns:
           Array(fields.length).fill("1fr").join(" ") +
