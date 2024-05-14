@@ -259,7 +259,6 @@ const FieldForm = ({
     reset,
     watch,
     setValue,
-    clearErrors,
     control,
     formState: { errors },
   } = useForm({
