@@ -277,7 +277,7 @@ const generateResponse = async (messages, metadata = {}) => {
   return new Promise(async (resolve, reject) => {
     await openai.chat.completions
       .create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages,
         // max_tokens,
       })
@@ -309,7 +309,7 @@ const generateResponse = async (messages, metadata = {}) => {
               const fixPrompt = `Have a look at the following JSON. Check if there's any mistake. Please fix the problems and return the fixed JSON. If there aren't any problems, Just return the JSON. respond with JSON only. don't include anything else.`;
               resp = await openai.chat.completions
                 .create({
-                  model: "gpt-4",
+                  model: "gpt-4o",
                   messages: [
                     {
                       role: "user",
