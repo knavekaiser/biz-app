@@ -531,7 +531,7 @@ exports.defaultSchemas = [
         optionValue: "name",
       },
       {
-        unique: true,
+        unique: false,
         name: "name",
         required: true,
         label: "Name",

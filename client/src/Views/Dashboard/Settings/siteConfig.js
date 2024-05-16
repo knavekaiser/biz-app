@@ -69,6 +69,8 @@ const SiteConfig = ({ next }) => {
         config?.siteConfig?.productViewPage?.recommendationLimit,
       comparisonLimit: config?.siteConfig?.productViewPage?.comparisonLimit,
       viewWhatsApp: config?.siteConfig?.productViewPage?.viewWhatsApp || false,
+      viewAddToCart:
+        config?.siteConfig?.productViewPage?.viewAddToCart || false,
       viewLandingPage:
         config?.siteConfig?.landingPage?.viewLandingPage || false,
       heroImages: config?.siteConfig?.landingPage?.hero?.slides || [],
@@ -180,6 +182,7 @@ const SiteConfig = ({ next }) => {
             },
             productViewPage: {
               viewWhatsApp: whatsapp,
+              viewAddToCart: values.viewAddToCart || false,
               productElements: values.productViewElements.filter((item) =>
                 productPageEelementOptions.find((opt) => opt.value === item)
               ),
@@ -301,6 +304,8 @@ const SiteConfig = ({ next }) => {
         }
       />
 
+      <hr />
+
       <h2>Landing Page</h2>
 
       <Combobox
@@ -350,6 +355,8 @@ const SiteConfig = ({ next }) => {
         </>
       )}
 
+      <hr />
+
       <h2>Product View Page</h2>
 
       <Combobox
@@ -398,6 +405,18 @@ const SiteConfig = ({ next }) => {
             : productPageEelementOptions
         }
       />
+
+      <Combobox
+        label="View Add to Cart"
+        name="viewAddToCart"
+        control={control}
+        options={[
+          { label: "Yes", value: true },
+          { label: "No", value: false },
+        ]}
+      />
+
+      <hr />
 
       <div style={{ margin: "1rem 0" }}>
         <div className="flex gap-1 justify-space-between align-center mb-1">
@@ -475,6 +494,8 @@ const SiteConfig = ({ next }) => {
         )}
       </div>
 
+      <hr />
+
       <div>
         <div className="flex justify-space-between align-center mb-1">
           <h5>Recommendation Filters</h5>
@@ -508,6 +529,8 @@ const SiteConfig = ({ next }) => {
         ]}
       />
 
+      <hr />
+
       <div>
         <div className="flex justify-space-between align-center mb-1">
           <h5>Comparison Filters</h5>
@@ -539,6 +562,8 @@ const SiteConfig = ({ next }) => {
           { label: "10", value: 10 },
         ]}
       />
+
+      <hr />
 
       <div>
         <div className="flex justify-space-between align-center mb-1">

@@ -76,6 +76,7 @@ module.exports = mongoose.model(
         },
         productViewPage: {
           viewWhatsApp: { type: Schema.Types.Boolean, default: false },
+          viewAddToCart: { type: Schema.Types.Boolean, default: false },
           productElements: [],
           recommendationFilters: [],
           recommendationLimit: { type: Schema.Types.Number, default: false },
