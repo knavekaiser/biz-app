@@ -3,6 +3,7 @@ module.exports = mongoose.model(
   new Schema(
     {
       topic: { type: String },
+      title: { type: String },
       faqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },
       parentTopic: { type: String },
       parentFaqDoc: { type: Schema.Types.ObjectId, ref: "FAQ Document" },

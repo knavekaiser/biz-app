@@ -248,24 +248,6 @@ const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
   });
 };
 
-const generateResponseOld = async (messages, max_tokens = 100, metadata) => {
-  return new Promise(async (resolve, reject) => {
-    await openai
-      .createChatCompletion({
-        model: "gpt-3.5-turbo-16k", //"gpt-3.5-turbo-0301",
-        messages,
-        max_tokens,
-      })
-      .then((completion) => {
-        resolve({
-          message: completion.data.choices[0]?.message,
-          usage: completion.data.usage,
-        });
-      })
-      .catch((err) => reject(err?.response.data));
-  });
-};
-
 const getAction = async () => {
   return async (business, pipeline = []) => {
     const { Model } = await dbHelper.getModel(business._id + "_" + "Product");
@@ -288,10 +270,21 @@ const generateResponse = async (messages, metadata = {}) => {
             message.content = JSON.stringify(JSON.parse(message.content));
           } catch (err) {
             console.log("fixing prompt", message.content);
+            if (
+              message.content.startsWith("```json") &&
+              message.content.endsWith("```")
+            ) {
+              message.content = message.content
+                .replace("```json", "")
+                .replace("```", "")
+                .trim();
+              return;
+            }
             const json = message.content
               .match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/gm)
               ?.map(JSON.parse);
             if (json) {
+              console.log("fixed json", json);
               message.content = JSON.stringify(json?.[0] || json);
             }
           }
@@ -338,7 +331,7 @@ const generateResponse = async (messages, metadata = {}) => {
             }
             console.log("parsed", resp);
             if (resp.response_type === "action") {
-              const action = await getAction(resp.action, metadata.business);
+              const action = await getAction();
               if (action) {
                 if (resp.pipeline?.length) {
                   resp.pipeline = resp.pipeline.filter(

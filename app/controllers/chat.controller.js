@@ -208,7 +208,7 @@ ${await SubcategoryModel.find().then((data) =>
 )}
 
 
-Please respond exclusively in JSON format to execute predefined actions when data retrieval from the database is necessary for context or response. For instance, if asked "show me some shirts within $500", respond with valid JSON format similar to the following example:
+Please respond exclusively in JSON to execute predefined actions when data retrieval from the database is necessary for context or response. For instance, if asked "show me some shirts within $500", respond with valid JSON, similar to the following example:
 { 
   "response_type": "action",
   "action": "Get Products",
@@ -223,8 +223,7 @@ Please respond exclusively in JSON format to execute predefined actions when dat
           ]
         }
       }
-    },
-    { "$count": "total_record" }
+    }
   ]
 }.
 
@@ -238,19 +237,11 @@ Please follow these rules when crafting action responses to ensure that your res
 7. Never mix explanation and JSON in the same response.
 8. Never include python, javascript or any programming language code and or instruction in the response.
 
-Use "$$NOW" and similar operators instead of fixed dates and times when queried with a relative timeframe, such as:
-a. "Give me all the Taskss that were created in the past 5 days."
-b. "Give me all upcoming Taskss from the next 7 days."
-c. "List all the Taskss in the next 7 days."
-d. "How many Taskss are left today?"
 
 Here are the available actions:
 1. "Get Products"
 
-
-In the reply of action response, you will be given the data you queried. You are to answer the initial question comprehensively based on said data. Do not just return the raw data you just received.
-
-If you are told to list or show one or multiple products, you will respond only with the following JSON format so it can be rendered in the frontend properly:
+After getting the products, respond only in JSON so they can be rendered properly in a react frontend, never return the products in plain english or exlpansions. Product listing JSON structure:
 [
   {
     "_id": "663ed2e2c406fe695bc50411",
@@ -272,7 +263,11 @@ If you are told to list or show one or multiple products, you will respond only 
     ],
     "price": 500
   }
-]`;
+]
+
+If the system returns an empty array, tell the user that no products were found.
+
+If the query is vague due to the user not mentioning any specific category or subcategory, you can politely ask the user to specify the category or subcategory.`;
 
     messages = [
       {
@@ -304,7 +299,24 @@ If you are told to list or show one or multiple products, you will respond only 
       message.action = "data" in resp;
       messages.push(message);
 
+      const title = await aiHelper
+        .generateResponse(
+          [
+            {
+              role: "user",
+              name: "System",
+              content: `You are an AI integrated in an e-commerce app. You are to generate a 3 word chat title based on the following question: ${req.body.message}.
+
+Respond with the title only, no extra text whatsoever. don't put quotes around the title.`,
+            },
+          ],
+          100,
+          { company: req.company || req.authUser, module }
+        )
+        .then((resp) => resp?.message?.content || null);
+
       let chat = await new Chat({
+        title,
         fullContext: true,
         user: {
           name: req.body.name,
@@ -375,6 +387,7 @@ exports.getChat = async (req, res) => {
         chat
           ? responseFn.success(res, {
               data: {
+                title: chat.title,
                 _id: chat._id,
                 user: chat.user,
                 ...(chat.parentTopic
@@ -483,11 +496,18 @@ exports.sendMessage = async (req, res) => {
     if (chat.fullContext) {
       resp = await aiHelper.generateResponse(
         [
-          ...chat.messages.map((item) => ({
-            role: item.role,
-            name: item.name,
-            content: item.content,
-          })),
+          ...chat.messages
+            .filter((msg) => !msg.content.startsWith("Todays Date: "))
+            .map((item) => ({
+              role: item.role,
+              name: item.name,
+              content: item.content,
+            })),
+          {
+            role: "user",
+            name: "System",
+            content: `Todays Date: ${new Date().toISOString()}`,
+          },
           {
             role: "user",
             name: "Guest",
@@ -523,10 +543,11 @@ exports.sendMessage = async (req, res) => {
     }
 
     if (resp) {
-      const { message, usage } = resp;
+      let { message, usage } = resp;
       message._id = mongoose.Types.ObjectId();
       message.createdAt = messageDate;
       message.updatedAt = messageDate;
+      message.action = "data" in resp;
 
       if (messages.length) {
         messages[messages.length - 1].token = usage.prompt_tokens;
@@ -544,9 +565,40 @@ exports.sendMessage = async (req, res) => {
             { ...message, token: usage.completion_tokens },
           ]
         : messages;
+
+      const newMessages = [];
+
+      if ("data" in resp) {
+        newMessages.push({
+          role: "user",
+          name: "System",
+          content: JSON.stringify(resp.data),
+        });
+        resp = await aiHelper.generateResponse(
+          [...msgs, ...newMessages].map((msg) => ({
+            role: msg.role,
+            name: msg.name,
+            content: msg.content,
+          })),
+          max_tokens,
+          { company: req.company || req.authUser, module }
+        );
+        const { message: newMsg, usage } = resp;
+        newMsg._id = mongoose.Types.ObjectId();
+        newMsg.createdAt = new Date();
+        newMsg.updatedAt = new Date();
+
+        if (newMessages.length) {
+          newMessages[newMessages.length - 1].token = usage.prompt_tokens;
+          newMessages.push({ ...newMsg, token: usage.completion_tokens });
+        }
+
+        message = newMsg;
+      }
+
       await Chat.updateOne(
         { _id: req.params._id },
-        { $push: { messages: { $each: msgs } } }
+        { $push: { messages: { $each: [...msgs, ...newMessages] } } }
       );
       return responseFn.success(res, { data: message });
     }
