@@ -36,8 +36,8 @@ exports.getSiteConfig = async (req, res) => {
       { $unwind: { path: "$config" } },
       {
         $project: {
-          siteTitle: "$name",
-          siteDescription: "$description",
+          name: "$name",
+          description: "$description",
           favicon: "$favicon",
           slogan: "$motto",
           logo: "$logo",
@@ -45,6 +45,8 @@ exports.getSiteConfig = async (req, res) => {
           domain: "$domain",
           chatbot: { $first: "$chatbots" },
           siteConfig: {
+            siteTitle: "$config.siteConfig.siteTitle",
+            siteDescription: "$config.siteConfig.siteDescription",
             productCard: "$config.siteConfig.productCard",
             currency: "$config.siteConfig.currency",
             landingPage: "$config.siteConfig.landingPage",
@@ -171,6 +173,10 @@ exports.browse = async (req, res) => {
 
     collection.fields.forEach((field) => {
       if (field.name in req.query) {
+        if (["category", "subcategory"].includes(field.name)) {
+          query[field.name] = req.query[field.name];
+          return;
+        }
         if (field.dataType === "string" || field.dataElementType === "string") {
           query[field.name] = {
             $in: req.query[field.name]

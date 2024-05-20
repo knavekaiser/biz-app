@@ -33,6 +33,8 @@ module.exports = mongoose.model(
       nextReceiptNo: { type: Schema.Types.Number, min: 0, default: 1 },
       businessType: { type: Schema.Types.String },
       siteConfig: {
+        siteTitle: { type: Schema.Types.String },
+        siteDescription: { type: Schema.Types.String },
         currency: { type: Schema.Types.String, default: "USD" },
         currencies: [
           new Schema({

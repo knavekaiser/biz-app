@@ -16,6 +16,7 @@ import {
   Table,
   TableActions,
   FileInputNew,
+  Textarea,
 } from "Components/elements";
 import s from "./settings.module.scss";
 import { useNavigate } from "react-router-dom";
@@ -32,7 +33,7 @@ const SiteConfig = ({ next }) => {
   const [updateRecommendationFilters, setUpdateRecommendationFilters] =
     useState(false);
   const [updateComparisonFilters, setUpdateComparisonFilters] = useState(false);
-  const { config, setConfig } = useContext(SiteContext);
+  const { business, config, user, setConfig } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -53,6 +54,12 @@ const SiteConfig = ({ next }) => {
 
   useEffect(() => {
     reset({
+      siteTitle:
+        config?.siteConfig?.siteTitle ||
+        business?.business?.name ||
+        user?.name ||
+        "",
+      siteDescription: config?.siteConfig?.siteDescription || "",
       businessType: config?.businessType || "",
       elements: config?.siteConfig?.productCard?.length
         ? config?.siteConfig?.productCard
@@ -172,6 +179,8 @@ const SiteConfig = ({ next }) => {
           businessType: values.businessType,
           siteConfig: {
             ...config?.siteConfig,
+            siteTitle: values.siteTitle,
+            siteDescription: values.siteDescription,
             productCard: values.elements.filter((item) =>
               productEelementOptions.find((opt) => opt.value === item)
             ),
@@ -253,6 +262,20 @@ const SiteConfig = ({ next }) => {
           .catch((err) => Prompt({ type: "error", data: err.message }));
       })}
     >
+      <Input
+        label="Site Title"
+        {...register("siteTitle")}
+        required
+        error={errors?.siteTitle}
+      />
+
+      <Textarea
+        label="Site Description"
+        {...register("siteDescription")}
+        required
+        error={errors?.siteDescription}
+      />
+
       <Combobox
         label="Business Type"
         name="businessType"
