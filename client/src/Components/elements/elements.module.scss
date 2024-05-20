@@ -230,19 +230,35 @@
       display: grid;
       place-items: center;
       position: relative;
+      .clear,
+      .resize {
+        border-radius: 0.5rem;
+        font-size: 2rem;
+        position: absolute;
+      }
       .clear {
         background: rgba(255, 255, 255, 0.5);
-        border-radius: 0.5rem;
         color: $red;
-        font-size: 2rem;
         top: 0rem;
         right: 0rem;
-        position: absolute;
+      }
+      .resize {
+        color: white;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0;
       }
       &.file {
         img {
-          max-width: 100%;
-          max-height: 100%;
+          max-width: 120px;
+          max-height: 120px;
+          object-fit: contain;
+        }
+      }
+      &:hover {
+        .resize {
+          opacity: 1;
         }
       }
       &.fileInputUploadBtn {
@@ -280,6 +296,32 @@
       color: red;
       text-align: left;
       display: block;
+    }
+  }
+}
+.imageCropperModal {
+  max-height: calc((var(--vh) * 100) - 2rem);
+  max-width: calc(100vw - 2rem);
+  width: max-content;
+  padding: 1rem;
+  display: grid;
+  grid-gap: 1rem;
+  place-items: center;
+  .canvasWrapper {
+    display: flex;
+    justify-content: center;
+    // background: red;
+    canvas {
+      width: auto !important;
+      height: auto !important;
+      max-width: calc(100vw - 6rem);
+      max-height: calc((var(--vh) * 100) - 15rem);
+      aspect-ratio: 1 !important;
+      //   width: 22rem !important;
+      //   height: 27rem !important;
+    }
+    .range {
+      width: 100%;
     }
   }
 }

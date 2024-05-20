@@ -165,7 +165,8 @@ export const Table = ({
               </span>
             </td>
           </tr>
-        ) : (children || dynamicData).length > 0 ? (
+        ) : ((Array.isArray(children) ? children : [children]) || dynamicData)
+            .length > 0 ? (
           <>
             {children ||
               dynamicData.map((item, i) =>

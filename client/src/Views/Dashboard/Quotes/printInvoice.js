@@ -197,12 +197,7 @@ const PrintInvoice = forwardRef(({ quote, user }, ref) => {
       <div className={`${s.totalAmount} mt-1`}>
         <p className={s.word}>
           Total:{" "}
-          {(
-            quote.items.reduce((p, c) => p + c.qty * c.price, 0) +
-            quote.items
-              .reduce((p, c) => p + c.qty * c.price, 0)
-              .percent(quote.gst || 0)
-          ).toWords()}
+          {quote.items.reduce((p, c) => p + c.qty * c.price, 0).toWords()}
         </p>
         <p className={s.digit}>
           {(

@@ -31,6 +31,8 @@ import {
   Autocomplete,
   useLoadScript,
 } from "@react-google-maps/api";
+import AvatarEditor from "react-avatar-editor";
+import { FaCropAlt } from "react-icons/fa";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -210,7 +212,7 @@ export const SearchField = ({
   );
 };
 
-const resizeImg = async (file) => {
+const compressImg = async (file) => {
   return new Promise((res, rej) => {
     try {
       const maxDim = 1200;
@@ -277,6 +279,7 @@ export const FileInputNew = ({
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
+  const [resizeImg, setResizeImg] = useState(null);
   useEffect(() => {
     if (control._formValues[name]?.length !== files.length) {
       setFiles(
@@ -338,7 +341,7 @@ export const FileInputNew = ({
                   const item = _files[i];
                   if (item.type?.startsWith("image/")) {
                     setLoading(true);
-                    _files[i] = await resizeImg(item);
+                    _files[i] = await compressImg(item);
                     setLoading(false);
                   }
                 }
@@ -400,6 +403,18 @@ export const FileInputNew = ({
                   return (
                     <li className={s.file} key={i}>
                       <ClearBtn />
+                      <button
+                        className={`clear ${s.resize}`}
+                        type="button"
+                        onClick={() => {
+                          setResizeImg({
+                            index: i,
+                            file,
+                          });
+                        }}
+                      >
+                        <FaCropAlt />
+                      </button>
                       <img src={url} />
                     </li>
                   );
@@ -479,9 +494,88 @@ export const FileInputNew = ({
             </Modal>
           )}
           {error && <span className={s.errMsg}>{error.message}</span>}
+          <Modal open={resizeImg} className={s.imageCropperModal}>
+            <ImageResizer
+              file={resizeImg?.file}
+              setFile={(newFile) => {
+                if (newFile && resizeImg && "index" in resizeImg) {
+                  let _files = [];
+                  setFiles((prev) => {
+                    _files = prev.map((f, i) =>
+                      i === resizeImg.index ? newFile : f
+                    );
+                    return _files;
+                  });
+                  setTimeout(() => {
+                    onChange(_files);
+                  }, 10);
+                }
+                setResizeImg(null);
+              }}
+            />
+          </Modal>
         </section>
       )}
     />
+  );
+};
+const ImageResizer = ({ file, setFile }) => {
+  const canvas = useRef();
+  const [scale, setScale] = useState(1);
+  return (
+    <>
+      <div className={s.canvasWrapper}>
+        <AvatarEditor
+          ref={canvas}
+          image={file}
+          scale={scale}
+          rotate={0}
+          height={750}
+          width={750}
+          border={0}
+          color={[0, 0, 0, 0.25]}
+        />
+      </div>
+      <div>
+        <input
+          type="range"
+          value={scale}
+          min={1}
+          max={4}
+          step="0.1"
+          onChange={(e) => setScale(+e.target.value)}
+        />
+      </div>
+      <div className={`p-1 flex gap_5 justify-center`}>
+        <button
+          title="Cancel"
+          className={`btn ${s.cancel}`}
+          type="button"
+          onClick={() => setFile(null)}
+        >
+          Cancel
+        </button>
+        <button
+          title="Submit"
+          className={`btn ${s.submit}`}
+          type="button"
+          onClick={() => {
+            canvas.current.getImageScaledToCanvas().toBlob((blob) => {
+              setFile(
+                new File([blob], file.name, {
+                  lastModified: new Date().getTime(),
+                  type: blob.type,
+                })
+              );
+              // setBlob(blob);
+            }, "image/webp");
+            setFile(null);
+          }}
+        >
+          Submit
+        </button>
+      </div>
+    </>
   );
 };
 export const uploadFiles = async ({ files, uploadFiles }) => {

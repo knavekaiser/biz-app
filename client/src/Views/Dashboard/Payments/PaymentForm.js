@@ -400,11 +400,13 @@ const MainForm = ({
           disabled={edit}
           control={control}
           label="Name"
-          options={purchases.map((item) => ({
-            label: item.vendor.name,
-            value: item.vendor.name,
-            data: item.vendor,
-          }))}
+          options={[...new Set(purchases.map((item) => item.vendor.name))].map(
+            (name) => ({
+              label: name,
+              value: name,
+              data: purchases.find((item) => item.vendor.name === name)?.vendor,
+            })
+          )}
           name="vendorName"
           formOptions={{ required: true }}
           renderListItem={(item) => <>{item.label}</>}

@@ -43,7 +43,7 @@ const Payments = () => {
         columns={[
           { label: "No." },
           { label: "Date" },
-          { label: "Customer" },
+          { label: "Vendor" },
           { label: "Amount", className: "text-right" },
           { label: "Action" },
         ]}
@@ -64,7 +64,7 @@ const Payments = () => {
             <td className={s.date}>
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
             </td>
-            <td className={s.customer}>{item.customer?.name}</td>
+            <td className={s.customer}>{item.vendor?.name}</td>
             <td className={`text-right ${s.net}`}>
               {item.amount.fix(2, config?.numberSeparator)}
             </td>

@@ -408,11 +408,13 @@ const MainForm = ({
 
       <SearchField
         label="Name"
-        data={purchases.map((item) => ({
-          label: item.vendor.name,
-          value: item.vendor.name,
-          data: item.vendor,
-        }))}
+        data={[...new Set(purchases.map((item) => item.vendor.name))].map(
+          (name) => ({
+            label: name,
+            value: name,
+            data: purchases.find((item) => item.vendor.name === name)?.vendor,
+          })
+        )}
         register={register}
         name="vendorName"
         formOptions={{ required: true }}

@@ -11,7 +11,7 @@ import SubPlanForm from "./ChatForm";
 
 const Chats = () => {
   const { user, checkPermission } = useContext(SiteContext);
-  const [subPlans, setChats] = useState([]);
+  const [chats, setChats] = useState([]);
   const [chat, setChat] = useState(null);
 
   const { get: getChats, loading } = useFetch(endpoints.chats);
@@ -39,20 +39,20 @@ const Chats = () => {
         columns={[
           { label: "Date" },
           { label: "User" },
-          ...(user.userType === "admin" ? [{ label: "Business" }] : []),
+          // ...(user.userType === "admin" ? [{ label: "Business" }] : []),
           { label: "Topic" },
           { label: "Total Messages" },
           { label: "Token Usage" },
           { label: "Action" },
         ]}
       >
-        {subPlans.map((item) => (
+        {chats.map((item) => (
           <tr style={{ cursor: "pointer" }} key={item._id}>
             <td>
               <Moment format="DD MMM YYYY hh:mma">{item.createdAt}</Moment>
             </td>
             <td>{item.user?.name}</td>
-            {user.userType === "admin" && <td>{item.business?.name}</td>}
+            {/* {user.userType === "admin" && <td>{item.business?.name}</td>} */}
             <td>{item.topic}</td>
             <td>{item.messages.length - 1}</td>
             <td>{item.tokenUsage}</td>

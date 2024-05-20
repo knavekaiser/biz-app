@@ -121,10 +121,9 @@ const Form = ({ edit, orders, onSuccess }) => {
             /> */}
             <Detail
               label="Total"
-              value={(
-                edit.items.reduce((p, c) => p + c.qty * c.price, 0) +
-                edit.items.reduce((p, c) => p + c.qty * c.price, 0)
-              ).fix(2, config?.numberSeparator)}
+              value={edit.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             />
           </div>
@@ -399,11 +398,13 @@ const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
 
       <SearchField
         label="Name"
-        data={orders.map((item) => ({
-          label: item.customer.name,
-          value: item.customer.name,
-          data: item.customer,
-        }))}
+        data={[...new Set(orders.map((item) => item.customer.name))].map(
+          (name) => ({
+            label: name,
+            value: name,
+            data: orders.find((item) => item.customer.name === name)?.customer,
+          })
+        )}
         register={register}
         name="customerName"
         formOptions={{ required: true }}

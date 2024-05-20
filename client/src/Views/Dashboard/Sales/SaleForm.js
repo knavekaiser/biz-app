@@ -420,11 +420,13 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
 
       <SearchField
         label="Name"
-        data={sales.map((item) => ({
-          label: item.customer.name,
-          value: item.customer.name,
-          data: item.customer,
-        }))}
+        data={[...new Set(sales.map((item) => item.customer.name))].map(
+          (name) => ({
+            label: name,
+            value: name,
+            data: sales.find((item) => item.customer.name === name)?.customer,
+          })
+        )}
         register={register}
         name="customerName"
         formOptions={{ required: true }}

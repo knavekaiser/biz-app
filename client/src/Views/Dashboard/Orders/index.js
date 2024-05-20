@@ -63,10 +63,9 @@ const Orders = () => {
             <td className={s.customer}>{item.customer?.name}</td>
             <td>{item.status}</td>
             <td className={`text-right ${s.net}`}>
-              {(
-                item.items.reduce((p, c) => p + c.qty * c.price, 0) +
-                item.items.reduce((p, c) => p + c.qty * c.price, 0)
-              ).fix(2, config?.numberSeparator)}
+              {item.items
+                .reduce((p, c) => p + c.qty * c.price, 0)
+                .fix(2, config?.numberSeparator)}
             </td>
             <TableActions
               className={s.actions}

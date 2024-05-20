@@ -46,6 +46,7 @@ const PrintInvoice = forwardRef(({ sale, user }, ref) => {
       </div>
     );
   }
+  console.log(sale.gst);
   return (
     <div className={s.print} ref={ref}>
       <header>
