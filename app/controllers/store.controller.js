@@ -173,14 +173,14 @@ exports.homeStoreCategories = async (req, res) => {
           from: "Admin_Store Subcategory",
           localField: "_id",
           foreignField: "category",
-          as: "subCategories",
+          as: "subcategories",
         },
       },
       {
         $project: {
           name: 1,
-          "subCategories.name": 1,
-          "subCategories.fields": 1,
+          "subcategories.name": 1,
+          "subcategories.fields": 1,
         },
       },
     ])

@@ -105,7 +105,7 @@ const SiteConfig = () => {
           control={control}
           name="subcategory"
           options={(
-            categories.find((item) => item.name === category)?.subCategories ||
+            categories.find((item) => item.name === category)?.subcategories ||
             []
           ).map((item) => ({
             label: item.name,

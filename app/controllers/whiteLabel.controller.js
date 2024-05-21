@@ -155,7 +155,7 @@ exports.browse = async (req, res) => {
         query._id = ObjectId(req.params._id);
       }
     }
-    const sort = {};
+    const sort = { "cat.order": 1 };
     if (req.query.sort) {
       const [col, order] = req.query.sort.split("-");
       sort[col] = order === "asc" ? 1 : -1;
@@ -216,8 +216,22 @@ exports.browse = async (req, res) => {
       },
       ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
       { $unset: ["__v"] },
+      {
+        $lookup: {
+          from: `${req.business._id}_Category`,
+          localField: "category",
+          foreignField: "name",
+          as: "cat",
+        },
+      },
+      {
+        $unwind: {
+          path: "$cat",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       { $sort: sort },
-      // { $set: { images: { $map: {} } } },
+      { $unset: "cat" },
       {
         $facet: {
           data: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
@@ -232,7 +246,15 @@ exports.browse = async (req, res) => {
           }
           return responseFn.error(res, {}, responseStr.record_not_found);
         }
-        responseFn.success(res, data);
+        responseFn.success(res, {
+          data: data.data,
+          metadata: {
+            ...data.metadata[0],
+            page: +req.query.page,
+            pageSize: +req.query.pageSize,
+            _id: undefined,
+          },
+        });
       })
       .catch((err) => {
         responseFn.error(res, {}, err.message || responseStr.error_occurred);
@@ -802,17 +824,32 @@ exports.categories = async (req, res) => {
       {
         $lookup: {
           from: `${req.business._id}_Subcategory`,
-          localField: "name",
-          foreignField: "category",
-          as: "subCategories",
+          as: "subcategories",
+          let: {
+            cat: "$$ROOT",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$$cat.name", "$category"],
+                },
+              },
+            },
+            {
+              $sort: {
+                name: 1,
+              },
+            },
+          ],
         },
       },
       {
         $project: {
           _id: 1,
           name: 1,
-          "subCategories._id": 1,
-          "subCategories.name": 1,
+          "subcategories._id": 1,
+          "subcategories.name": 1,
         },
       },
     ])

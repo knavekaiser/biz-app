@@ -205,9 +205,9 @@ const Sidebar = ({ filters, setFilters, config }) => {
                     }
                   }}
                 />
-                {cat.subCategories?.length > 0 && (
-                  <ul className={s.subCategories}>
-                    {cat.subCategories.map((subCat) => (
+                {cat.subcategories?.length > 0 && (
+                  <ul className={s.subcategories}>
+                    {cat.subcategories.map((subCat) => (
                       <li key={subCat.name}>
                         <Checkbox
                           label={subCat.name}
