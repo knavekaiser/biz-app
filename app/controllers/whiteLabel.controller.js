@@ -172,6 +172,10 @@ exports.browse = async (req, res) => {
     }
 
     collection.fields.forEach((field) => {
+      if (field.name === "subcategory" && req.query.subcategories) {
+        query.subcategory = { $in: req.query.subcategories.split(",") };
+        return;
+      }
       if (field.name in req.query) {
         if (["category", "subcategory"].includes(field.name)) {
           query[field.name] = req.query[field.name];
