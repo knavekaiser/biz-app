@@ -278,14 +278,14 @@ const generateResponse = async (messages, metadata = {}) => {
                 .replace("```json", "")
                 .replace("```", "")
                 .trim();
-              return;
-            }
-            const json = message.content
-              .match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/gm)
-              ?.map(JSON.parse);
-            if (json) {
-              console.log("fixed json", json);
-              message.content = JSON.stringify(json?.[0] || json);
+            } else {
+              const json = message.content
+                .match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/gm)
+                ?.map(JSON.parse);
+              if (json) {
+                console.log("fixed json", json);
+                message.content = JSON.stringify(json?.[0] || json);
+              }
             }
           }
         }

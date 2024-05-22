@@ -254,12 +254,32 @@ exports.update = async (req, res) => {
       req.body.variants = JSON.parse(req.body.variants);
     }
 
+    const record = await Model.findOne({ _id: req.params.id });
+
     Model.findOneAndUpdate(
       { _id: req.params.id },
       { ...req.body },
       { new: true }
     )
-      .then((data) => {
+      .then(async (data) => {
+        if (collection.name === "Category" && record.name !== data.name) {
+          const { Model: Product } = await dbHelper.getModel(
+            req.business._id + "_" + "Product"
+          );
+          await Product.updateMany(
+            { category: record.name },
+            { category: data.name }
+          );
+        }
+        if (collection.name === "Subcategory" && record.name !== data.name) {
+          const { Model: Product } = await dbHelper.getModel(
+            req.business._id + "_" + "Product"
+          );
+          await Product.updateMany(
+            { subcategory: record.name },
+            { subcategory: data.name }
+          );
+        }
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
       .catch((err) => responseFn.error(res, {}, err.message));
