@@ -155,7 +155,7 @@ exports.browse = async (req, res) => {
         query._id = ObjectId(req.params._id);
       }
     }
-    const sort = { "cat.order": 1 };
+    const sort = { _bestSeller: -1, "cat.order": 1 };
     if (req.query.sort) {
       const [col, order] = req.query.sort.split("-");
       sort[col] = order === "asc" ? 1 : -1;
@@ -215,7 +215,6 @@ exports.browse = async (req, res) => {
         $set: { seller: { name: req.business.name, logo: req.business.logo } },
       },
       ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
-      { $unset: ["__v"] },
       {
         $lookup: {
           from: `${req.business._id}_Category`,
@@ -230,8 +229,19 @@ exports.browse = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $set: {
+          _bestSeller: {
+            $cond: {
+              if: { $eq: ["$bestSeller", true] },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+      },
       { $sort: sort },
-      { $unset: "cat" },
+      { $unset: ["cat", "_bestSeller", "__v"] },
       {
         $facet: {
           data: [{ $skip: pageSize * (page - 1) }, { $limit: pageSize }],
@@ -844,6 +854,7 @@ exports.categories = async (req, res) => {
           ],
         },
       },
+      { $sort: { order: 1 } },
       {
         $project: {
           _id: 1,
