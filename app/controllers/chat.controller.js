@@ -239,35 +239,40 @@ Please follow these rules when crafting action responses to ensure that your res
 
 
 Here are the available actions:
-1. "Get Products"
+1. "Get Products" - This is to be used to retrieve products for auditional context when answering a query.
+2. "List Products" - This is to be used when showing users a list of products.
 
-After getting the products, respond only in JSON so they can be rendered properly in a react frontend, never return the products in plain english or exlpansions. Product listing JSON structure:
-[
-  {
-    "_id": "663ed2e2c406fe695bc50411",
-    "title: "Red T-shirt",
-    "description": "This is a red T-shirt",
-    "images": [
-      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed07469a2e5a55bb64d7e.webp",
-      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed09969a2e5a55bb64da0.webp",
-    ],
-    "price": 500
-  },
-  {
-    "_id": "663ed07469a2e5a55bb64d80",
-    "title: "Blue T-shirt",
-    "description": "This is a blue T-shirt",
-    "images": [
-      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663edd77c858fe09c169654c.webp",
-      "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed0ca69a2e5a55bb64dfc.webp",
-    ],
-    "price": 500
-  }
-]
+Once you retrieve products with "List Products", your response must in the following format:
+{
+  "response_type": "product_list",
+  "products": [
+    {
+      "_id": "663ed07469a2e5a55bb64d80",
+      "title": "T-shirt",
+      "description": "a red t-shirt",
+      "images": [
+        "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed07469a2e5a55bb64d7e.webp"
+      ],
+      "price": 500
+    },
+    {
+      "_id": "663ed09969a2e5a55bb64da0",
+      "title": "Frok",
+      "description": "a blue frok",
+      "images": [
+        "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/663ed09969a2e5a55bb64d9e.webp",
+        "/assets/uploads/dynamicTables/Product_6633991d8fe77e687bfc3e99/665413d7a02ca691cc11ff5d.webp"
+      ],
+      "price": 1200
+    }
+  ],
+  "message": "We have these two shirts just for you."
+}
 
-If the system returns an empty array, tell the user that no products were found.
+If the query is vague due to the user not mentioning any specific category or subcategory, you can politely ask the user to specify the category or subcategory.
 
-If the query is vague due to the user not mentioning any specific category or subcategory, you can politely ask the user to specify the category or subcategory.`;
+If the system returns an empty array, tell the user that no products were found. Never say "As an AI, I don't have the necessary information to answer that".
+`;
 
     messages = [
       {

@@ -7,7 +7,7 @@ const PDFParser = require("pdf-parse");
 const xlsx = require("xlsx");
 const fs = require("fs");
 const { CharacterTextSplitter } = require("langchain/text_splitter");
-const { PineconeClient } = require("@pinecone-database/pinecone");
+// const pinecone = require("@pinecone-database/pinecone");
 const { ObjectId } = require("mongodb");
 const dbHelper = require("./db.helper");
 
@@ -23,32 +23,44 @@ const splitter = new CharacterTextSplitter({
   chunkSize: 1536,
   chunkOverlap: 200,
 });
-const pineconeIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
-const pinecone = new PineconeClient();
-let pineconeIndex = null;
-pinecone
-  .init({
-    apiKey: process.env.PINECONE_API_KEY,
-    environment: process.env.PINECONE_ENVIRONMENT,
-  })
-  .then(async (res) => {
-    pineconeIndex = pinecone.Index(pineconeIndexName);
-    const indexesList = await pinecone.listIndexes();
-    // await pinecone.deleteIndex({
-    //   indexName: pineconeIndexName,
-    // });
-    if (!indexesList.includes(pineconeIndexName)) {
-      // await pinecone.createIndex({
-      //   createRequest: {
-      //     name: pineconeIndexName,
-      //     dimension: 1536,
-      // metadataConfig: {
-      //   indexed: ["color"],
-      // },
-      //   },
-      // });
-    }
-  });
+
+// const pcIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
+let pcIndex = null;
+// setTimeout(async () => {
+//   try {
+//     const pc = new Pinecone(process.env.PINECONE_API_KEY);
+// pineconeIndex = pc.Index(pineconeIndexName);
+// const indexesList = await pc.describeIndex(pcIndexName);
+// console.log(pcIndexName, indexesList);
+// await pinecone.deleteIndex({
+//   indexName: pineconeIndexName,
+// });
+// if (!indexesList.includes(pcIndexName)) {
+// await pc
+//   .createIndex({
+//     createRequest: {
+//       name: pineconeIndexName,
+//       dimension: 1536,
+//       metric: "cosine",
+//       metadataConfig: {
+//         indexed: ["_id"],
+//       },
+//       spec: {
+//         serverless: {
+//           cloud: "aws",
+//           region: "us-east-1",
+//         },
+//       },
+//     },
+//   })
+//   .then((newIndex) => {
+//     console.log(newIndex);
+//   });
+// }
+//   } catch (err) {
+//     console.log("pinecone error", err);
+//   }
+// }, 1000);
 
 const countToken = (messages) => {
   const encoded = encode(messages);
@@ -248,10 +260,21 @@ const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
   });
 };
 
-const getAction = async () => {
+const getAction = async (actionName) => {
   return async (business, pipeline = []) => {
-    const { Model } = await dbHelper.getModel(business._id + "_" + "Product");
-    return Model.aggregate([...pipeline]);
+    const { Model, collection } = await dbHelper.getModel(
+      business._id + "_" + "Product"
+    );
+    return Model.aggregate([
+      ...pipeline,
+      ...(actionName === "List Products"
+        ? dbHelper.getDynamicPipeline({
+            fields: collection.fields,
+            business_id: business._id,
+            table: "Product",
+          })
+        : []),
+    ]);
   };
 };
 
@@ -331,7 +354,7 @@ const generateResponse = async (messages, metadata = {}) => {
             }
             console.log("parsed", resp);
             if (resp.response_type === "action") {
-              const action = await getAction();
+              const action = await getAction(resp.action);
               if (action) {
                 if (resp.pipeline?.length) {
                   resp.pipeline = resp.pipeline.filter(
@@ -348,6 +371,7 @@ const generateResponse = async (messages, metadata = {}) => {
                 });
                 console.log("data ----------->", data?.length);
                 resolve({
+                  action: resp.action,
                   data,
                   message,
                   usage: completion.usage,
@@ -408,7 +432,7 @@ question: ${message}`,
 };
 
 const removeVectors = async (ids) => {
-  await pineconeIndex.delete1({ ids });
+  await pcIndex.delete1({ ids });
 };
 
 const pushToPinecone = async ({
@@ -418,7 +442,7 @@ const pushToPinecone = async ({
   urls = [],
 }) => {
   if (oldVectorIds?.length) {
-    await pineconeIndex.delete1({ ids: oldVectorIds });
+    await pcIndex.delete1({ ids: oldVectorIds });
   }
   const vectorIds = [];
   for (let i = 0; i < files.length + urls.length; i++) {
@@ -450,7 +474,7 @@ const pushToPinecone = async ({
       });
 
       if (batch.length === batchsize || i === chunks.length - 1) {
-        await pineconeIndex.upsert({ upsertRequest: { vectors: batch } });
+        await pcIndex.upsert({ upsertRequest: { vectors: batch } });
         batch = [];
         vectorIds.push(...newIds);
         newIds = [];
@@ -467,7 +491,7 @@ const getPartialContext = async ({ userId, topicId, msg }) => {
       input: msg,
     })
     .then((res) => res.data.data[0].embedding);
-  const queryResponse = await pineconeIndex.query({
+  const queryResponse = await pcIndex.query({
     queryRequest: {
       topK: 2,
       vector: queryEmbeddings,
