@@ -142,7 +142,6 @@ export const getDynamicPages = async (req, res) => {
 
 export const browse = async (req, res) => {
   try {
-    console.log("this");
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_" + "Product"
     );
