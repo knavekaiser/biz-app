@@ -1,9 +1,11 @@
-const { authJwt, validate } = require("../middlewares");
-const controller = require("../controllers/collection.controller");
-const { collection: schema } = require("../validationSchemas");
-const router = require("express").Router();
+import { authJwt, validate } from "../middlewares/index.js";
+import * as controller from "../controllers/collection.controller.js";
+import { collection as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.get("/templates", authJwt.verifyToken, controller.getSchemaTemplates);
   router.post(
     "/templates",
@@ -36,8 +38,8 @@ module.exports = function (app) {
     "/:id?",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_table_delete"),
-    controller.delete
+    controller.deleteColl
   );
 
   app.use("/api/collections", router);
-};
+}

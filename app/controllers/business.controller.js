@@ -1,17 +1,16 @@
-const {
-  appConfig: { responseFn, responseStr, ...appConfig },
-} = require("../config");
-const {
+import { appConfig } from "../config/index.js";
+import {
   appHelper,
-  appHelper: { genId },
   dbHelper,
   fileHelper,
   emailHelper,
-} = require("../helpers");
+} from "../helpers/index.js";
+import { User, Otp, Config, Collection, SubPlan } from "../models/index.js";
 
-const { User, Otp, Config, Collection, SubPlan } = require("../models");
+const { responseFn, responseStr } = appConfig;
+const { genId } = appHelper;
 
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   try {
     if (!req.body.phone && !req.body.email) {
       return responseFn.error(res, {}, "Email or Phone is required", 400);
@@ -57,7 +56,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     if (!req.body.phone && !req.body.email) {
       return responseFn.error(res, {}, "Email or Phone is required", 400);
@@ -88,7 +87,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   try {
     if (!req.body.phone && !req.body.email) {
       return responseFn.error(res, {}, "Email or Phone is required", 400);
@@ -199,7 +198,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-exports.validatePassToken = async (req, res) => {
+export const validatePassToken = async (req, res) => {
   try {
     code = appHelper.decryptString(req.body.token);
     if (!code) {
@@ -226,7 +225,7 @@ exports.validatePassToken = async (req, res) => {
   }
 };
 
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   try {
     if (!req.body.phone && !req.body.token) {
       return responseFn.error(res, {}, "Token or Phone is required", 400);
@@ -297,7 +296,7 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     res.clearCookie("access_token");
     return responseFn.success(res, {});
@@ -306,7 +305,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-exports.profile = (req, res) => {
+export const profile = (req, res) => {
   try {
     User.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
       .then(async (data) =>
@@ -325,7 +324,7 @@ exports.profile = (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     if (req.body.password) {
       if (
@@ -397,7 +396,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.updateBusiness = async (req, res) => {
+export const updateBusiness = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.params._id });
     if (req.body.password) {
@@ -473,7 +472,7 @@ exports.updateBusiness = async (req, res) => {
   }
 };
 
-exports.find = async (req, res) => {
+export const find = async (req, res) => {
   try {
     const conditions = {};
     if ("name" in req.query) {
@@ -557,7 +556,7 @@ exports.find = async (req, res) => {
   }
 };
 
-exports.createBusiness = async (req, res) => {
+export const createBusiness = async (req, res) => {
   try {
     req.body.password = appHelper.generateHash(req.body.password);
 

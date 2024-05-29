@@ -1,10 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { fileHelper } = require("../helpers");
-const { Config } = require("../models");
+import { appConfig } from "../config/index.js";
+import { fileHelper } from "../helpers/index.js";
+import { Config } from "../models/index.js";
 
-exports.findOne = async (req, res) => {
+const { responseFn, responseStr } = appConfig;
+
+export const findOne = async (req, res) => {
   try {
     const condition = { user: req.authUser._id };
     if (["admin", "staff"].includes(req.authToken.userType)) {
@@ -18,7 +18,7 @@ exports.findOne = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const conditions = { user: req.authUser._id };
     if (["admin", "staff"].includes(req.authToken.userType)) {

@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
+import { SubPlan } from "../models/index.js";
 
-const { SubPlan } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     const { page, pageSize, ...q } = req.query;
     const conditions = { ...q };
@@ -28,7 +27,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     new SubPlan({ ...req.body })
       .save()
@@ -41,7 +40,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     SubPlan.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
@@ -53,7 +52,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deletePlan = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

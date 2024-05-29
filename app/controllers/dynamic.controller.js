@@ -1,10 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { dbHelper } = require("../helpers");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { dbHelper } from "../helpers/index.js";
+import { ObjectId } from "mongodb";
 
-exports.findAll = async (req, res) => {
+const { responseFn, responseStr } = appConfig;
+
+export const findAll = async (req, res) => {
   try {
     const { Model, collection } = req;
     const conditions = {};
@@ -127,7 +127,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { Model, collection } = req;
 
@@ -180,7 +180,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.bulkCreate = async (req, res) => {
+export const bulkCreate = async (req, res) => {
   try {
     const { Model, collection } = req;
     const data = req.body.data || req.body;
@@ -233,7 +233,7 @@ exports.bulkCreate = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const { Model, collection } = req;
 
@@ -288,7 +288,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteColl = async (req, res) => {
   try {
     const { Model } = req;
     if (!req.params.id && !req.body.ids?.length) {

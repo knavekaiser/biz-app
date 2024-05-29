@@ -1,11 +1,13 @@
-const { authJwt, validate, file, whitelabel } = require("../middlewares");
-const controller = require("../controllers/chatbot.controller");
-const { chatbot: schema } = require("../validationSchemas");
-const { appConfig } = require("../config");
-const router = require("express").Router();
-const routerPublic = require("express").Router();
+import { authJwt, validate, file, whitelabel } from "../middlewares/index.js";
+import * as controller from "../controllers/chatbot.controller.js";
+import { chatbot as schema } from "../validationSchemas/index.js";
+import { appConfig } from "../config/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+const routerPublic = express.Router();
+
+export default function (app) {
   router.get("/", authJwt.verifyToken, controller.getChatbots);
   router.put(
     "/:_id",
@@ -33,4 +35,4 @@ module.exports = function (app) {
     controller.getChatbot
   );
   app.use("/api", routerPublic);
-};
+}

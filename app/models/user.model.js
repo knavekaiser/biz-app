@@ -1,6 +1,8 @@
-const { normalizeDomain } = require("../helpers/app.helper");
+import { appHelper } from "../helpers/index.js";
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
 
-module.exports = mongoose.model(
+export default mongoose.model(
   "User",
   new Schema(
     {
@@ -27,8 +29,8 @@ module.exports = mongoose.model(
       domain: {
         type: Schema.Types.String,
         unique: [true, "Domain is being used"],
-        get: (v) => normalizeDomain(v) || null,
-        set: (v) => normalizeDomain(v) || null,
+        get: (v) => appHelper.normalizeDomain(v) || null,
+        set: (v) => appHelper.normalizeDomain(v) || null,
         sparse: true,
       },
       address: {},

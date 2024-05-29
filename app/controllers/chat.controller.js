@@ -1,12 +1,11 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { aiHelper, dbHelper } = require("../helpers");
+import { appConfig } from "../config/index.js";
+import { aiHelper, dbHelper } from "../helpers/index.js";
+import { FaqDoc, Chat, SubPlan } from "../models/index.js";
+import mongoose from "mongoose";
 
-const { FaqDoc, Chat, SubPlan } = require("../models");
-const { default: mongoose } = require("mongoose");
+const { responseFn, responseStr } = appConfig;
 
-exports.getTopics = async (req, res) => {
+export const getTopics = async (req, res) => {
   try {
     const topics = await FaqDoc.find({
       user: req.business?._id || null,
@@ -19,7 +18,7 @@ exports.getTopics = async (req, res) => {
   }
 };
 
-exports.initChatOld = async (req, res) => {
+export const initChatOld = async (req, res) => {
   try {
     if (!req.body.topic) {
       const availableTopics = await FaqDoc.find({ user: req.business._id });
@@ -148,7 +147,7 @@ exports.initChatOld = async (req, res) => {
   }
 };
 
-exports.initChat = async (req, res) => {
+export const initChat = async (req, res) => {
   try {
     let messages = [];
 
@@ -385,7 +384,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
   }
 };
 
-exports.getChat = async (req, res) => {
+export const getChat = async (req, res) => {
   try {
     Chat.findOne({ _id: req.params._id })
       .then((chat) =>
@@ -416,7 +415,7 @@ exports.getChat = async (req, res) => {
   }
 };
 
-exports.getChats = async (req, res) => {
+export const getChats = async (req, res) => {
   try {
     let { page, pageSize } = req.query;
     page = +page;
@@ -480,7 +479,7 @@ exports.getChats = async (req, res) => {
   }
 };
 
-exports.sendMessage = async (req, res) => {
+export const sendMessage = async (req, res) => {
   try {
     const chat = await Chat.findOne({ _id: req.params._id });
     const messageDate = new Date();
@@ -614,7 +613,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-exports.vote = async (req, res) => {
+export const vote = async (req, res) => {
   try {
     Chat.updateOne(
       {
@@ -636,7 +635,7 @@ exports.vote = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteChat = async (req, res) => {
   try {
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

@@ -1,12 +1,12 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
 
-const { User, FaqDoc } = require("../models");
-const { fileHelper } = require("../helpers");
+import { User, FaqDoc } from "../models/index.js";
+import { fileHelper } from "../helpers/index.js";
 
-exports.getChatbot = async (req, res) => {
+const { responseFn, responseStr } = appConfig;
+
+export const getChatbot = async (req, res) => {
   try {
     const topics = await FaqDoc.aggregate([
       {
@@ -66,7 +66,7 @@ exports.getChatbot = async (req, res) => {
   }
 };
 
-exports.getChatbotByDomain = async (req, res) => {
+export const getChatbotByDomain = async (req, res) => {
   try {
     const chatbot = await User.aggregate([
       { $match: { "chatbots.domain": req.params.domain } },
@@ -91,7 +91,7 @@ exports.getChatbotByDomain = async (req, res) => {
   }
 };
 
-exports.getChatbots = async (req, res) => {
+export const getChatbots = async (req, res) => {
   try {
     if (req.authToken.userType === "business") {
       return responseFn.success(res, {
@@ -118,7 +118,7 @@ exports.getChatbots = async (req, res) => {
   }
 };
 
-exports.updateChatbot = async (req, res) => {
+export const updateChatbot = async (req, res) => {
   try {
     const condition = { "chatbots._id": ObjectId(req.params._id) };
     if (req.authToken.userType === "business") {

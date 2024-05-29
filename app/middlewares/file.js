@@ -1,10 +1,12 @@
-const multer = require("multer");
-const {
-  appConfig: { responseFn, responseStr, ...appConfig },
-} = require("../config");
-const { ObjectId } = require("mongodb");
-const fs = require("fs");
-const path = require("path");
+import multer from "multer";
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { responseFn, responseStr } = appConfig;
 
 const uploadDir = __dirname.replace(/(\\|\/)app.*/, "") + appConfig.uploadDir;
 const getPath = (str) =>
@@ -12,7 +14,7 @@ const getPath = (str) =>
     .replace(/\\/g, "/")
     .replace(new RegExp(`.*(?=${appConfig.uploadDir})`, "gi"), "");
 
-const upload = (fields, uploadPath, options) => {
+export const upload = (fields, uploadPath, options) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       Object.entries(req.body).forEach(([key, value]) => {
@@ -145,7 +147,7 @@ const upload = (fields, uploadPath, options) => {
   };
 };
 
-const uploadNew = (fields, uploadPath, options) => {
+export const uploadNew = (fields, uploadPath, options) => {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       Object.entries(req.body).forEach(([key, value]) => {
@@ -299,7 +301,7 @@ const uploadNew = (fields, uploadPath, options) => {
   };
 };
 
-const dynamicUpload = async (req, res, next) => {
+export const dynamicUpload = async (req, res, next) => {
   const { Model, collection } = req;
   // get options from collection
   // size limit, file types
@@ -412,7 +414,7 @@ const dynamicUpload = async (req, res, next) => {
   });
 };
 
-const removeFiles = async (req, res, next) => {
+export const removeFiles = async (req, res, next) => {
   const { Model, collection } = req;
 
   const fileFields = collection.fields
@@ -448,5 +450,3 @@ const removeFiles = async (req, res, next) => {
 
   next();
 };
-
-module.exports = { upload, uploadNew, dynamicUpload, removeFiles };

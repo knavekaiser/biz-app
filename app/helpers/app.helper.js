@@ -1,17 +1,16 @@
-const bcrypt = require("bcryptjs");
-const { SignJWT } = require("jose");
-const crypto = require("crypto");
+import bcrypt from "bcryptjs";
+import { SignJWT } from "jose";
+import crypto from "crypto";
+import { appConfig } from "../config/index.js";
 
-const {
-  appConfig,
-  appConfig: { responseFn },
-} = require("../config");
+const { responseFn } = appConfig;
 
-exports.generateHash = (string) => bcrypt.hashSync(string, 8);
+export const generateHash = (string) => bcrypt.hashSync(string, 8);
 
-exports.compareHash = (password, hash) => bcrypt.compareSync(password, hash);
+export const compareHash = (password, hash) =>
+  bcrypt.compareSync(password, hash);
 
-exports.signIn = async (res, user, userType) => {
+export const signIn = async (res, user, userType) => {
   const token = await signToken({ sub: user._id, userType });
   ["password", "__v", "updatedAt"].forEach((key) => delete user[key]);
   res.cookie("access_token", token, {
@@ -32,7 +31,7 @@ exports.signIn = async (res, user, userType) => {
   });
 };
 
-exports.json = (data) => JSON.parse(JSON.stringify(data));
+export const json = (data) => JSON.parse(JSON.stringify(data));
 
 const signToken = async (data) => {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -48,7 +47,7 @@ const signToken = async (data) => {
   return jwt;
 };
 
-exports.genId = (l, { uppercase, lowercase, letters, numbers } = {}) => {
+export const genId = (l, { uppercase, lowercase, letters, numbers } = {}) => {
   const _l = "abcdefghijklmnopqrstuvwxyz";
   const _n = "0123456789";
   let a =
@@ -82,14 +81,14 @@ const encryptionIV = crypto
   .substring(0, 16);
 const ecnryption_method = "aes-256-cbc";
 
-exports.encryptString = (data) => {
+export const encryptString = (data) => {
   const cipher = crypto.createCipheriv(ecnryption_method, key, encryptionIV);
   return Buffer.from(
     cipher.update(data, "utf8", "hex") + cipher.final("hex")
   ).toString("base64");
 };
 
-exports.decryptString = (encryptedData) => {
+export const decryptString = (encryptedData) => {
   try {
     const buff = Buffer.from(encryptedData, "base64");
     const decipher = crypto.createDecipheriv(
@@ -106,7 +105,7 @@ exports.decryptString = (encryptedData) => {
   }
 };
 
-exports.normalizeDomain = (url) =>
+export const normalizeDomain = (url) =>
   (url || "")
     .toLowerCase()
     .replace(/(https?:\/\/)(www\.)?/, "")

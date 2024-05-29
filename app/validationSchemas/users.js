@@ -1,6 +1,6 @@
-const yup = require("yup");
-const commonYup = require("./commonYup");
-const { User, SubPlan } = require("../models");
+import yup from "yup";
+import * as commonYup from "./commonYup.js";
+import { User, SubPlan } from "../models/index.js";
 
 const updateUser = {
   name: yup.string().min(3),
@@ -57,179 +57,177 @@ const updateUser = {
     }),
 };
 
-module.exports = {
-  signup: yup.object({
-    body: yup.object({
-      name: yup.string().required(),
-      phone: yup
-        .string()
-        .min(8)
-        .test("checkPhone", "Phone number already in use", (v) =>
-          !v ? true : User.findOne({ phone: v }).then((user) => !user)
-        ),
-      email: yup
-        .string()
-        .email()
-        .test("checkEmail", "Email already in use", (v) =>
-          !v
-            ? true
-            : User.findOne({ email: { $regex: new RegExp(v, "i") } }).then(
-                (user) => !user
-              )
-        ),
-      password: commonYup.password.required(),
-      subscription: yup.string().none(),
-      subPlan: yup.string().none(),
-      chatbots: yup.string().none(),
-    }),
-  }),
-
-  createBusiness: yup.object({
-    body: yup.object({
-      name: yup.string().required(),
-      phone: yup
-        .string()
-        .min(8)
-        .required()
-        .test("checkPhone", "Phone number already in use", (v) =>
-          User.findOne({ phone: v }).then((user) => !user)
-        ),
-      password: commonYup.password.required(),
-      subscription: yup.string().none(),
-      subPlan: yup
-        .string()
-        .objectId()
-        .test("checkPhone", "Subscription Plan not found", (v) =>
-          SubPlan.findOne({ _id: v })
-        )
-        .required(),
-      chatbots: yup.string().none(),
-    }),
-  }),
-
-  login: yup.object({
-    body: yup.object({
-      phone: yup.string(),
-      email: yup.string().email(),
-      password: yup.string().required(),
-    }),
-  }),
-
-  forgotPassword: yup.object({
-    body: yup.object({
-      phone: yup
-        .string()
-        .test(
-          "checkPhone",
-          "Account not found",
-          (v) => !v || User.findOne({ phone: v })
-        ),
-      email: yup
-        .string()
-        .email()
-        .test(
-          "checkEmail",
-          "Account not found",
-          (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
-        ),
-    }),
-  }),
-
-  resetPassword: yup.object({
-    body: yup.object({
-      phone: yup
-        .string()
-        .test(
-          "checkPhone",
-          "Account not found",
-          (v) => !v || User.findOne({ phone: v })
-        ),
-      email: yup
-        .string()
-        .email()
-        .test(
-          "checkEmail",
-          "Account not found",
-          (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
-        ),
-      code: yup
-        .string()
-        .when("phone", (phone, schema) => (phone ? schema.required() : schema)),
-      token: yup
-        .string()
-        .when("email", (email, schema) => (email ? schema.required() : schema)),
-      password: commonYup.password.required(),
-    }),
-  }),
-
-  validatePassToken: yup.object({
-    body: yup.object({
-      token: yup.string().required(),
-    }),
-  }),
-
-  updateProfile: yup.object({
-    body: yup.object({
-      phone: yup.string().when("$req", (req, field) => {
-        return field.test(
-          "checkPhone",
-          "Phone number is already in use",
-          (v) =>
-            !v ||
-            User.findOne({ phone: v, _id: { $ne: req.authUser._id } }).then(
+export const signup = yup.object({
+  body: yup.object({
+    name: yup.string().required(),
+    phone: yup
+      .string()
+      .min(8)
+      .test("checkPhone", "Phone number already in use", (v) =>
+        !v ? true : User.findOne({ phone: v }).then((user) => !user)
+      ),
+    email: yup
+      .string()
+      .email()
+      .test("checkEmail", "Email already in use", (v) =>
+        !v
+          ? true
+          : User.findOne({ email: { $regex: new RegExp(v, "i") } }).then(
               (user) => !user
             )
-        );
-      }),
-      email: yup
-        .string()
-        .email()
-        .when("$req", (req, field) => {
-          return field.test(
-            "checkEmail",
-            "Email is already in use",
-            (v) =>
-              !v ||
-              User.findOne({
-                email: { $regex: new RegExp(v, "i") },
-                _id: { $ne: req.authUser._id },
-              }).then((user) => !user)
-          );
-        }),
-      ...updateUser,
-    }),
+      ),
+    password: commonYup.password.required(),
+    subscription: yup.string().none(),
+    subPlan: yup.string().none(),
+    chatbots: yup.string().none(),
   }),
+});
 
-  updateBusiness: yup.object({
-    body: yup.object({
-      phone: yup.string().when("$req", (req, field) => {
+export const createBusiness = yup.object({
+  body: yup.object({
+    name: yup.string().required(),
+    phone: yup
+      .string()
+      .min(8)
+      .required()
+      .test("checkPhone", "Phone number already in use", (v) =>
+        User.findOne({ phone: v }).then((user) => !user)
+      ),
+    password: commonYup.password.required(),
+    subscription: yup.string().none(),
+    subPlan: yup
+      .string()
+      .objectId()
+      .test("checkPhone", "Subscription Plan not found", (v) =>
+        SubPlan.findOne({ _id: v })
+      )
+      .required(),
+    chatbots: yup.string().none(),
+  }),
+});
+
+export const login = yup.object({
+  body: yup.object({
+    phone: yup.string(),
+    email: yup.string().email(),
+    password: yup.string().required(),
+  }),
+});
+
+export const forgotPassword = yup.object({
+  body: yup.object({
+    phone: yup
+      .string()
+      .test(
+        "checkPhone",
+        "Account not found",
+        (v) => !v || User.findOne({ phone: v })
+      ),
+    email: yup
+      .string()
+      .email()
+      .test(
+        "checkEmail",
+        "Account not found",
+        (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
+      ),
+  }),
+});
+
+export const resetPassword = yup.object({
+  body: yup.object({
+    phone: yup
+      .string()
+      .test(
+        "checkPhone",
+        "Account not found",
+        (v) => !v || User.findOne({ phone: v })
+      ),
+    email: yup
+      .string()
+      .email()
+      .test(
+        "checkEmail",
+        "Account not found",
+        (v) => !v || User.findOne({ email: { $regex: new RegExp(v, "i") } })
+      ),
+    code: yup
+      .string()
+      .when("phone", (phone, schema) => (phone ? schema.required() : schema)),
+    token: yup
+      .string()
+      .when("email", (email, schema) => (email ? schema.required() : schema)),
+    password: commonYup.password.required(),
+  }),
+});
+
+export const validatePassToken = yup.object({
+  body: yup.object({
+    token: yup.string().required(),
+  }),
+});
+
+export const updateProfile = yup.object({
+  body: yup.object({
+    phone: yup.string().when("$req", (req, field) => {
+      return field.test(
+        "checkPhone",
+        "Phone number is already in use",
+        (v) =>
+          !v ||
+          User.findOne({ phone: v, _id: { $ne: req.authUser._id } }).then(
+            (user) => !user
+          )
+      );
+    }),
+    email: yup
+      .string()
+      .email()
+      .when("$req", (req, field) => {
         return field.test(
-          "checkPhone",
-          "Phone number is already in use",
+          "checkEmail",
+          "Email is already in use",
           (v) =>
             !v ||
             User.findOne({
-              phone: { $regex: new RegExp(v, "i") },
+              email: { $regex: new RegExp(v, "i") },
+              _id: { $ne: req.authUser._id },
+            }).then((user) => !user)
+        );
+      }),
+    ...updateUser,
+  }),
+});
+
+export const updateBusiness = yup.object({
+  body: yup.object({
+    phone: yup.string().when("$req", (req, field) => {
+      return field.test(
+        "checkPhone",
+        "Phone number is already in use",
+        (v) =>
+          !v ||
+          User.findOne({
+            phone: { $regex: new RegExp(v, "i") },
+            _id: { $ne: req.params._id },
+          }).then((user) => !user)
+      );
+    }),
+    email: yup
+      .string()
+      .email()
+      .when("$req", (req, field) => {
+        return field.test(
+          "checkEmail",
+          "Email is already in use",
+          (v) =>
+            !v ||
+            User.findOne({
+              email: { $regex: new RegExp(v, "i") },
               _id: { $ne: req.params._id },
             }).then((user) => !user)
         );
       }),
-      email: yup
-        .string()
-        .email()
-        .when("$req", (req, field) => {
-          return field.test(
-            "checkEmail",
-            "Email is already in use",
-            (v) =>
-              !v ||
-              User.findOne({
-                email: { $regex: new RegExp(v, "i") },
-                _id: { $ne: req.params._id },
-              }).then((user) => !user)
-          );
-        }),
-      ...updateUser,
-    }),
+    ...updateUser,
   }),
-};
+});

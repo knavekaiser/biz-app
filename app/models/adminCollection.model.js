@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
 const schema = new Schema(
   {
     name: { type: Schema.Types.String, min: 3, required: true },
@@ -7,4 +10,4 @@ const schema = new Schema(
 );
 schema.index({ name: 1 }, { unique: true });
 
-module.exports = mongoose.model("AdminSchema", schema);
+export default mongoose.model("AdminSchema", schema);

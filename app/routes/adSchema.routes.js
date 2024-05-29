@@ -1,9 +1,11 @@
-const { authJwt, validate } = require("../middlewares");
-const controller = require("../controllers/adSchema.controller");
-const { adSchema: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, validate } from "../middlewares/index.js";
+import * as controller from "../controllers/adSchema.controller.js";
+import { adSchema as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.get("/:id?", authJwt.verifyToken, controller.findAll);
   router.post(
     "/",
@@ -17,7 +19,7 @@ module.exports = function (app) {
     validate(schema.update),
     controller.update
   );
-  router.delete("/:id?", authJwt.verifyToken, controller.delete);
+  router.delete("/:id?", authJwt.verifyToken, controller.deleteSchema);
 
   app.use("/api/ad-schemas", router);
-};
+}

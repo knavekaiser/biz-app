@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
+import { Purchase, Config } from "../models/index.js";
 
-const { Purchase, Config } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     const conditions = {
       user: ObjectId(req.business?._id || req.authUser._id),
@@ -110,7 +109,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { nextPurchaseNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
@@ -136,7 +135,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     delete req.body.no;
     Purchase.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
@@ -149,7 +148,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deletePruchase = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

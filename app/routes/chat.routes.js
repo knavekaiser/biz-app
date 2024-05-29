@@ -1,10 +1,12 @@
-const { authJwt, validate, whitelabel } = require("../middlewares");
-const controller = require("../controllers/chat.controller");
-const { chat: schema } = require("../validationSchemas");
-const router = require("express").Router();
-const adminRouter = require("express").Router();
+import { authJwt, validate, whitelabel } from "../middlewares/index.js";
+import * as controller from "../controllers/chat.controller.js";
+import { chat as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+const adminRouter = express.Router();
+
+export default function (app) {
   router.get(
     "/topics",
     // whitelabel.getBusiness,
@@ -51,7 +53,7 @@ module.exports = function (app) {
     "/:_id",
     authJwt.verifyToken,
     authJwt.checkPermission("chat_delete"),
-    controller.delete
+    controller.deleteChat
   );
   app.use("/api/chats", adminRouter);
-};
+}

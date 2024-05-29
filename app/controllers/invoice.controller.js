@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
+import { Invoice, Config } from "../models/index.js";
 
-const { Invoice, Config } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     const conditions = {
       user: ObjectId(req.business?._id || req.authUser._id),
@@ -126,7 +125,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { nextInvoiceNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
@@ -152,7 +151,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     delete req.body.no;
     Invoice.findOneAndUpdate(
@@ -169,7 +168,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteInvoice = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

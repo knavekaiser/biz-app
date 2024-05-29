@@ -1,9 +1,10 @@
-const { authJwt, validate, whitelabel } = require("../middlewares");
-const controller = require("../controllers/whiteLabel.controller");
-const { whitelabel: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, validate, whitelabel } from "../middlewares/index.js";
+import * as controller from "../controllers/whiteLabel.controller.js";
+import { whitelabel as schema } from "../validationSchemas/index.js";
+import express from "express";
+const router = express.Router();
 
-module.exports = function (app) {
+export default function (app) {
   router.get("/site-config", whitelabel.getBusiness, controller.getSiteConfig);
   router.get("/sitemap-urls", whitelabel.getBusiness, controller.sitemapUrls);
   router.get(
@@ -97,4 +98,4 @@ module.exports = function (app) {
   router.get("/categories", whitelabel.getBusiness, controller.categories);
 
   app.use("/api", router);
-};
+}

@@ -1,10 +1,12 @@
-const { authJwt, validate, file } = require("../middlewares");
-const { appConfig } = require("../config");
-const controller = require("../controllers/config.controller");
-const { config: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, validate, file } from "../middlewares/index.js";
+import { appConfig } from "../config/index.js";
+import * as controller from "../controllers/config.controller.js";
+import { config as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.put(
     "/",
     authJwt.verifyToken,
@@ -26,4 +28,4 @@ module.exports = function (app) {
   router.get("/", authJwt.verifyToken, controller.findOne);
 
   app.use("/api/user-config", router);
-};
+}

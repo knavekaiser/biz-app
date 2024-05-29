@@ -1,4 +1,7 @@
-module.exports = mongoose.model(
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
+export default mongoose.model(
   "Store",
   new Schema(
     {

@@ -1,6 +1,8 @@
-const { appConfig } = require("../config");
+import { appConfig } from "../config/index.js";
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
 
-module.exports = mongoose.model(
+export default mongoose.model(
   "Otp",
   new Schema(
     {

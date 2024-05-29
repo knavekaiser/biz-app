@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { ObjectId } from "mongodb";
+import { Order, Quote } from "../models/index.js";
 
-const { Order, Quote } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     const conditions = {
       user: ObjectId(req.business?._id || req.authUser._id),
@@ -18,7 +17,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     new Order({
       ...req.body,
@@ -34,7 +33,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.generateFromQuote = async (req, res) => {
+export const generateFromQuote = async (req, res) => {
   try {
     const quote = await Quote.findOne({
       _id: req.body.quote_id,
@@ -63,7 +62,7 @@ exports.generateFromQuote = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     Order.findOneAndUpdate(
       { _id: req.params.id, user: req.business?._id || req.authUser._id },
@@ -79,7 +78,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteOrder = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

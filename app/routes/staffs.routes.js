@@ -1,10 +1,12 @@
-const { authJwt, file, validate } = require("../middlewares");
-const { appConfig } = require("../config");
-const controller = require("../controllers/staff.controller");
-const { staffs: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, file, validate } from "../middlewares/index.js";
+import { appConfig } from "../config/index.js";
+import * as controller from "../controllers/staff.controller.js";
+import { staffs as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.get("/", controller.findAll);
 
   //-------------------------- Auth
@@ -41,4 +43,4 @@ module.exports = function (app) {
   );
 
   app.use("/api/staff", router);
-};
+}

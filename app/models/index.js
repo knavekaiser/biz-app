@@ -1,5 +1,4 @@
-global.mongoose = require("mongoose");
-global.Schema = mongoose.Schema;
+import mongoose from "mongoose";
 
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -9,26 +8,24 @@ mongoose
   .then(() => console.log("connected to db"))
   .catch((err) => console.log("could not connect to db, here's why: " + err));
 
-module.exports = {
-  Admin: require("./admin.model"),
-  Config: require("./config.model"),
-  User: require("./user.model"),
-  Staff: require("./staff.model"),
-  Otp: require("./otp.model"),
-  Invoice: require("./invoice.model"),
-  Receipt: require("./receipt.model"),
-  Purchase: require("./purchase.model"),
-  Payment: require("./payment.model"),
-  Collection: require("./collection.model"),
-  AdminCollection: require("./adminCollection.model"),
-  Order: require("./order.model"),
-  Quote: require("./quote.model"),
-  Role: require("./role.model"),
-  Store: require("./store.model"),
-  AdSchema: require("./adSchema.model"),
-  StoreConfig: require("./storeConfig.model"),
-  SubPlan: require("./subPlan.model"),
-  FaqDoc: require("./faqDoc.model"),
-  Chat: require("./chat.model"),
-  DynamicPage: require("./dynamicPage.model"),
-};
+export { default as Admin } from "./admin.model.js";
+export { default as Config } from "./config.model.js";
+export { default as User } from "./user.model.js";
+export { default as Staff } from "./staff.model.js";
+export { default as Otp } from "./otp.model.js";
+export { default as Invoice } from "./invoice.model.js";
+export { default as Receipt } from "./receipt.model.js";
+export { default as Purchase } from "./purchase.model.js";
+export { default as Payment } from "./payment.model.js";
+export { default as Collection } from "./collection.model.js";
+export { default as AdminCollection } from "./adminCollection.model.js";
+export { default as Order } from "./order.model.js";
+export { default as Quote } from "./quote.model.js";
+export { default as Role } from "./role.model.js";
+export { default as Store } from "./store.model.js";
+export { default as AdSchema } from "./adSchema.model.js";
+export { default as StoreConfig } from "./storeConfig.model.js";
+export { default as SubPlan } from "./subPlan.model.js";
+export { default as FaqDoc } from "./faqDoc.model.js";
+export { default as Chat } from "./chat.model.js";
+export { default as DynamicPage } from "./dynamicPage.model.js";

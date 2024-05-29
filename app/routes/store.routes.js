@@ -1,12 +1,14 @@
-const { authJwt, file, validate } = require("../middlewares");
-const { appConfig } = require("../config");
-const controller = require("../controllers/store.controller");
-const { store: schema } = require("../validationSchemas");
-const router = require("express").Router();
-const configRouter = require("express").Router();
-const homeRouter = require("express").Router();
+import { authJwt, file, validate } from "../middlewares/index.js";
+import { appConfig } from "../config/index.js";
+import * as controller from "../controllers/store.controller.js";
+import { store as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+const configRouter = express.Router();
+const homeRouter = express.Router();
+
+export default function (app) {
   router.get("/:id?", authJwt.verifyToken, controller.find);
   router.post(
     "/",
@@ -62,7 +64,7 @@ module.exports = function (app) {
     validate(schema.update),
     controller.update
   );
-  router.delete("/:id?", authJwt.verifyToken, controller.delete);
+  router.delete("/:id?", authJwt.verifyToken, controller.deleteStore);
 
   app.use("/api/stores", router);
 
@@ -78,4 +80,4 @@ module.exports = function (app) {
   homeRouter.get("/config", controller.homeConfig);
   homeRouter.get("/locations", controller.locations);
   app.use("/api/home", homeRouter);
-};
+}

@@ -1,10 +1,9 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { appConfig } from "../config/index.js";
+import { Payment, Config } from "../models/index.js";
 
-const { Payment, Config } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     Payment.find({ user: req.business?._id || req.authUser._id })
       .then((data) => responseFn.success(res, { data }))
@@ -14,7 +13,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { nextPaymentNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
@@ -40,7 +39,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     delete req.body.no;
     Payment.findOneAndUpdate(
@@ -57,7 +56,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deletePayment = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

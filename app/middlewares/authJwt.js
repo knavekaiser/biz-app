@@ -1,14 +1,13 @@
-const {
-  appConfig: { responseFn },
-} = require("../config");
-const { jwtVerify } = require("jose");
+import { appConfig } from "../config/index.js";
+import { jwtVerify } from "jose";
 
-const { User, Staff, Role, Admin, SubPlan } = require("../models");
-const { dbHelper } = require("../helpers");
-const { responseStr } = require("../config/app.config");
-const { ObjectId } = require("mongodb");
+import { User, Staff, Role, Admin, SubPlan } from "../models/index.js";
+import { dbHelper } from "../helpers/index.js";
+import { ObjectId } from "mongodb";
 
-verifyToken = async (req, res, next) => {
+const { responseFn, responseStr } = appConfig;
+
+export const verifyToken = async (req, res, next) => {
   const token = req.cookies.access_token || req.headers["x-access-token"];
   const business_id = req.headers["x-business-id"];
 
@@ -76,7 +75,7 @@ verifyToken = async (req, res, next) => {
   }
 };
 
-checkPermission = (permission) => {
+export const checkPermission = (permission) => {
   return (req, res, next) => {
     if (req.authToken?.userType === "admin") {
       return next();
@@ -91,7 +90,7 @@ checkPermission = (permission) => {
   };
 };
 
-verifyOrigin = async (req, res, next) => {
+export const verifyOrigin = async (req, res, next) => {
   try {
     const chatbot_id = req.headers["x-chatbot-id"];
     // const origin = (req.headers.origin || req.headers.host || "").replace(
@@ -115,5 +114,3 @@ verifyOrigin = async (req, res, next) => {
     return responseFn.error(res, {}, "Unauthorized!", 401);
   }
 };
-
-module.exports = { verifyToken, checkPermission, verifyOrigin };

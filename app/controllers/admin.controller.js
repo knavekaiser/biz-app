@@ -1,14 +1,11 @@
-const {
-  appConfig: { responseFn, responseStr, ...appConfig },
-} = require("../config");
-const {
-  appHelper,
-  appHelper: { genId },
-} = require("../helpers");
+import { appConfig } from "../config/index.js";
+import { appHelper } from "../helpers/index.js";
+import { Admin, Otp } from "../models/index.js";
 
-const { Admin, Otp } = require("../models");
+const { responseFn, responseStr } = appConfig;
+const { genId } = appHelper;
 
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   try {
     req.body.password = appHelper.generateHash(req.body.password);
 
@@ -25,7 +22,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const user = await Admin.findOne({ phone: req.body.phone });
 
@@ -39,7 +36,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   try {
     const user = await Admin.findOne({ phone: req.body.phone });
 
@@ -94,7 +91,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   try {
     const user = await Admin.findOne({ phone: req.body.phone });
     const otpRec = await Otp.findOne({ user: user._id });
@@ -136,7 +133,7 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     res.clearCookie("access_token");
     return responseFn.success(res, {});
@@ -145,7 +142,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-exports.profile = (req, res) => {
+export const profile = (req, res) => {
   try {
     Admin.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
       .then(async (data) =>
@@ -159,7 +156,7 @@ exports.profile = (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     if (req.body.password) {
       req.body.password = appHelper.generateHash(req.body.password);

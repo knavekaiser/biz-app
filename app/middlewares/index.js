@@ -1,11 +1,5 @@
-const authJwt = require("./authJwt");
-const file = require("./file");
-const { validate } = require("./validation");
-
-module.exports = {
-  authJwt,
-  file,
-  validate,
-  whitelabel: require("./whitelabel"),
-  dynamic: require("./dynamic"),
-};
+export * as authJwt from "./authJwt.js";
+export * as file from "./file.js";
+export { validate } from "./validation.js";
+export * as whitelabel from "./whitelabel.js";
+export * as dynamic from "./dynamic.js";

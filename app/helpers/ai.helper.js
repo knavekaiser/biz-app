@@ -1,20 +1,26 @@
-const { encode } = require("gpt-3-encoder");
-const fetch = require("node-fetch");
-const puppeteer = require("puppeteer");
-const cheerio = require("cheerio");
-const mammoth = require("mammoth");
-const PDFParser = require("pdf-parse");
-const xlsx = require("xlsx");
-const fs = require("fs");
-const { CharacterTextSplitter } = require("langchain/text_splitter");
-// const pinecone = require("@pinecone-database/pinecone");
-const { ObjectId } = require("mongodb");
-const dbHelper = require("./db.helper");
+import { encode } from "gpt-3-encoder";
+import fetch from "node-fetch";
+import puppeteer from "puppeteer";
+import cheerio from "cheerio";
+import mammoth from "mammoth";
+// import PDFParser from "pdf-parse";
+import xlsx from "xlsx";
+import fs from "fs";
+import { CharacterTextSplitter } from "langchain/text_splitter";
+import { Pinecone } from "@pinecone-database/pinecone";
+import { ObjectId } from "mongodb";
+import * as dbHelper from "./db.helper.js";
 
-const fileHelper = require("./file.helper");
+import * as fileHelper from "./file.helper.js";
 
-const OpenAI = require("openai");
-const { FaqDoc } = require("../models");
+import OpenAI from "openai";
+import { FaqDoc } from "../models/index.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __tempDir = __dirname + "/assets/temp";
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -24,45 +30,11 @@ const splitter = new CharacterTextSplitter({
   chunkOverlap: 200,
 });
 
-// const pcIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
+const pcIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
 let pcIndex = null;
-// setTimeout(async () => {
-//   try {
-//     const pc = new Pinecone(process.env.PINECONE_API_KEY);
-// pineconeIndex = pc.Index(pineconeIndexName);
-// const indexesList = await pc.describeIndex(pcIndexName);
-// console.log(pcIndexName, indexesList);
-// await pinecone.deleteIndex({
-//   indexName: pineconeIndexName,
-// });
-// if (!indexesList.includes(pcIndexName)) {
-// await pc
-//   .createIndex({
-//     createRequest: {
-//       name: pineconeIndexName,
-//       dimension: 1536,
-//       metric: "cosine",
-//       metadataConfig: {
-//         indexed: ["_id"],
-//       },
-//       spec: {
-//         serverless: {
-//           cloud: "aws",
-//           region: "us-east-1",
-//         },
-//       },
-//     },
-//   })
-//   .then((newIndex) => {
-//     console.log(newIndex);
-//   });
-// }
-//   } catch (err) {
-//     console.log("pinecone error", err);
-//   }
-// }, 1000);
 
-const countToken = (messages) => {
+export const countToken = (messages) => {
   const encoded = encode(messages);
   return encoded.length;
 };
@@ -135,29 +107,28 @@ const readContext = async ({ filename, ext, path, file }) => {
       });
     }
   } else if (ext === "pdf") {
-    if (file) {
-      await PDFParser(file)
-        .then((data) => {
-          context = data.text.trim() + "\n\n";
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-    } else if (path) {
-      await fs.readFileSync(path, async (error, buffer) => {
-        if (error) {
-          console.error(error);
-        }
-
-        await PDFParser(buffer)
-          .then((data) => {
-            context = data.text.trim() + "\n\n";
-          })
-          .catch((error) => {
-            console.error(error);
-          });
-      });
-    }
+    // if (file) {
+    //   await PDFParser(file)
+    //     .then((data) => {
+    //       context = data.text.trim() + "\n\n";
+    //     })
+    //     .catch((error) => {
+    //       console.error(error);
+    //     });
+    // } else if (path) {
+    //   await fs.readFileSync(path, async (error, buffer) => {
+    //     if (error) {
+    //       console.error(error);
+    //     }
+    //     await PDFParser(buffer)
+    //       .then((data) => {
+    //         context = data.text.trim() + "\n\n";
+    //       })
+    //       .catch((error) => {
+    //         console.error(error);
+    //       });
+    //   });
+    // }
   }
 
   if (filename) {
@@ -169,7 +140,7 @@ ${context}`;
   return context;
 };
 
-const fetchContext = async (url) => {
+export const fetchContext = async (url) => {
   let topic, content, error;
   if (true || new RegExp(/\.(pdf|docx)$/i).test(url)) {
     await fetch(url)
@@ -231,7 +202,11 @@ const fetchContext = async (url) => {
   return { topic, error, content };
 };
 
-const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
+export const getContext = async ({
+  files = [],
+  urls = [],
+  content: rawCotent,
+}) => {
   return new Promise(async (resolve, reject) => {
     let context = rawCotent + "";
 
@@ -242,7 +217,7 @@ const getContext = async ({ files = [], urls = [], content: rawCotent }) => {
           (await readContext({
             filename: file.name,
             ext: file.url.replace(/.+\./, ""),
-            path: __appDir + file.url,
+            path: __dirname + file.url,
           })) + "\n\n";
       }
       for (let i = 0; i < urls?.length; i++) {
@@ -278,7 +253,7 @@ const getAction = async (actionName) => {
   };
 };
 
-const generateResponse = async (messages, metadata = {}) => {
+export const generateResponse = async (messages, metadata = {}) => {
   return new Promise(async (resolve, reject) => {
     await openai.chat.completions
       .create({
@@ -406,7 +381,7 @@ const generateResponse = async (messages, metadata = {}) => {
   });
 };
 
-const getTopic = async ({ topics, message }) => {
+export const getTopic = async ({ topics, message }) => {
   if (topics.length <= 1) {
     return topics[0]?.topic || null;
   }
@@ -431,11 +406,11 @@ question: ${message}`,
   );
 };
 
-const removeVectors = async (ids) => {
+export const removeVectors = async (ids) => {
   await pcIndex.delete1({ ids });
 };
 
-const pushToPinecone = async ({
+export const pushToPinecone = async ({
   metadata,
   oldVectorIds,
   files = [],
@@ -484,7 +459,7 @@ const pushToPinecone = async ({
   await FaqDoc.findOneAndUpdate({ _id: metadata.topicId }, { vectorIds });
 };
 
-const getPartialContext = async ({ userId, topicId, msg }) => {
+export const getPartialContext = async ({ userId, topicId, msg }) => {
   const queryEmbeddings = await openai
     .createEmbedding({
       model: "text-embedding-ada-002",
@@ -520,15 +495,4 @@ const getPartialContext = async ({ userId, topicId, msg }) => {
       content: msg,
     },
   ];
-};
-
-module.exports = {
-  countToken,
-  fetchContext,
-  getContext,
-  generateResponse,
-  getTopic,
-  pushToPinecone,
-  getPartialContext,
-  removeVectors,
 };

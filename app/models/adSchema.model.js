@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+const Schema = mongoose.Schema;
+
 const schema = new Schema(
   {
     category: { type: Schema.Types.String, required: true },
@@ -8,4 +11,4 @@ const schema = new Schema(
 );
 schema.index({ name: 1, user: 1 }, { unique: true });
 
-module.exports = mongoose.model("AdSchema", schema);
+export default mongoose.model("AdSchema", schema);

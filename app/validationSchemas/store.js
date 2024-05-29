@@ -1,20 +1,18 @@
-const yup = require("yup");
+import yup from "yup";
 
-module.exports = {
-  create: yup.object({
-    body: yup.object({
-      start: yup.date().required(),
-      end: yup.date().required(),
-      category: yup.string().required(),
-      business: yup.mixed().required(),
-    }),
+export const create = yup.object({
+  body: yup.object({
+    start: yup.date().required(),
+    end: yup.date().required(),
+    category: yup.string().required(),
+    business: yup.mixed().required(),
   }),
-  update: yup.object({
-    body: yup.object({
-      start: yup.date().required(),
-      end: yup.date().required(),
-      category: yup.string().required(),
-      business: yup.mixed().required(),
-    }),
+});
+export const update = yup.object({
+  body: yup.object({
+    start: yup.date().required(),
+    end: yup.date().required(),
+    category: yup.string().required(),
+    business: yup.mixed().required(),
   }),
-};
+});

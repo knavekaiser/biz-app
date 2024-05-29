@@ -1,9 +1,7 @@
-const {
-  appConfig: { responseFn },
-} = require("../config");
-const { fileHelper } = require("../helpers");
+import { responseFn } from "../config/app.config.js";
+import * as fileHelper from "../helpers/file.helper.js";
 
-exports.validate = (schema) => async (req, res, next) => {
+export const validate = (schema) => async (req, res, next) => {
   try {
     const values = await schema.validate(
       {

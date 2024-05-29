@@ -1,3 +1,5 @@
-module.exports = {
-  appConfig: require("./app.config"),
-};
+// import appConfig from "./app.config.js";
+
+export * as appConfig from "./app.config.js";
+
+// export default { appConfig };

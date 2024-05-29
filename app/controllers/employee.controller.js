@@ -1,10 +1,9 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { appConfig } from "../config/index.js";
+import { Staff } from "../models/index.js";
 
-const { Staff } = require("../models");
+const { responseFn } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     Staff.find(
       {
@@ -35,7 +34,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const staff = await Staff.findOne({ _id: req.body.employee });
 

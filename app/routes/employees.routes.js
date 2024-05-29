@@ -1,9 +1,11 @@
-const { authJwt, validate } = require("../middlewares");
-const controller = require("../controllers/employee.controller");
-const { employee: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, validate } from "../middlewares/index.js";
+import * as controller from "../controllers/employee.controller.js";
+import { employee as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.put(
     "/",
     authJwt.verifyToken,
@@ -19,4 +21,4 @@ module.exports = function (app) {
   );
 
   app.use("/api/employees", router);
-};
+}

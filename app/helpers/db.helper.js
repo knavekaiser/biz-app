@@ -1,5 +1,8 @@
-const Collection = require("../models/collection.model");
-const AdminCollection = require("../models/adminCollection.model");
+import Collection from "../models/collection.model.js";
+import AdminCollection from "../models/adminCollection.model.js";
+import mongoose from "mongoose";
+
+const Schema = mongoose.Schema;
 
 const getType = (field) => {
   let t;
@@ -62,7 +65,7 @@ const getFields = (fields) => {
   return _fields;
 };
 
-exports.getModel = async (table) => {
+export const getModel = async (table) => {
   const [_id, name] = table.split("_");
   const collection = await Collection.findOne({ name, user: _id });
 
@@ -87,7 +90,7 @@ exports.getModel = async (table) => {
   };
 };
 
-exports.getAdminModel = async (table) => {
+export const getAdminModel = async (table) => {
   const collection = await AdminCollection.findOne({ name: table });
   if (!collection) {
     return {
@@ -112,7 +115,7 @@ exports.getAdminModel = async (table) => {
   };
 };
 
-exports.getDynamicPipeline = ({
+export const getDynamicPipeline = ({
   fields,
   pipeline = [],
   business_id,
@@ -367,7 +370,7 @@ exports.getDynamicPipeline = ({
   return pipeline;
 };
 
-exports.getRatingPipeline = ({ business }) => {
+export const getRatingPipeline = ({ business }) => {
   return [
     {
       $lookup: {
@@ -417,7 +420,7 @@ exports.getRatingPipeline = ({ business }) => {
   ];
 };
 
-exports.getRatingBreakdownPipeline = ({ business }) => {
+export const getRatingBreakdownPipeline = ({ business }) => {
   return [
     {
       $lookup: {
@@ -498,7 +501,7 @@ exports.getRatingBreakdownPipeline = ({ business }) => {
   ];
 };
 
-exports.defaultSchemas = [
+export const defaultSchemas = [
   {
     name: "Category",
     fields: [

@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { appConfig } from "../config/index.js";
+import { User, Collection } from "../models/index.js";
+import { ObjectId } from "mongodb";
 
-const { User, Collection } = require("../models");
-const { ObjectId } = require("mongodb");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     const _id =
       req.params.id && req.params.id.match(/^[0-9a-fA-F]{24}$/)
@@ -61,7 +60,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     new Collection({
       ...req.body,
@@ -77,7 +76,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     delete req.body.name;
     Collection.findOneAndUpdate(
@@ -94,7 +93,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteColl = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
@@ -121,7 +120,7 @@ exports.delete = async (req, res) => {
   }
 };
 
-exports.getSchemaTemplates = async (req, res) => {
+export const getSchemaTemplates = async (req, res) => {
   try {
     User.aggregate([
       {
@@ -147,7 +146,7 @@ exports.getSchemaTemplates = async (req, res) => {
   }
 };
 
-exports.addSchemaTemplates = async (req, res) => {
+export const addSchemaTemplates = async (req, res) => {
   try {
     const schemas = await Collection.find({
       user: ObjectId(req.body.schema_id),

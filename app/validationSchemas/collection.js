@@ -1,5 +1,4 @@
-const yup = require("yup");
-const commonYup = require("./commonYup");
+import yup from "yup";
 
 const fieldSchema = yup.object().shape({
   name: yup.string().required(),
@@ -11,33 +10,31 @@ const fieldSchema = yup.object().shape({
   // options for select and radio
 });
 
-module.exports = {
-  create: yup.object({
-    body: yup.object({
-      name: yup.string().required(),
-      fields: yup
-        .array()
-        .of(fieldSchema)
-        .min(1)
-        .required()
-        .typeError("items must be an array"),
-    }),
+export const create = yup.object({
+  body: yup.object({
+    name: yup.string().required(),
+    fields: yup
+      .array()
+      .of(fieldSchema)
+      .min(1)
+      .required()
+      .typeError("items must be an array"),
   }),
-  update: yup.object({
-    body: yup.object({
-      name: yup.string().required(),
-      fields: yup
-        .array()
-        .of(fieldSchema)
-        .min(1)
-        .required()
-        .typeError("items must be an array"),
-    }),
+});
+export const update = yup.object({
+  body: yup.object({
+    name: yup.string().required(),
+    fields: yup
+      .array()
+      .of(fieldSchema)
+      .min(1)
+      .required()
+      .typeError("items must be an array"),
   }),
+});
 
-  addSchemaTemplate: yup.object({
-    body: yup.object({
-      schema_id: yup.string().required(),
-    }),
+export const addSchemaTemplate = yup.object({
+  body: yup.object({
+    schema_id: yup.string().required(),
   }),
-};
+});

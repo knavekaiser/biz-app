@@ -1,10 +1,12 @@
-const { authJwt, validate, file } = require("../middlewares");
-const controller = require("../controllers/dynamicPage.controller");
-const { dynamicPage: schema } = require("../validationSchemas");
-const { appConfig } = require("../config");
-const router = require("express").Router();
+import { authJwt, validate, file } from "../middlewares/index.js";
+import * as controller from "../controllers/dynamicPage.controller.js";
+import { dynamicPage as schema } from "../validationSchemas/index.js";
+import { appConfig } from "../config/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.get(
     "/:_id?",
     authJwt.verifyToken,
@@ -41,8 +43,8 @@ module.exports = function (app) {
     "/:_id?",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_page_delete"),
-    controller.delete
+    controller.deletePage
   );
 
   app.use("/api/manage-dynamic-pages", router);
-};
+}

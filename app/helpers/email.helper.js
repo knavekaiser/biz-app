@@ -1,5 +1,5 @@
-const { appConfig } = require("../config");
-const nodemailer = require("nodemailer");
+import { appConfig } from "../config/index.js";
+import nodemailer from "nodemailer";
 
 const templates = [
   {
@@ -35,7 +35,8 @@ const emailConfig = {
     pass: process.env.EMAIL_PASSWORD,
   },
 };
-exports.sendEmail = async ({ to, templateName, values }) => {
+
+export const sendEmail = async ({ to, templateName, values }) => {
   let transporter = nodemailer.createTransport(emailConfig);
 
   const template = templates.find((item) => item.name === templateName);

@@ -1,11 +1,8 @@
-const yup = require("yup");
-const commonYup = require("./commonYup");
+import yup from "yup";
 
-module.exports = {
-  update: yup.object({
-    body: yup.object({
-      employee: yup.string().required(),
-      roles: yup.array().of(yup.string()).required(),
-    }),
+export const update = yup.object({
+  body: yup.object({
+    employee: yup.string().required(),
+    roles: yup.array().of(yup.string()).required(),
   }),
-};
+});

@@ -1,8 +1,12 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const sharp = require("sharp");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import sharp from "sharp";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+
+import "dotenv/config";
 
 const app = express();
 app.use(cookieParser());
@@ -10,12 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const path = require("path");
-
-global.__appDir = __dirname;
-global.__assetDir = __dirname + "/assets";
-global.__tempDir = __dirname + "/assets/temp";
-global.__uploadDir = __dirname + "/assets/uploads";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use((req, res, next) => {
   ["query", "body", "params"].forEach((data) => {
@@ -30,14 +29,14 @@ app.use((req, res, next) => {
   next();
 });
 
-require("./app/routes")(app);
+import routes from "./app/routes/index.js";
+routes(app);
 
 // simple route
 app.get("/api", (req, res) => {
   res.json({ message: "Welcome to Biz App API." });
 });
 
-const fs = require("fs");
 app.get("/assets/*/:file", (req, res) => {
   const filepath =
     __dirname + "/assets/" + req.params[0] + "/" + req.params.file;

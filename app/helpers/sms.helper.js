@@ -1,6 +1,6 @@
-const fetchkk = require("node-fetch");
+import fetch from "node-fetch";
 
-exports.sendSms = ({ variables_values, to, otp, message }) => {
+export const sendSms = ({ variables_values, to, otp, message }) => {
   const reqBody = {
     route: "dlt",
     sender_id: "DelPay",

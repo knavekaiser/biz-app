@@ -1,11 +1,7 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { appConfig } from "../config/index.js";
+import { appHelper } from "../helpers/index.js";
 
-const { User } = require("../models");
-const {
-  appHelper: { normalizeDomain },
-} = require("../helpers");
+import { User } from "../models/index.js";
 
 const localhosts = [
   "localhost:3000",
@@ -14,7 +10,10 @@ const localhosts = [
   "127.0.0.1:4005",
 ];
 
-exports.getBusiness = async (req, res, next) => {
+const { normalizeDomain } = appHelper;
+const { responseFn, responseStr } = appConfig;
+
+export const getBusiness = async (req, res, next) => {
   let domain = normalizeDomain(req.headers["referer"] || req.headers["origin"]);
   if (!domain)
     return responseFn.error(res, {}, responseStr.domain_not_specified);
@@ -32,7 +31,7 @@ exports.getBusiness = async (req, res, next) => {
   next();
 };
 
-exports.getBusinessOptinal = async (req, res, next) => {
+export const getBusinessOptinal = async (req, res, next) => {
   let domain = normalizeDomain(req.headers["referer"] || req.headers["origin"]);
   // if (localhosts.includes(domain)) domain = "infinai.loca.lt";
 

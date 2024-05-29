@@ -1,9 +1,11 @@
-const { authJwt, validate, file, dynamic } = require("../middlewares");
-const controller = require("../controllers/dynamic.controller");
-// const { collection: schema } = require("../validationSchemas");
-const router = require("express").Router();
+import { authJwt, validate, file, dynamic } from "../middlewares/index.js";
+import * as controller from "../controllers/dynamic.controller.js";
+// const { collection as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.post(
     "/:table/bulk-create",
     authJwt.verifyToken,
@@ -39,8 +41,8 @@ module.exports = function (app) {
     authJwt.verifyToken,
     dynamic.getModel,
     file.removeFiles,
-    controller.delete
+    controller.deleteColl
   );
 
   app.use("/api/dynamic", router);
-};
+}

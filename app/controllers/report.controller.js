@@ -1,10 +1,9 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { appConfig } from "../config/index.js";
+import { Chat } from "../models/index.js";
 
-const { Chat } = require("../models");
+const { responseFn } = appConfig;
 
-exports.getAnalytics = async (req, res) => {
+export const getAnalytics = async (req, res) => {
   try {
     const { granularity, minDate, maxDate } = req.query;
     const condition = {};

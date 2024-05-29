@@ -1,10 +1,14 @@
-const { appConfig } = require("../config");
-const fs = require("fs");
+import { appConfig } from "../config/index.js";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const uploadDir = __dirname.replace(/(\\|\/)app.*/, "") + appConfig.uploadDir;
 const pathRegx = new RegExp(`.*(\\\\|\/)assets(\\\\|\/)uploads`); // detects everything up until /assets/uplods
 
-exports.deleteFiles = (paths) => {
+export const deleteFiles = (paths) => {
   if (Array.isArray(paths)) {
     paths.forEach((path) => {
       fs.unlink(uploadDir + path.replace(pathRegx, ""), (err) => {

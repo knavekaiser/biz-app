@@ -1,10 +1,12 @@
-const { authJwt, file, validate } = require("../middlewares");
-const { appConfig } = require("../config");
-const controller = require("../controllers/admin.controller");
-const { users: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, file, validate } from "../middlewares/index.js";
+import { appConfig } from "../config/index.js";
+import * as controller from "../controllers/admin.controller.js";
+import { users as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   //-------------------------- Auth
   router.post("/signup", validate(schema.signup), controller.signup);
   router.post("/signin", validate(schema.login), controller.login);
@@ -39,4 +41,4 @@ module.exports = function (app) {
   );
 
   app.use("/api/admin", router);
-};
+}

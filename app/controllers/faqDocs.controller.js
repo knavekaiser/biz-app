@@ -1,11 +1,10 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { fileHelper, aiHelper } = require("../helpers");
+import { appConfig } from "../config/index.js";
+import { fileHelper, aiHelper } from "../helpers/index.js";
+import { FaqDoc, SubPlan } from "../models/index.js";
 
-const { FaqDoc, SubPlan } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.findAll = async (req, res) => {
+export const findAll = async (req, res) => {
   try {
     let { page, pageSize } = req.query;
     page = +page;
@@ -48,7 +47,7 @@ exports.findAll = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const subPlan = await SubPlan.findOne({
       _id: (req.business || req.authUser).subscription?.plan,
@@ -97,7 +96,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.generateUserContext = async (req, res) => {
+export const generateUserContext = async (req, res) => {
   try {
     const faqDoc = await FaqDoc.findOne({ _id: req.params._id });
 
@@ -145,7 +144,7 @@ const compareArrWithObj = (arr1, arr2) =>
     )
   );
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const doc = await FaqDoc.findOne({ _id: req.params._id });
     const subPlan = await SubPlan.findOne({
@@ -215,7 +214,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteDoc = async (req, res) => {
   try {
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);

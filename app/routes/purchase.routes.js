@@ -1,9 +1,11 @@
-const { authJwt, validate } = require("../middlewares");
-const controller = require("../controllers/purchase.controller");
-const { purchase: schema } = require("../validationSchemas");
-var router = require("express").Router();
+import { authJwt, validate } from "../middlewares/index.js";
+import * as controller from "../controllers/purchase.controller.js";
+import { purchase as schema } from "../validationSchemas/index.js";
 
-module.exports = function (app) {
+import express from "express";
+const router = express.Router();
+
+export default function (app) {
   router.post(
     "/",
     authJwt.verifyToken,
@@ -28,8 +30,8 @@ module.exports = function (app) {
     "/:id?",
     authJwt.verifyToken,
     authJwt.checkPermission("purchase_delete"),
-    controller.delete
+    controller.deletePruchase
   );
 
   app.use("/api/purchases", router);
-};
+}

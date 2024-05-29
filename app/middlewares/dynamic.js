@@ -1,9 +1,9 @@
-const { dbHelper } = require("../helpers");
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
+import { dbHelper } from "../helpers/index.js";
+import { appConfig } from "../config/index.js";
 
-exports.getModel = async (req, res, next) => {
+const { responseFn, responseStr } = appConfig;
+
+export const getModel = async (req, res, next) => {
   try {
     if (req.authToken.userType === "staff") {
       const dynamicTables = req.permissions
@@ -49,7 +49,7 @@ exports.getModel = async (req, res, next) => {
   }
 };
 
-exports.getAdminModel = async (req, res, next) => {
+export const getAdminModel = async (req, res, next) => {
   try {
     const { Model, collection } = await dbHelper.getAdminModel(
       req.params.table

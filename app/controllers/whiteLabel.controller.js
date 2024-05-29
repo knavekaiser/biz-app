@@ -1,15 +1,12 @@
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const {
-  dbHelper,
-  appHelper: { normalizeDomain, ...appHelper },
-} = require("../helpers");
-const { ObjectId } = require("mongodb");
+import { appConfig } from "../config/index.js";
+import { dbHelper, appHelper } from "../helpers/index.js";
+import { ObjectId } from "mongodb";
+import { User, Config, Collection, DynamicPage } from "../models/index.js";
 
-const { User, Config, Collection, DynamicPage } = require("../models");
+const { responseFn, responseStr } = appConfig;
+const { normalizeDomain } = appHelper;
 
-exports.getSiteConfig = async (req, res) => {
+export const getSiteConfig = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -80,7 +77,7 @@ exports.getSiteConfig = async (req, res) => {
   }
 };
 
-exports.sitemapUrls = async (req, res) => {
+export const sitemapUrls = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -111,7 +108,7 @@ exports.sitemapUrls = async (req, res) => {
   }
 };
 
-exports.getDynamicPages = async (req, res) => {
+export const getDynamicPages = async (req, res) => {
   try {
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -142,7 +139,7 @@ exports.getDynamicPages = async (req, res) => {
   }
 };
 
-exports.browse = async (req, res) => {
+export const browse = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_" + "Product"
@@ -278,7 +275,7 @@ exports.browse = async (req, res) => {
   }
 };
 
-exports.getRelatedProducts = async (req, res) => {
+export const getRelatedProducts = async (req, res) => {
   try {
     const config = await Config.findOne({ user: req.business._id });
 
@@ -402,7 +399,7 @@ exports.getRelatedProducts = async (req, res) => {
   }
 };
 
-exports.getElements = async (req, res) => {
+export const getElements = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_" + req.params.table
@@ -422,7 +419,7 @@ exports.getElements = async (req, res) => {
   }
 };
 
-exports.getLandingPageShelves = async (req, res) => {
+export const getLandingPageShelves = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_Product"
@@ -516,7 +513,7 @@ exports.getLandingPageShelves = async (req, res) => {
   }
 };
 
-exports.validateAccount = async (req, res) => {
+export const validateAccount = async (req, res) => {
   try {
     if (!(req.body.phone || req.body.email)) {
       return responseFn.error(
@@ -543,7 +540,7 @@ exports.validateAccount = async (req, res) => {
   }
 };
 
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   if (!(req.body.phone || req.body.email)) {
     return responseFn.error(
       res,
@@ -578,7 +575,7 @@ exports.signup = async (req, res) => {
     .catch((err) => responseFn.error(res, {}, err.message));
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     if (!(req.body.phone || req.body.email)) {
       return responseFn.error(
@@ -607,7 +604,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     res.clearCookie("access_token");
     return responseFn.success(res, {});
@@ -616,7 +613,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-exports.profile = async (req, res) => {
+export const profile = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_Customer"
@@ -630,7 +627,7 @@ exports.profile = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_Customer"
@@ -659,7 +656,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.addReview = async (req, res) => {
+export const addReview = async (req, res) => {
   try {
     const { Model: Product } = await dbHelper.getModel(
       req.business._id + "_Product"
@@ -689,7 +686,7 @@ exports.addReview = async (req, res) => {
   }
 };
 
-exports.getReviews = async (req, res) => {
+export const getReviews = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Review");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -729,7 +726,7 @@ exports.getReviews = async (req, res) => {
   }
 };
 
-exports.getCart = async (req, res) => {
+export const getCart = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -742,7 +739,7 @@ exports.getCart = async (req, res) => {
   }
 };
 
-exports.updateCart = async (req, res) => {
+export const updateCart = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -777,7 +774,7 @@ exports.updateCart = async (req, res) => {
   }
 };
 
-exports.orders = async (req, res) => {
+export const orders = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -793,7 +790,7 @@ exports.orders = async (req, res) => {
   }
 };
 
-exports.placeOrder = async (req, res) => {
+export const placeOrder = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -826,7 +823,7 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-exports.categories = async (req, res) => {
+export const categories = async (req, res) => {
   try {
     const { Model: Category } = await dbHelper.getModel(
       req.business._id + "_Category"

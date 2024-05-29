@@ -1,12 +1,11 @@
-const { default: fetch } = require("node-fetch");
-const {
-  appConfig: { responseFn, responseStr },
-} = require("../config");
-const { fileHelper, dbHelper } = require("../helpers");
+import fetch from "node-fetch";
+import { appConfig } from "../config/index.js";
+import { fileHelper, dbHelper } from "../helpers/index.js";
+import { Store, StoreConfig, AdSchema, User } from "../models/index.js";
 
-const { Store, StoreConfig, AdSchema, User } = require("../models");
+const { responseFn, responseStr } = appConfig;
 
-exports.homeStores = async (req, res) => {
+export const homeStores = async (req, res) => {
   try {
     const {
       category,
@@ -157,7 +156,7 @@ exports.homeStores = async (req, res) => {
   }
 };
 
-exports.homeStoreCategories = async (req, res) => {
+export const homeStoreCategories = async (req, res) => {
   try {
     const { Model } = await dbHelper.getAdminModel("Store Category");
     if (!Model) {
@@ -193,7 +192,7 @@ exports.homeStoreCategories = async (req, res) => {
   }
 };
 
-exports.homeConfig = async (req, res) => {
+export const homeConfig = async (req, res) => {
   try {
     StoreConfig.findOne()
       .then(async (data) => {
@@ -205,7 +204,7 @@ exports.homeConfig = async (req, res) => {
   }
 };
 
-exports.find = async (req, res) => {
+export const find = async (req, res) => {
   try {
     const conditions = {};
     if ("name" in req.query) {
@@ -232,7 +231,7 @@ exports.find = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     new Store({ ...req.body, createdBy: req.authUser._id })
       .save()
@@ -251,7 +250,7 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     Store.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then(async (data) => {
@@ -270,7 +269,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.delete = async (req, res) => {
+export const deleteStore = async (req, res) => {
   try {
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
@@ -296,7 +295,7 @@ exports.delete = async (req, res) => {
   }
 };
 
-exports.storeConfig = async (req, res) => {
+export const storeConfig = async (req, res) => {
   try {
     StoreConfig.findOne().then((data) => responseFn.success(res, { data }));
   } catch (error) {
@@ -304,7 +303,7 @@ exports.storeConfig = async (req, res) => {
   }
 };
 
-exports.updateStoreConfig = async (req, res) => {
+export const updateStoreConfig = async (req, res) => {
   try {
     StoreConfig.findOneAndUpdate({}, req.body, {
       new: true,
@@ -315,7 +314,7 @@ exports.updateStoreConfig = async (req, res) => {
   }
 };
 
-exports.locations = async (req, res) => {
+export const locations = async (req, res) => {
   try {
     let userAddress = null;
     if (req.query.latlng) {
