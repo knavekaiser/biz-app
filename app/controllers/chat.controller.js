@@ -169,79 +169,90 @@ export const initChat = async (req, res) => {
 
     const prompt = `You are an AI assistant embedded within an e-commerce site. Your role is to help the user find what they looking for. Within this application, each Product possesses essential fields including ${Object.keys(
       product?._doc || {}
-    ).join(", ")}. Here's what you are tasked to do:
+    )
+      .filter(
+        (key) =>
+          ![
+            "__v",
+            "createdAt",
+            "updatedAt",
+            "images",
+            "whatsappNumber",
+          ].includes(key)
+      )
+      .join(
+        ", "
+      )}. Your task is to help users find what they are looking for based on their queries. For instance, a user may ask:
+a. I'm looking for something for my wife to wear. she likes red and sparkly things.
+b. Can you suggest something for me to wear to a meeting this evening?
 
-Offer pertinent information about the product upon request. For instance:
-a. Show me 5 green shirts.
-b. Show me few shirts under $500.
+You will generate bullet points from the user's query, which will then be vectorized. These vectors will be queried and ranked against a Pinecone vector database containing similar bullet points, with each vector corresponding to one product. If you notice that the user is looking for a product for which we have a dedicated category or subcategory, you will include that category or subcategory, as well as any other relevant parameters, in a metadata filter.
 
-When unable to provide an answer due to insufficient data, respond with JSON to run automated actions so you can get the data required to perform the analysis effectively.
+Product query responses must adhere to this specific structure, with nothing preceding or following:
+{
+  "response_type": "action",
+  "action": "Query Products",
+  "parameters": {
+    "attributes": "Type: Clothing\nColor: Red\nMaterial: Velvet",
+    "summary": "Red soft dress.",
+    "metadata": {
+      "category": "Clothing",
+      "subcategory": "Women's"
+    } 
+  }
+}
+All the values in "attributes," "summary," and "metadata" are just examples. Include up to 20 attributes. Keep the summary under 20 words.
 
 Here's an example of a Product:-
-${JSON.stringify(product._doc, null, 2)}
+${JSON.stringify(
+  Object.entries(product._doc)
+    .filter(
+      (key) =>
+        !["__v", "createdAt", "updatedAt", "images", "whatsappNumber"].includes(
+          key
+        )
+    )
+    .reduce((p, [k, v]) => {
+      p[k] = v;
+      return p;
+    }, {}),
+  null,
+  2
+)}
 
 Please note that the following example serves solely to illustrate the document structure. Avoid utilizing any of these specific values for queries or any other purposes.
 
-Possible product categories are:
-${await CategoryModel.find().then((data) =>
+Possible product categories and subcategories are:
+${await CategoryModel.aggregate([
+  {
+    $lookup: {
+      from: `${req.business._id}_Subcategory`,
+      localField: "name",
+      foreignField: "category",
+      as: "subcategories",
+    },
+  },
+]).then((data) =>
   data
     .map(
       (cat, i) =>
-        `${i + 1}. ${JSON.stringify({ _id: cat._id, name: cat.name })}`
+        `${i + 1}. ${JSON.stringify({ _id: cat._id, name: cat.name })}
+  Subcateries:
+${cat.subcategories
+  .map(
+    (subcat) => "\t" + JSON.stringify({ _id: subcat._id, name: subcat.name })
+  )
+  .join("\n")}`
     )
     .join("\n")
 )}
-
-Possible product subcategories are:
-${await SubcategoryModel.find().then((data) =>
-  data
-    .map(
-      (subcat, i) =>
-        `${i + 1}. ${JSON.stringify({
-          _id: subcat._id,
-          category: subcat.category,
-          name: subcat.name,
-        })}`
-    )
-    .join("\n")
-)}
-
-
-Please respond exclusively in JSON to execute predefined actions when data retrieval from the database is necessary for context or response. For instance, if asked "show me some shirts within $500", respond with valid JSON, similar to the following example:
-{ 
-  "response_type": "action",
-  "action": "Get Products",
-  "pipeline": [
-    {
-      "$match": {
-        "$expr": {
-          "$and": [
-            {
-              "$lte": [ "$price", 500 ]
-            }
-          ]
-        }
-      }
-    }
-  ]
-}.
-
-Please follow these rules when crafting action responses to ensure that your response is perfectly stringifiable and parsable:
-1. Refrain from utilizing inline functions such as ISODate(), Date(), or ObjectId(). Instead, opt for suitable operators like $dateFromString or $toObjectId.
-2. If you need to perform a mathematical equation in the query, such as for date comparisons, please use MongoDB operators like $add, $subtract, $multiply, etc. Do not pass mathematical equations directly like this '{ "$subtract": [ "$$NOW", 60 * 60 * 24 * 7 * 1000 * 3 ] }', as '60 * 60 * 24 * 7 * 1000 * 3' are not valid JSON, just write 1814400000 instead.
-3. Abstain from employing $lookup, as all 'foreign fields' will already be populated.
-4. Do not use following operators in the pipeline: $nin.
-5. Whenever querying any name, make sure the query is case-insensitive.
-6. The whole response must be valid JSON. Do not include any sort of explanation in the response. Keep it mind, the response will automatically be parsed and ran as queries.
-7. Never mix explanation and JSON in the same response.
-8. Never include python, javascript or any programming language code and or instruction in the response.
 
 
 Here are the available actions:
 1. "Get Products" - This is to be used to retrieve products for auditional context when answering a query.
-2. "List Products" - This is to be used when showing users a list of products.
+2. "Query Products" - This is to be used when showing users a list of products.
 
-Once you retrieve products with "List Products", your response must in the following format:
+Once you retrieve products with "Query Products", your response must in the following format:
 {
   "response_type": "product_list",
   "products": [
@@ -315,7 +326,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
             },
           ],
           100,
-          { company: req.company || req.authUser, module }
+          { company: req.company || req.authUser }
         )
         .then((resp) => resp?.message?.content || null);
 
@@ -585,7 +596,7 @@ export const sendMessage = async (req, res) => {
             content: msg.content,
           })),
           max_tokens,
-          { company: req.company || req.authUser, module }
+          { company: req.company || req.authUser }
         );
         const { message: newMsg, usage } = resp;
         newMsg._id = mongoose.Types.ObjectId();

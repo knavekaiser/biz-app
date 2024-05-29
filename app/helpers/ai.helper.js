@@ -7,11 +7,12 @@ import mammoth from "mammoth";
 import xlsx from "xlsx";
 import fs from "fs";
 import { CharacterTextSplitter } from "langchain/text_splitter";
-import { Pinecone } from "@pinecone-database/pinecone";
+// import { Pinecone } from "@pinecone-database/pinecone";
 import { ObjectId } from "mongodb";
-import * as dbHelper from "./db.helper.js";
 
+import * as dbHelper from "./db.helper.js";
 import * as fileHelper from "./file.helper.js";
+import * as pc from "./pinecone.helper.js";
 
 import OpenAI from "openai";
 import { FaqDoc } from "../models/index.js";
@@ -29,10 +30,6 @@ const splitter = new CharacterTextSplitter({
   chunkSize: 1536,
   chunkOverlap: 200,
 });
-
-const pcIndexName = process.env.PINECONE_INDEX_NAME; // "infinai-chat-context";
-const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-let pcIndex = null;
 
 export const countToken = (messages) => {
   const encoded = encode(messages);
@@ -242,7 +239,7 @@ const getAction = async (actionName) => {
     );
     return Model.aggregate([
       ...pipeline,
-      ...(actionName === "List Products"
+      ...(["List Products", "Query Products"].includes(actionName)
         ? dbHelper.getDynamicPipeline({
             fields: collection.fields,
             business_id: business._id,
@@ -329,18 +326,42 @@ export const generateResponse = async (messages, metadata = {}) => {
             }
             console.log("parsed", resp);
             if (resp.response_type === "action") {
-              const action = await getAction(resp.action);
-              if (action) {
-                if (resp.pipeline?.length) {
-                  resp.pipeline = resp.pipeline.filter(
-                    (item) => Object.keys(item).length > 0
-                  );
+              if (resp.action === "Query Products") {
+                console.log(resp.parameters);
+                const embedding = await openai.embeddings
+                  .create({
+                    model: "text-embedding-3-large",
+                    input: `${resp.parameters.attributes}
+Summary: ${resp.parameters.summary}`,
+                    encoding_format: "float",
+                  })
+                  .then((data) => data.data[0].embedding);
+                const vectors = await pc.query({
+                  topK: 5,
+                  vector: embedding,
+                  ...(Object.keys(resp.parameters.metadata).length > 0 && {
+                    filter: resp.parameters.metadata,
+                  }),
+                  includeMetadata: false,
+                  includeValues: false,
+                });
+                if (!vectors?.length) {
+                  resolve({
+                    action: resp.action,
+                    data: [],
+                    message,
+                    usage: completion.usage,
+                  });
                 }
-                console.log("generated pipeline -> ", resp.pipeline);
-                const data = await action(
-                  metadata.business,
-                  resp.pipeline
-                ).catch((err) => {
+                const action = await getAction(resp.action);
+                console.log(vectors);
+                const data = await action(metadata.business, [
+                  {
+                    $match: {
+                      _id: { $in: vectors.map((v) => new ObjectId(v.id)) },
+                    },
+                  },
+                ]).catch((err) => {
                   console.log(`Error occured on action: ${err.message}`);
                   return [];
                 });
@@ -351,6 +372,30 @@ export const generateResponse = async (messages, metadata = {}) => {
                   message,
                   usage: completion.usage,
                 });
+              } else {
+                const action = await getAction(resp.action);
+                if (action) {
+                  if (resp.pipeline?.length) {
+                    resp.pipeline = resp.pipeline.filter(
+                      (item) => Object.keys(item).length > 0
+                    );
+                  }
+                  console.log("generated pipeline -----> ", resp.pipeline);
+                  const data = await action(
+                    metadata.business,
+                    resp.pipeline
+                  ).catch((err) => {
+                    console.log(`Error occured on action: ${err.message}`);
+                    return [];
+                  });
+                  console.log("data ----------->", data?.length);
+                  resolve({
+                    action: resp.action,
+                    data,
+                    message,
+                    usage: completion.usage,
+                  });
+                }
               }
             } else if (resp.response_type === "text") {
               resolve({
@@ -407,7 +452,7 @@ question: ${message}`,
 };
 
 export const removeVectors = async (ids) => {
-  await pcIndex.delete1({ ids });
+  await pc.deleteVectors({ ids });
 };
 
 export const pushToPinecone = async ({
@@ -417,7 +462,7 @@ export const pushToPinecone = async ({
   urls = [],
 }) => {
   if (oldVectorIds?.length) {
-    await pcIndex.delete1({ ids: oldVectorIds });
+    await pc.deleteVectors({ ids: oldVectorIds });
   }
   const vectorIds = [];
   for (let i = 0; i < files.length + urls.length; i++) {
@@ -449,7 +494,7 @@ export const pushToPinecone = async ({
       });
 
       if (batch.length === batchsize || i === chunks.length - 1) {
-        await pcIndex.upsert({ upsertRequest: { vectors: batch } });
+        await pc.upsert({ vectors: batch });
         batch = [];
         vectorIds.push(...newIds);
         newIds = [];
@@ -466,16 +511,14 @@ export const getPartialContext = async ({ userId, topicId, msg }) => {
       input: msg,
     })
     .then((res) => res.data.data[0].embedding);
-  const queryResponse = await pcIndex.query({
-    queryRequest: {
-      topK: 2,
-      vector: queryEmbeddings,
-      includeMetadata: true,
-      // includeValues: false,
-      filter: {
-        userId,
-        topicId,
-      },
+  const queryResponse = await pc.query({
+    topK: 2,
+    vector: queryEmbeddings,
+    includeMetadata: true,
+    // includeValues: false,
+    filter: {
+      userId,
+      topicId,
     },
   });
   const context = queryResponse.matches
@@ -495,4 +538,111 @@ export const getPartialContext = async ({ userId, topicId, msg }) => {
       content: msg,
     },
   ];
+};
+
+export const addProductVector = async ({ product }) => {
+  try {
+    if (!product.title?.trim() || !product.description?.trim()) return;
+    const existingVector = await pc
+      .fetch([product._id.toString()])
+      .catch((err) => console.log("fetch error", err));
+
+    const messages = [
+      {
+        role: "user",
+        name: "System",
+        content: `You are an AI assistant here to help with summarizing product titles and descriptions into bullet points attributes. Also, include a 100 word summary of the whole description. Don't use markdonw, use plain text.
+      
+      Response structure should be like this:
+      Title: <Product Title>
+      Attributes:
+      Type: Memory Foam Orthopedic Insoles
+      Lightweight: Yes, does not add extra weight
+      Color Options: Gray, Blue
+(list as many attributes as possible up to 20)
+Description: <Description Summary>`,
+      },
+      {
+        role: "user",
+        name: "Guest",
+        content: `${Object.entries(product.toJSON())
+          .filter(
+            ([key]) =>
+              ![
+                "_id",
+                "__v",
+                "createdAt",
+                "updatedAt",
+                "images",
+                "whatsappNumber",
+              ].includes(key)
+          )
+          .map(([key, value]) => `${key}: ${value}`)
+          .join("\n")}`,
+      },
+    ];
+    const { message, usage } = await generateResponse(messages);
+    const embedding = await openai.embeddings
+      .create({
+        model: "text-embedding-3-large",
+        input: message.content,
+        encoding_format: "float",
+      })
+      .then((data) => data.data[0].embedding);
+
+    const metadata = Object.entries(product.toJSON())
+      .filter(
+        ([key]) =>
+          ![
+            "_id",
+            "__v",
+            "createdAt",
+            "updatedAt",
+            "images",
+            "whatsappNumber",
+            "description",
+          ].includes(key)
+      )
+      .reduce((p, [k, v]) => {
+        p[k] = v;
+        return p;
+      }, {});
+
+    if (existingVector.length) {
+      await pc
+        .update({
+          id: product._id.toString(),
+          values: embedding,
+          setMetadata: metadata,
+        })
+        .then((data) => {
+          console.log("vector updated", data);
+        });
+    } else {
+      await pc
+        .upsert({
+          vectors: [
+            {
+              id: product._id.toString(),
+              values: embedding,
+              metadata,
+            },
+          ],
+        })
+        .then((data) => {
+          console.log("vector saved", data);
+        });
+    }
+    // console.log("bullet points", embedding);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const deleteProductVector = async ({ ids }) => {
+  try {
+    await pc.deleteVectors({ ids });
+  } catch (err) {
+    console.log(err);
+  }
 };

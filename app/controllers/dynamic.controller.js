@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { dbHelper } from "../helpers/index.js";
+import { aiHelper, dbHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
@@ -163,7 +163,10 @@ export const create = async (req, res) => {
             table: req.params.table,
           })
         );
-        return responseFn.success(res, { data: newItem[0] });
+        responseFn.success(res, { data: newItem[0] });
+        if (collection.name === "Product") {
+          await aiHelper.addProductVector({ product: data });
+        }
       })
       .catch((err) => {
         if (err.code === 11000) {
@@ -280,7 +283,13 @@ export const update = async (req, res) => {
             { subcategory: data.name }
           );
         }
-        return responseFn.success(res, { data }, responseStr.record_updated);
+        responseFn.success(res, { data }, responseStr.record_updated);
+        if (
+          collection.name === "Product"
+          // && (record.name !== data.name || record.description !== data.description)
+        ) {
+          await aiHelper.addProductVector({ product: data });
+        }
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -298,7 +307,14 @@ export const deleteColl = async (req, res) => {
     Model.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
     })
-      .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
+      .then((num) => {
+        responseFn.success(res, {}, responseStr.record_deleted);
+        if (collection.name === "Product") {
+          aiHelper.deleteProductVector({
+            ids: req.body.ids || [req.params.id],
+          });
+        }
+      })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
