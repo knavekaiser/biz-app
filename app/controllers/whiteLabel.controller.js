@@ -142,6 +142,7 @@ export const getDynamicPages = async (req, res) => {
 
 export const browse = async (req, res) => {
   try {
+    console.log("this");
     const { Model, collection } = await dbHelper.getModel(
       req.business._id + "_" + "Product"
     );
@@ -149,7 +150,7 @@ export const browse = async (req, res) => {
 
     const query = {};
     if (req.params._id) {
-      if (mongoosee.isValidObjectId(req.params._id)) {
+      if (mongoose.isValidObjectId(req.params._id)) {
         query._id = ObjectId(req.params._id);
       }
     }
