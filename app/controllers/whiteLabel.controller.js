@@ -2,6 +2,7 @@ import { appConfig } from "../config/index.js";
 import { dbHelper, appHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
 import { User, Config, Collection, DynamicPage } from "../models/index.js";
+import mongoose from "mongoose";
 
 const { responseFn, responseStr } = appConfig;
 const { normalizeDomain } = appHelper;
@@ -148,7 +149,7 @@ export const browse = async (req, res) => {
 
     const query = {};
     if (req.params._id) {
-      if (mongoose.isValidObjectId(req.params._id)) {
+      if (mongoosee.isValidObjectId(req.params._id)) {
         query._id = ObjectId(req.params._id);
       }
     }

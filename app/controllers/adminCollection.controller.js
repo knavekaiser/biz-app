@@ -1,6 +1,7 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
 import { User, AdminCollection } from "../models/index.js";
+import mongoose from "mongoose";
 
 const { responseFn, responseStr } = appConfig;
 

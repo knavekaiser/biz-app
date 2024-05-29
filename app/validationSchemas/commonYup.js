@@ -1,5 +1,6 @@
 import yup from "yup";
 import { phone } from "phone";
+import mongoose from "mongoose";
 
 export const location = {
   latitude: yup

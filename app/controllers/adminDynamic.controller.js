@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
 import { dbHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";

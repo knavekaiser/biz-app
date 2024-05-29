@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
 import { User, Collection } from "../models/index.js";
 import { ObjectId } from "mongodb";
