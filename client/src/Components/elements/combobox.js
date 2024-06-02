@@ -372,7 +372,7 @@ export const Select = ({
           Prompt({ type: "error", message: err.message });
         });
     },
-    [control._formValues[name], selectedOptions]
+    [url, control._formValues[name], selectedOptions]
   );
 
   useEffect(() => {
@@ -381,7 +381,7 @@ export const Select = ({
     } else if (url) {
       getOptions(inputValue);
     }
-  }, [inputValue]);
+  }, [inputValue, url]);
 
   useEffect(() => {
     const _value =

@@ -173,6 +173,8 @@ const DynamicForm = ({
     ),
   });
 
+  const category = watch("category");
+
   const fields = (
     collection?.name === "Product" ? _fields : collectionFields
   ).map((field, i) => {
@@ -307,6 +309,16 @@ const DynamicForm = ({
           {...(field.optionType === "collection" && {
             url: `${endpoints.dynamic}/${field.collection}`,
           })}
+          {...(collection.name === "Product" &&
+            field.optionType === "collection" && {
+              url: `${endpoints.dynamic}/${field.collection}?${
+                category ? `category=${category}` : ""
+              }`,
+            })}
+          {...(collection.name === "Product" &&
+            field.name === "subcategory" && {
+              disabled: !category,
+            })}
           getQuery={(inputValue, selected) => ({
             ...(inputValue && { [field.optionLabel]: inputValue }),
             ...(selected && { [field.optionValue]: selected }),
@@ -434,6 +446,11 @@ const DynamicForm = ({
       );
     }
   }, [subcategory]);
+  useEffect(() => {
+    if (!category) {
+      setValue("subcategory", "");
+    }
+  }, [category]);
 
   return (
     <form

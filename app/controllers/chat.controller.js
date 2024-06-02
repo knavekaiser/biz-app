@@ -159,9 +159,6 @@ export const initChat = async (req, res) => {
     const { Model: CategoryModel } = await dbHelper.getModel(
       req.business._id + "_" + "Category"
     );
-    const { Model: SubcategoryModel } = await dbHelper.getModel(
-      req.business._id + "_" + "Subcategory"
-    );
     if (!ProductModel)
       return responseFn.error(res, {}, responseStr.record_not_found);
 
