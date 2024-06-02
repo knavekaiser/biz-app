@@ -274,6 +274,13 @@ export const update = async (req, res) => {
             { category: record.name },
             { category: data.name }
           );
+          const { Model: Subcategory } = await dbHelper.getModel(
+            req.business._id + "_" + "Subcategory"
+          );
+          await Subcategory.updateMany(
+            { category: record.name },
+            { category: data.name }
+          );
         }
         if (collection.name === "Subcategory" && record.name !== data.name) {
           const { Model: Product } = await dbHelper.getModel(

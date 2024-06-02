@@ -252,7 +252,7 @@ Here are the available actions:
 1. "Get Products" - This is to be used to retrieve products for auditional context when answering a query.
 2. "Query Products" - This is to be used when showing users a list of products.
 
-Once you retrieve products with "Query Products", your response must in the following format:
+Once you retrieve products with "Query Products", the response must adhere to this specific structure, with nothing preceding or following:
 {
   "response_type": "product_list",
   "products": [
