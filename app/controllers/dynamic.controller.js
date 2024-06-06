@@ -12,6 +12,9 @@ export const findAll = async (req, res) => {
     if (req.params.id) {
       conditions._id = req.params.id;
     }
+    if (collection.name === "Order" && !req.query.status) {
+      conditions.status = { $ne: "cart" };
+    }
 
     const { page, pageSize, ...query } = req.query;
     Object.entries(query).forEach(([key, value]) => {
@@ -57,7 +60,7 @@ export const findAll = async (req, res) => {
       .forEach((field) => {
         pipeline.push({
           $lookup: {
-            from: `${req.authUser._id}_${field.collection}`,
+            from: `${collection.user}_${field.collection}`,
             let: { fieldName: `$${field.name}` },
             pipeline: [
               {

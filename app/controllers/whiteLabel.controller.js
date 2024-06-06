@@ -800,6 +800,7 @@ export const placeOrder = async (req, res) => {
       {
         customer: req.authUser._id,
         status: "cart",
+        $expr: { $gt: [{ $size: "$products" }, 0] },
       },
       {
         status:

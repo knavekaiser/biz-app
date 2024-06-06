@@ -571,6 +571,14 @@ export const DynamicTable = ({
                 </td>
               );
             }
+            if (field.fieldType === "combobox" && field.options?.length) {
+              return (
+                <td key={j}>
+                  {field.options?.find((opt) => opt.value == item[field.name])
+                    ?.label || item[field.name]}
+                </td>
+              );
+            }
             if (field.inputType === "date") {
               return (
                 <td key={j} className="ellipsis l-1">
