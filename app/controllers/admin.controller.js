@@ -1,6 +1,6 @@
 import { appConfig } from "../config/index.js";
 import { appHelper } from "../helpers/index.js";
-import { Admin, Otp } from "../models/index.js";
+import { Admin, Otp, User } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 const { genId } = appHelper;
@@ -137,6 +137,34 @@ export const logout = async (req, res) => {
   try {
     res.clearCookie("access_token");
     return responseFn.success(res, {});
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const switchAccount = async (req, res) => {
+  try {
+    if (!req.body.phone && !req.body.email) {
+      return responseFn.error(res, {}, "Email or Phone is required", 400);
+    }
+    const condition = {};
+    if (req.body.phone) {
+      condition.phone = req.body.phone;
+    } else if (req.body.email) {
+      condition.email = req.body.email;
+    }
+    const user = await User.findOne(condition);
+
+    if (user) {
+      return appHelper.signIn(res, user._doc, "business");
+    } else {
+      return responseFn.error(
+        res,
+        { type: "cred_error" },
+        responseStr.invalid_cred,
+        400
+      );
+    }
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

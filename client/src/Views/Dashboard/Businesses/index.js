@@ -13,7 +13,7 @@ const Businesses = () => {
       </div>
       <Table
         className={s.sales}
-        columns={[{ label: "Business" }, { label: "Role" }]}
+        columns={[{ label: "Business" }, { label: "Phone" }, { label: "Role" }]}
       >
         {user.businesses.map((item) => (
           <tr
@@ -30,6 +30,7 @@ const Businesses = () => {
             key={item._id}
           >
             <td>{item.business.name}</td>
+            <td>{item.business.phone}</td>
             <td>
               {item.roles.map((role) => (
                 <p key={role._id}>{role.name}</p>

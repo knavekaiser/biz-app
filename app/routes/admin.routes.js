@@ -20,6 +20,7 @@ export default function (app) {
     validate(schema.resetPassword),
     controller.resetPassword
   );
+  router.post("/switch-account", authJwt.verifyToken, controller.switchAccount);
   router.post("/logout", controller.logout);
 
   //-------------------------- Profile

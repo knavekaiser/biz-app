@@ -9,14 +9,16 @@ import BusinessForm from "./BusinessForm";
 import { useNavigate } from "react-router-dom";
 import { paths } from "config";
 import { FaPencilAlt } from "react-icons/fa";
+import { FiLogIn } from "react-icons/fi";
 
 const Businesses = () => {
-  const { setBusiness, setConfig } = useContext(SiteContext);
+  const { setBusiness, setConfig, setUser } = useContext(SiteContext);
   const [businesses, setBusinesses] = useState([]);
   const [addBusiness, setAddBusiness] = useState(false);
   const navigate = useNavigate();
 
   const { get: getBusinesses } = useFetch(endpoints.findBusinesses);
+  const { post: logoutAndLogin } = useFetch(endpoints.adminSwitchAccount);
 
   useEffect(() => {
     getBusinesses()
@@ -42,6 +44,7 @@ const Businesses = () => {
         className={s.sales}
         columns={[
           { label: "Business" },
+          { label: "Phone" },
           { label: "Plan" },
           { label: "Actions" },
         ]}
@@ -57,11 +60,42 @@ const Businesses = () => {
             style={{ cursor: "pointer" }}
             key={item._id}
           >
+            <td>{item.phone}</td>
             <td>{item.name}</td>
             <td>{item.subscription?.plan?.name}</td>
             <TableActions
               className={s.actions}
               actions={[
+                {
+                  icon: <FiLogIn style={{ fontSize: "1.15rem" }} />,
+                  label: "Login as this Business",
+                  callBack: () => {
+                    Prompt({
+                      type: "confirmation",
+                      message:
+                        "Are you sure you want to logout and login as this business?",
+                      callback: () => {
+                        logoutAndLogin({ phone: item.phone })
+                          .then(({ data }) => {
+                            if (data.success) {
+                              setUser(data.data);
+                              localStorage.setItem(
+                                "userType",
+                                data.data.userType
+                              );
+                              window.location =
+                                paths.dashboard.replace("*", "") + paths.quotes;
+                              return;
+                            }
+                            Prompt({ type: "error", message: data.message });
+                          })
+                          .catch((err) =>
+                            Prompt({ type: "error", message: err.message })
+                          );
+                      },
+                    });
+                  },
+                },
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",

@@ -72,6 +72,17 @@ const Header = ({ home, filters, setFilters }) => {
         style={style}
       >
         <ul>
+          {user && (
+            <>
+              <li style={{ pointerEvents: "none" }}>
+                {user.name}
+                <p>
+                  <small>{user.phone}</small>
+                </p>
+              </li>
+              <hr />
+            </>
+          )}
           {user?.userType === "admin" && business && !home && (
             <li
               onClick={() => {

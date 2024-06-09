@@ -10,6 +10,7 @@ const endpoints = {
   adminForgotPassword: `${baseApiUrl}/api/admin/forgot-password`,
   adminResetPassword: `${baseApiUrl}/api/admin/reset-password`,
   adminLogout: `${baseApiUrl}/api/admin/logout`,
+  adminSwitchAccount: `${baseApiUrl}/api/admin/switch-account`,
 
   businessSignUp: `${baseApiUrl}/api/business/signup`,
   businessSignIn: `${baseApiUrl}/api/business/signin`,
