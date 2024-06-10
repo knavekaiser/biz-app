@@ -803,8 +803,8 @@ export const placeOrder = async (req, res) => {
         $expr: { $gt: [{ $size: "$products" }, 0] },
       },
       {
-        status:
-          req.body.payment_method === "cod" ? "orderedCod" : "orderedPaid",
+        status: "received",
+        payment_method: req.body.payment_method,
       },
       { new: true }
     )
@@ -820,6 +820,56 @@ export const placeOrder = async (req, res) => {
         );
       })
       .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const placeOrderOther = async (req, res) => {
+  try {
+    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    const serverCart = await Model.findOne({
+      customer: req.authUser._id,
+      status: "cart",
+      $expr: { $gt: [{ $size: "$products" }, 0] },
+    });
+
+    if (serverCart) {
+      await Model.findOneAndUpdate(
+        {
+          customer: req.authUser._id,
+          status: "cart",
+          $expr: { $gt: [{ $size: "$products" }, 0] },
+        },
+        {
+          status: "recieved",
+          payment_method: req.body.payment_method,
+        }
+      );
+    } else if (req.body.cart) {
+      await new Model(req.body.cart).save();
+    } else {
+      return responseFn.error(
+        res,
+        {},
+        "Something went wrong. Please add items to cart again."
+      );
+    }
+
+    const newOrder = await Model.findAll({
+      customer: req.authUser._id,
+      status: "received",
+    })
+      .sort({ createdAt: -1 })
+      .limit(1);
+
+    return responseFn.success(
+      res,
+      { data: newOrder },
+      responseStr.order_placed
+    );
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
