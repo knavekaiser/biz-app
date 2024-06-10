@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
 import { dbHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
+import { Store } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -236,12 +237,28 @@ export const update = async (req, res) => {
       req.body.variants = JSON.parse(req.body.variants);
     }
 
+    const record = await Model.findOne({ _id: req.params.id });
     Model.findOneAndUpdate(
       { _id: req.params.id },
       { ...req.body },
       { new: true }
     )
-      .then((data) => {
+      .then(async (data) => {
+        if (collection.name === "Store Category" && record.name !== data.name) {
+          await Store.updateMany(
+            { category: record.name },
+            { category: data.name }
+          );
+        }
+        if (
+          collection.name === "Store Subcategory" &&
+          record.name !== data.name
+        ) {
+          await Store.updateMany(
+            { subcategory: record.name },
+            { subcategory: data.name }
+          );
+        }
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
       .catch((err) => responseFn.error(res, {}, err.message));

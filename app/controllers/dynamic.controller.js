@@ -271,14 +271,14 @@ export const update = async (req, res) => {
       .then(async (data) => {
         if (collection.name === "Category" && record.name !== data.name) {
           const { Model: Product } = await dbHelper.getModel(
-            req.business._id + "_" + "Product"
+            collection.user + "_" + "Product"
           );
           await Product.updateMany(
             { category: record.name },
             { category: data.name }
           );
           const { Model: Subcategory } = await dbHelper.getModel(
-            req.business._id + "_" + "Subcategory"
+            collection.user + "_" + "Subcategory"
           );
           await Subcategory.updateMany(
             { category: record.name },
@@ -287,7 +287,7 @@ export const update = async (req, res) => {
         }
         if (collection.name === "Subcategory" && record.name !== data.name) {
           const { Model: Product } = await dbHelper.getModel(
-            req.business._id + "_" + "Product"
+            collection.user + "_" + "Product"
           );
           await Product.updateMany(
             { subcategory: record.name },

@@ -196,7 +196,7 @@ const Form = ({ edit, onSuccess }) => {
               .filter((item) => item.category?.name === category)
               .map((item) => ({
                 label: item.name,
-                value: item._id,
+                value: item.name,
                 fields: item.fields,
               }))}
             name="subcategory"
