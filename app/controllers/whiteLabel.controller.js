@@ -753,6 +753,10 @@ export const updateCart = async (req, res) => {
       cart = await new Model({
         products: req.body.products,
         customer: req.authUser._id,
+        price: req.body.products.reduce(
+          (p, c) => p + (c.product.price + (c.variant?.price || 0)) * c.qty,
+          0
+        ),
         status: "cart",
       }).save();
     } else {

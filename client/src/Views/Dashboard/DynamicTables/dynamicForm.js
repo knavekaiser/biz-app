@@ -175,6 +175,110 @@ const DynamicForm = ({
 
   const category = watch("category");
 
+  const addVariant = watch("addVariant");
+  const subcategory = watch("subcategory");
+
+  useEffect(() => {
+    const _edit = { ...edit, addNew: false };
+    if (edit) {
+      collectionFields.forEach((field) => {
+        if (field.inputType === "date") {
+          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD");
+        } else if (field.inputType === "datetime-local") {
+          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
+        } else if (
+          field.dataType === "objectId" &&
+          typeof edit[field.name] === "object"
+        ) {
+          _edit[field.name] = edit[field.name][field.optionValue];
+        } else if (
+          field.dataElementType === "objectId" &&
+          typeof (edit[field.name] || [])[0] === "object"
+        ) {
+          _edit[field.name] = edit[field.name].map(
+            (item) => item[field.optionValue]
+          );
+        } else if (
+          field.name === "variants" &&
+          collection?.name === "Product"
+        ) {
+          _edit.addVariant = !!edit.variants?.length;
+        }
+      });
+    }
+
+    setTimeout(() => reset(_edit), 10);
+  }, [edit]);
+  useEffect(() => {
+    const _prefill = {
+      ..._fields
+        .map((item) => item.name)
+        .reduce((p, c) => {
+          p[c] = "";
+          return p;
+        }, {}),
+      ...prefill,
+      addNew: false,
+    };
+    if (prefill) {
+      collectionFields.forEach((field) => {
+        if (field.inputType === "date") {
+          _prefill[field.name] = moment(_prefill[field.name], "YYYY-MM-DD");
+        } else if (field.inputType === "datetime-local") {
+          _prefill[field.name] = moment(
+            _prefill[field.name],
+            "YYYY-MM-DD hh:mm"
+          );
+        } else if (
+          field.dataType === "objectId" &&
+          typeof prefill[field.name] === "object"
+        ) {
+          _prefill[field.name] = prefill[field.name][field.optionValue];
+        } else if (
+          field.dataElementType === "objectId" &&
+          typeof (prefill[field.name] || [])[0] === "object"
+        ) {
+          _prefill[field.name] = prefill[field.name].map(
+            (item) => item[field.optionValue]
+          );
+        } else if (
+          field.name === "variants" &&
+          collection?.name === "Product"
+        ) {
+          _prefill.addVariant = !!prefill.variants?.length;
+        }
+      });
+      reset(_prefill);
+    }
+  }, [prefill]);
+  useEffect(() => {
+    if (subcategory) {
+      set_fields(
+        collectionFields
+          .filter(
+            (item) => !item.subcategory || item.subcategory === subcategory
+          )
+          .sort((a, b) => {
+            if (["category", "subcategory"].includes(a.name)) {
+              return -1;
+            }
+            return 1;
+          })
+      );
+    } else {
+      set_fields(
+        collectionFields.filter((item) =>
+          ["category", "subcategory"].includes(item.name)
+        )
+      );
+    }
+  }, [subcategory]);
+  useEffect(() => {
+    if (!category) {
+      setValue("subcategory", "");
+    }
+  }, [category]);
+
   const fields = (
     collection?.name === "Product" ? _fields : collectionFields
   ).map((field, i) => {
@@ -348,109 +452,6 @@ const DynamicForm = ({
       );
     }
   });
-
-  const addVariant = watch("addVariant");
-  const subcategory = watch("subcategory");
-
-  useEffect(() => {
-    const _edit = { ...edit, addNew: false };
-    if (edit) {
-      collectionFields.forEach((field) => {
-        if (field.inputType === "date") {
-          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD");
-        } else if (field.inputType === "datetime-local") {
-          _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
-        } else if (
-          field.dataType === "objectId" &&
-          typeof edit[field.name] === "object"
-        ) {
-          _edit[field.name] = edit[field.name][field.optionValue];
-        } else if (
-          field.dataElementType === "objectId" &&
-          typeof (edit[field.name] || [])[0] === "object"
-        ) {
-          _edit[field.name] = edit[field.name].map(
-            (item) => item[field.optionValue]
-          );
-        } else if (
-          field.name === "variants" &&
-          collection?.name === "Product"
-        ) {
-          _edit.addVariant = !!edit.variants?.length;
-        }
-      });
-    }
-    reset(_edit);
-  }, [edit]);
-  useEffect(() => {
-    const _prefill = {
-      ..._fields
-        .map((item) => item.name)
-        .reduce((p, c) => {
-          p[c] = "";
-          return p;
-        }, {}),
-      ...prefill,
-      addNew: false,
-    };
-    if (prefill) {
-      collectionFields.forEach((field) => {
-        if (field.inputType === "date") {
-          _prefill[field.name] = moment(_prefill[field.name], "YYYY-MM-DD");
-        } else if (field.inputType === "datetime-local") {
-          _prefill[field.name] = moment(
-            _prefill[field.name],
-            "YYYY-MM-DD hh:mm"
-          );
-        } else if (
-          field.dataType === "objectId" &&
-          typeof prefill[field.name] === "object"
-        ) {
-          _prefill[field.name] = prefill[field.name][field.optionValue];
-        } else if (
-          field.dataElementType === "objectId" &&
-          typeof (prefill[field.name] || [])[0] === "object"
-        ) {
-          _prefill[field.name] = prefill[field.name].map(
-            (item) => item[field.optionValue]
-          );
-        } else if (
-          field.name === "variants" &&
-          collection?.name === "Product"
-        ) {
-          _prefill.addVariant = !!prefill.variants?.length;
-        }
-      });
-      reset(_prefill);
-    }
-  }, [prefill]);
-  useEffect(() => {
-    if (subcategory) {
-      set_fields(
-        collectionFields
-          .filter(
-            (item) => !item.subcategory || item.subcategory === subcategory
-          )
-          .sort((a, b) => {
-            if (["category", "subcategory"].includes(a.name)) {
-              return -1;
-            }
-            return 1;
-          })
-      );
-    } else {
-      set_fields(
-        collectionFields.filter((item) =>
-          ["category", "subcategory"].includes(item.name)
-        )
-      );
-    }
-  }, [subcategory]);
-  useEffect(() => {
-    if (!category) {
-      setValue("subcategory", "");
-    }
-  }, [category]);
 
   return (
     <form

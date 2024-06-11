@@ -874,7 +874,6 @@ export const defaultSchemas = [
         dataElementType: "object",
         fields: [
           {
-            unique: true,
             name: "product",
             required: false,
             label: "Product",
@@ -1064,14 +1063,9 @@ export const defaultSchemas = [
         optionType: "array",
         options: [
           {
-            label: "Ordered - COD",
-            value: "orderedCod",
+            label: "Received",
+            value: "received",
             _id: "mjdbllxr",
-          },
-          {
-            label: "Complete",
-            value: "complete",
-            _id: "8d5zic0h",
           },
           {
             label: "Shipped",
@@ -1079,9 +1073,9 @@ export const defaultSchemas = [
             _id: "cx54dmpq",
           },
           {
-            label: "Ordered - Paid",
-            value: "orderedPaid",
-            _id: "zuy69ppv",
+            label: "Complete",
+            value: "complete",
+            _id: "8d5zic0h",
           },
           {
             label: "Cart",
@@ -1091,6 +1085,34 @@ export const defaultSchemas = [
         ],
         multiRange: "",
         label: "Status",
+        required: false,
+        decimalPlaces: "",
+        unique: "",
+        multiple: false,
+      },
+      {
+        name: "payment_method",
+        inputType: "",
+        dataType: "string",
+        dataElementType: "",
+        dataElements: "",
+        collection: "",
+        fieldType: "combobox",
+        optionType: "array",
+        options: [
+          {
+            label: "Cash on Delivery",
+            value: "cod",
+            _id: "mjdbllxr",
+          },
+          {
+            label: "Pre-Paid",
+            value: "prePaid",
+            _id: "cx54dmpq",
+          },
+        ],
+        multiRange: "",
+        label: "Payment Method",
         required: false,
         decimalPlaces: "",
         unique: "",

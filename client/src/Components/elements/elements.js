@@ -955,13 +955,29 @@ export const MobileNumberInput = ({
     [country]
   );
   useEffect(() => {
-    const preferredCountry = countries.find((c) => c.iso2 === "IN");
-    cSetValue("country", preferredCountry.code);
-    setCountry({
-      value: preferredCountry.code,
-      label: preferredCountry.name,
-      iso2: preferredCountry.iso2,
-    });
+    const value = control._formValues[name];
+    if (value) {
+      const phoneNumber = phone(value);
+      if (phoneNumber?.countryIso2) {
+        const country = countries.find(
+          (c) => c.iso2 === phoneNumber.countryIso2
+        );
+        cSetValue("country", country.code);
+        setCountry({
+          value: country.code,
+          label: country.name,
+          iso2: country.iso2,
+        });
+      }
+    } else {
+      const preferredCountry = countries.find((c) => c.iso2 === "IN");
+      cSetValue("country", preferredCountry.code);
+      setCountry({
+        value: preferredCountry.code,
+        label: preferredCountry.name,
+        iso2: preferredCountry.iso2,
+      });
+    }
   }, []);
   return (
     <Controller

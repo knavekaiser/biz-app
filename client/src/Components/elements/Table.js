@@ -531,7 +531,7 @@ export const DynamicTable = ({
           style={{
             gridTemplateColumns:
               Array(fields.length).fill("1fr").join(" ") +
-              (actions ? " 3.5rem" : ""),
+              (actions ? " 4rem" : ""),
           }}
         >
           {fields.map((field, j) => {
@@ -667,8 +667,7 @@ export const DynamicTable = ({
       actions={actions}
       theadTrStyle={{
         gridTemplateColumns:
-          Array(fields.length).fill("1fr").join(" ") +
-          (actions ? " 3.5rem" : ""),
+          Array(fields.length).fill("1fr").join(" ") + (actions ? " 4rem" : ""),
       }}
     />
   ) : (
