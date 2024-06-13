@@ -33,6 +33,7 @@ import { SiteContext } from "SiteContext";
 import { endpoints } from "config";
 // import { ProductThumb } from "Views/Home/productThumbnail";
 import { ProductThumb } from "../ui/productThumbnail";
+import { useParams } from "react-router-dom";
 
 export const Table = ({
   admin,
@@ -136,6 +137,9 @@ export const Table = ({
               </td>
             </tr>
           ) : null}
+          <tr className={s.filters}>
+            Showing Records: {(children || dynamicData).length}
+          </tr>
           {productTable && productView === "grid" ? null : (
             <tr style={theadTrStyle}>
               {columns.map((column, i) => (
@@ -175,7 +179,8 @@ export const Table = ({
                     <td>
                       <ProductThumb
                         product={item}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const editAction = actions(item)?.find(
                             (ac) => ac.label === "Edit"
                           )?.callBack;
@@ -458,6 +463,7 @@ export const TableActions = ({ actions, className }) => {
     <td
       className={`${s.tableActions} ${className || ""}`}
       data-testid="tableActions"
+      onClick={(e) => e.stopPropagation()}
     >
       {actions.map((action, i) => (
         <button
@@ -472,7 +478,10 @@ export const TableActions = ({ actions, className }) => {
       ))}
     </td>
   ) : (
-    <td className={`${s.tableActions} ${className || ""}`}>
+    <td
+      className={`${s.tableActions} ${className || ""}`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <button
         className={s.btn}
         ref={btn}
@@ -520,9 +529,20 @@ export const DynamicTable = ({
   filterFields,
   actions,
   className = "",
+  select,
 }) => {
   const { config } = useContext(SiteContext);
+  const [selected, setSelected] = useState(null);
 
+  const { "*": table } = useParams();
+
+  const columns = [
+    ...(table === "Product"
+      ? [{ label: "Created At" }, { label: "Updated At" }]
+      : []),
+    ...(fields.map((field) => ({ label: field.label })) || []),
+    ...(actions ? [{ label: "Action", className: s.actions }] : []),
+  ];
   const renderRow = useCallback(
     (item, i) => {
       return (
@@ -531,9 +551,42 @@ export const DynamicTable = ({
           style={{
             gridTemplateColumns:
               Array(fields.length).fill("1fr").join(" ") +
+              (table === "Product" ? " 1fr 1fr" : "") +
               (actions ? " 4rem" : ""),
+            background:
+              selected?._id === item._id ? "rgba(67, 138, 138, 0.2)" : "",
+          }}
+          onClick={(e) => {
+            if (window.innerWidth > 480) return;
+            if (select) {
+              if (selected?._id === item._id) {
+                setSelected(null);
+              } else {
+                setSelected(item);
+              }
+            }
           }}
         >
+          {table === "Product" && (
+            <>
+              <td>
+                <p>
+                  <Moment format="MMM DD, YY">{item.createdAt}</Moment>
+                </p>
+                <small>
+                  <Moment format="hh:mma">{item.createdAt}</Moment>
+                </small>
+              </td>
+              <td>
+                <p>
+                  <Moment format="MMM DD, YY">{item.updatedAt}</Moment>
+                </p>
+                <small>
+                  <Moment format="hh:mma">{item.updatedAt}</Moment>
+                </small>
+              </td>
+            </>
+          )}
           {fields.map((field, j) => {
             if (field.dataType === "boolean") {
               return (
@@ -592,7 +645,7 @@ export const DynamicTable = ({
               )
             ) {
               return (
-                <td key={j}>
+                <td key={j} onClick={(e) => e.stopPropagation()}>
                   <Images images={item[field.name]} />
                 </td>
               );
@@ -643,11 +696,15 @@ export const DynamicTable = ({
               </td>
             );
           })}
-          <TableActions actions={actions(item)} />
+          {window.innerWidth > 480 || selected?._id === item._id ? (
+            <TableActions actions={actions(item)} />
+          ) : (
+            <td style={{ minWidth: "4rem", border: "none" }} />
+          )}
         </tr>
       );
     },
-    [fields]
+    [fields, selected]
   );
 
   return url ? (
@@ -657,17 +714,16 @@ export const DynamicTable = ({
       url={url}
       pagination={pagination}
       className={`${s.dynamic} ${className}`}
-      columns={[
-        ...(fields.map((field) => ({ label: field.label })) || []),
-        ...(actions ? [{ label: "Action", className: s.actions }] : []),
-      ]}
+      columns={columns}
       filters={filters}
       filterFields={filterFields || fields}
       renderRow={renderRow}
       actions={actions}
       theadTrStyle={{
         gridTemplateColumns:
-          Array(fields.length).fill("1fr").join(" ") + (actions ? " 4rem" : ""),
+          Array(fields.length).fill("1fr").join(" ") +
+          (table === "Product" ? " 1fr 1fr" : "") +
+          (actions ? " 4rem" : ""),
       }}
     />
   ) : (
@@ -675,10 +731,7 @@ export const DynamicTable = ({
       admin={admin}
       loading={loading}
       className={className}
-      columns={[
-        ...(fields.map((field) => ({ label: field.label })) || []),
-        ...(actions ? [{ label: "Action" }] : []),
-      ]}
+      columns={columns}
       theadTrStyle={{
         gridTemplateColumn: Array(fields.length + (actions ? 1 : 0))
           .fill("55px")

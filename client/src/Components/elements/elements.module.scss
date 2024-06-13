@@ -847,39 +847,7 @@
       grid-template-columns: repeat(auto-fit, minmax(150px, 320px));
     }
   }
-  &.actions {
-    tr {
-      padding-right: 0;
-    }
-    th,
-    td {
-      &:last-child {
-        padding: 0 8px;
-        position: sticky;
-        right: 0;
-        background: inherit;
-        border-left: 1px solid rgba(0, 0, 0, 0.1);
-        display: flex;
-        height: 100%;
-        align-items: center;
-      }
-    }
-    td {
-      form {
-        & > :last-child {
-          border-left: 1px solid rgba(0, 0, 0, 0.1);
-          padding: 8px;
-          background: white;
-          position: sticky;
-          right: 0;
-          z-index: 20;
-        }
-        .btns {
-          background: red;
-        }
-      }
-    }
-  }
+
   &:not(.virtual) {
     tbody {
       tr {
@@ -1241,6 +1209,44 @@ $branch-angle: 35deg;
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media only screen and (min-width: 480px) {
+  .table {
+    &.actions {
+      tr {
+        padding-right: 0;
+      }
+      th,
+      td {
+        &:last-child {
+          padding: 0 8px;
+          position: sticky;
+          right: 0;
+          background: inherit;
+          border-left: 1px solid rgba(0, 0, 0, 0.1);
+          display: flex;
+          height: 100%;
+          align-items: center;
+        }
+      }
+      td {
+        form {
+          & > :last-child {
+            border-left: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            background: white;
+            position: sticky;
+            right: 0;
+            z-index: 20;
+          }
+          .btns {
+            background: red;
+          }
+        }
+      }
+    }
   }
 }
 

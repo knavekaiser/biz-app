@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { dbHelper, appHelper } from "../helpers/index.js";
+import { dbHelper, appHelper, razorpayHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
 import { User, Config, Collection, DynamicPage } from "../models/index.js";
 import mongoose from "mongoose";
@@ -733,7 +733,7 @@ export const getCart = async (req, res) => {
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.findOne({ customer: req.authUser._id, status: "cart" })
-      .then((data) => responseFn.success(res, { data: data.products }))
+      .then((data) => responseFn.success(res, { data: data?.products || [] }))
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -749,14 +749,15 @@ export const updateCart = async (req, res) => {
       customer: req.authUser._id,
       status: "cart",
     });
+    const price = req.body.products.reduce(
+      (p, c) => p + (c.product.price + (c.variant?.price || 0)) * c.qty,
+      0
+    );
     if (!cart) {
       cart = await new Model({
         products: req.body.products,
         customer: req.authUser._id,
-        price: req.body.products.reduce(
-          (p, c) => p + (c.product.price + (c.variant?.price || 0)) * c.qty,
-          0
-        ),
+        price,
         status: "cart",
       }).save();
     } else {
@@ -764,10 +765,7 @@ export const updateCart = async (req, res) => {
         { _id: cart._id },
         {
           products: req.body.products,
-          price: req.body.products.reduce(
-            (p, c) => p + (c.product.price + (c.variant?.price || 0)) * c.qty,
-            0
-          ),
+          price,
         },
         { new: true }
       );
@@ -800,80 +798,55 @@ export const placeOrder = async (req, res) => {
     const { Model } = await dbHelper.getModel(req.business._id + "_Order");
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
-    Model.findOneAndUpdate(
-      {
-        customer: req.authUser._id,
-        status: "cart",
-        $expr: { $gt: [{ $size: "$products" }, 0] },
-      },
-      {
-        status: "received",
-        payment_method: req.body.payment_method,
-      },
-      { new: true }
-    )
-      .then((data) => {
-        if (data) {
-          return responseFn.success(res, { data }, responseStr.order_placed);
-        }
-        return responseFn.error(
-          res,
-          {},
-          responseStr.record_not_found.replace("Record", "Cart"),
-          400
-        );
-      })
-      .catch((err) => responseFn.error(res, {}, err.message));
-  } catch (error) {
-    return responseFn.error(res, {}, error.message, 500);
-  }
-};
-
-export const placeOrderOther = async (req, res) => {
-  try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
-    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
-
-    const serverCart = await Model.findOne({
+    const cart = await Model.findOne({
       customer: req.authUser._id,
       status: "cart",
       $expr: { $gt: [{ $size: "$products" }, 0] },
     });
-
-    if (serverCart) {
-      await Model.findOneAndUpdate(
-        {
-          customer: req.authUser._id,
-          status: "cart",
-          $expr: { $gt: [{ $size: "$products" }, 0] },
-        },
-        {
-          status: "recieved",
-          payment_method: req.body.payment_method,
-        }
-      );
-    } else if (req.body.cart) {
-      await new Model(req.body.cart).save();
-    } else {
+    if (!cart) {
       return responseFn.error(
         res,
         {},
-        "Something went wrong. Please add items to cart again."
+        responseStr.record_not_found.replace("Record", "Cart"),
+        400
       );
     }
 
-    const newOrder = await Model.findAll({
-      customer: req.authUser._id,
-      status: "received",
-    })
-      .sort({ createdAt: -1 })
-      .limit(1);
+    const payOrder =
+      req.body.paymentMethod === "prepaid"
+        ? await razorpayHelper
+            .createOrder({
+              business_id: req.business._id,
+              order_id: cart._id,
+              amount: cart.price,
+            })
+            .catch((err) => console.log(err))
+        : null;
+    console.log("payOrder --->", payOrder);
+    if (req.body.paymentMethod === "prepaid" && !payOrder) {
+      return responseFn.error(
+        res,
+        {},
+        responseStr.error_occurred_contact_support
+      );
+    }
 
-    return responseFn.success(
-      res,
-      { data: newOrder },
-      responseStr.order_placed
-    );
+    Model.findOneAndUpdate(
+      { _id: cart._id },
+      {
+        status: "received",
+        paymentMethod: req.body.paymentMethod,
+        paymentStatus: "pending",
+        ...(payOrder && { payOrderId: payOrder.id }),
+      },
+      { new: true }
+    )
+      .then(async (data) => {
+        if (data) {
+          return responseFn.success(res, { data }, responseStr.order_placed);
+        }
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

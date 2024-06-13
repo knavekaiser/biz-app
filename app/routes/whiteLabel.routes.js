@@ -92,6 +92,7 @@ export default function (app) {
   router.post(
     "/place-order",
     whitelabel.getBusiness,
+    validate(schema.placeOrder),
     authJwt.verifyToken,
     controller.placeOrder
   );

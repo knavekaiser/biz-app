@@ -52,6 +52,12 @@ export const updateCart = yup.object({
   }),
 });
 
+export const placeOrder = yup.object({
+  body: yup.object({
+    paymentMethod: yup.string().oneOf(["cod", "prepaid"]).required(),
+  }),
+});
+
 // ------------------------------------------------ Not applied
 
 export const forgotPassword = yup.object({

@@ -121,6 +121,7 @@ const DynamicTablePage = () => {
         url={`${endpoints.dynamic}/${table}`}
         filters={filters}
         pagination
+        select
         actions={(item) => [
           ...(checkPermission(`${business?.business._id}_${table}_update`)
             ? [
