@@ -7,7 +7,7 @@ const { responseFn, responseStr } = appConfig;
 export const razorpayWebhook = async (req, res) => {
   try {
     console.log("razorpay webhook");
-    // console.log(JSON.stringify(req.body, null, 2));
+    console.log(JSON.stringify(req.body, null, 2));
 
     const signatureHash = req.headers["x-razorpay-signature"];
     if (!signatureHash) {
@@ -29,6 +29,16 @@ export const razorpayWebhook = async (req, res) => {
       );
       await Model.findOneAndUpdate(
         { _id: order.entity.notes.order_id, paymentStatus: "pending" },
+        { paymentStatus: "paid" }
+      );
+    }
+    if (req.body.event === "payment.authorized") {
+      const { payment } = req.body?.payload;
+      const { Model } = await dbHelper.getModel(
+        payment.entity.notes.business_id + "_Order"
+      );
+      await Model.findOneAndUpdate(
+        { _id: payment.entity.notes.order_id, paymentStatus: "pending" },
         { paymentStatus: "paid" }
       );
     }
