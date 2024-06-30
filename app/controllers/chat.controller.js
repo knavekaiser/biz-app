@@ -107,7 +107,6 @@ Once you retrieve products, the response MUST adhere to this specific structure,
     {
       "_id": "663ed07469a2e5a55bb64d80",
       "title": "T-shirt",
-      "description": "a red t-shirt",
       "images": [
         "/assets/uploads/dynamicTables/Product_3469991d8fe77e627bfc3e99/663ed07469a2e5a55bb64d7e.webp"
       ],

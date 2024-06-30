@@ -112,8 +112,12 @@ Summary: ${vectorSearch.query?.summary}`,
         business_id,
         table: "Product",
       }),
+      { $project: { description: 0 } },
     ];
-    const products = await Model.aggregate(wholePipeline);
+    const products = await Model.aggregate(wholePipeline).catch((err) => {
+      console.log("llm action err: getProduct - ", err.message);
+      return [];
+    });
     // console.log("products found", products.length);
     return JSON.stringify(products);
   },
