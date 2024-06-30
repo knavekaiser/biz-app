@@ -100,7 +100,7 @@ ${cat.subcategories
     .join("\n")
 )}
 
-Once you retrieve products with "Query Products", the response must adhere to this specific structure, with nothing preceding or following:
+Once you retrieve products, the response MUST adhere to this specific structure, with nothing preceding or following:
 {
   "response_type": "product_list",
   "products": [
@@ -212,7 +212,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
                           content,
                         },
                       ],
-                    })
+                    }) + "___msgEnd___"
                   );
                   firstBitSent = true;
                 } else {
@@ -221,7 +221,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
                       _id: newMessageId,
                       // role: "assistant",
                       content,
-                    })
+                    }) + "___msgEnd___"
                   );
                 }
               }
@@ -229,6 +229,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
           }
         }
       });
+    res.end();
 
     await Chat.findOneAndUpdate(
       { _id: chat._id },
@@ -242,7 +243,6 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
         },
       }
     );
-    res.end();
   } catch (error) {
     console.log(error);
     return responseFn.error(res, {}, error.message, 500);
@@ -398,7 +398,7 @@ export const sendMessage = async (req, res) => {
                       createdAt: new Date(),
                       updatedAt: new Date(),
                       content,
-                    })
+                    }) + "___msgEnd___"
                   );
                   firstBitSent = true;
                 } else {
@@ -406,7 +406,7 @@ export const sendMessage = async (req, res) => {
                     JSON.stringify({
                       _id: newMessageId,
                       content,
-                    })
+                    }) + "___msgEnd___"
                   );
                 }
               }

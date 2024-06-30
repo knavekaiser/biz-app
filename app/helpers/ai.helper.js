@@ -105,6 +105,7 @@ Summary: ${vectorSearch.query?.summary}`,
     );
     const wholePipeline = [
       ...(_ids ? [_ids] : []),
+      { $limit: 5 },
       ...pipeline,
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
@@ -113,6 +114,7 @@ Summary: ${vectorSearch.query?.summary}`,
       }),
     ];
     const products = await Model.aggregate(wholePipeline);
+    // console.log("products found", products.length);
     return JSON.stringify(products);
   },
 });
