@@ -146,15 +146,17 @@ If the system returns an empty array, tell the user that no products were found.
       },
     ];
 
-    const title = await aiHelper
-      .generateResponse({
-        message: `You are an AI integrated in an e-commerce app. You are to generate a 3 word chat title based on the following question: ${req.body.message}.
+    const title = null;
+    //     await aiHelper
+    //       .generateResponse({
+    //         message: `You are an AI integrated in an e-commerce app. You are to generate a 3 word chat title based on the following question: ${req.body.message}.
 
-Respond with the title only, no extra text whatsoever. don't put quotes around the title.`,
-        metadata: { company: req.company || req.authUser },
-        stream: false,
-      })
-      .then((resp) => resp?.output || null);
+    // Respond with the title only, no extra text whatsoever. don't put quotes around the title.`,
+    //         metadata: { company: req.company || req.authUser },
+    //         stream: false,
+    //       })
+    //       .then((resp) => resp?.output || null)
+    //       .catch((err) => null);
 
     let chat = await new Chat({
       title,
@@ -169,10 +171,6 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
 
     let fullResponse = "";
 
-    res.writeHead(200, {
-      "Content-Type": "text/plain",
-      "Transfer-Encoding": "chunked",
-    });
     const newMessageId = new ObjectId();
     let firstBitSent = false;
     await aiHelper
@@ -184,67 +182,90 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
       })
       .then(async (stream) => {
         if (stream) {
-          for await (const event of stream) {
-            const eventType = event.event;
-            if (eventType === "on_llm_stream") {
-              const content = event.data?.chunk?.message?.content;
-              if (content !== undefined && content !== "") {
-                fullResponse += content;
-                if (!firstBitSent) {
-                  res.write(
-                    JSON.stringify({
-                      _id: chat._id,
-                      user: chat.user,
-                      title: chat.title,
-                      ...(chat.parentTopic
-                        ? { topic: chat.parentTopic, subTopic: chat.topic }
-                        : { topic: chat.topic }),
-                      messages: [
-                        ...chat.messages.filter(
-                          (item) => !(item.role === "system" || item.action)
-                        ),
-                        {
-                          _id: newMessageId,
-                          role: "assistant",
-                          createdAt: new Date(),
-                          updatedAt: new Date(),
-                          content,
-                        },
-                      ],
-                    }) + "___msgEnd___"
-                  );
-                  firstBitSent = true;
-                } else {
-                  res.write(
-                    JSON.stringify({
-                      _id: newMessageId,
-                      // role: "assistant",
-                      content,
-                    }) + "___msgEnd___"
-                  );
+          res.writeHead(200, {
+            "Content-Type": "text/plain",
+            "Transfer-Encoding": "chunked",
+          });
+          try {
+            for await (const event of stream) {
+              const eventType = event.event;
+              if (eventType === "on_llm_stream") {
+                const content = event.data?.chunk?.message?.content;
+                if (content !== undefined && content !== "") {
+                  fullResponse += content;
+                  if (!firstBitSent) {
+                    res.write(
+                      JSON.stringify({
+                        _id: chat._id,
+                        user: chat.user,
+                        title: chat.title,
+                        ...(chat.parentTopic
+                          ? { topic: chat.parentTopic, subTopic: chat.topic }
+                          : { topic: chat.topic }),
+                        messages: [
+                          ...chat.messages.filter(
+                            (item) => !(item.role === "system" || item.action)
+                          ),
+                          {
+                            _id: newMessageId,
+                            role: "assistant",
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+                            content,
+                          },
+                        ],
+                      }) + "___msgEnd___"
+                    );
+                    firstBitSent = true;
+                  } else {
+                    res.write(
+                      JSON.stringify({
+                        _id: newMessageId,
+                        // role: "assistant",
+                        content,
+                      }) + "___msgEnd___"
+                    );
+                  }
                 }
               }
             }
+            await Chat.findOneAndUpdate(
+              { _id: chat._id },
+              {
+                $push: {
+                  messages: {
+                    _id: newMessageId,
+                    role: "assistant",
+                    content: fullResponse,
+                  },
+                },
+              }
+            );
+          } catch (err) {
+            console.error("Error during streaming:", err.message);
+            res.write(
+              JSON.stringify({
+                error: "An error occurred during streaming.",
+                details: err.message,
+              }) + "___msgEnd___"
+            );
+          } finally {
+            res.end();
           }
         }
+      })
+      .catch((err) => {
+        console.log("generate response err:", err.message);
+        return responseFn.error(
+          res,
+          {},
+          responseStr.error_occurred_contact_support,
+          500
+        );
       });
-    res.end();
-
-    await Chat.findOneAndUpdate(
-      { _id: chat._id },
-      {
-        $push: {
-          messages: {
-            _id: newMessageId,
-            role: "assistant",
-            content: fullResponse,
-          },
-        },
-      }
-    );
   } catch (error) {
     console.log(error);
-    return responseFn.error(res, {}, error.message, 500);
+    // return responseFn.error(res, {}, error.message, 500);
   }
 };
 
@@ -355,10 +376,6 @@ export const sendMessage = async (req, res) => {
       );
     }
 
-    res.writeHead(200, {
-      "Content-Type": "text/plain",
-      "Transfer-Encoding": "chunked",
-    });
     const newMessageId = new ObjectId();
     let fullResponse = "";
     let firstBitSent = false;
@@ -383,6 +400,10 @@ export const sendMessage = async (req, res) => {
       })
       .then(async (stream) => {
         if (stream) {
+          res.writeHead(200, {
+            "Content-Type": "text/plain",
+            "Transfer-Encoding": "chunked",
+          });
           for await (const event of stream) {
             const eventType = event.event;
             if (eventType === "on_llm_stream") {
@@ -411,19 +432,22 @@ export const sendMessage = async (req, res) => {
               }
             }
           }
+          const newMessages = [
+            { role: "user", content: req.body.content },
+            { _id: newMessageId, role: "assistant", content: fullResponse },
+          ];
+          chat = await Chat.findOneAndUpdate(
+            { _id: req.params._id },
+            { $push: { messages: { $each: newMessages } } },
+            { new: true }
+          );
+          res.end();
         }
+      })
+      .catch((err) => {
+        console.log("generate response err:", err.message);
+        return responseFn.error(res, {}, 500);
       });
-    res.end();
-
-    const newMessages = [
-      { role: "user", content: req.body.content },
-      { _id: newMessageId, role: "assistant", content: fullResponse },
-    ];
-    chat = await Chat.findOneAndUpdate(
-      { _id: req.params._id },
-      { $push: { messages: { $each: newMessages } } },
-      { new: true }
-    );
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

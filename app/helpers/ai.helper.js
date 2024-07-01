@@ -36,7 +36,7 @@ const pcIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 const getProducts = new DynamicStructuredTool({
   name: "get_products",
   description: `This function will return a list of products from the mongodb database.
-You will generate attributes from the user's query, which will then be vectorized. These vectors will be queried and ranked against a Pinecone vector database containing similar bullet points, with each vector corresponding to one product. If you notice that the user is looking for a product for which we have a dedicated category or subcategory, you will include that category or subcategory, as well as any other relevant parameters, in a metadata filter.`,
+For vectorSearch: You will generate attributes from the user's query, which will then be vectorized. These vectors will be queried and ranked against a Pinecone vector database containing similar bullet points, with each vector corresponding to one product. If you notice that the user is looking for a product for which we have a dedicated category or subcategory, you will include that category or subcategory, as well as any other relevant parameters, in a metadata filter.`,
   schema: z.object({
     business_id: z.string().describe("ID of the business."),
     vectorSearch: z
@@ -54,23 +54,55 @@ You will generate attributes from the user's query, which will then be vectorize
             ),
         }),
         metadata: z
-          .object({})
-          .describe("Extra filters like category, subcategory etc."),
+          .object({
+            price: z
+              .object({
+                $eq: z.number().optional(),
+                $ne: z.number().optional(),
+                $gt: z.number().optional(),
+                $gte: z.number().optional(),
+                $lt: z.number().optional(),
+                $lte: z.number().optional(),
+                $in: z.number().optional(),
+                $nin: z.number().optional(),
+                $exists: z.number().optional(),
+              })
+              .optional()
+              .describe(
+                "Include this field if the user is asking for products within specific range. the key can be one of $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $exists. and the value should be the number user provided."
+              ),
+            category: z.string().optional(),
+            subcategory: z.string().optional(),
+          })
+          .optional()
+          .describe(
+            "Include this field if the user asks for products from a specific category, subcategory, etc."
+          ),
       })
       .optional()
       .describe(
         "This is an optional field that will filter products by matching vectors."
       ),
-    pipeline: z
-      .array(
-        z
-          .object({})
-          .optional()
-          .describe(
-            "Mongodb aggregation pipeline stage. Never pass an empty object."
-          )
-      )
-      .describe("Mongodb aggregation pipeline. This can be empty."),
+    // pipeline: z
+    //   .array(
+    //     z
+    //       .object({
+    //         // properties: {
+    //         //   $match: z
+    //         //     .object({})
+    //         //     .describe(
+    //         //       "$match is an mongobdb aggregation pipeline stage used to filter records. Here, it will be used to filter products based on user's query."
+    //         //     ),
+    //         // },
+    //       })
+    //       .describe(
+    //         "Mongodb aggregation pipeline stage. Never return an empty object. Never return an empty object as the."
+    //       )
+    //   )
+    //   .optional()
+    //   .describe(
+    //     "Mongodb aggregation pipeline. Pass appropiate filters based on user's query. Never return an empty object inside this array."
+    //   ),
   }),
   func: async ({ vectorSearch, business_id, pipeline = [] }) => {
     let _ids = null;
@@ -105,8 +137,8 @@ Summary: ${vectorSearch.query?.summary}`,
     );
     const wholePipeline = [
       ...(_ids ? [_ids] : []),
-      { $limit: 5 },
-      ...pipeline,
+      // ...pipeline,
+      // { $limit: 5 },
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
         business_id,
@@ -114,6 +146,7 @@ Summary: ${vectorSearch.query?.summary}`,
       }),
       { $project: { description: 0 } },
     ];
+    console.log(pipeline);
     const products = await Model.aggregate(wholePipeline).catch((err) => {
       console.log("llm action err: getProduct - ", err.message);
       return [];
