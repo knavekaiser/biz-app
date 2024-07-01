@@ -138,7 +138,7 @@ Summary: ${vectorSearch.query?.summary}`,
     const wholePipeline = [
       ...(_ids ? [_ids] : []),
       // ...pipeline,
-      // { $limit: 5 },
+      { $limit: 5 },
       ...dbHelper.getDynamicPipeline({
         fields: collection.fields,
         business_id,
