@@ -514,6 +514,34 @@ export const getLandingPageShelves = async (req, res) => {
   }
 };
 
+export const getLandingPageCategories = async (req, res) => {
+  try {
+    const { Model, collection } = await dbHelper.getModel(
+      req.business._id + "_Category"
+    );
+    if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
+
+    Model.aggregate([
+      {
+        $match: {
+          displayOnLandingPage: true,
+          image: { $exists: true },
+        },
+      },
+    ])
+      .then((data) => {
+        responseFn.success(res, { data });
+      })
+      .catch((err) => {
+        console.log(err);
+        responseFn.error(res, {}, err.message);
+      });
+  } catch (error) {
+    console.log(error);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 export const validateAccount = async (req, res) => {
   try {
     if (!(req.body.phone || req.body.email)) {

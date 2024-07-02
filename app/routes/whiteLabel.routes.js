@@ -23,6 +23,11 @@ export default function (app) {
     controller.getLandingPageShelves
   );
   router.get(
+    "/browse/landing-page-categories",
+    whitelabel.getBusiness,
+    controller.getLandingPageCategories
+  );
+  router.get(
     "/browse/related/:_id",
     whitelabel.getBusiness,
     controller.getRelatedProducts

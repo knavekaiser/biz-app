@@ -83,26 +83,6 @@ For vectorSearch: You will generate attributes from the user's query, which will
       .describe(
         "This is an optional field that will filter products by matching vectors."
       ),
-    // pipeline: z
-    //   .array(
-    //     z
-    //       .object({
-    //         // properties: {
-    //         //   $match: z
-    //         //     .object({})
-    //         //     .describe(
-    //         //       "$match is an mongobdb aggregation pipeline stage used to filter records. Here, it will be used to filter products based on user's query."
-    //         //     ),
-    //         // },
-    //       })
-    //       .describe(
-    //         "Mongodb aggregation pipeline stage. Never return an empty object. Never return an empty object as the."
-    //       )
-    //   )
-    //   .optional()
-    //   .describe(
-    //     "Mongodb aggregation pipeline. Pass appropiate filters based on user's query. Never return an empty object inside this array."
-    //   ),
   }),
   func: async ({ vectorSearch, business_id, pipeline = [] }) => {
     let _ids = null;
@@ -136,7 +116,7 @@ Summary: ${vectorSearch.query?.summary}`,
       business_id + "_" + "Product"
     );
     const wholePipeline = [
-      ...(_ids ? [_ids] : []),
+      // ...(_ids ? [_ids] : []),
       // ...pipeline,
       { $limit: 5 },
       ...dbHelper.getDynamicPipeline({

@@ -137,8 +137,8 @@ export const Table = ({
               </td>
             </tr>
           ) : null}
-          <tr className={s.filters}>
-            Showing Records: {(children || dynamicData).length}
+          <tr className={`${s.filters} ${s.rowCount}`}>
+            <td>Showing Records: {(children || dynamicData).length}</td>
           </tr>
           {productTable && productView === "grid" ? null : (
             <tr style={theadTrStyle}>
