@@ -61,6 +61,8 @@ const SiteConfig = ({ next }) => {
         "",
       siteDescription: config?.siteConfig?.siteDescription || "",
       businessType: config?.businessType || "",
+      headerColor: config?.siteConfig?.theme?.headerColor,
+      footerColor: config?.siteConfig?.theme?.footerColor,
       elements: config?.siteConfig?.productCard?.length
         ? config?.siteConfig?.productCard
         : [],
@@ -179,6 +181,10 @@ const SiteConfig = ({ next }) => {
           businessType: values.businessType,
           siteConfig: {
             ...config?.siteConfig,
+            theme: {
+              headerColor: values.headerColor,
+              footerColor: values.footerColor,
+            },
             siteTitle: values.siteTitle,
             siteDescription: values.siteDescription,
             productCard: values.elements.filter((item) =>
@@ -326,6 +332,28 @@ const SiteConfig = ({ next }) => {
             : productEelementOptions
         }
       />
+
+      <hr />
+
+      <h2>Theme</h2>
+
+      <div className="flex gap-1">
+        <Input
+          label="Header Color"
+          type="Color"
+          className="flex-1"
+          {...register("headerColor")}
+          error={errors.headerColor}
+        />
+
+        <Input
+          label="Footer Color"
+          type="Color"
+          className="flex-1"
+          {...register("footerColor")}
+          error={errors.footerColor}
+        />
+      </div>
 
       <hr />
 

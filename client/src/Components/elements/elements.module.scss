@@ -58,6 +58,9 @@
       }
     }
   }
+  input[type="color"] {
+    padding: 0;
+  }
   textarea {
     resize: vertical;
     min-height: 3rem;

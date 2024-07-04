@@ -43,6 +43,7 @@ export const getSiteConfig = async (req, res) => {
           domain: "$domain",
           chatbot: { $first: "$chatbots" },
           siteConfig: {
+            theme: "$config.siteConfig.theme",
             siteTitle: "$config.siteConfig.siteTitle",
             siteDescription: "$config.siteConfig.siteDescription",
             productCard: "$config.siteConfig.productCard",
