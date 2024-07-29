@@ -45,6 +45,11 @@ const Dashboard = () => {
             className={s.tab}
             tabs={[
               { label: "Businesses", path: paths.businesses },
+              {
+                label: "Micro Apps",
+                url: "https://crm.infinai.in",
+                target: "_blank",
+              },
               { label: "Stores", path: paths.storeListings },
               { label: "Subscription Plans", path: paths.subPlans },
               // { label: "Categories", path: paths.categories },
@@ -131,6 +136,7 @@ const Dashboard = () => {
             className={s.tab}
             tabs={[
               { label: "Businesses", path: paths.businesses },
+              { label: "Micro Apps", path: paths.businesses },
               // { label: "Settings", path: paths.settings },
             ]}
           />

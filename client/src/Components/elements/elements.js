@@ -1125,9 +1125,21 @@ export const Tabs = ({
       data-testid="tabs"
     >
       {tabs
-        .filter((item) => onChange || item.path)
-        .map((tab) =>
-          onChange ? (
+        .filter((item) => onChange || item.path || item.url)
+        .map((tab) => {
+          if (tab.url) {
+            return (
+              <a
+                key={tab.url}
+                // className={tab.value === activeTab ? s.active : ""}
+                href={tab.url}
+                target={tab.target}
+              >
+                {tab.label}
+              </a>
+            );
+          }
+          return onChange ? (
             <a
               key={tab.value}
               className={tab.value === activeTab ? s.active : ""}
@@ -1153,8 +1165,8 @@ export const Tabs = ({
             >
               {tab.label}
             </Link>
-          )
-        )}
+          );
+        })}
       <span className={s.fill} />
     </div>
   );
