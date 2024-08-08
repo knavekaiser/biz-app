@@ -2,9 +2,9 @@
 
 .content {
   background: white;
-  margin: 1rem auto;
   margin-bottom: 0;
   border-radius: 1rem;
+  padding: 1rem;
   // max-width: 60rem;
   width: 100%;
   grid-template-rows: min-content 1fr;
@@ -24,6 +24,11 @@
   .content {
     border-radius: 0;
     margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
     .subPlans {
       margin: 0;
       border: none;

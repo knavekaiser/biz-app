@@ -2,10 +2,9 @@
 
 .content {
   background: white;
-  margin: 1rem auto;
   border-radius: 1rem;
+  padding: 1rem;
   margin-bottom: 0;
-  // max-width: 60rem;
   width: 100%;
   grid-template-rows: min-content 1fr;
   .sales {
@@ -19,6 +18,11 @@
   .content {
     border-radius: 0;
     margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
   }
   .addSaleForm {
     .itemForm {

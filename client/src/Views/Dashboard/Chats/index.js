@@ -8,8 +8,9 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import SubPlanForm from "./ChatForm";
+import { BsList } from "react-icons/bs";
 
-const Chats = () => {
+const Chats = ({ setSidebarOpen }) => {
   const { user, checkPermission } = useContext(SiteContext);
   const [chats, setChats] = useState([]);
   const [chat, setChat] = useState(null);
@@ -29,7 +30,13 @@ const Chats = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
-        <h2>All Chats</h2>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Chats</h2>
+        </div>
       </div>
       <Table
         loading={loading}
@@ -43,7 +50,7 @@ const Chats = () => {
           { label: "Topic" },
           { label: "Total Messages" },
           { label: "Token Usage" },
-          { label: "Action" },
+          { label: "Action", className: "action" },
         ]}
       >
         {chats.map((item) => (

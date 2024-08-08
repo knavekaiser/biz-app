@@ -11,8 +11,10 @@ import CollectionForm from "./form";
 import DynamicTable from "./dynamicTable";
 import SchemaForm from "./schemaTemplateForm";
 import { SiteContext } from "SiteContext";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Collections = () => {
+const Collections = ({ setSidebarOpen }) => {
   const { checkPermission } = useContext(SiteContext);
   const [edit, setEdit] = useState(null);
   const [addCollection, setAddCollection] = useState(false);
@@ -45,7 +47,19 @@ const Collections = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex justify-space-between">
-        <h2>All Tables</h2>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Tables</h2>
+          <button
+            className="btn clear iconOnly"
+            onClick={() => setAddCollection(true)}
+          >
+            <GoPlus />
+          </button>
+        </div>
         <div className="flex gap-1">
           <button
             className="btn m-a mr-0"

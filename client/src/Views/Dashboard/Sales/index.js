@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import SaleForm from "./SaleForm";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Invoices = () => {
+const Invoices = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [sales, setSales] = useState([]);
   const [sale, setSale] = useState(null);
@@ -31,14 +33,26 @@ const Invoices = () => {
       });
   }, []);
   return (
-    <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Invoices</h2>
-        {checkPermission("invoice_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddSale(true)}>
-            Add Invoice
-          </button>
-        )}
+    <div className={`${s.content} grid gap-1 m-a`}>
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Invoices</h2>
+          {checkPermission("invoice_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddSale(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

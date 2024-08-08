@@ -231,7 +231,7 @@ export const Table = ({
               </span>
               <button
                 title="Previous Page"
-                className="btn"
+                className="btn clear"
                 disabled={metadata.page <= 1}
                 onClick={() => {
                   getData({ page: metadata.page - 1 });
@@ -242,7 +242,7 @@ export const Table = ({
               <span className={s.currentPage}>{metadata.page}</span>
               <button
                 title="Next Page"
-                className="btn"
+                className="btn clear"
                 disabled={metadata.page * metadata.pageSize >= metadata.total}
                 onClick={() => {
                   getData({ page: metadata.page + 1 });
@@ -553,8 +553,8 @@ export const DynamicTable = ({
               Array(fields.length).fill("1fr").join(" ") +
               (table === "Product" ? " 1fr 1fr" : "") +
               (actions ? " 4rem" : ""),
-            background:
-              selected?._id === item._id ? "rgba(67, 138, 138, 0.2)" : "",
+            // background:
+            //   selected?._id === item._id ? "rgba(67, 138, 138, 0.2)" : "",
           }}
           onClick={(e) => {
             if (window.innerWidth > 480) return;

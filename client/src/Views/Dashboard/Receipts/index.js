@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import ReceiptForm from "./ReceiptForm";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Receipts = () => {
+const Receipts = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [receipts, setReceipts] = useState([]);
   const [receipt, setReceipt] = useState(null);
@@ -29,13 +31,25 @@ const Receipts = () => {
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Receipts</h2>
-        {checkPermission("reciept_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddReceipt(true)}>
-            Add Receipt
-          </button>
-        )}
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Receipts</h2>
+          {checkPermission("reciept_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddReceipt(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

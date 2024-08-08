@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import PaymentForm from "./PaymentForm";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Payments = () => {
+const Payments = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [payments, setPayments] = useState([]);
   const [payment, setPayment] = useState(null);
@@ -29,13 +31,25 @@ const Payments = () => {
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Payments</h2>
-        {checkPermission("payment_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddPayment(true)}>
-            Add Payment
-          </button>
-        )}
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Payments</h2>
+          {checkPermission("payment_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddPayment(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

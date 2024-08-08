@@ -10,8 +10,10 @@ import { useNavigate } from "react-router-dom";
 import { paths } from "config";
 import { FaPencilAlt } from "react-icons/fa";
 import { FiLogIn } from "react-icons/fi";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Businesses = () => {
+const Businesses = ({ setSidebarOpen }) => {
   const { setBusiness, setConfig, setUser } = useContext(SiteContext);
   const [businesses, setBusinesses] = useState([]);
   const [addBusiness, setAddBusiness] = useState(false);
@@ -33,11 +35,20 @@ const Businesses = () => {
   }, []);
 
   return (
-    <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Businesses</h2>
-        <button className="btn m-a mr-0" onClick={() => setAddBusiness(true)}>
-          Add Business
+    <div className={`${s.content} grid gap-1 m-a`}>
+      <div className={`flex ${s.head} align-center gap-1`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Businesses</h2>
+        </div>
+        <button
+          className="btn clear iconOnly"
+          onClick={() => setAddBusiness(true)}
+        >
+          <GoPlus />
         </button>
       </div>
       <Table

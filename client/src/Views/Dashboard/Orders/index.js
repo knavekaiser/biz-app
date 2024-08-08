@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import OrderForm from "./OrderForm";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Orders = () => {
+const Orders = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [orders, setOrders] = useState([]);
   const [order, setOrder] = useState(null);
@@ -28,14 +30,26 @@ const Orders = () => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
-    <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Orders</h2>
-        {checkPermission("order_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddOrder(true)}>
-            Add Order
-          </button>
-        )}
+    <div className={`${s.content} grid gap-1 m-a`}>
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Orders</h2>
+          {checkPermission("order_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddOrder(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

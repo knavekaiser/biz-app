@@ -8,8 +8,10 @@ import { endpoints } from "config";
 
 import EmpForm from "./EmpForm";
 import { SiteContext } from "SiteContext";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Emps = () => {
+const Emps = ({ setSidebarOpen }) => {
   const { checkPermission } = useContext(SiteContext);
   const [emps, setEmps] = useState([]);
   const [emp, setEmp] = useState(null);
@@ -32,13 +34,25 @@ const Emps = () => {
 
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Staffs</h2>
-        {checkPermission("employee_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddEmp(true)}>
-            Add Staff
-          </button>
-        )}
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Staffs</h2>
+          {checkPermission("employee_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddEmp(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

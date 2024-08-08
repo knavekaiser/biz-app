@@ -23,6 +23,7 @@ import TermsAndConditions from "./terms";
 import SiteConfig from "./siteConfig";
 import Documents from "./documents";
 import DynamicPages from "./dynamicPages";
+import { BsList } from "react-icons/bs";
 
 const businessInformationSchema = yup.object({
   name: yup.string().required(),
@@ -33,11 +34,21 @@ const businessInformationSchema = yup.object({
   // address: yup.string().required(),
 });
 
-const Settings = () => {
+const Settings = ({ setSidebarOpen }) => {
   const location = useLocation();
   const [next, setNext] = useState(location.state?.next);
   return (
     <div className={s.container}>
+      <div className={`flex`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>Settings</h2>
+        </div>
+      </div>
+
       <Tabs
         tabs={[
           {

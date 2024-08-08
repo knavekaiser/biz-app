@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import SubPlanForm from "./SubPlanForm";
+import { GoPlus } from "react-icons/go";
+import { BsList } from "react-icons/bs";
 
-const SubPlans = () => {
+const SubPlans = ({ setSidebarOpen }) => {
   const { checkPermission } = useContext(SiteContext);
   const [subPlans, setSubPlans] = useState([]);
   const [subPlan, setSubPlan] = useState(null);
@@ -30,12 +32,24 @@ const SubPlans = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex">
-        <h2>All Subscription Plans</h2>
-        {checkPermission("sub_plan_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddSubPlan(true)}>
-            Add Plan
-          </button>
-        )}
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Subscription Plans</h2>
+          {checkPermission("sub_plan_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddSubPlan(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

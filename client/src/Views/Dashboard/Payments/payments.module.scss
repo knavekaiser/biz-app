@@ -2,7 +2,7 @@
 
 .content {
   background: white;
-  margin: 1rem auto;
+  padding: 1rem;
   margin-bottom: 0;
   border-radius: 1rem;
   // max-width: 80rem;
@@ -202,6 +202,11 @@
   .content {
     border-radius: 0;
     margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
   }
   .payments,
   .addPaymentForm .purchaseTable {

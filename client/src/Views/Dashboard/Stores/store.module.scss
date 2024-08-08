@@ -2,12 +2,48 @@
 
 .content {
   background: white;
-  margin: 1rem auto;
   margin-bottom: 0;
   border-radius: 1rem;
+  padding: 1rem;
   // max-width: 60rem;
   width: 100%;
   grid-template-rows: min-content min-content 1fr;
+  .head {
+    .filterBtn {
+      margin: auto;
+      margin-right: 1rem;
+      padding: 0;
+      font-size: 1.75rem;
+      position: relative;
+      .indicator {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        height: 0.7rem;
+        width: 0.7rem;
+        border-radius: 50%;
+        background: $primary-color-dark1;
+        transition: transform 0.2s ease-in-out;
+        transform: scale(0);
+        &.active {
+          transform: scale(1);
+        }
+      }
+    }
+  }
+  .filterWrapper {
+    overflow: hidden;
+    transition: height 0.5s ease-in-out;
+    width: 100%;
+    .filters {
+      padding: 1rem;
+      flex-basis: 100%;
+      display: grid;
+      grid-gap: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+  }
   .sales {
     tr {
       grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 5rem 4rem;
@@ -46,6 +82,11 @@
   .content {
     border-radius: 0;
     margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
   }
 }
 

@@ -2,7 +2,6 @@
 
 .content {
   background: white;
-  margin: 1rem auto;
   margin-bottom: 0;
   border-radius: 1rem;
   // max-width: 80rem;
@@ -11,7 +10,7 @@
 }
 .payments {
   tr {
-    grid-template-columns: 3rem 8rem 1fr 6rem 3rem;
+    grid-template-columns: 3rem 8rem 1fr 6rem 3.5rem;
   }
 }
 
@@ -190,13 +189,18 @@
 
 .dynamicFormModal {
   width: 100%;
-  max-width: 37.5rem;
+  // max-width: 37.5rem;
 }
 
 @media only screen and (max-width: 480px) {
   .content {
     border-radius: 0;
     margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
   }
   .payments,
   .addCollectionForm {

@@ -27,16 +27,81 @@ code {
 button {
   display: flex;
   justify-content: center;
+  font-family: "Roboto", "SolaimanLipi", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
   &.btn {
-    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    color: white;
+    border: none;
+    background: none;
+    background: $primary-color-dark1;
+    position: relative;
+    z-index: 1;
+    &.medium {
+      width: 100%;
+      max-width: 10rem;
+    }
+    &:not(.clear)::before,
+    &:not(.clear)::after {
+      // content: "";
+      display: block;
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      top: 50%;
+      left: 50%;
+      border-radius: 2rem;
+      transform-origin: center;
+      transition: transform 0.1s cubic-bezier(0.44, 0.13, 0.54, 1.02);
+    }
+    &:not(.clear)::before {
+      // background: red;
+      transform: translate(-50%, -50%) scale(0.9);
+      border: 2px solid $primary-color-dark1;
+      z-index: -5;
+    }
+    &:not(.clear)::after {
+      background: linear-gradient(
+        45deg,
+        $primary-color-dark1 0%,
+        $primary-color-dark2 100%
+      );
+      transform: translate(-50%, -50%);
+      border-radius: 2rem;
+      z-index: -1;
+    }
+    &:not(.clear) {
+      &:hover,
+      &:active {
+        &::before {
+          transform: translate(-50%, -50%) scale(1.015, 1.1);
+        }
+        &::after {
+          transform: translate(-50%, -50%) scale(0.98, 0.85);
+        }
+      }
+      &:active {
+        background: $primary-color-dark2;
+      }
+    }
+    &:disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
   }
   &.clear {
     cursor: pointer;
-    color: $primary-color-dark3;
+    color: inherit;
     border: none;
     background: none;
+    width: max-content;
     &.iconOnly {
-      font-size: 1.3em;
+      font-size: 1.75em;
       padding: 0.25rem 0.5rem;
       align-items: center;
     }
@@ -44,9 +109,13 @@ button {
       border: 1px solid $grey2;
       border-radius: 4px;
     }
-    &:hover {
-      opacity: 0.5;
+    &:disabled {
+      opacity: 0.6;
+      pointer-events: none;
     }
+  }
+  &.small {
+    padding: 0.25rem;
   }
 }
 

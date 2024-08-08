@@ -8,8 +8,10 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import PurchaseForm from "./PurchaseForm";
+import { BsList } from "react-icons/bs";
+import { GoPlus } from "react-icons/go";
 
-const Purchases = () => {
+const Purchases = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [purchases, setPurchases] = useState([]);
   const [purchase, setPurchase] = useState(null);
@@ -28,14 +30,26 @@ const Purchases = () => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
-    <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex">
-        <h2>All Purchases</h2>
-        {checkPermission("purchase_create") && (
-          <button className="btn m-a mr-0" onClick={() => setAddPurchase(true)}>
-            Add Purchase
-          </button>
-        )}
+    <div className={`${s.content} grid gap-1 m-a`}>
+      <div className={`flex ${s.head}`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Purchases</h2>
+          {checkPermission("purchase_create") && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddPurchase(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
       </div>
       <Table
         loading={loading}

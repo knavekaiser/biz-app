@@ -9,8 +9,10 @@ import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
 import s from "./payments.module.scss";
 
 import DynamicForm from "./dynamicForm";
+import { BsList } from "react-icons/bs";
+import { GoArrowLeft, GoPlus } from "react-icons/go";
 
-const DynamicTablePage = () => {
+const DynamicTablePage = ({ setSidebarOpen }) => {
   const [filters, setFilters] = useState({});
   const { business, checkPermission } = useContext(SiteContext);
   const [templateData, setTemplateData] = useState([]);
@@ -82,10 +84,27 @@ const DynamicTablePage = () => {
   return (
     <div className={`${s.content} grid gap-1 m-a p-1`}>
       <div className="flex justify-space-between">
-        <h2>{table}</h2>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>{table}</h2>
+          {checkPermission(`${business?.business._id}_${table}_create`) && (
+            <button
+              className="btn clear iconOnly"
+              onClick={(e) => {
+                e.stopPropagation();
+                setAddData(true);
+              }}
+            >
+              <GoPlus />
+            </button>
+          )}
+        </div>
         <div className="flex gap-1">
           <button
-            className="btn m-a mr-0"
+            className="btn clear iconOnly"
             onClick={() =>
               navigate(
                 paths.dashboard.replace("*", "") +
@@ -93,13 +112,8 @@ const DynamicTablePage = () => {
               )
             }
           >
-            Back
+            <GoArrowLeft />
           </button>
-          {checkPermission(`${business?.business._id}_${table}_create`) && (
-            <button className="btn m-a mr-0" onClick={() => setAddData(true)}>
-              Add {table}
-            </button>
-          )}
         </div>
       </div>
       <DynamicTable

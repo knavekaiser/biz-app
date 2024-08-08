@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Combobox,
-  Input,
   Moment,
   Select,
   Table,
@@ -16,91 +15,104 @@ import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
 import StoreForm from "./StoreForm";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { BsList } from "react-icons/bs";
+import { GoArrowLeft, GoPlus } from "react-icons/go";
+import { BiFilter } from "react-icons/bi";
 
-const Filters = ({ filters, setFilters }) => {
+const Filters = ({ showFilter, filters, setFilters }) => {
+  const formRef = useRef();
   const { handleSubmit, register, control, reset, watch } = useForm();
 
   return (
-    <form
-      className={s.filters}
-      onSubmit={handleSubmit((values) => {
-        // getValues -> setFilters(values)
-        setFilters(
-          Object.entries(values).reduce((p, [key, value]) => {
-            if (value !== undefined) {
-              p[key] = value;
-            }
-            return p;
-          }, {})
-        );
-      })}
+    <div
+      style={{
+        height: `${showFilter ? formRef.current?.scrollHeight || 0 : 0}px`,
+      }}
+      className={s.filterWrapper}
     >
-      {/* <Input label="Product Name" {...register("productName")} /> */}
-
-      <Select
-        control={control}
-        label="Business"
-        url={endpoints.findBusinesses}
-        getQuery={(inputValue, selected) => ({
-          ...(inputValue && { name: inputValue }),
-          ...(selected && { _id: selected }),
+      <form
+        ref={formRef}
+        className={s.filters}
+        onSubmit={handleSubmit((values) => {
+          // getValues -> setFilters(values)
+          setFilters(
+            Object.entries(values).reduce((p, [key, value]) => {
+              if (value !== undefined) {
+                p[key] = value;
+              }
+              return p;
+            }, {})
+          );
         })}
-        handleData={(item) => ({
-          label: item.name,
-          value: item._id,
-        })}
-        name="business"
-        className={s.itemName}
-      />
+      >
+        {/* <Input label="Product Name" {...register("productName")} /> */}
 
-      <Select
-        control={control}
-        label="Category"
-        url={endpoints.adminDynamic + "/Store Category"}
-        getQuery={(inputValue, selected) => ({
-          ...(inputValue && { name: inputValue }),
-          ...(selected && { _id: selected }),
-        })}
-        handleData={(item) => ({
-          label: item.name,
-          value: item._id,
-        })}
-        name="category"
-        className={s.itemName}
-      />
+        <Select
+          control={control}
+          label="Business"
+          url={endpoints.findBusinesses}
+          getQuery={(inputValue, selected) => ({
+            ...(inputValue && { name: inputValue }),
+            ...(selected && { _id: selected }),
+          })}
+          handleData={(item) => ({
+            label: item.name,
+            value: item._id,
+          })}
+          name="business"
+          className={s.itemName}
+        />
 
-      <Combobox
-        label="Featured"
-        control={control}
-        name="featured"
-        options={[
-          { label: "Yes", value: true },
-          { label: "No", value: false },
-        ]}
-      />
+        <Select
+          control={control}
+          label="Category"
+          url={endpoints.adminDynamic + "/Store Category"}
+          getQuery={(inputValue, selected) => ({
+            ...(inputValue && { name: inputValue }),
+            ...(selected && { _id: selected }),
+          })}
+          handleData={(item) => ({
+            label: item.name,
+            value: item._id,
+          })}
+          name="category"
+          className={s.itemName}
+        />
 
-      <div className="btns">
-        <button className={"btn"}>Search</button>
-        <button
-          className={"btn"}
-          type="button"
-          onClick={() => {
-            reset();
-            setFilters({});
-          }}
-        >
-          Clear
-        </button>
-      </div>
-    </form>
+        <Combobox
+          label="Featured"
+          control={control}
+          name="featured"
+          options={[
+            { label: "Yes", value: true },
+            { label: "No", value: false },
+          ]}
+        />
+
+        <div className="btns">
+          <button className={"btn"}>Search</button>
+          <button
+            className={"btn"}
+            type="button"
+            onClick={() => {
+              reset();
+              setFilters({});
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
-const Stores = () => {
+const Stores = ({ setSidebarOpen }) => {
   const [stores, setStores] = useState([]);
   const [addStore, setAddStore] = useState(false);
   const [store, setStore] = useState(null);
   const [filters, setFilters] = useState({});
+  const [showFilter, setShowFilter] = useState(false);
   const { get: getStores, loading } = useFetch(endpoints.stores);
   const navigate = useNavigate();
 
@@ -121,25 +133,45 @@ const Stores = () => {
   }, [filters]);
 
   return (
-    <div className={`${s.content} grid gap-1 m-a p-1`}>
-      <div className="flex justify-space-between">
-        <h2>All Listings</h2>
+    <div className={`${s.content} grid gap-1 m-a`}>
+      <div className={`${s.head} flex justify-space-between`}>
+        <div
+          className={`flex align-center pointer gap_5  ml-1`}
+          onClick={() => setSidebarOpen((prev) => !prev)}
+        >
+          <BsList style={{ fontSize: "1.75rem" }} />
+          <h2>All Listings</h2>
+          <button
+            className="btn clear iconOnly"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAddStore(true);
+            }}
+          >
+            <GoPlus />
+          </button>
+        </div>
         <div className="flex gap-1">
           <button
-            className="btn"
-            onClick={() =>
-              navigate(paths.dashboard.replace("*", "") + paths.stores)
-            }
+            title="Toggle Filters"
+            className={`btn clear ${s.filterBtn}`}
+            onClick={() => setShowFilter(!showFilter)}
           >
-            Back
-          </button>
-          <button className="btn" onClick={() => setAddStore(true)}>
-            Add Listing
+            <span
+              className={`${s.indicator} ${
+                Object.values(filters).length > 0 ? s.active : ""
+              }`}
+            />
+            <BiFilter />
           </button>
         </div>
       </div>
 
-      <Filters filters={filters} setFilters={setFilters} />
+      <Filters
+        showFilter={showFilter}
+        filters={filters}
+        setFilters={setFilters}
+      />
 
       <Table
         loading={loading}
