@@ -43,7 +43,11 @@ const Form = () => {
           if (data.success) {
             setUser(data.data);
             localStorage.setItem("userType", data.data.userType);
-            navigate(paths.dashboard, { replace: true });
+            const path =
+              data.data.userType === "admin"
+                ? `/dashboard/businesses`
+                : `/dashboard/quotes`;
+            navigate(path, { replace: true });
           } else {
             Prompt({
               type: "error",

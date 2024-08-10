@@ -95,7 +95,12 @@ const Header = ({ home, filters, setFilters }) => {
             </li>
           )}
           {user ? (
-            <Link to={paths.dashboard.replace("*", "")}>
+            <Link
+              to={
+                paths.dashboard.replace("*", "") +
+                (userType === "admin" ? "businesses" : "quotes")
+              }
+            >
               <li>Dashboard</li>
             </Link>
           ) : (
