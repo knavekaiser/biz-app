@@ -46,7 +46,7 @@ export default function (app) {
     controller.updateProfile
   );
 
-  app.use("/api/business", routerExcl);
+  app.use("/api/company", routerExcl);
 
   //-------------------------- Management
 
