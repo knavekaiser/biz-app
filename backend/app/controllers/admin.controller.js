@@ -156,7 +156,7 @@ export const switchAccount = async (req, res) => {
     const user = await Company.findOne(condition);
 
     if (user) {
-      return appHelper.signIn(res, user._doc, "business");
+      return appHelper.signIn(res, user._doc, "company");
     } else {
       return responseFn.error(
         res,

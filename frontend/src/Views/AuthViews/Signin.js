@@ -55,10 +55,10 @@ const Form = () => {
         </div>
         <ul className={s.userTypes}>
           <li
-            className={userType === "business" ? s.active : ""}
+            className={userType === "company" ? s.active : ""}
             onClick={() => {
-              setUserType("business");
-              localStorage.setItem("userType", "business");
+              setUserType("company");
+              localStorage.setItem("userType", "company");
             }}
           >
             Business

@@ -430,7 +430,7 @@ export const getChats = async (req, res) => {
     pageSize = +pageSize;
 
     const conditions = {};
-    if (["business", "staff"].includes(req.authToken.userType)) {
+    if (["company", "staff"].includes(req.authToken.userType)) {
       conditions.business = req.business?._id || req.authUser._id;
     }
     if (req.query.topic) {

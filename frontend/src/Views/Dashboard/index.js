@@ -425,7 +425,7 @@ const Dashboard = () => {
                 },
               ]
             : []),
-          ...(["business", "admin"].includes(userType)
+          ...(["company", "admin"].includes(userType)
             ? [
                 {
                   icon: <BsGear />,
@@ -578,7 +578,7 @@ const Dashboard = () => {
               }
             />
           )}
-          {["business", "admin"].includes(userType) && (
+          {["company", "admin"].includes(userType) && (
             <Route
               path={paths.settings.baseUrl}
               element={
@@ -721,6 +721,11 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
         </ul>
 
         <div className={`${s.actions} flex gap-1 center`}>
+          <a href={`${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/dashboard`}>
+            <button title="Micro Apps" className={`clear ${s.logoutBtn}`}>
+              <RxExit />
+            </button>
+          </a>
           <button
             title="Log out"
             className={`clear ${s.logoutBtn}`}

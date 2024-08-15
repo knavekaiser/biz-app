@@ -47,7 +47,7 @@ export const signup = async (req, res) => {
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
 
-        return appHelper.signIn(res, user._doc, "business");
+        return appHelper.signIn(res, user._doc, "company");
       })
       .catch((err) => {
         return responseFn.error(res, {}, err.message);
@@ -74,7 +74,7 @@ export const login = async (req, res) => {
       user &&
       appHelper.compareHash(req.body.password.toString(), user.password)
     ) {
-      return appHelper.signIn(res, user._doc, "business");
+      return appHelper.signIn(res, user._doc, "company");
     } else {
       return responseFn.error(
         res,
@@ -313,7 +313,7 @@ export const profile = (req, res) => {
         responseFn.success(res, {
           data: {
             ...data._doc,
-            userType: "business",
+            userType: "company",
             chatbot: data.chatbots?.[0] || null,
             chatbots: undefined,
           },

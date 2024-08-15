@@ -93,7 +93,7 @@ export const getChatbotByDomain = async (req, res) => {
 
 export const getChatbots = async (req, res) => {
   try {
-    if (req.authToken.userType === "business") {
+    if (req.authToken.userType === "company") {
       return responseFn.success(res, {
         data: req.authUser.chatbots?.[0] || null,
       });
@@ -121,7 +121,7 @@ export const getChatbots = async (req, res) => {
 export const updateChatbot = async (req, res) => {
   try {
     const condition = { "chatbots._id": ObjectId(req.params._id) };
-    if (req.authToken.userType === "business") {
+    if (req.authToken.userType === "company") {
       condition.user = req.authUser._id;
     }
     if (req.authToken.userType === "staff") {

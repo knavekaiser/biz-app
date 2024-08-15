@@ -22,7 +22,7 @@ export const signIn = async (res, user, userType) => {
     data: {
       ...user,
       userType,
-      ...(userType === "business" && {
+      ...(userType === "company" && {
         chatbot: user.chatbots?.[0] || null,
         chatbots: undefined,
       }),

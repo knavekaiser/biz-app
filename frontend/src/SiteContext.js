@@ -7,13 +7,13 @@ export const Provider = ({ children }) => {
   const [config, setConfig] = useState(null);
   const [business, setBusiness] = useState(null);
   const [userType, setUserType] = useState(
-    localStorage.getItem("userType") || "business"
+    localStorage.getItem("userType") || "company"
   );
 
   const checkPermission = useCallback(
     (permission) => {
       if (!user) return false;
-      if (["business", "admin"].includes(userType)) {
+      if (["company", "admin"].includes(userType)) {
         return true;
       }
       if (!business) {
@@ -52,13 +52,13 @@ export const Provider = ({ children }) => {
         });
     };
     if (!!(business || user) && !config) {
-      if (user?.userType === "business") {
+      if (user?.userType === "company") {
         getConfig();
       } else if (business) {
         getConfig();
       }
     } else if (user) {
-      if (user.userType === "business") {
+      if (user.userType === "company") {
         setConfig(null);
       } else if (!business) {
         setConfig(null);
@@ -68,10 +68,10 @@ export const Provider = ({ children }) => {
 
   useEffect(() => {
     if (
-      !["business", "admin", "staff"].includes(localStorage.getItem("userType"))
+      !["company", "admin", "staff"].includes(localStorage.getItem("userType"))
     ) {
-      localStorage.setItem("userType", "business");
-      setUserType("business");
+      localStorage.setItem("userType", "company");
+      setUserType("company");
     }
   }, []);
 

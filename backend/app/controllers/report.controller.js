@@ -10,7 +10,7 @@ export const getAnalytics = async (req, res) => {
     if (req.business) {
       condition.business = req.business._id;
     }
-    if (req.authToken.userType === "business") {
+    if (req.authToken.userType === "company") {
       condition.business = req.authUser._id;
     }
     const fromDate = minDate

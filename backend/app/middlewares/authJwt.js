@@ -23,6 +23,13 @@ export const verifyToken = async (req, res, next) => {
       new TextEncoder().encode(process.env.JWT_SECRET)
     );
 
+    if (
+      req.originalUrl.includes("/profile") &&
+      !req.originalUrl.includes(`/${decoded.userType}`)
+    ) {
+      return res.redirect(`/api/${decoded.userType}/profile`);
+    }
+
     let Model = Company;
     if (req.business) {
       const { Model: model } = await dbHelper.getModel(
@@ -45,7 +52,7 @@ export const verifyToken = async (req, res, next) => {
       return responseFn.error(res, {}, "Unauthorized!", 401);
     }
 
-    if (decoded.userType === "business" && user?.subscription?.plan) {
+    if (decoded.userType === "company" && user?.subscription?.plan) {
       req.subPlan = await SubPlan.findOne({ _id: user.subscription.plan });
     }
 
@@ -88,7 +95,7 @@ export const checkPermission = (permission) => {
   return (req, res, next) => {
     if (req.authToken?.userType === "admin") {
       return next();
-    } else if (req.authToken?.userType === "business") {
+    } else if (req.authToken?.userType === "company") {
       return next();
     } else if (req.authToken?.userType === "staff") {
       if (req.permissions.includes(permission)) {
