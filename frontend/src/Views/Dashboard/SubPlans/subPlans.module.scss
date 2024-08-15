@@ -1,0 +1,40 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  padding: 1rem;
+  // max-width: 60rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .subPlans {
+    tr {
+      grid-template-columns: 1fr 5rem 5rem 3rem;
+    }
+  }
+}
+
+.addSubPlanFormModal {
+  width: 100%;
+  max-width: 25rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
+    .subPlans {
+      margin: 0;
+      border: none;
+      thead {
+        display: none;
+      }
+    }
+  }
+}

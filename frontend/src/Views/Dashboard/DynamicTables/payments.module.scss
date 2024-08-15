@@ -1,0 +1,259 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin: 1rem auto;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  // max-width: 80rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .collections {
+    .tableName {
+      width: max-content;
+      cursor: pointer;
+      &:hover {
+        color: $primary-color-dark2;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+.payments {
+  tr {
+    grid-template-columns: 3rem 8rem 1fr 6rem 3rem;
+  }
+}
+
+.addCollectionForm {
+  grid-auto-rows: min-content;
+  .purchaseDetail {
+    .box {
+      min-width: 10rem;
+      flex: 1;
+    }
+  }
+  .noContent {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+  }
+  .items {
+    min-height: 10rem;
+    .name {
+      max-width: 15rem;
+    }
+    tr {
+      grid-template-columns: 1fr 3rem 4rem 4rem 5rem 4rem;
+    }
+  }
+  .optionsWrapper {
+    .options {
+      tr {
+        grid-template-columns: 1fr 1fr 5.5rem;
+      }
+    }
+  }
+  .mainForm {
+    grid-template-columns: 1fr 1fr;
+  }
+  p.detail {
+    font-size: 1rem;
+    .label {
+      font-weight: bold;
+      font-size: 0.8em;
+    }
+  }
+  &.viewOnly {
+    .items {
+      tr {
+        grid-template-columns: 1fr 5rem 4rem 4rem 5rem;
+      }
+    }
+  }
+  & > h3 {
+    margin-bottom: -0.5rem;
+  }
+}
+.collectionFormModal {
+  width: 100%;
+}
+
+.dynamicForm {
+  .productVariants {
+    tr {
+      // grid-template-columns: 8rem 5rem 1fr;
+    }
+    .images {
+      // background: red;
+      label {
+        padding: 0;
+        &.selected {
+          border: 3px solid $comp-color;
+        }
+        height: 3rem;
+        width: 3rem;
+      }
+      img {
+        height: 100%;
+        width: 100%;
+      }
+    }
+  }
+  .products {
+    display: grid;
+    grid-gap: 0.5rem;
+    .product {
+      display: flex;
+      grid-gap: 0.5rem;
+      .thumbnail {
+        height: 5rem;
+        width: 5rem;
+        img {
+          height: 100%;
+          width: 100%;
+          object-fit: center;
+        }
+      }
+      .productDetail {
+        flex: 1;
+        h3 {
+          font-weight: 500;
+        }
+        p {
+          font-size: 0.8rem;
+        }
+      }
+      .price {
+        font-weight: 600;
+      }
+    }
+    ~ hr {
+      margin-top: 1rem;
+    }
+  }
+  .subtotal {
+    text-align: right;
+  }
+}
+
+.variantForm {
+  .variantImages {
+    label {
+      padding: 0 !important;
+      &.selected {
+        border: 3px solid $comp-color;
+      }
+      height: 4rem;
+      width: 4rem;
+    }
+    img {
+      height: 100%;
+      width: 100%;
+    }
+  }
+}
+
+.fieldFormWrapper {
+  border: 1px solid $grey2;
+  border-radius: 0.5rem;
+  display: inherit;
+  grid-gap: 1rem;
+  .dataDetail,
+  .inputDetail {
+    display: grid;
+    grid-gap: 1rem;
+    padding: 1rem;
+    form > h3 {
+      margin-bottom: -0.5rem;
+    }
+  }
+  .dataDetail {
+    border-bottom: 1px solid $grey1;
+    border-radius: 0.5rem;
+    background: rgba(255, 0, 171, 0.13);
+    background: rgb(250, 250, 250);
+  }
+  .inputDetail {
+    border-top: 1px solid $grey1;
+    border-radius: 0.5rem;
+    background: rgba(0, 255, 163, 0.16);
+    background: rgb(250, 250, 250);
+  }
+
+  .fieldForm {
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: flex-end;
+    .fields {
+      min-height: 20rem;
+    }
+  }
+}
+.nestedObjectFormModal {
+  .fieldFormWrapper {
+    border-radius: 0;
+  }
+}
+
+.dynamicFormModal {
+  width: 100%;
+  max-width: 37.5rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+  }
+  .payments,
+  .addCollectionForm {
+    .purchaseDetail {
+      .box {
+        min-width: 10rem;
+        flex: 1;
+      }
+    }
+    .noContent {
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      font-style: italic;
+      color: rgba(0, 0, 0, 0.6);
+      border-radius: 0.5rem;
+    }
+    .items {
+      min-height: 10rem;
+      .name {
+        max-width: 15rem;
+      }
+      tr {
+        grid-template-columns: 1fr 3rem 4rem 4rem 5rem 4rem;
+      }
+    }
+
+    .fieldForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+    }
+    .mainForm {
+      grid-template-columns: 1fr 1fr;
+    }
+    p.detail {
+      font-size: 1rem;
+      .label {
+        font-weight: bold;
+        font-size: 0.8em;
+      }
+    }
+    &.viewOnly {
+      .items {
+        tr {
+          grid-template-columns: 1fr 5rem 4rem 4rem 5rem;
+        }
+      }
+    }
+  }
+}

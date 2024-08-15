@@ -1,0 +1,87 @@
+@import "Components/variables";
+
+.container {
+  padding: 1rem 0;
+  min-height: calc((var(--vh) * 100));
+  display: grid;
+  grid-template-rows: 1fr min-content;
+  place-items: center;
+  position: relative;
+  .background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    object-fit: cover;
+  }
+  form {
+    overflow: hidden;
+    .illustration {
+      object-fit: contain;
+      width: calc(100% + 2rem);
+      height: calc(100% + 2rem);
+      margin: -1rem;
+    }
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    max-width: 55rem;
+    background: white;
+    border-radius: 0.5rem;
+    grid-gap: 2rem;
+    h1 {
+      // color: $primary-color;
+    }
+    .userTypes {
+      display: flex;
+      border: 1px solid $grey2;
+      border-radius: 6px;
+      overflow: hidden;
+      li {
+        padding: 0.5rem;
+        flex: 1;
+        text-align: center;
+        cursor: pointer;
+        color: $grey2;
+        &.active {
+          color: black;
+          font-weight: 600;
+          background: $primary-color;
+        }
+      }
+    }
+    .resetPasswordLink {
+      margin-top: -0.75rem;
+      text-align: right;
+      text-decoration: underline;
+    }
+    .resend {
+      margin-top: -0.75rem;
+      button {
+        display: inline-block;
+        font-size: 1em;
+        background: none;
+        border: none;
+        outline: none;
+        font-weight: bold;
+        cursor: pointer;
+        font-style: italic;
+      }
+    }
+  }
+  footer {
+    padding: 1.5rem;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .container {
+    padding: 1rem;
+    padding-bottom: 0;
+    form {
+      grid-template-columns: 1fr;
+      grid-gap: 1rem;
+    }
+  }
+}

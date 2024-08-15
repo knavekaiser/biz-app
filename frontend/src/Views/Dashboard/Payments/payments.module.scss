@@ -1,0 +1,286 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  padding: 1rem;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  // max-width: 80rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+}
+.payments {
+  tr {
+    grid-template-columns: 3rem 8rem 1fr 6rem 3rem;
+  }
+}
+
+.addPaymentForm {
+  .paymentDetail {
+    .box {
+      min-width: 10rem;
+      flex: 1;
+    }
+  }
+  .noContent {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.6);
+    border-radius: 0.5rem;
+  }
+  .items {
+    min-height: 10rem;
+    .name {
+      max-width: 15rem;
+    }
+    tr {
+      // grid-template-columns: 1fr 4rem 4rem 5rem 4rem;
+      grid-template-columns: 1fr 6rem 4rem;
+    }
+  }
+  .itemForm {
+    grid-template-columns: 1fr 5rem 5rem 8rem 5rem;
+    align-items: flex-end;
+    .btns {
+      align-items: center;
+      grid-gap: 0.5rem;
+      button {
+        padding: 0.4rem;
+      }
+    }
+  }
+  .mainForm {
+    .mainFormWrapper {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .purchaseTable {
+    tr {
+      grid-template-columns: 5rem 5rem 8rem 5rem 5rem 5rem;
+    }
+  }
+  p.detail {
+    font-size: 1rem;
+    .label {
+      font-weight: bold;
+      font-size: 0.8em;
+    }
+  }
+  &.viewOnly {
+    .items {
+      tr {
+        grid-template-columns: 1fr 5rem 4rem 4rem 5rem;
+      }
+    }
+  }
+}
+
+.print {
+  height: 100%;
+  width: 100%;
+  display: block;
+  header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    // grid-gap: 0 1rem;
+    .logo {
+      height: 80px;
+      width: 80px;
+      object-fit: contain;
+    }
+    div {
+      margin-top: -0.5rem;
+    }
+    h4 {
+      flex-basis: 100%;
+      text-align: center;
+      font-size: 2rem;
+      color: $primary-color-dark2;
+    }
+  }
+  .box {
+    border: 1px solid black;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  .items,
+  .taxes {
+    border: 1px solid black;
+    thead {
+      background-color: white;
+      tr {
+        th {
+          color: black;
+          padding: 0.5rem 0.5rem;
+        }
+        border-bottom: 1px solid black;
+      }
+    }
+    tbody {
+      td {
+        padding: 0.35rem 0.5rem;
+      }
+      tr:first-child {
+        td {
+          padding-top: 0.5rem;
+        }
+      }
+      tr:last-child {
+        td {
+          padding-bottom: 0.75rem;
+        }
+      }
+      tr {
+        border: none;
+      }
+    }
+    tr {
+      grid-gap: 0;
+      padding: 0;
+    }
+    td,
+    th {
+      height: 100%;
+      &:not(:last-child) {
+        border-right: 1px solid black;
+      }
+    }
+  }
+  .items {
+    tr {
+      // grid-template-columns: 3rem 1fr 5rem 5rem 6rem 8rem;
+    }
+  }
+  .taxes {
+    page-break-inside: avoid;
+    tr {
+      grid-template-columns: 3rem 1fr 8rem 9rem 8rem;
+    }
+  }
+  .totalAmount {
+    page-break-inside: avoid;
+    display: flex;
+    border: 1px solid black;
+    border-radius: 0.5rem;
+    .word {
+      flex: 1;
+      border-right: 1px solid black;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .digit {
+      font-weight: 600;
+    }
+    .word,
+    .digit {
+      padding: 1.5rem;
+    }
+  }
+  footer {
+    page-break-inside: avoid;
+    .sign {
+      flex: 1;
+      text-align: right;
+      .signature {
+        object-fit: contain;
+        width: 8rem;
+        max-height: 8rem;
+      }
+    }
+  }
+}
+
+@page {
+  margin: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
+  }
+  .payments,
+  .addPaymentForm .purchaseTable {
+    margin: 0;
+    border: none;
+    thead {
+      display: none;
+    }
+    tr {
+      border-radius: 0.5rem;
+      margin: 0.5rem;
+      background-color: white;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      border: none !important;
+      grid-gap: 10px;
+      grid-template-columns: 1fr 0.7fr;
+      grid-row-gap: 0px;
+      .date {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+        font-weight: bold;
+        color: $primary-color-dark2;
+        padding-bottom: 0;
+        font-size: 1.1rem;
+      }
+      .no {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+        padding: 0;
+      }
+      .customer {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4;
+        padding-top: 0;
+        color: $primary-color-dark2;
+      }
+      .net {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        font-weight: bold;
+        color: $primary-color-dark2;
+        padding-bottom: 0;
+        font-size: 1.1rem;
+      }
+      .actions {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        justify-content: flex-end;
+        padding-top: 0;
+      }
+    }
+  }
+  .addPaymentForm {
+    width: 100vw;
+    .itemForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+      .itemName {
+        grid-column: 1 / -1;
+      }
+      & > button {
+        grid-column: 1 / -1;
+      }
+    }
+    .mainForm {
+      .mainFormWrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+@media print {
+  .print {
+    padding-bottom: 0;
+  }
+}

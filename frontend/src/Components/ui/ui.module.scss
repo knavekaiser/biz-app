@@ -1,0 +1,68 @@
+@import "Components/variables";
+
+.header {
+  z-index: 100;
+  position: sticky;
+  top: 0;
+  background: white;
+  color: $primary-color;
+  padding: 1rem;
+  display: flex;
+  grid-gap: 1rem;
+  align-items: center;
+  box-shadow: 0 0 0.75rem $primary-color-dark3;
+  .siteName {
+    display: flex;
+    // grid-gap: 0.5rem;
+    align-items: center;
+    .logo {
+      max-height: 2.75rem;
+      max-width: 2.75rem;
+    }
+  }
+  .logoutBtn {
+    font-size: 1.2em;
+    color: $primary-color;
+    margin: auto;
+    margin-right: 0;
+  }
+  nav {
+    flex: 1;
+    display: flex;
+    grid-gap: 0.5rem;
+    color: black;
+    font-weight: 600;
+  }
+}
+
+.accountModal {
+  ul {
+    li {
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      &:hover {
+        background: $grey1;
+      }
+    }
+  }
+  box-shadow: $shadow1;
+  position: absolute;
+}
+.accountModalBackdrop {
+  background: none;
+}
+
+.footer {
+  text-align: center;
+  padding: 1rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .header {
+    flex-wrap: wrap;
+    form {
+      flex-basis: 100%;
+      order: 3;
+    }
+  }
+}
