@@ -12,13 +12,13 @@ const endpoints = {
   adminLogout: `${baseApiUrl}/api/admin/logout`,
   adminSwitchAccount: `${baseApiUrl}/api/admin/switch-account`,
 
-  businessSignUp: `${baseApiUrl}/api/company/signup`,
-  businessSignIn: `${baseApiUrl}/api/company/signin`,
-  businessProfile: `${baseApiUrl}/api/company/profile`,
+  companySignUp: `${baseApiUrl}/api/company/signup`,
+  companySignIn: `${baseApiUrl}/api/company/signin`,
+  companyProfile: `${baseApiUrl}/api/company/profile`,
 
-  businessForgotPassword: `${baseApiUrl}/api/company/forgot-password`,
-  businessResetPassword: `${baseApiUrl}/api/company/reset-password`,
-  businessLogout: `${baseApiUrl}/api/company/logout`,
+  companyForgotPassword: `${baseApiUrl}/api/company/forgot-password`,
+  companyResetPassword: `${baseApiUrl}/api/company/reset-password`,
+  companyLogout: `${baseApiUrl}/api/company/logout`,
 
   staffSignUp: `${baseApiUrl}/api/staff/signup`,
   staffSignIn: `${baseApiUrl}/api/staff/signin`,
