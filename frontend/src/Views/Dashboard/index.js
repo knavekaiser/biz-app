@@ -15,6 +15,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { paths } from "config";
+import { FaArrowLeftLong } from "react-icons/fa6";
 
 import s from "./dashboard.module.scss";
 import { FaRegUser } from "react-icons/fa";
@@ -723,7 +724,7 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
         <div className={`${s.actions} flex gap-1 center`}>
           <a href={`${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/dashboard`}>
             <button title="Micro Apps" className={`clear ${s.logoutBtn}`}>
-              <RxExit />
+              <FaArrowLeftLong />
             </button>
           </a>
           <button
