@@ -300,7 +300,7 @@ export const resetPassword = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     res.cookie("access_token", "", {
-      domain: ".infinai.in",
+      domain: process.env.COOKIE_DOMAIN,
       maxAge: 0, // 60 days
       httpOnly: true,
       sameSite: "Strict",

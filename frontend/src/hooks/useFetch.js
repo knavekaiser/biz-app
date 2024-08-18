@@ -61,17 +61,7 @@ export const useFetch = (url, { headers: hookHeaders } = {}) => {
               setUser(null);
               setConfig(null);
               // navigate(paths.home);
-              return;
-
-              // return Prompt({
-              //   type: "error",
-              //   message: "Session has expired!",
-              //   callback: () => {
-              //     setUser(null);
-              //     setConfig(null);
-              //     navigate(paths.home);
-              //   },
-              // });
+              throw 401;
             }
             setLoading(false);
             resolve({ res, data });

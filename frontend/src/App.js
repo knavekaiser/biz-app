@@ -1,13 +1,7 @@
 import "./App.scss";
 import { useEffect, useContext, lazy, Suspense } from "react";
 import { SiteContext } from "SiteContext";
-import {
-  useNavigate,
-  useLocation,
-  Routes,
-  Route,
-  useSearchParams,
-} from "react-router-dom";
+import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { paths, endpoints } from "config";
 import { Prompt } from "Components/modal";
 import { CgSpinner } from "react-icons/cg";
@@ -28,7 +22,6 @@ function App() {
   const { setUser, userType } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const { get: getProfile } = useFetch(endpoints[`${userType}Profile`]);
 
@@ -36,37 +29,26 @@ function App() {
     window.addEventListener("resize", () => resizeWindow());
     resizeWindow();
 
-    // if (!document.cookie.includes("access_token")) {
-    //   return;
-    // }
-
-    const access_token = searchParams.get("access_token");
-
-    getProfile(
-      access_token
-        ? {
-            headers: {
-              "x-set-cookie": "true",
-              "x-access-token": access_token,
-            },
-          }
-        : {}
-    )
+    getProfile()
       .then(({ data }) => {
         if (data.success) {
           localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
-          setSearchParams((prev) => {
-            prev.delete("access_token");
-            return prev;
-          });
           // const path = ["/signin", "/signup"].includes(location.pathname)
           //   ? paths.home
           //   : location.pathname || paths.home;
           // navigate(path, { replace: true });
         }
       })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
+      .catch((err) => {
+        if (err === 401) {
+          if (location.pathname.startsWith("/dashboard")) {
+            window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.href}`;
+          }
+          return;
+        }
+        Prompt({ type: "error", message: err.message });
+      });
 
     loadScript(endpoints.comifyChat).then(() => {
       if (window.InfinAI) {
