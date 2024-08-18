@@ -156,11 +156,11 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1220);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) {
-      navigate(paths.signIn);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!user) {
+  //     navigate(paths.signIn);
+  //   }
+  // }, []);
 
   if (!user) {
     return (

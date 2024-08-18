@@ -155,7 +155,12 @@ export const resetPassword = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("access_token");
+    res.cookie("access_token", "", {
+      domain: ".infinai.in",
+      maxAge: 0, // 60 days
+      httpOnly: true,
+      sameSite: "Strict",
+    });
     return responseFn.success(res, {});
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

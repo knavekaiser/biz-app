@@ -1,6 +1,6 @@
 import { authJwt, file, validate } from "../middlewares/index.js";
 import { appConfig } from "../config/index.js";
-import * as controller from "../controllers/business.controller.js";
+import * as controller from "../controllers/company.controller.js";
 import { users as schema } from "../validationSchemas/index.js";
 
 import express from "express";
