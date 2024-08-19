@@ -50,7 +50,7 @@ import {
   IoStorefront,
   IoStorefrontOutline,
 } from "react-icons/io5";
-import { BsGear, BsGearFill } from "react-icons/bs";
+import { BsGear, BsGearFill, BsList } from "react-icons/bs";
 import {
   HiOutlineShoppingCart,
   HiOutlineUserGroup,
@@ -82,7 +82,6 @@ const AdminDynamicTables = lazy(() => import("./AdminDynamicTables"));
 const Roles = lazy(() => import("./Roles"));
 const Employees = lazy(() => import("./Employees"));
 const StoreListings = lazy(() => import("./Stores"));
-const SubCategories = lazy(() => import("./SubCategories"));
 const SubPlans = lazy(() => import("./SubPlans"));
 const Chats = lazy(() => import("./Chats"));
 
@@ -95,72 +94,63 @@ const Dashboard = () => {
       label: "Home",
       path: paths.dashboard.replace("/*", ""),
     },
-    {
-      icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
-      activeIcon: (
-        <MdBusinessCenter style={{ fontSize: "1.2em" }} className={s.filled} />
-      ),
-      label: "Businesses",
-      path: paths.businesses,
-    },
-    {
-      icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
-      activeIcon: (
-        <PiUsersFourFill className={s.filled} style={{ fontSize: "1.2em" }} />
-      ),
-      label: "Micro Apps",
-      path: "https://crm.infinai.in",
-      target: "_blank",
-    },
-    {
-      icon: <IoStorefrontOutline style={{ fontSize: "1.1em" }} />,
-      activeIcon: (
-        <IoStorefront className={s.filled} style={{ fontSize: "1.1em" }} />
-      ),
-      label: "Stores",
-      path: paths.storeListings,
-    },
-    {
-      icon: <MdOutlinePayments style={{ fontSize: "1.2em" }} />,
-      activeIcon: (
-        <MdPayments className={s.filled} style={{ fontSize: "1.2em" }} />
-      ),
-      label: "Subscription Plans",
-      path: paths.subPlans,
-    },
-    // { label: "Categories", path: paths.categories },
-    // { label: "Sub Categories", path: paths.subcategories },
-    {
-      icon: <IoChatbubblesOutline style={{ fontSize: "1.2em" }} />,
-      activeIcon: (
-        <IoChatbubbles className={s.filled} style={{ fontSize: "1.2em" }} />
-      ),
-      label: "Chats",
-      path: paths.chats,
-    },
-    {
-      icon: <PiTableLight style={{ fontSize: "1.2em" }} />,
-      activeIcon: (
-        <PiTableFill className={s.filled} style={{ fontSize: "1.2em" }} />
-      ),
-      label: "Manage Data",
-      path: paths.dynamicTables.replace("/*", ""),
-    },
-    {
-      icon: <BsGear />,
-      activeIcon: <BsGearFill className={s.filled} />,
-      label: "Settings",
-      path: paths.settings.baseUrl,
-    },
+    // {
+    //   icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
+    //   activeIcon: (
+    //     <MdBusinessCenter style={{ fontSize: "1.2em" }} className={s.filled} />
+    //   ),
+    //   label: "Businesses",
+    //   path: paths.businesses,
+    // },
+    // {
+    //   icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
+    //   activeIcon: (
+    //     <PiUsersFourFill className={s.filled} style={{ fontSize: "1.2em" }} />
+    //   ),
+    //   label: "Micro Apps",
+    //   path: "https://crm.infinai.in",
+    //   target: "_blank",
+    // },
+    // {
+    //   icon: <IoStorefrontOutline style={{ fontSize: "1.1em" }} />,
+    //   activeIcon: (
+    //     <IoStorefront className={s.filled} style={{ fontSize: "1.1em" }} />
+    //   ),
+    //   label: "Stores",
+    //   path: paths.storeListings,
+    // },
+    // {
+    //   icon: <MdOutlinePayments style={{ fontSize: "1.2em" }} />,
+    //   activeIcon: (
+    //     <MdPayments className={s.filled} style={{ fontSize: "1.2em" }} />
+    //   ),
+    //   label: "Subscription Plans",
+    //   path: paths.subPlans,
+    // },
+    // {
+    //   icon: <IoChatbubblesOutline style={{ fontSize: "1.2em" }} />,
+    //   activeIcon: (
+    //     <IoChatbubbles className={s.filled} style={{ fontSize: "1.2em" }} />
+    //   ),
+    //   label: "Chats",
+    //   path: paths.chats,
+    // },
+    // {
+    //   icon: <PiTableLight style={{ fontSize: "1.2em" }} />,
+    //   activeIcon: (
+    //     <PiTableFill className={s.filled} style={{ fontSize: "1.2em" }} />
+    //   ),
+    //   label: "Manage Data",
+    //   path: paths.dynamicTables.replace("/*", ""),
+    // },
+    // {
+    //   icon: <BsGear />,
+    //   activeIcon: <BsGearFill className={s.filled} />,
+    //   label: "Settings",
+    //   path: paths.settings.baseUrl,
+    // },
   ]);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1220);
-  const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   if (!user) {
-  //     navigate(paths.signIn);
-  //   }
-  // }, []);
 
   if (!user) {
     return (
@@ -170,7 +160,7 @@ const Dashboard = () => {
     );
   }
 
-  if (userType === "admin" && !business) {
+  if (userType === "admin") {
     return (
       <div className={s.container}>
         <Sidebar
@@ -181,7 +171,7 @@ const Dashboard = () => {
 
         <div className={s.content}>
           <Routes>
-            <Route
+            {/* <Route
               path={paths.subPlans}
               element={
                 <Suspense fallback={<LoadingSaklleton />}>
@@ -228,13 +218,24 @@ const Dashboard = () => {
                   <Chats setSidebarOpen={setSidebarOpen} />
                 </Suspense>
               }
-            />
+            /> */}
             <Route
-              path={"/"}
+              path={"*"}
               element={
-                <Suspense fallback={<SettingLoading />}>
-                  <Home setSidebarOpen={setSidebarOpen} />
-                </Suspense>
+                <div>
+                  <div className={`flex p-1 align-center gap-1`}>
+                    <div
+                      className={`flex align-center pointer gap_5  ml-1`}
+                      onClick={() => setSidebarOpen((prev) => !prev)}
+                    >
+                      <BsList style={{ fontSize: "1.75rem" }} />
+                      <h2>Dashboard</h2>
+                    </div>
+                  </div>
+                  <div style={{ padding: "1rem" }}>
+                    <h2>Please login as a company or staff.</h2>
+                  </div>
+                </div>
               }
             />
           </Routes>
@@ -277,7 +278,6 @@ const Dashboard = () => {
               path: paths.businesses,
               target: "_blank",
             },
-            // { label: "Settings", path: paths.settings },
           ]}
           setSidebarOpen={setSidebarOpen}
         />
