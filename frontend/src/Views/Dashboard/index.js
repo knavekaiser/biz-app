@@ -742,9 +742,7 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
                     if (data.success) {
                       setUser(null);
                       setConfig(null);
-                      navigate(
-                        `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.origin}/dashboard`
-                      );
+                      window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.origin}/dashboard`;
                     }
                   });
                 },
