@@ -23,6 +23,7 @@ import TermsAndConditions from "./terms";
 import SiteConfig from "./siteConfig";
 import Documents from "./documents";
 import DynamicPages from "./dynamicPages";
+import Reports from "./reports";
 import { BsList } from "react-icons/bs";
 
 const businessInformationSchema = yup.object({
@@ -68,6 +69,7 @@ const Settings = ({ setSidebarOpen }) => {
           { label: "Configurations", path: paths.settings.config },
           { label: "Site Configurations", path: paths.settings.siteConfig },
           { label: "Blogs", path: paths.settings.dynamicPages },
+          { label: "Reports", path: paths.settings.reports },
         ]}
       />
       <Routes>
@@ -99,6 +101,10 @@ const Settings = ({ setSidebarOpen }) => {
         <Route
           path={paths.settings.dynamicPages}
           element={<DynamicPages next={next} />}
+        />
+        <Route
+          path={paths.settings.reports}
+          element={<Reports next={next} />}
         />
       </Routes>
     </div>

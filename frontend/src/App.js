@@ -11,7 +11,6 @@ import { loadScript } from "helpers";
 
 const Dashboard = lazy(() => import("Views/Dashboard"));
 const Home = lazy(() => import("Views/Home"));
-const AuthView = lazy(() => import("Views/AuthViews"));
 
 function resizeWindow() {
   let vh = window.innerHeight * 0.01;
@@ -19,7 +18,7 @@ function resizeWindow() {
 }
 
 function App() {
-  const { setUser, userType } = useContext(SiteContext);
+  const { setUser, userType, setUserType } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,6 +33,7 @@ function App() {
         if (data.success) {
           localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
+          setUserType(data.data.userType);
           // const path = ["/signin", "/signup"].includes(location.pathname)
           //   ? paths.home
           //   : location.pathname || paths.home;
@@ -77,14 +77,6 @@ function App() {
           element={
             <Suspense fallback={<CgSpinner className="loadingSpinner" />}>
               <Dashboard />
-            </Suspense>
-          }
-        />
-        <Route
-          path="*"
-          element={
-            <Suspense fallback={<CgSpinner className="loadingSpinner" />}>
-              <AuthView />
             </Suspense>
           }
         />

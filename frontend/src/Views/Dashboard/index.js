@@ -628,6 +628,9 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
                   <img
                     src={user?.logo || user?.photo}
                     alt={`${user?.name} Logo`}
+                    onError={(e) => {
+                      e.target.src = "/assets/user.png";
+                    }}
                   />
                 ) : (
                   <FaRegUser />
@@ -739,7 +742,9 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
                     if (data.success) {
                       setUser(null);
                       setConfig(null);
-                      navigate(paths.home);
+                      navigate(
+                        `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.origin}/dashboard`
+                      );
                     }
                   });
                 },
