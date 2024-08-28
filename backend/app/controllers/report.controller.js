@@ -1,7 +1,8 @@
 import { appConfig } from "../config/index.js";
-import { Chat } from "../models/index.js";
+import { Chat, Report } from "../models/index.js";
+import { ObjectId } from "mongodb";
 
-const { responseFn } = appConfig;
+const { responseFn, responseStr } = appConfig;
 
 export const getAnalytics = async (req, res) => {
   try {
@@ -185,5 +186,88 @@ export const getAnalytics = async (req, res) => {
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const genReport = async (req, res) => {
+  try {
+    const reportTemplate = await Report.findOne({ _id: req.params._id });
+    return responseFn.success(res, {
+      data: {
+        name: reportTemplate.name,
+        columns: reportTemplate.pipeline,
+        data: [],
+      },
+    });
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
+  }
+};
+
+export const getReports = async (req, res) => {
+  try {
+    const conditions = {
+      company: ObjectId(req.business?._id || req.authUser._id),
+    };
+    if (req.params._id) {
+      conditions._id = req.params._id;
+    }
+    Report.find(conditions)
+      .then((data) => {
+        if (req.params._id) {
+          if (data.length) {
+            responseFn.success(res, { data: data[0] });
+          } else {
+            responseFn.success(res, {}, responseStr.record_not_found);
+          }
+          return;
+        }
+        responseFn.success(res, { data });
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
+  }
+};
+
+export const createReport = async (req, res) => {
+  try {
+    new Report({ ...req.body, company: req.business?._id || req.authUser._id })
+      .save()
+      .then((data) => {
+        return responseFn.success(res, { data }, responseStr.record_updated);
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
+  }
+};
+
+export const updateReport = async (req, res) => {
+  try {
+    Report.findOneAndUpdate(
+      { _id: req.params._id, company: req.business?._id || req.authUser._id },
+      req.body,
+      { new: true }
+    )
+      .then((data) => {
+        return responseFn.success(res, { data }, responseStr.record_updated);
+      })
+      .catch((err) => responseFn.error(res, {}, err.message));
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
+  }
+};
+
+export const deleteReport = async (req, res) => {
+  try {
+    Report.deleteMany({
+      _id: req.params._id,
+      company: req.business?._id || req.authUser._id,
+    })
+      .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
+      .catch((err) => responseFn.error(res, {}, err.message, 500));
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
   }
 };

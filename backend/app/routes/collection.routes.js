@@ -14,6 +14,13 @@ export default function (app) {
     controller.addSchemaTemplates
   );
 
+  router.get(
+    "/all",
+    authJwt.verifyToken,
+    authJwt.checkPermission("dynamic_table_read"),
+    controller.getAll
+  );
+
   router.post(
     "/",
     authJwt.verifyToken,

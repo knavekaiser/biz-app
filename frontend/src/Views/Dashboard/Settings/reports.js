@@ -2,58 +2,40 @@ import { useEffect, useContext, useState } from "react";
 import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
-import { paths, endpoints } from "config";
+import { endpoints } from "config";
 import { useYup, useFetch } from "hooks";
 import { Prompt, Modal } from "Components/modal";
 import { FaPencilAlt, FaRegTrashAlt } from "react-icons/fa";
-import { findProperties } from "helpers";
 import { Input, Combobox, Table, TableActions } from "Components/elements";
 import s from "./settings.module.scss";
-import { useNavigate } from "react-router-dom";
 
-const SiteConfig = () => {
+const Reports = () => {
   const [addReport, setAddReport] = useState(false);
-  const { config, setConfig } = useContext(SiteContext);
-  const { handleSubmit, reset, watch, setValue } = useForm();
+  const [editReport, setEditReport] = useState(null);
+  const [reports, setReports] = useState([]);
 
-  const { put: updateConfig, loading } = useFetch(endpoints.userConfig);
-  const [editSection, setEditSection] = useState(null);
+  const { get: getReports, loading } = useFetch(endpoints.reports);
+  const { remove: dltReport, loading: deleting } = useFetch(
+    endpoints.reports + "/{ID}"
+  );
 
   useEffect(() => {
-    reset({
-      //
-    });
-  }, [config]);
-
-  const footerElements = watch("footerElements");
+    getReports()
+      .then(({ data }) => {
+        if (data.success) {
+          setReports(data.data);
+        }
+      })
+      .catch((err) =>
+        Prompt({
+          type: "error",
+          message: "Reports could not be fetched.",
+        })
+      );
+  }, []);
 
   return (
-    <form
-      className="grid gap-1"
-      onSubmit={handleSubmit((values) => {
-        const payload = {
-          ...config,
-          businessType: values.businessType,
-          siteConfig: {
-            ...config?.siteConfig,
-            //
-          },
-        };
-
-        updateConfig(payload)
-          .then(({ data }) => {
-            if (!data.success) {
-              return Prompt({ type: "error", message: data.message });
-            }
-            setConfig(data.data);
-            Prompt({
-              type: "information",
-              message: "Updates have been saved.",
-            });
-          })
-          .catch((err) => Prompt({ type: "error", data: err.message }));
-      })}
-    >
+    <div className="grid gap-1">
       <div>
         <div className="flex justify-space-between align-center mb-1">
           <h5>Reports</h5>
@@ -67,37 +49,50 @@ const SiteConfig = () => {
         </div>
         <Table
           columns={[
-            { label: "Section Title" },
-            { label: "Elements" },
+            { label: "Report Name" },
+            // { label: "Columns" },
             { label: "Actions" },
           ]}
         >
-          {footerElements?.map((section, i) => (
-            <tr key={section.title}>
-              <td>{section.title}</td>
-              <td>{section.items?.length}</td>
+          {reports?.map((report, i) => (
+            <tr key={report._id}>
+              <td>{report.name}</td>
+              {/* <td>{report.pipeline?.length}</td> */}
               <TableActions
                 actions={[
                   {
                     icon: <FaPencilAlt />,
                     label: "Edit",
                     callBack: () => {
-                      setEditSection(section);
+                      setEditReport(report);
                       setAddReport(true);
                     },
                   },
                   {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
+                    disabled: deleting,
                     callBack: () =>
                       Prompt({
                         type: "confirmation",
                         message: `Are you sure you want to remove this section?`,
                         callback: () => {
-                          setValue(
-                            "footerElements",
-                            footerElements.filter((i) => i._id !== section._id)
-                          );
+                          dltReport({}, { params: { "{ID}": report._id } })
+                            .then(({ data }) => {
+                              if (data.success) {
+                                setReports(
+                                  reports.filter((i) => i._id !== report._id)
+                                );
+                              } else {
+                                Prompt({
+                                  type: "error",
+                                  message: data.message,
+                                });
+                              }
+                            })
+                            .catch((err) =>
+                              Prompt({ type: "error", message: err.message })
+                            );
                         },
                       }),
                   },
@@ -111,40 +106,31 @@ const SiteConfig = () => {
       <Modal
         open={addReport}
         head
-        label={`${editSection ? "Update" : "Create"} Record Template`}
+        label={`${editReport ? "Update" : "Create"} Report Template`}
         className={s.recFilterModal}
         setOpen={() => {
           setAddReport(false);
-          setEditSection(null);
+          setEditReport(null);
         }}
       >
-        <FooterElements
-          edit={editSection}
+        <Form
+          edit={editReport}
           onSuccess={(value) => {
-            setValue(
-              "footerElements",
-              editSection
-                ? footerElements.map((item) =>
-                    item._id === value._id ? value : item
-                  )
-                : [...footerElements, value]
+            setReports(
+              editReport
+                ? reports.map((item) => (item._id === value._id ? value : item))
+                : [...reports, value]
             );
             setAddReport(false);
-            setEditSection(null);
+            setEditReport(null);
           }}
         />
       </Modal>
-
-      <div className="flex gap-1 justify-center">
-        <button className="btn" disabled={loading}>
-          Save Changes
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 
-const FooterElements = ({ edit, onSuccess }) => {
+const Form = ({ edit, onSuccess }) => {
   const [updateItems, setUpdateItems] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [err, setErr] = useState(null);
@@ -154,46 +140,48 @@ const FooterElements = ({ edit, onSuccess }) => {
     control,
     watch,
     reset,
-    getValues,
     setValue,
     formState: { errors },
   } = useForm({
     resolver: useYup(
       yup.object({
-        title: yup.string().required("Section Title is required"),
-        viewStyle: yup.string().required("Select a view style"),
+        name: yup.string().required("Report Name is required"),
       })
     ),
   });
 
-  const items = watch("items");
+  const { post, put, loading } = useFetch(
+    endpoints.reports + (edit ? `/${edit?._id}` : "")
+  );
+
+  const columns = watch("columns");
   useEffect(() => {
     reset({
-      title: edit?.title || "",
-      viewStyle: edit?.viewStyle || "list",
-      items: edit?.items || [],
+      name: edit?.name || "",
+      columns: edit?.pipeline ? edit.pipeline : [],
     });
   }, [edit]);
 
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        if (items.length <= 0) {
-          return setErr("Add at least one item");
+        if (columns.length <= 0) {
+          return setErr("Add at least one column");
         }
-        onSuccess({
-          ...values,
-          _id: edit?._id || Math.random().toString(36).substr(-8),
-        });
+        (edit ? put : post)({ ...values, pipeline: values.columns })
+          .then(({ data }) => {
+            if (data.success) {
+              onSuccess(data.data);
+            } else {
+              Prompt({ type: "error", message: data.message });
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
       })}
       className={`p-1 grid gap-1`}
     >
       {err && <p className="error">{err}</p>}
-      <Input
-        {...register("title")}
-        label="Section Title"
-        error={errors.title}
-      />
+      <Input {...register("name")} label="Report Name" error={errors.name} />
 
       <div>
         <div className="flex justify-space-between align-center mb-1">
@@ -207,12 +195,18 @@ const FooterElements = ({ edit, onSuccess }) => {
           </button>
         </div>
         <Table
-          columns={[{ label: "Field" }, { label: "URL" }, { label: "Actions" }]}
+          columns={[
+            { label: "Label" },
+            { label: "Table" },
+            { label: "field" },
+            { label: "Actions" },
+          ]}
         >
-          {items?.map((item, i) => (
+          {columns?.map((item, i) => (
             <tr key={item.label}>
               <td>{item.label}</td>
-              <td>{item.href}</td>
+              <td>{item.table?.name}</td>
+              <td>{item.field}</td>
               <TableActions
                 actions={[
                   {
@@ -232,8 +226,8 @@ const FooterElements = ({ edit, onSuccess }) => {
                         message: `Are you sure you want to remove this item?`,
                         callback: () => {
                           setValue(
-                            "items",
-                            items.filter((i) => i._id !== item._id)
+                            "columns",
+                            columns.filter((i) => i._id !== item._id)
                           );
                         },
                       }),
@@ -255,14 +249,14 @@ const FooterElements = ({ edit, onSuccess }) => {
           setEditItem(null);
         }}
       >
-        <FooterElementForm
+        <ColumnForm
           edit={editItem}
           onSuccess={(value) => {
             setValue(
-              "items",
+              "columns",
               editItem
-                ? items.map((item) => (item._id === value._id ? value : item))
-                : [...items, value]
+                ? columns.map((item) => (item._id === value._id ? value : item))
+                : [...columns, value]
             );
             setUpdateItems(false);
             setEditItem(null);
@@ -272,80 +266,100 @@ const FooterElements = ({ edit, onSuccess }) => {
       </Modal>
 
       <div className="flex justify-center">
-        <button className="btn">
-          {edit ? "Update Section" : "Add Section"}
-        </button>
+        <button className="btn">{edit ? "Update Report" : "Add Report"}</button>
       </div>
     </form>
   );
 };
 
-const FooterElementForm = ({ edit, onSuccess }) => {
+const ColumnForm = ({ edit, onSuccess }) => {
   const {
     handleSubmit,
     control,
     register,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: useYup(
       yup.object({
         label: yup.string().required("Label is required"),
-        href: yup
-          .string()
-          .matches(
-            /^\/[a-zA-Z0-9\-._~!$&'()*+,;=:@]+$/,
-            "Invalid sub-path format"
-          )
-          .required("Field is required"),
+        table: yup.string().required("Label is required"),
+        field: yup.string().required("Label is required"),
       })
     ),
   });
 
+  const [tables, setTables] = useState([]);
+  const { get: getTables } = useFetch(endpoints.allCollections);
+
+  const table = watch("table");
+
+  useEffect(() => {
+    getTables()
+      .then(({ data }) => {
+        if (data.success) {
+          // console.log(data.data);
+          setTables([
+            ...data.data.map((table) => ({
+              label: table.name,
+              type: table.type,
+              value: `${table.name}-${table.type}`,
+              fields: table.fields,
+            })),
+          ]);
+        }
+      })
+      .catch((err) => console.log(err));
+  }, []);
+
   useEffect(() => {
     reset({
       label: edit?.label || "",
-      href: edit?.href || "",
-      type: edit?.type || "dynamicPage",
-      files: edit?.files || [],
+      table: edit?.table ? `${edit?.table.name}-${edit?.table.type}` : "",
+      field: edit?.field || "",
     });
   }, [edit]);
 
   return (
     <form
       onSubmit={handleSubmit((values) => {
+        const coll = tables?.find((t) => t.value === values.table);
         onSuccess({
-          ...values,
           _id: edit?._id || Math.random().toString(36).substr(-8),
+          label: values.label,
+          table: {
+            name: coll.label,
+            type: coll.type,
+          },
+          field: values.field,
         });
       })}
       className={`p-1 grid gap-1`}
     >
       <Input {...register("label")} label="Label" error={errors.label} />
+      <Combobox label="Table" name="table" control={control} options={tables} />
       <Combobox
-        label="URL Type"
-        name="type"
+        label="Field"
+        name="field"
         control={control}
-        options={[
-          { label: "Dynamic", value: "dynamicPage" },
-          { label: "Internal Link", value: "internalLink" },
-          { label: "External Link", value: "externalLink" },
-        ]}
-      />
-      <Input
-        {...register("href")}
-        label="Path"
-        placeholder="/some-path"
-        error={errors.href}
+        options={
+          table
+            ? tables
+                ?.find((t) => t.value === table)
+                ?.fields?.map((f) => ({
+                  label: f.label,
+                  value: f.name,
+                }))
+            : []
+        }
       />
 
       <div className="flex justify-center">
-        <button className="btn">
-          {edit ? "Update Element" : "Add Element"}
-        </button>
+        <button className="btn">{edit ? "Update Column" : "Add Column"}</button>
       </div>
     </form>
   );
 };
 
-export default SiteConfig;
+export default Reports;

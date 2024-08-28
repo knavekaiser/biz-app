@@ -11,7 +11,7 @@ export const responseFn = {
     res,
     error = {},
     message = "Some error occurred. Please try again later.",
-    statusCode = 200
+    statusCode = 400
   ) => {
     return res.status(statusCode).send({
       success: false,

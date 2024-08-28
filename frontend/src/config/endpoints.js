@@ -54,6 +54,7 @@ const endpoints = {
   userConfig: `${baseApiUrl}/api/user-config`,
   chats: `${baseApiUrl}/api/chats`,
   collections: `${baseApiUrl}/api/collections`,
+  allCollections: `${baseApiUrl}/api/collections/all`,
   schemaTemplates: `${baseApiUrl}/api/collections/templates`,
   dynamic: `${baseApiUrl}/api/dynamic`,
   adminCollections: `${baseApiUrl}/api/admin/collections`,
@@ -62,6 +63,9 @@ const endpoints = {
   staffs: `${baseApiUrl}/api/staffs`,
   employees: `${baseApiUrl}/api/employees`,
   dynamicBulkCreate: `${baseApiUrl}/api/dynamic/:table/bulk-create`,
+
+  reports: `${baseApiUrl}/api/reports`,
+  generateReport: `${baseApiUrl}/api/reports/generate`,
 
   comifyChat: `${
     process.env.NODE_ENV === "development"

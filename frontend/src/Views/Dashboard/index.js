@@ -31,6 +31,8 @@ import {
   MdPayments,
 } from "react-icons/md";
 import {
+  PiLineSegments,
+  PiLineSegmentsFill,
   PiTableFill,
   PiTableLight,
   PiUsersFour,
@@ -84,6 +86,7 @@ const Employees = lazy(() => import("./Employees"));
 const StoreListings = lazy(() => import("./Stores"));
 const SubPlans = lazy(() => import("./SubPlans"));
 const Chats = lazy(() => import("./Chats"));
+const Reports = lazy(() => import("./Reports"));
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -376,6 +379,17 @@ const Dashboard = () => {
                 },
               ]
             : []),
+          {
+            icon: <PiLineSegments style={{ fontSize: "1.2em" }} />,
+            activeIcon: (
+              <PiLineSegmentsFill
+                className={s.filled}
+                style={{ fontSize: "1.2em" }}
+              />
+            ),
+            label: "Reports",
+            path: paths.reports,
+          },
           ...(checkPermission("dynamic_table_read")
             ? [
                 {
@@ -519,6 +533,14 @@ const Dashboard = () => {
               }
             />
           )}
+          <Route
+            path={paths.reports}
+            element={
+              <Suspense fallback={<LoadingSaklleton />}>
+                <Reports setSidebarOpen={setSidebarOpen} />
+              </Suspense>
+            }
+          />
           {checkPermission("dynamic_table_read") && (
             <Route
               path={paths.dynamicTables}
@@ -606,7 +628,6 @@ const Dashboard = () => {
 const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
   const { user, setUser, setConfig } = useContext(SiteContext);
   const location = useLocation();
-  const navigate = useNavigate();
 
   const { post: logout } = useFetch(
     endpoints[`${user?.userType}Logout`] || "/"

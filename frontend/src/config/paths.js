@@ -20,6 +20,7 @@ const paths = {
   roles: "roles",
   employees: "employees",
   storeListings: "stores",
+  reports: "reports",
   categories: "categories",
   subcategories: "sub-categories",
   subPlans: "subscription-plans",

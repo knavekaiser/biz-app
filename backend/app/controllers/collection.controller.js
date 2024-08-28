@@ -1,9 +1,50 @@
 import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
-import { Company, Collection } from "../models/index.js";
+import { Company, Collection, Module } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
+
+export const getAll = async (req, res) => {
+  try {
+    const conditions = { user: req.business?._id || req.authUser._id };
+    if (req.authToken.userType === "admin") {
+      conditions.user = req.query.business || req.business._id;
+    }
+    const collections = await Collection.find(conditions);
+    const modules = await Module.find(conditions);
+
+    responseFn.success(res, {
+      data: [
+        ...collections.map((col) => ({
+          name: col.name,
+          type: "collection",
+          fields: col.fields,
+        })),
+        ...modules
+          .map((mod) => [
+            {
+              name: mod.name,
+              type: "module",
+              fields: mod.fields.filter((field) => !field.coll),
+            },
+            ...mod.fields
+              .filter((field) => field.coll)
+              .map((coll) => ({
+                name: coll.name,
+                module: mod._id,
+                fields: coll.fields,
+                type: "module-coll",
+              })),
+          ])
+          .flat(),
+      ],
+    });
+  } catch (error) {
+    console.log(error);
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
 
 export const findAll = async (req, res) => {
   try {
