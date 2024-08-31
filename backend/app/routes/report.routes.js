@@ -7,6 +7,12 @@ const router = express.Router();
 export default function (app) {
   router.get("/analytics", authJwt.verifyToken, controller.getAnalytics);
 
+  router.post("/test-pipeline", authJwt.verifyToken, controller.testPipeline);
+  router.post(
+    "/generate-pipeline",
+    authJwt.verifyToken,
+    controller.genPipeline
+  );
   router.get("/generate/:_id", authJwt.verifyToken, controller.genReport);
 
   router.get("/:_id?", authJwt.verifyToken, controller.getReports);

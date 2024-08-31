@@ -1,4 +1,5 @@
 import { appConfig } from "../config/index.js";
+import { dbHelper } from "../helpers/index.js";
 import { Chat, Report } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
@@ -186,6 +187,68 @@ export const getAnalytics = async (req, res) => {
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const genPipeline = async (req, res) => {
+  try {
+    const companyId = req.company?._id || req.authUser._id;
+    const baseTable = req.body.table;
+    const columns = req.body.columns;
+
+    const pipeline = [];
+
+    columns
+      .filter((col) => col.type === "lookup")
+      .forEach((col) => {
+        let tableName = `${companyId}_${col.table.name}`;
+        if (["module-coll", "submodule-coll"].includes(col.table.type)) {
+          tableName = `${companyId}_${
+            col.table.module || col.table.submodule
+          }_${col.table.name}`;
+        }
+        pipeline.push(
+          ...[
+            {
+              $lookup: {
+                from: tableName,
+                localField: col.localField,
+                foreignField: col.foreignField,
+                as: col.label,
+              },
+            },
+          ]
+        );
+      });
+
+    const project = {};
+    columns.forEach((col) => {
+      project[col.label] = `$${col.field || col.label}`;
+    });
+    pipeline.push({ $project: project });
+
+    return responseFn.success(res, { data: pipeline });
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
+  }
+};
+
+export const testPipeline = async (req, res) => {
+  try {
+    const companyId = req.company?._id || req.authUser._id;
+    const table = req.body.table;
+    let tableName = `${companyId}_${table.name}`;
+    if (["module-coll", "submodule-coll"].includes(table.type)) {
+      tableName = `${companyId}_${table.module || table.submodule}_${
+        table.name
+      }`;
+    }
+
+    const { Model } = await dbHelper.getModel(tableName);
+    const data = await Model.aggregate(req.body.pipeline);
+    return responseFn.success(res, { data });
+  } catch (err) {
+    return responseFn.error(res, {}, err.message, 500);
   }
 };
 

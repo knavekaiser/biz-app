@@ -30,5 +30,5 @@ export { default as FaqDoc } from "./faqDoc.model.js";
 export { default as Chat } from "./chat.model.js";
 export { default as DynamicPage } from "./dynamicPage.model.js";
 export { default as Module } from "./module.model.js";
-export { default as Subodule } from "./submodule.model.js";
+export { default as Submodule } from "./submodule.model.js";
 export { default as Report } from "./report.model.js";

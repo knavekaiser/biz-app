@@ -38,6 +38,10 @@
   }
 }
 
+.codeInput {
+  font-family: "Courier New", Courier, monospace;
+}
+
 .termForm {
   display: grid;
   grid-gap: 1rem;
@@ -64,6 +68,10 @@
 .recFilterModal {
   width: 100%;
   max-width: 35rem;
+  .form {
+    overflow: scroll;
+    max-height: 100vh;
+  }
 }
 
 .landingPageShelveFormModal {

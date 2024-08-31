@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
-import { Company, Collection, Module } from "../models/index.js";
+import { Company, Collection, Module, Submodule } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
@@ -13,28 +13,66 @@ export const getAll = async (req, res) => {
     }
     const collections = await Collection.find(conditions);
     const modules = await Module.find(conditions);
+    const submodules = await Submodule.find(conditions);
 
     responseFn.success(res, {
       data: [
         ...collections.map((col) => ({
+          label: `Collection: ${col.name}`,
           name: col.name,
           type: "collection",
-          fields: col.fields,
+          fields: [
+            { name: "_id", label: "ID", unique: true, fieldType: null },
+            ...col.fields,
+          ],
         })),
         ...modules
           .map((mod) => [
             {
+              label: `Module: ${mod.name}`,
               name: mod.name,
               type: "module",
-              fields: mod.fields.filter((field) => !field.coll),
+              fields: [
+                { name: "_id", label: "ID", unique: true, fieldType: null },
+                ...mod.fields.filter((field) => !field.coll),
+              ],
             },
             ...mod.fields
               .filter((field) => field.coll)
-              .map((coll) => ({
-                name: coll.name,
-                module: mod._id,
-                fields: coll.fields,
+              .map((field) => ({
+                label: `Module: ${mod.name} - ${field.name}`,
+                name: field,
+                module: mod.name,
+                fields: [
+                  { name: "_id", label: "ID", unique: true, fieldType: null },
+                  ...(field.coll.fields || []),
+                ],
                 type: "module-coll",
+              })),
+          ])
+          .flat(),
+        ...submodules
+          .map((mod) => [
+            {
+              label: `Submodule: ${mod.name}`,
+              name: mod.name,
+              type: "submodule",
+              fields: [
+                { name: "_id", label: "ID", unique: true, fieldType: null },
+                ...mod.fields.filter((field) => !field.coll),
+              ],
+            },
+            ...mod.fields
+              .filter((field) => field.coll)
+              .map((field) => ({
+                label: `Submodule: ${mod.name} - ${field.name}`,
+                name: field.name,
+                submodule: mod.name,
+                fields: [
+                  { name: "_id", label: "ID", unique: true, fieldType: null },
+                  ...(field.coll.fields || []),
+                ],
+                type: "submodule-coll",
               })),
           ])
           .flat(),

@@ -93,6 +93,12 @@ button {
       opacity: 0.6;
       pointer-events: none;
     }
+    &.secondary {
+      background: white;
+      color: $primary-color-dark1;
+      outline: 2px solid $primary-color-dark1;
+      outline-offset: -2px;
+    }
   }
   &.clear {
     cursor: pointer;
