@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { endpoints } from "config";
@@ -11,6 +11,7 @@ import {
   Table,
   TableActions,
   Textarea,
+  Select,
 } from "Components/elements";
 import s from "./settings.module.scss";
 import { IoMdArrowForward } from "react-icons/io";
@@ -56,16 +57,14 @@ const Reports = () => {
         <Table
           columns={[
             { label: "Report Name" },
-            { label: "Table" },
+            { label: "Module" },
             { label: "Actions" },
           ]}
         >
           {reports?.map((report, i) => (
             <tr key={report._id}>
               <td>{report.name}</td>
-              <td>
-                {report.table?.name} - {report.table?.type}
-              </td>
+              <td>{report.tables?.find((t) => t.type === "module")?.name}</td>
               <TableActions
                 actions={[
                   {
@@ -158,7 +157,7 @@ const Form = ({ edit, onSuccess }) => {
     resolver: useYup(
       yup.object({
         name: yup.string().required("Report Name is required"),
-        table: yup.string().required("Please select a base table"),
+        tables: yup.array().of(yup.string()).required("Please select tables"),
       })
     ),
   });
@@ -174,15 +173,19 @@ const Form = ({ edit, onSuccess }) => {
     endpoints.generateReportPipeline
   );
 
-  const table = watch("table");
+  const selectedTables = watch("tables");
   const columns = watch("columns");
   const pipeline = watch("pipeline");
   useEffect(() => {
     reset({
       name: edit?.name || "",
-      table: edit?.table ? `${edit?.table.name}-${edit?.table.type}` : "",
+      tables: edit?.tables
+        ? edit.tables.map(
+            (t) => `${t.module ? `${t.module}-` : ""}${t.name}-${t.type}`
+          )
+        : [],
       columns: edit?.columns || [],
-      pipeline: JSON.stringify(edit?.pipeline || [{ Some: "Test" }], null, 2),
+      pipeline: JSON.stringify(edit?.pipeline || [], null, 2),
     });
   }, [edit]);
 
@@ -190,15 +193,18 @@ const Form = ({ edit, onSuccess }) => {
     getTables()
       .then(({ data }) => {
         if (data.success) {
-          setTables([
-            ...data.data.map((table) => ({
+          setTables(
+            data.data.map((table) => ({
               label: table.label,
               name: table.name,
               type: table.type,
-              value: `${table.name}-${table.type}`,
+              module: table.module,
+              value: `${table.module ? `${table.module}-` : ""}${table.name}-${
+                table.type
+              }`,
               fields: table.fields,
-            })),
-          ]);
+            }))
+          );
         }
       })
       .catch((err) => console.log(err));
@@ -210,15 +216,37 @@ const Form = ({ edit, onSuccess }) => {
         if (columns.length <= 0) {
           return setErr("Add at least one column");
         }
+        let selectedTables = tables.filter((t) =>
+          values.tables.includes(t.value)
+        );
+        const selectedModule = selectedTables.find((t) => t.type === "module");
+        if (!selectedModule) {
+          return setError("tables", {
+            type: "custom",
+            message: "Please select a module",
+          });
+        }
+        selectedTables = selectedTables.filter((t) =>
+          t.type === "module"
+            ? t.value === selectedModule.value
+            : t.module === selectedModule.name
+        );
+        setValue(
+          "tables",
+          selectedTables.map((t) => t.value)
+        );
         if (step === 1) {
-          if (!values.pipeline || values.pipeline === "[]") {
-            const coll = tables?.find((t) => t.value === values.table);
+          let parsed = null;
+          try {
+            parsed = JSON.parse(values.pipeline);
+          } catch (err) {
+            parsed = [];
+          }
+          if (!parsed || !parsed.length) {
             await genPipeline({
               table: {
-                name: coll.name,
-                module: coll.module,
-                submodule: coll.submodule,
-                type: coll.type,
+                name: selectedModule.name,
+                type: "module",
               },
               columns: values.columns,
             })
@@ -243,15 +271,14 @@ const Form = ({ edit, onSuccess }) => {
             message: "Pipeline must be valid JSON",
           });
         }
-        const coll = tables?.find((t) => t.value === values.table);
         (edit ? put : post)({
           ...values,
-          table: {
-            name: coll.name,
-            module: coll.module,
-            submodule: coll.submodule,
-            type: coll.type,
-          },
+          tables: selectedTables.map((t) => ({
+            name: t.name,
+            type: t.type,
+            module: t.module,
+            submodule: t.submodule,
+          })),
         })
           .then(({ data }) => {
             if (data.success) {
@@ -274,9 +301,10 @@ const Form = ({ edit, onSuccess }) => {
             error={errors.name}
           />
 
-          <Combobox
-            label="Table"
-            name="table"
+          <Select
+            label="Tables"
+            multiple
+            name="tables"
             control={control}
             options={tables}
           />
@@ -294,7 +322,7 @@ const Form = ({ edit, onSuccess }) => {
             <Table
               columns={[
                 { label: "Label" },
-                { label: "Type" },
+                // { label: "Type" },
                 { label: "Table" },
                 { label: "field" },
                 { label: "Actions" },
@@ -303,7 +331,7 @@ const Form = ({ edit, onSuccess }) => {
               {columns?.map((item, i) => (
                 <tr key={item.label}>
                   <td>{item.label}</td>
-                  <td>{item.type}</td>
+                  {/* <td>{item.type}</td> */}
                   <td>{item.table?.name}</td>
                   <td>
                     {item.type === "lookup" ? (
@@ -369,7 +397,7 @@ const Form = ({ edit, onSuccess }) => {
         }}
       >
         <ColumnForm
-          table={table}
+          table={selectedTables}
           tables={tables}
           edit={editItem}
           onSuccess={(value) => {
@@ -394,13 +422,13 @@ const Form = ({ edit, onSuccess }) => {
               className="btn"
               type="button"
               onClick={() => {
-                const coll = tables?.find((t) => t.value === table);
+                const selectedModule = tables.find(
+                  (t) => t.type === "module" && selectedTables.includes(t.value)
+                );
                 const payload = {
                   table: {
-                    name: coll.name,
-                    module: coll.module,
-                    submodule: coll.submodule,
-                    type: coll.type,
+                    name: selectedModule.name,
+                    type: "module",
                   },
                 };
                 try {
@@ -467,6 +495,19 @@ const Form = ({ edit, onSuccess }) => {
 };
 
 const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
+  const fields = useMemo(() => {
+    return (
+      tables
+        ?.filter((t) => baseTable.includes(t.value))
+        .map((t) => t.fields.map((f) => ({ ...f, parent: t })))
+        .flat()
+        .map((f) => ({
+          label: `${f.parent.name}: ${f.label}`,
+          value: `${f.parent.name}-${f.name}`,
+          parent: f.parent,
+        })) || []
+    );
+  }, [tables, baseTable]);
   const {
     handleSubmit,
     control,
@@ -479,26 +520,26 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
       yup.object({
         label: yup.string().required("Label is required"),
         type: yup.string().required("Type is required"),
-        table: yup.string().when("type", {
-          is: "lookup",
-          then: (s) => s.required("Table is required"),
-          otherwise: (s) => s,
-        }),
+        // table: yup.string().when("type", {
+        //   is: "lookup",
+        //   then: (s) => s.required("Table is required"),
+        //   otherwise: (s) => s,
+        // }),
         field: yup.string().when("type", {
           is: "localField",
           then: (s) => s.required("Field is required"),
           otherwise: (s) => s,
         }),
-        localField: yup.string().when("type", {
-          is: "lookup",
-          then: (s) => s.required("Local Field is required"),
-          otherwise: (s) => s,
-        }),
-        foreignField: yup.string().when("type", {
-          is: "foreignField",
-          then: (s) => s.required("Foreign Field is required"),
-          otherwise: (s) => s,
-        }),
+        // localField: yup.string().when("type", {
+        //   is: "lookup",
+        //   then: (s) => s.required("Local Field is required"),
+        //   otherwise: (s) => s,
+        // }),
+        // foreignField: yup.string().when("type", {
+        //   is: "foreignField",
+        //   then: (s) => s.required("Foreign Field is required"),
+        //   otherwise: (s) => s,
+        // }),
       })
     ),
   });
@@ -513,37 +554,77 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
       localField: edit?.localField || "",
       foreignField: edit?.foreignField || "",
       table: edit?.table ? `${edit?.table.name}-${edit?.table.type}` : "",
-      field: edit?.field || "",
+      field: `${edit?.value}` || "",
     });
   }, [edit]);
 
   return (
     <form
       onSubmit={handleSubmit((values) => {
-        const coll = tables?.find((t) => t.value === values.table);
+        const parentTable = tables.find(
+          (t) =>
+            t.name === fields.find((f) => f.value === values.field)?.parent.name
+        );
+        const field = parentTable.fields.find(
+          (f) => `${parentTable.name}-${f.name}` === values.field
+        );
+
         const payload = {
           _id: edit?._id || Math.random().toString(36).substr(-8),
           label: values.label,
-          type: values.type,
+          value: values.field,
         };
-        if (values.type === "localField") {
-          payload.field = values.field;
-        } else if (values.type === "lookup") {
+        if (parentTable.type === "module") {
+          payload.type = "localField";
+          payload.field = field.name;
+          if (field.coll) {
+            payload.type = "module-coll-lookup";
+            payload.table = {
+              name: field.coll.name,
+              type: "module-coll",
+              module: parentTable.name,
+            };
+            payload.localField = field.coll.name;
+            payload.foreignField = "_id";
+          }
+        } else if (parentTable.type === "module-coll") {
+          payload.type = "module-coll-lookup";
           payload.table = {
-            name: coll.name,
-            type: coll.type,
-            module: coll.module,
-            submodule: coll.submodule,
+            name: field.coll.name,
+            type: parentTable.type,
+            module: parentTable.module,
           };
-          payload.localField = values.localField;
-          payload.foreignField = values.foreignField;
+          payload.localField = field.coll.name;
+          payload.foreignField = "_id";
+        } else if (parentTable.type === "submodule") {
+          payload.type = "submodule-lookup";
+          payload.table = {
+            name: field.name,
+            type: parentTable.type,
+            module: parentTable.module,
+            submodule: parentTable.submodule,
+          };
+          payload.localField = "_id";
+          payload.foreignField = "record";
+        } else if (parentTable.type === "submodule-coll") {
+          payload.type = "submodule-coll-lookup";
+          payload.table = {
+            name: field.coll.name,
+            type: parentTable.type,
+            module: parentTable.module,
+            submodule: parentTable.submodule,
+          };
+          payload.foreignField = field.coll.name;
+          payload.foreignField = "_id";
         }
+
         onSuccess(payload);
       })}
       className={`p-1 grid gap-1`}
     >
+      <Combobox label="Field" name="field" control={control} options={fields} />
       <Input {...register("label")} label="Label" error={errors.label} />
-      <Combobox
+      {/* <Combobox
         label="Type"
         name="type"
         control={control}
@@ -551,23 +632,8 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
           { label: "Local Field", value: "localField" },
           { label: "Lookup / Join", value: "lookup" },
         ]}
-      />
-      {type === "localField" && (
-        <Combobox
-          label="Field"
-          name="field"
-          control={control}
-          options={
-            tables
-              ?.find((t) => t.value === baseTable)
-              ?.fields?.map((f) => ({
-                label: f.label,
-                value: f.name,
-              })) || []
-          }
-        />
-      )}
-      {type === "lookup" && (
+      /> */}
+      {false && (
         <>
           <Combobox
             label="Table"

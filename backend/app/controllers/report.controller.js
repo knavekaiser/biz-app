@@ -1,6 +1,6 @@
 import { appConfig } from "../config/index.js";
 import { dbHelper } from "../helpers/index.js";
-import { Chat, Report } from "../models/index.js";
+import { Chat, Module, Report, Submodule } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
@@ -199,14 +199,9 @@ export const genPipeline = async (req, res) => {
     const pipeline = [];
 
     columns
-      .filter((col) => col.type === "lookup")
+      .filter((col) => col.type === "module-coll-lookup")
       .forEach((col) => {
-        let tableName = `${companyId}_${col.table.name}`;
-        if (["module-coll", "submodule-coll"].includes(col.table.type)) {
-          tableName = `${companyId}_${
-            col.table.module || col.table.submodule
-          }_${col.table.name}`;
-        }
+        let tableName = `${companyId}_${col.table.module}_${col.table.name}`;
         pipeline.push(
           ...[
             {
@@ -214,7 +209,7 @@ export const genPipeline = async (req, res) => {
                 from: tableName,
                 localField: col.localField,
                 foreignField: col.foreignField,
-                as: col.label,
+                as: col.field,
               },
             },
           ]
@@ -223,7 +218,14 @@ export const genPipeline = async (req, res) => {
 
     const project = {};
     columns.forEach((col) => {
-      project[col.label] = `$${col.field || col.label}`;
+      project[col.label] = col.table
+        ? {
+            $getField: {
+              field: "name",
+              input: { $first: `$${col.field}` },
+            },
+          }
+        : `$${col.field}`;
     });
     pipeline.push({ $project: project });
 
@@ -244,7 +246,33 @@ export const testPipeline = async (req, res) => {
       }`;
     }
 
-    const { Model } = await dbHelper.getModel(tableName);
+    let Model = null;
+    if (table.type === "collection") {
+      Model = await dbHelper.getModel(tableName).then((data) => data.Model);
+    } else if (["module", "submodule"].includes(table.type)) {
+      const module = await (table.type === "module"
+        ? Module
+        : Submodule
+      ).findOne({ name: table.name });
+      Model = await dbHelper
+        .getModuleModel({
+          name: `${companyId}_${module.name}`,
+          fields: module.fields,
+        })
+        .then((data) => data.Model);
+    } else if (["module-coll", "submodule-coll"].includes(table.type)) {
+      const module = await (table.type === "module"
+        ? Module
+        : Submodule
+      ).findOne({ name: table.name });
+      Model = await dbHelper
+        .getModuleModel({
+          name: `${companyId}_${module.name}_${table.name}`,
+          fields: module.fields.find((f) => f.name === table.name)?.fields,
+        })
+        .then((data) => data.Model);
+    }
+
     const data = await Model.aggregate(req.body.pipeline);
     return responseFn.success(res, { data });
   } catch (err) {

@@ -40,6 +40,9 @@
 
 .codeInput {
   font-family: "Courier New", Courier, monospace;
+  textarea {
+    min-height: 15rem;
+  }
 }
 
 .termForm {
@@ -69,8 +72,8 @@
   width: 100%;
   max-width: 35rem;
   .form {
-    overflow: scroll;
-    max-height: 100vh;
+    overflow: auto;
+    max-height: 85vh;
   }
 }
 

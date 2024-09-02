@@ -36,6 +36,35 @@ const getType = (field) => {
   }
   return t;
 };
+const getTypeStr = (field) => {
+  let t;
+  switch (field.dataType) {
+    case "string":
+    case "text":
+      t = `Schema.Types.String`;
+      break;
+    case "number":
+      t = `Schema.Types.Number`;
+      break;
+    case "date":
+      t = `Schema.Types.Date`;
+      break;
+    case "boolean":
+      t = `Schema.Types.Boolean`;
+      break;
+    case "array":
+      t = `Schema.Types.Array`;
+      break;
+    case "objectId":
+      t = `Schema.Types.ObjectId`;
+      break;
+    case "object":
+      t = `Schema.Types.Object`;
+      break;
+    default:
+  }
+  return t;
+};
 
 const getFields = (fields) => {
   const _fields = {};
@@ -1174,3 +1203,71 @@ export const defaultSchemas = [
     ],
   },
 ];
+
+export const getModuleModel = async ({ name, fields }) => {
+  const getFields = (fields) => {
+    const _fields = {};
+    const rawFields = {};
+    fields.forEach((field) => {
+      // add nested fields type if field is an object
+      if (field.dataType === "array" && field.dataElementType === "object") {
+        if (Array.isArray(field.fields) && field.fields.length) {
+          _fields[field.name] = [
+            new Schema(getFields(field.fields).schemaFields, {
+              timestamps: true,
+            }),
+          ];
+          rawFields[field.name] = `[${getFields(field.fields).schemaStr}]`;
+        } else {
+          _fields[field.name] = [];
+          rawFields[field.name] = `[]`;
+        }
+      } else {
+        _fields[field.name] = {
+          type: getType(field),
+          required: field.required,
+          ...(field.dataType === "objectId" &&
+            field.coll && { ref: `${name}_${field.coll.name}` }),
+          ...(field.unique && {
+            unique: true,
+            ...(!field.required && { sparse: true }),
+          }),
+        };
+        rawFields[field.name] = `{ type: ${getTypeStr(field)}, required: ${(
+          field.required || false
+        ).toString()}${
+          field.dataType === "objectId" && field.coll
+            ? `, ref: "${name}_${field.coll.name}"`
+            : " "
+        }${
+          field.unique
+            ? `, unique: true${!field.required ? ", sparse: true" : " "}`
+            : ""
+        }}`;
+      }
+    });
+    return {
+      schemaFields: _fields,
+      schemaStr: `new Schema(${Object.entries(rawFields).reduce(
+        (p, [k, v], i, arr) =>
+          `${i === 0 ? "{" : ""}${p}\n${k}: ${v},${
+            i + 1 === arr.length ? `\n}` : ""
+          }`,
+        ""
+      )}, { timestamps: true })`,
+    };
+  };
+  const { schemaFields, schemaStr } = getFields(fields);
+
+  if (mongoose.models[name]) {
+    delete mongoose.models[name];
+  }
+
+  const schema = new Schema(schemaFields, { timestamps: true });
+  return {
+    collectionName: name,
+    Model: mongoose.model(name, schema, name),
+    schemaStr,
+    // collection: { __name: name },
+  };
+};
