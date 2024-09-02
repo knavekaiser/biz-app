@@ -454,7 +454,7 @@ const Form = ({ edit, onSuccess }) => {
           </div>
           <Table columns={columns.map((col) => ({ label: col.label }))}>
             {data?.map((rec, i) => (
-              <tr key={rec._id || i}>
+              <tr key={i}>
                 {columns.map((col, i) => {
                   let data = rec[col.field] || rec[col.label];
                   if (Array.isArray(data)) {
@@ -570,6 +570,7 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
         );
 
         const payload = {
+          dataType: field.dataType,
           _id: edit?._id || Math.random().toString(36).substr(-8),
           label: values.label,
           value: values.field,
@@ -580,42 +581,35 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
           if (field.coll) {
             payload.type = "module-coll-lookup";
             payload.table = {
-              name: field.coll.name,
+              name: field.name,
               type: "module-coll",
               module: parentTable.name,
             };
             payload.localField = field.coll.name;
             payload.foreignField = "_id";
           }
-        } else if (parentTable.type === "module-coll") {
-          payload.type = "module-coll-lookup";
-          payload.table = {
-            name: field.coll.name,
-            type: parentTable.type,
-            module: parentTable.module,
-          };
-          payload.localField = field.coll.name;
-          payload.foreignField = "_id";
         } else if (parentTable.type === "submodule") {
           payload.type = "submodule-lookup";
           payload.table = {
-            name: field.name,
+            name: parentTable.name,
+            field: field.name,
             type: parentTable.type,
             module: parentTable.module,
-            submodule: parentTable.submodule,
+            submodule: parentTable.name,
           };
           payload.localField = "_id";
           payload.foreignField = "record";
-        } else if (parentTable.type === "submodule-coll") {
-          payload.type = "submodule-coll-lookup";
-          payload.table = {
-            name: field.coll.name,
-            type: parentTable.type,
-            module: parentTable.module,
-            submodule: parentTable.submodule,
-          };
-          payload.foreignField = field.coll.name;
-          payload.foreignField = "_id";
+          if (field.coll) {
+            payload.type = "submodule-coll-lookup";
+            payload.table = {
+              name: field.name,
+              type: parentTable.type,
+              module: parentTable.module,
+              submodule: parentTable.name,
+            };
+            payload.localField = field.coll.name;
+            payload.foreignField = "_id";
+          }
         }
 
         onSuccess(payload);

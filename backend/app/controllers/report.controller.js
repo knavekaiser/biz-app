@@ -206,6 +206,7 @@ export const genPipeline = async (req, res) => {
           ...[
             {
               $lookup: {
+                // type: "module-coll-lookup",
                 from: tableName,
                 localField: col.localField,
                 foreignField: col.foreignField,
@@ -215,17 +216,90 @@ export const genPipeline = async (req, res) => {
           ]
         );
       });
+    columns
+      .filter((col) => col.type === "submodule-lookup")
+      .forEach((col) => {
+        let tableName = `${companyId}_${col.table.module}_${col.table.name}`;
+        pipeline.push(
+          ...[
+            {
+              $lookup: {
+                // type: "submodule-lookup",
+                from: tableName,
+                localField: col.localField,
+                foreignField: col.foreignField,
+                as: col.label,
+              },
+            },
+            {
+              $unwind: {
+                path: `$${col.label}`,
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ]
+        );
+      });
+    const submoduleColumn = columns.find(
+      (col) => col.type === "submodule-lookup" && col.foreignField === "record"
+    );
+    columns
+      .filter((col) => col.type === "submodule-coll-lookup")
+      .forEach((col) => {
+        let tableName = `${companyId}_${col.table.module}_${col.table.submodule}_${col.table.name}`;
+        pipeline.push(
+          ...[
+            {
+              $lookup: {
+                // type: "submodule-coll-lookup",
+                from: tableName,
+                localField: `${submoduleColumn?.label}.${col.table.name}`,
+                foreignField: "_id",
+                as: `${submoduleColumn?.label}.${col.localField}`,
+              },
+            },
+            {
+              $set: {
+                [`${submoduleColumn?.label}.${col.localField}`]: {
+                  $getField: {
+                    input: {
+                      $first: `$${submoduleColumn?.label}.${col.localField}`,
+                    },
+                    field: "name",
+                  },
+                },
+              },
+            },
+          ]
+        );
+      });
 
     const project = {};
     columns.forEach((col) => {
-      project[col.label] = col.table
-        ? {
-            $getField: {
-              field: "name",
-              input: { $first: `$${col.field}` },
-            },
-          }
-        : `$${col.field}`;
+      if (col.type === "module-coll-lookup") {
+        project[col.label] = {
+          $getField: {
+            field: "name",
+            input: { $first: `$${col.field}` },
+          },
+        };
+      } else if (col.type === "submodule-lookup") {
+        project[col.label] = {
+          $getField: {
+            field: col.table.field,
+            input: `$${col.label}`,
+          },
+        };
+      } else if (col.type === "submodule-coll-lookup") {
+        project[col.label] = {
+          $getField: {
+            field: col.table.name,
+            input: `$${submoduleColumn.label}`,
+          },
+        };
+      } else {
+        project[col.label] = `$${col.field}`;
+      }
     });
     pipeline.push({ $project: project });
 
