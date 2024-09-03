@@ -309,43 +309,42 @@ export const genPipeline = async (req, res) => {
   }
 };
 
+const getModelForReport = async ({ companyId, table }) => {
+  let tableName = `${companyId}_${table.name}`;
+  if (["module-coll", "submodule-coll"].includes(table.type)) {
+    tableName = `${companyId}_${table.module || table.submodule}_${table.name}`;
+  }
+
+  let Model = null;
+  if (table.type === "collection") {
+    Model = await dbHelper.getModel(tableName).then((data) => data.Model);
+  } else if (["module", "submodule"].includes(table.type)) {
+    const module = await (table.type === "module" ? Module : Submodule).findOne(
+      { name: table.name }
+    );
+    Model = await dbHelper
+      .getModuleModel({
+        name: `${companyId}_${module.name}`,
+        fields: module.fields,
+      })
+      .then((data) => data.Model);
+  } else if (["module-coll", "submodule-coll"].includes(table.type)) {
+    const module = await (table.type === "module" ? Module : Submodule).findOne(
+      { name: table.name }
+    );
+    Model = await dbHelper
+      .getModuleModel({
+        name: `${companyId}_${module.name}_${table.name}`,
+        fields: module.fields.find((f) => f.name === table.name)?.fields,
+      })
+      .then((data) => data.Model);
+  }
+  return Model;
+};
 export const testPipeline = async (req, res) => {
   try {
     const companyId = req.company?._id || req.authUser._id;
-    const table = req.body.table;
-    let tableName = `${companyId}_${table.name}`;
-    if (["module-coll", "submodule-coll"].includes(table.type)) {
-      tableName = `${companyId}_${table.module || table.submodule}_${
-        table.name
-      }`;
-    }
-
-    let Model = null;
-    if (table.type === "collection") {
-      Model = await dbHelper.getModel(tableName).then((data) => data.Model);
-    } else if (["module", "submodule"].includes(table.type)) {
-      const module = await (table.type === "module"
-        ? Module
-        : Submodule
-      ).findOne({ name: table.name });
-      Model = await dbHelper
-        .getModuleModel({
-          name: `${companyId}_${module.name}`,
-          fields: module.fields,
-        })
-        .then((data) => data.Model);
-    } else if (["module-coll", "submodule-coll"].includes(table.type)) {
-      const module = await (table.type === "module"
-        ? Module
-        : Submodule
-      ).findOne({ name: table.name });
-      Model = await dbHelper
-        .getModuleModel({
-          name: `${companyId}_${module.name}_${table.name}`,
-          fields: module.fields.find((f) => f.name === table.name)?.fields,
-        })
-        .then((data) => data.Model);
-    }
+    const Model = await getModelForReport({ companyId, table: req.body.table });
 
     const data = await Model.aggregate(req.body.pipeline);
     return responseFn.success(res, { data });
@@ -357,11 +356,17 @@ export const testPipeline = async (req, res) => {
 export const genReport = async (req, res) => {
   try {
     const reportTemplate = await Report.findOne({ _id: req.params._id });
+    const companyId = reportTemplate.company;
+    const table = reportTemplate.tables.find((t) => t.type === "module");
+
+    const Model = await getModelForReport({ companyId, table });
+    const data = await Model.aggregate(reportTemplate.pipeline);
+
     return responseFn.success(res, {
       data: {
         name: reportTemplate.name,
-        columns: reportTemplate.pipeline,
-        data: [],
+        columns: reportTemplate.columns,
+        records: data,
       },
     });
   } catch (err) {

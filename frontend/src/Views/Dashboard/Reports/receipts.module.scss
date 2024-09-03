@@ -9,11 +9,6 @@
   width: 100%;
   grid-template-rows: min-content 1fr;
 }
-.receipts {
-  tr {
-    grid-template-columns: 1fr 3rem;
-  }
-}
 
 .addReceiptFormModal {
   width: 100%;

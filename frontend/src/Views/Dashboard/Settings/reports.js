@@ -12,6 +12,7 @@ import {
   TableActions,
   Textarea,
   Select,
+  Moment,
 } from "Components/elements";
 import s from "./settings.module.scss";
 import { IoMdArrowForward } from "react-icons/io";
@@ -456,7 +457,7 @@ const Form = ({ edit, onSuccess }) => {
             {data?.map((rec, i) => (
               <tr key={i}>
                 {columns.map((col, i) => {
-                  let data = rec[col.field] || rec[col.label];
+                  let data = rec[col.label];
                   if (Array.isArray(data)) {
                     data = data.length;
                   } else if (data === null) {
@@ -467,6 +468,10 @@ const Form = ({ edit, onSuccess }) => {
                     );
                   } else if (typeof data === "object") {
                     data = JSON.stringify(data);
+                  } else if (data && col.dataType === "date") {
+                    data = <Moment format="DD MMM YY hh:mma">{data}</Moment>;
+                  } else if (!data) {
+                    data = "--";
                   }
                   return <td key={i}>{data}</td>;
                 })}
