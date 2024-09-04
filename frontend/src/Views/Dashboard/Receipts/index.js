@@ -88,7 +88,7 @@ const Receipts = ({ setSidebarOpen }) => {
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setReceipt(item);
                     setAddReceipt(true);
                   },
@@ -98,7 +98,7 @@ const Receipts = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this receipt?`,

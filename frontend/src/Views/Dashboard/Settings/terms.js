@@ -115,7 +115,7 @@ const Terms = ({ terms, setTerms }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                     setAddTerm(true);
                   },
@@ -123,7 +123,7 @@ const Terms = ({ terms, setTerms }) => {
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Term?`,

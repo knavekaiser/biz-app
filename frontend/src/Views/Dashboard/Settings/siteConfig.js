@@ -643,7 +643,7 @@ const SiteConfig = ({ next }) => {
                   {
                     icon: <FaPencilAlt />,
                     label: "Edit",
-                    callBack: () => {
+                    onClick: () => {
                       setEditSection(section);
                       setUpdateFooterElements(true);
                     },
@@ -651,7 +651,7 @@ const SiteConfig = ({ next }) => {
                   {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
-                    callBack: () =>
+                    onClick: () =>
                       Prompt({
                         type: "confirmation",
                         message: `Are you sure you want to remove this section?`,
@@ -851,7 +851,7 @@ const LandingPageShelves = ({
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                     setAddShelf(true);
                   },
@@ -859,7 +859,7 @@ const LandingPageShelves = ({
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Shelf?`,
@@ -1625,7 +1625,7 @@ const FooterElements = ({ edit, onSuccess }) => {
                   {
                     icon: <FaPencilAlt />,
                     label: "Edit",
-                    callBack: () => {
+                    onClick: () => {
                       setEditItem(item);
                       setUpdateItems(true);
                     },
@@ -1633,7 +1633,7 @@ const FooterElements = ({ edit, onSuccess }) => {
                   {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
-                    callBack: () =>
+                    onClick: () =>
                       Prompt({
                         type: "confirmation",
                         message: `Are you sure you want to remove this item?`,

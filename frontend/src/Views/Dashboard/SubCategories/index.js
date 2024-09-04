@@ -63,7 +63,7 @@ const Collections = () => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                   },
                 },
@@ -71,7 +71,7 @@ const Collections = () => {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
                   disabled: deleting,
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Subcategory?`,

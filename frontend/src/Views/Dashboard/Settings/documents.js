@@ -91,7 +91,7 @@ const Docs = ({ docs, setDocs }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                     setAddDoc(true);
                   },
@@ -99,7 +99,7 @@ const Docs = ({ docs, setDocs }) => {
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Document?`,
@@ -305,7 +305,7 @@ const DocForm = ({ edit, onSuccess }) => {
                   {
                     icon: <FaPencilAlt />,
                     label: "Edit",
-                    callBack: () => {
+                    onClick: () => {
                       setValue("url", item);
                       setUpdateUrl(item);
                     },
@@ -313,7 +313,7 @@ const DocForm = ({ edit, onSuccess }) => {
                   {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
-                    callBack: () =>
+                    onClick: () =>
                       Prompt({
                         type: "confirmation",
                         message: `Are you sure you want to remove this URL?`,

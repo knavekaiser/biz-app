@@ -64,7 +64,7 @@ const Orders = ({ setSidebarOpen }) => {
       >
         {orders.map((item) => (
           <tr
-            onClick={() => {
+            onClick={(e) => {
               setOrder(item);
               setAddOrder(true);
             }}
@@ -87,7 +87,7 @@ const Orders = ({ setSidebarOpen }) => {
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setOrder(item);
                     setAddOrder(true);
                   },
@@ -97,7 +97,7 @@ const Orders = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this order?`,

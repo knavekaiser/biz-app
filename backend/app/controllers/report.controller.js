@@ -359,8 +359,19 @@ export const genReport = async (req, res) => {
     const companyId = reportTemplate.company;
     const table = reportTemplate.tables.find((t) => t.type === "module");
 
+    const match = {};
+    if (req.query.startDate && req.query.endDate) {
+      match.createdAt = {
+        $gte: new Date(req.query.startDate),
+        $lt: new Date(req.query.endDate).add("0 0 0 1"),
+      };
+    }
+
     const Model = await getModelForReport({ companyId, table });
-    const data = await Model.aggregate(reportTemplate.pipeline);
+    const data = await Model.aggregate([
+      { $match: match },
+      ...reportTemplate.pipeline,
+    ]);
 
     return responseFn.success(res, {
       data: {

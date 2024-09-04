@@ -87,7 +87,7 @@ const Quotes = ({ setSidebarOpen }) => {
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setQuote(item);
                     setAddQuote(true);
                   },
@@ -97,7 +97,7 @@ const Quotes = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this quote?`,

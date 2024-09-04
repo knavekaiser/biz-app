@@ -88,7 +88,7 @@ const Payments = ({ setSidebarOpen }) => {
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setPayment(item);
                     setAddPayment(true);
                   },
@@ -98,7 +98,7 @@ const Payments = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this payment?`,

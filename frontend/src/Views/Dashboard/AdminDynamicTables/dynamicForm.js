@@ -506,7 +506,7 @@ const Variants = ({ collection, setValue, getValues }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                     setFormOpen(true);
                   },
@@ -514,7 +514,7 @@ const Variants = ({ collection, setValue, getValues }) => {
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Variant?`,
@@ -754,7 +754,7 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
             {
               icon: <FaPencilAlt />,
               label: "Edit",
-              callBack: () => {
+              onClick: () => {
                 setEdit(item);
                 setFormOpen(true);
               },
@@ -762,7 +762,7 @@ const NestedObjectTable = ({ collection, field, values = [], setValue }) => {
             {
               icon: <FaRegTrashAlt />,
               label: "Delete",
-              callBack: () =>
+              onClick: () =>
                 Prompt({
                   type: "confirmation",
                   message: `Are you sure you want to remove this Collection?`,

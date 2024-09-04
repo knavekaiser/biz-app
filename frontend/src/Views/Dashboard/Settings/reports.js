@@ -71,7 +71,7 @@ const Reports = () => {
                   {
                     icon: <FaPencilAlt />,
                     label: "Edit",
-                    callBack: () => {
+                    onClick: () => {
                       setEditReport(report);
                       setAddReport(true);
                     },
@@ -80,7 +80,7 @@ const Reports = () => {
                     icon: <FaRegTrashAlt />,
                     label: "Delete",
                     disabled: deleting,
-                    callBack: () =>
+                    onClick: () =>
                       Prompt({
                         type: "confirmation",
                         message: `Are you sure you want to remove this section?`,
@@ -349,7 +349,7 @@ const Form = ({ edit, onSuccess }) => {
                       {
                         icon: <FaPencilAlt />,
                         label: "Edit",
-                        callBack: () => {
+                        onClick: () => {
                           setEditItem(item);
                           setUpdateItems(true);
                         },
@@ -357,7 +357,7 @@ const Form = ({ edit, onSuccess }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this item?`,

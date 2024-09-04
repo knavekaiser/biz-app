@@ -80,7 +80,7 @@ const Businesses = ({ setSidebarOpen }) => {
                 {
                   icon: <FiLogIn style={{ fontSize: "1.15rem" }} />,
                   label: "Login as this Business",
-                  callBack: () => {
+                  onClick: () => {
                     Prompt({
                       type: "confirmation",
                       message:
@@ -110,7 +110,7 @@ const Businesses = ({ setSidebarOpen }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setAddBusiness(item);
                   },
                 },

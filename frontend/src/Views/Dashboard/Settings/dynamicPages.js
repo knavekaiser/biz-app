@@ -89,7 +89,7 @@ const Docs = ({ docs, setDocs }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setEdit(item);
                     setAddDoc(true);
                   },
@@ -97,7 +97,7 @@ const Docs = ({ docs, setDocs }) => {
                 {
                   icon: <FaRegTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this Document?`,

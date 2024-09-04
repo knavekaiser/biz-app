@@ -93,7 +93,7 @@ const Purchases = ({ setSidebarOpen }) => {
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setPurchase(item);
                     setAddPurchase(true);
                   },
@@ -103,7 +103,7 @@ const Purchases = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this purchase?`,

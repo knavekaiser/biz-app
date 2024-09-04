@@ -265,14 +265,14 @@ const Form = ({ edit, onSuccess }) => {
                       {
                         icon: <FaPencilAlt />,
                         label: "Update",
-                        callBack: () => {
+                        onClick: () => {
                           setEditProduct(product);
                         },
                       },
                       {
                         icon: <FaTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this product?`,

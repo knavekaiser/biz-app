@@ -82,7 +82,7 @@ const Emps = ({ setSidebarOpen }) => {
                       {
                         icon: <FaPencilAlt />,
                         label: "Update",
-                        callBack: () => {
+                        onClick: () => {
                           setEmp(item);
                           setAddEmp(true);
                         },

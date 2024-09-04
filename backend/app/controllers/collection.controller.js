@@ -37,6 +37,18 @@ export const getAll = async (req, res) => {
               type: "module",
               fields: [
                 { name: "_id", label: "ID", unique: true, fieldType: null },
+                {
+                  name: "createdAt",
+                  label: "Created At",
+                  dataType: "date",
+                  fieldType: null,
+                },
+                {
+                  name: "updatedAt",
+                  label: "Updated At",
+                  dataType: "date",
+                  fieldType: null,
+                },
                 ...mod.fields,
                 // .filter((field) => !field.coll),
               ],
@@ -64,6 +76,18 @@ export const getAll = async (req, res) => {
               module: mod.module?.name,
               fields: [
                 { name: "_id", label: "ID", unique: true, fieldType: null },
+                {
+                  name: "createdAt",
+                  label: "Created At",
+                  dataType: "date",
+                  fieldType: null,
+                },
+                {
+                  name: "updatedAt",
+                  label: "Updated At",
+                  dataType: "date",
+                  fieldType: null,
+                },
                 ...mod.fields,
                 // .filter((field) => !field.coll),
               ],

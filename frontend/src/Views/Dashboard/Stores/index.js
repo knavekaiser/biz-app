@@ -207,7 +207,7 @@ const Stores = ({ setSidebarOpen }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Update",
-                  callBack: () => {
+                  onClick: () => {
                     setStore(item);
                     setAddStore(true);
                   },
@@ -215,7 +215,7 @@ const Stores = ({ setSidebarOpen }) => {
                 {
                   icon: <FaTrashAlt />,
                   label: "Delete",
-                  callBack: () =>
+                  onClick: () =>
                     Prompt({
                       type: "confirmation",
                       message: `Are you sure you want to remove this listing?`,

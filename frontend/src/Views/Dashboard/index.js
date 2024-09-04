@@ -7,13 +7,7 @@ import {
   useState,
 } from "react";
 import { SiteContext } from "SiteContext";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  Link,
-  useLocation,
-} from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { paths } from "config";
 import { FaArrowLeftLong } from "react-icons/fa6";
 
@@ -24,12 +18,7 @@ import { useFetch } from "hooks";
 import { endpoints } from "config";
 
 import { RxExit } from "react-icons/rx";
-import {
-  MdBusinessCenter,
-  MdOutlineBusinessCenter,
-  MdOutlinePayments,
-  MdPayments,
-} from "react-icons/md";
+import { MdBusinessCenter, MdOutlineBusinessCenter } from "react-icons/md";
 import {
   PiLineSegments,
   PiLineSegmentsFill,
@@ -49,10 +38,18 @@ import {
   IoReceiptOutline,
   IoShieldCheckmark,
   IoShieldCheckmarkOutline,
-  IoStorefront,
-  IoStorefrontOutline,
 } from "react-icons/io5";
-import { BsGear, BsGearFill, BsList } from "react-icons/bs";
+import {
+  BsCart3,
+  BsCartFill,
+  BsFillTagsFill,
+  BsGear,
+  BsGearFill,
+  BsHouseDoor,
+  BsHouseDoorFill,
+  BsList,
+  BsTags,
+} from "react-icons/bs";
 import {
   HiOutlineShoppingCart,
   HiOutlineUserGroup,
@@ -70,7 +67,6 @@ import { CgSpinner } from "react-icons/cg";
 
 const Home = lazy(() => import("./Home"));
 const Settings = lazy(() => import("./Settings"));
-const AdminSettings = lazy(() => import("./AdminSettings"));
 const Businesses = lazy(() => import("./Businesses"));
 const AdminBusinesses = lazy(() => import("./AdminBusinesses"));
 const Invoices = lazy(() => import("./Sales"));
@@ -80,11 +76,8 @@ const Purchases = lazy(() => import("./Purchases"));
 const Receipts = lazy(() => import("./Receipts"));
 const Payments = lazy(() => import("./Payments"));
 const DynamicTables = lazy(() => import("./DynamicTables"));
-const AdminDynamicTables = lazy(() => import("./AdminDynamicTables"));
 const Roles = lazy(() => import("./Roles"));
 const Employees = lazy(() => import("./Employees"));
-const StoreListings = lazy(() => import("./Stores"));
-const SubPlans = lazy(() => import("./SubPlans"));
 const Chats = lazy(() => import("./Chats"));
 const Reports = lazy(() => import("./Reports"));
 
@@ -92,68 +85,225 @@ const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
   const [sidebarItems, setSidebarItems] = useState([
     {
-      icon: <IoHomeOutline />,
-      activeIcon: <IoHome className={s.filled} />,
+      icon: <BsHouseDoor style={{ fontSize: "1.2em", marginTop: "-0.15em" }} />,
+      activeIcon: (
+        <BsHouseDoorFill
+          style={{ fontSize: "1.2em", marginTop: "-0.15em" }}
+          className={s.filled}
+        />
+      ),
       label: "Home",
       path: paths.dashboard.replace("/*", ""),
     },
-    // {
-    //   icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
-    //   activeIcon: (
-    //     <MdBusinessCenter style={{ fontSize: "1.2em" }} className={s.filled} />
-    //   ),
-    //   label: "Businesses",
-    //   path: paths.businesses,
-    // },
-    // {
-    //   icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
-    //   activeIcon: (
-    //     <PiUsersFourFill className={s.filled} style={{ fontSize: "1.2em" }} />
-    //   ),
-    //   label: "Micro Apps",
-    //   path: "https://crm.infinai.in",
-    //   target: "_blank",
-    // },
-    // {
-    //   icon: <IoStorefrontOutline style={{ fontSize: "1.1em" }} />,
-    //   activeIcon: (
-    //     <IoStorefront className={s.filled} style={{ fontSize: "1.1em" }} />
-    //   ),
-    //   label: "Stores",
-    //   path: paths.storeListings,
-    // },
-    // {
-    //   icon: <MdOutlinePayments style={{ fontSize: "1.2em" }} />,
-    //   activeIcon: (
-    //     <MdPayments className={s.filled} style={{ fontSize: "1.2em" }} />
-    //   ),
-    //   label: "Subscription Plans",
-    //   path: paths.subPlans,
-    // },
-    // {
-    //   icon: <IoChatbubblesOutline style={{ fontSize: "1.2em" }} />,
-    //   activeIcon: (
-    //     <IoChatbubbles className={s.filled} style={{ fontSize: "1.2em" }} />
-    //   ),
-    //   label: "Chats",
-    //   path: paths.chats,
-    // },
-    // {
-    //   icon: <PiTableLight style={{ fontSize: "1.2em" }} />,
-    //   activeIcon: (
-    //     <PiTableFill className={s.filled} style={{ fontSize: "1.2em" }} />
-    //   ),
-    //   label: "Manage Data",
-    //   path: paths.dynamicTables.replace("/*", ""),
-    // },
-    // {
-    //   icon: <BsGear />,
-    //   activeIcon: <BsGearFill className={s.filled} />,
-    //   label: "Settings",
-    //   path: paths.settings.baseUrl,
-    // },
   ]);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1220);
+
+  useEffect(() => {
+    if (userType === "company" || (userType === "staff" && business)) {
+      const menuItems = [
+        {
+          section: "home",
+          icon: <BsHouseDoor />,
+          activeIcon: <BsHouseDoorFill className={s.filled} />,
+          label: "Home",
+          path: paths.dashboard.replace("/*", ""),
+        },
+      ];
+      if (["staff", "admin"].includes(userType)) {
+        menuItems.push({
+          section: "home",
+          icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
+          activeIcon: (
+            <MdBusinessCenter
+              style={{ fontSize: "1.2em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Businesses",
+          path: paths.businesses,
+        });
+      }
+      menuItems.push({
+        section: "home",
+        icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
+        activeIcon: (
+          <PiUsersFourFill className={s.filled} style={{ fontSize: "1.2em" }} />
+        ),
+        label: "Micro Apps",
+        path: paths.businesses,
+        target: "_blank",
+      });
+      if (checkPermission("quote_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <BsTags style={{ marginTop: "0.15em" }} />,
+          activeIcon: (
+            <BsFillTagsFill
+              style={{ marginTop: "0.15em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Quotes",
+          path: paths.quotes,
+        });
+      }
+      if (checkPermission("order_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <BsCart3 />,
+          activeIcon: <BsCartFill className={s.filled} />,
+          label: "Orders",
+          path: paths.orders,
+        });
+      }
+      if (checkPermission("invoice_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <PiInvoiceLight style={{ fontSize: "1.15em" }} />,
+          activeIcon: (
+            <PiInvoiceFill
+              style={{ fontSize: "1.15em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Invoices",
+          path: paths.sales,
+        });
+      }
+      if (checkPermission("purchase_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <RiShoppingBag2Line style={{ fontSize: "1.1em" }} />,
+          activeIcon: (
+            <RiShoppingBag2Fill
+              style={{ fontSize: "1.1em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Purchases",
+          path: paths.purchases,
+        });
+      }
+      if (checkPermission("reciept_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <IoReceiptOutline />,
+          activeIcon: <IoReceipt className={s.filled} />,
+          label: "Receipts",
+          path: paths.receipts,
+        });
+      }
+      if (checkPermission("payment_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <RiMoneyDollarBoxLine style={{ fontSize: "1.1em" }} />,
+          activeIcon: (
+            <RiMoneyDollarBoxFill
+              style={{ fontSize: "1.1em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Payments",
+          path: paths.payments,
+        });
+      }
+      menuItems.push({
+        icon: <PiLineSegments style={{ fontSize: "1.2em" }} />,
+        activeIcon: (
+          <PiLineSegmentsFill
+            className={s.filled}
+            style={{ fontSize: "1.2em" }}
+          />
+        ),
+        label: "Reports",
+        path: paths.reports,
+      });
+      if (checkPermission("dynamic_table_read")) {
+        menuItems.push({
+          icon: <PiTableLight style={{ fontSize: "1.2em" }} />,
+          activeIcon: (
+            <PiTableFill className={s.filled} style={{ fontSize: "1.2em" }} />
+          ),
+          label: "Manage Data",
+          path: paths.dynamicTables.replace("/*", ""),
+        });
+      }
+      if (checkPermission("chat_read")) {
+        menuItems.push({
+          icon: <IoChatbubblesOutline style={{ fontSize: "1.2em" }} />,
+          activeIcon: (
+            <IoChatbubbles className={s.filled} style={{ fontSize: "1.2em" }} />
+          ),
+          label: "Chats",
+          path: paths.chats,
+        });
+      }
+      if (checkPermission("employee_read")) {
+        menuItems.push({
+          section: "management",
+          icon: <HiOutlineUserGroup />,
+          activeIcon: <HiUserGroup className={s.filled} />,
+          label: "Staffs",
+          path: paths.employees,
+        });
+      }
+      if (checkPermission("role_read")) {
+        menuItems.push({
+          section: "management",
+          icon: <IoShieldCheckmarkOutline />,
+          activeIcon: <IoShieldCheckmark className={s.filled} />,
+          label: "Roles",
+          path: paths.roles,
+        });
+      }
+      if (["company", "admin"].includes(userType)) {
+        menuItems.push({
+          section: "management",
+          icon: <BsGear />,
+          activeIcon: <BsGearFill className={s.filled} />,
+          label: "Settings",
+          path: paths.settings.baseUrl,
+        });
+      }
+
+      setSidebarItems(menuItems);
+    } else if (userType === "staff" && !business) {
+      setSidebarItems([
+        {
+          section: "home",
+          icon: <BsHouseDoor />,
+          activeIcon: <BsHouseDoorFill className={s.filled} />,
+          label: "Home",
+          path: paths.dashboard.replace("/*", ""),
+        },
+        {
+          section: "home",
+          icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
+          activeIcon: (
+            <MdBusinessCenter
+              style={{ fontSize: "1.2em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Businesses",
+          path: paths.businesses,
+        },
+        {
+          section: "other-app",
+          icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
+          activeIcon: (
+            <PiUsersFourFill
+              className={s.filled}
+              style={{ fontSize: "1.2em" }}
+            />
+          ),
+          label: "Micro Apps",
+          path: paths.businesses,
+          target: "_blank",
+        },
+      ]);
+    }
+  }, [userType, business]);
 
   if (!user) {
     return (
@@ -251,37 +401,7 @@ const Dashboard = () => {
       <div className={s.container}>
         <Sidebar
           sidebarOpen={sidebarOpen}
-          sidebarItems={[
-            {
-              icon: <IoHomeOutline />,
-              activeIcon: <IoHome className={s.filled} />,
-              label: "Home",
-              path: paths.dashboard.replace("/*", ""),
-            },
-            {
-              icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
-              activeIcon: (
-                <MdBusinessCenter
-                  style={{ fontSize: "1.2em" }}
-                  className={s.filled}
-                />
-              ),
-              label: "Businesses",
-              path: paths.businesses,
-            },
-            {
-              icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
-              activeIcon: (
-                <PiUsersFourFill
-                  className={s.filled}
-                  style={{ fontSize: "1.2em" }}
-                />
-              ),
-              label: "Micro Apps",
-              path: paths.businesses,
-              target: "_blank",
-            },
-          ]}
+          sidebarItems={sidebarItems}
           setSidebarOpen={setSidebarOpen}
         />
 
@@ -312,162 +432,7 @@ const Dashboard = () => {
     <div className={s.container}>
       <Sidebar
         sidebarOpen={sidebarOpen}
-        sidebarItems={[
-          {
-            icon: <IoHomeOutline />,
-            activeIcon: <IoHome className={s.filled} />,
-            label: "Home",
-            path: paths.dashboard.replace("/*", ""),
-          },
-          ...(checkPermission("quote_read")
-            ? [
-                {
-                  icon: <IoPricetagsOutline />,
-                  activeIcon: <IoPricetags className={s.filled} />,
-                  label: "Quotes",
-                  path: paths.quotes,
-                },
-              ]
-            : []),
-          ...(checkPermission("order_read")
-            ? [
-                {
-                  icon: <HiOutlineShoppingCart />,
-                  activeIcon: <HiShoppingCart className={s.filled} />,
-                  label: "Orders",
-                  path: paths.orders,
-                },
-              ]
-            : []),
-          ...(checkPermission("invoice_read")
-            ? [
-                {
-                  icon: <PiInvoiceLight />,
-                  activeIcon: <PiInvoiceFill className={s.filled} />,
-                  label: "Invoices",
-                  path: paths.sales,
-                },
-              ]
-            : []),
-          ...(checkPermission("purchase_read")
-            ? [
-                {
-                  icon: <RiShoppingBag2Line />,
-                  activeIcon: <RiShoppingBag2Fill className={s.filled} />,
-                  label: "Purchases",
-                  path: paths.purchases,
-                },
-              ]
-            : []),
-          ...(checkPermission("reciept_read")
-            ? [
-                {
-                  icon: <IoReceiptOutline />,
-                  activeIcon: <IoReceipt className={s.filled} />,
-                  label: "Receipts",
-                  path: paths.receipts,
-                },
-              ]
-            : []),
-          ...(checkPermission("payment_read")
-            ? [
-                {
-                  icon: <RiMoneyDollarBoxLine />,
-                  activeIcon: <RiMoneyDollarBoxFill className={s.filled} />,
-                  label: "Payments",
-                  path: paths.payments,
-                },
-              ]
-            : []),
-          {
-            icon: <PiLineSegments style={{ fontSize: "1.2em" }} />,
-            activeIcon: (
-              <PiLineSegmentsFill
-                className={s.filled}
-                style={{ fontSize: "1.2em" }}
-              />
-            ),
-            label: "Reports",
-            path: paths.reports,
-          },
-          ...(checkPermission("dynamic_table_read")
-            ? [
-                {
-                  icon: <PiTableLight style={{ fontSize: "1.2em" }} />,
-                  activeIcon: (
-                    <PiTableFill
-                      className={s.filled}
-                      style={{ fontSize: "1.2em" }}
-                    />
-                  ),
-                  label: "Manage Data",
-                  path: paths.dynamicTables.replace("/*", ""),
-                },
-              ]
-            : []),
-          ...(checkPermission("chat_read")
-            ? [
-                {
-                  icon: <IoChatbubblesOutline style={{ fontSize: "1.2em" }} />,
-                  activeIcon: (
-                    <IoChatbubbles
-                      className={s.filled}
-                      style={{ fontSize: "1.2em" }}
-                    />
-                  ),
-                  label: "Chats",
-                  path: paths.chats,
-                },
-              ]
-            : []),
-          ...(checkPermission("role_read")
-            ? [
-                {
-                  icon: <IoShieldCheckmarkOutline />,
-                  activeIcon: <IoShieldCheckmark className={s.filled} />,
-                  label: "Roles",
-                  path: paths.roles,
-                },
-              ]
-            : []),
-          ...(checkPermission("employee_read")
-            ? [
-                {
-                  icon: <HiOutlineUserGroup />,
-                  activeIcon: <HiUserGroup className={s.filled} />,
-                  label: "Staffs",
-                  path: paths.employees,
-                },
-              ]
-            : []),
-          ...(["company", "admin"].includes(userType)
-            ? [
-                {
-                  icon: <BsGear />,
-                  activeIcon: <BsGearFill className={s.filled} />,
-                  label: "Settings",
-                  path: paths.settings.baseUrl,
-                },
-              ]
-            : []),
-          ...(["staff", "admin"].includes(userType)
-            ? [
-                {
-                  icon: (
-                    <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />
-                  ),
-                  activeIcon: (
-                    <MdBusinessCenter
-                      style={{ fontSize: "1.2em" }}
-                      className={s.filled}
-                    />
-                  ),
-                  label: "Businesses",
-                  path: paths.businesses,
-                },
-              ]
-            : []),
-        ]}
+        sidebarItems={sidebarItems}
         setSidebarOpen={setSidebarOpen}
       />
 

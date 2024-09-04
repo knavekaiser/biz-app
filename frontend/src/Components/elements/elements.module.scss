@@ -836,7 +836,7 @@
         padding: 0;
       }
       &:not(:last-child) {
-        border-bottom: 1px solid rgba(var(--font-color), 0.1);
+        border-bottom: 1px solid rgba(black, 0.1);
       }
 
       &.loading {
@@ -856,13 +856,6 @@
           svg {
             animation: spin 1s infinite linear;
           }
-        }
-      }
-    }
-    :global(.light) & {
-      tr {
-        &:not(:last-child) {
-          border-bottom: 1px solid rgba(var(--font-color), 0.15);
         }
       }
     }

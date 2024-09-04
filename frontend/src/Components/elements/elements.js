@@ -474,7 +474,7 @@ export const FileInputNew = ({
                           {
                             icon: <FaRegTrashAlt />,
                             label: "Remove",
-                            callBack: () => {
+                            onClick: () => {
                               let _files = files.filter((f) =>
                                 typeof f === "string"
                                   ? f !== file

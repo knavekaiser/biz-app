@@ -91,7 +91,7 @@ const Roles = ({ setSidebarOpen }) => {
                       {
                         icon: <FaPencilAlt />,
                         label: "View",
-                        callBack: () => {
+                        onClick: () => {
                           setRole(item);
                           setAddRole(true);
                         },
@@ -103,7 +103,7 @@ const Roles = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this role?`,

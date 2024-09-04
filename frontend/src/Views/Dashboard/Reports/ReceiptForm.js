@@ -1,13 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { moment, Moment, Table } from "Components/elements";
+import { Input, moment, Moment, Table } from "Components/elements";
 import { useFetch } from "hooks";
 import s from "./receipts.module.scss";
 import { useReactToPrint } from "react-to-print";
 import { endpoints } from "config";
 
 import PrintInvoice from "./printInvoice";
+import { useForm } from "react-hook-form";
+import { BsX } from "react-icons/bs";
 
 export default function Report({ report: { _id } }) {
+  const { register, watch, setValue } = useForm();
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
@@ -17,13 +20,21 @@ export default function Report({ report: { _id } }) {
     endpoints.generateReport + `/${_id}`
   );
 
+  const startDate = watch("startDate");
+  const endDate = watch("endDate");
+
   useEffect(() => {
-    genReport().then(({ data }) => {
+    const query = {};
+    if (startDate && endDate) {
+      query.startDate = startDate;
+      query.endDate = endDate;
+    }
+    genReport({ query }).then(({ data }) => {
       if (data?.success) {
         setReport(data.data);
       }
     });
-  }, []);
+  }, [startDate, endDate]);
 
   return (
     <div className={`grid gap-1 p-1 ${s.addReceiptForm}`}>
@@ -34,7 +45,26 @@ export default function Report({ report: { _id } }) {
           </button>
         </div> */}
         <div>
-          <h3>{report.name}</h3>
+          <div className="flex gap-1 align-center">
+            <h2>{report.name}</h2>
+            <div className="flex gap-1 m-a mr-0 align-end">
+              <Input
+                label="Start Date"
+                type="date"
+                {...register("startDate")}
+              />
+              <Input label="End Date" type="date" {...register("endDate")} />
+              <button
+                className="btn clear iconOnly"
+                onClick={() => {
+                  setValue("startDate", "");
+                  setValue("endDate", "");
+                }}
+              >
+                <BsX />
+              </button>
+            </div>
+          </div>
           <Table
             loading={loading}
             className={s.receipts}

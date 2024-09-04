@@ -1,19 +1,7 @@
-import {
-  useRef,
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useCallback,
-  useContext,
-} from "react";
+import { useRef, useState, useEffect, useCallback, useContext } from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
-import {
-  FaSortDown,
-  FaCircleNotch,
-  FaChevronLeft,
-  FaChevronRight,
-} from "react-icons/fa";
+import { FaCircleNotch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Moment } from "./moment";
 import {
   Images,
@@ -23,7 +11,6 @@ import {
   Input,
   Select,
 } from "Components/elements";
-import { BsFillGearFill } from "react-icons/bs";
 import { useForm } from "react-hook-form";
 import { useFetch, useYup } from "hooks";
 import { toCSV, parseXLSXtoJSON } from "helpers";
@@ -31,9 +18,9 @@ import * as yup from "yup";
 import { Modal, Prompt } from "../modal";
 import { SiteContext } from "SiteContext";
 import { endpoints } from "config";
-// import { ProductThumb } from "Views/Home/productThumbnail";
 import { ProductThumb } from "../ui/productThumbnail";
 import { useParams } from "react-router-dom";
+import Menu from "./menu";
 
 export const Table = ({
   admin,
@@ -437,83 +424,16 @@ const Filters = ({
 };
 
 export const TableActions = ({ actions, className }) => {
-  const btn = useRef();
-  const popupContainerRef = useRef();
-  const [open, setOpen] = useState(false);
-  const [style, setStyle] = useState({});
-  useLayoutEffect(() => {
-    if (actions.length > 3) {
-      const { width, height, x, y } = btn.current.getBoundingClientRect();
-      const top = window.innerHeight - y;
-      setStyle({
-        position: "absolute",
-        right: window.innerWidth - (x + width),
-        top: (
-          window.innerHeight -
-          ((popupContainerRef.current?.querySelector("button").clientHeight ||
-            35) *
-            actions.length +
-            8)
-        ).clamp(8, y + height),
-        maxHeight: window.innerHeight - 16,
-      });
-    }
-  }, [open]);
-  return actions.length < 4 ? (
+  if (actions?.length === 0) {
+    return <td className={`${s.tableActions} ${className || ""}`} />;
+  }
+
+  return (
     <td
-      className={`${s.tableActions} ${className || ""}`}
-      data-testid="tableActions"
       onClick={(e) => e.stopPropagation()}
-    >
-      {actions.map((action, i) => (
-        <button
-          key={i}
-          title={action.label}
-          className="clear"
-          onClick={action.callBack}
-          type="button"
-        >
-          {action.icon}
-        </button>
-      ))}
-    </td>
-  ) : (
-    <td
       className={`${s.tableActions} ${className || ""}`}
-      onClick={(e) => e.stopPropagation()}
     >
-      <button
-        className={s.btn}
-        ref={btn}
-        data-testid="gear-btn"
-        onClick={() => setOpen(true)}
-        type="button"
-      >
-        <BsFillGearFill className={s.gear} /> <FaSortDown className={s.sort} />
-      </button>
-      <Modal
-        style={style}
-        className={s.actionModal}
-        open={open}
-        onBackdropClick={() => setOpen(false)}
-        backdropClass={s.actionBackdrop}
-      >
-        <div ref={popupContainerRef}>
-          {actions.map((action, i) => (
-            <button
-              key={i}
-              title={action.label}
-              className="clear"
-              onClick={() => {
-                setOpen(false);
-                action.callBack();
-              }}
-            >
-              {action.icon} {action.label}
-            </button>
-          ))}
-        </div>
-      </Modal>
+      <Menu options={actions} />
     </td>
   );
 };

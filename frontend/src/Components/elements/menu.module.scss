@@ -1,0 +1,46 @@
+@import "../variables";
+
+.menuBtn {
+  font-size: 1.25rem !important;
+  padding: 0 !important;
+}
+.actionModal {
+  width: max-content !important;
+  height: min-content !important;
+  display: absolute !important;
+  border-radius: 0.5rem !important;
+  filter: drop-shadow(0 2px 2px rgba(black, 0.25));
+  background: white;
+  animation: none;
+  opacity: 1;
+  div {
+    display: grid;
+    button {
+      width: 100%;
+      padding: 8px 12px;
+      display: flex;
+      grid-gap: 8px;
+      align-items: center;
+      justify-content: flex-start;
+      svg {
+        height: 18px;
+        width: 18px;
+        color: $primary-color-dark1;
+      }
+      &:hover {
+        background: rgba(black, 0.05) !important;
+      }
+      &:disabled,
+      &[disabled] {
+        opacity: 0.5 !important;
+        pointer-events: none;
+        font-style: italic;
+      }
+    }
+  }
+}
+.actionBackdrop {
+  backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0) !important;
+  animation: none;
+}

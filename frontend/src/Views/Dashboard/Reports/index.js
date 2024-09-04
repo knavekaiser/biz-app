@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Table, TableActions } from "Components/elements";
-import { FaRegEye } from "react-icons/fa";
+import { Table } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./receipts.module.scss";
 import { useFetch } from "hooks";
@@ -39,24 +38,34 @@ const Receipts = ({ setSidebarOpen }) => {
       <Table
         loading={loading}
         className={s.receipts}
-        columns={[{ label: "Name" }, { label: "Action" }]}
+        columns={[
+          { label: "Name" },
+          // { label: "Action" }
+        ]}
       >
         {receipts.map((item) => (
-          <tr style={{ cursor: "pointer" }} key={item._id}>
+          <tr
+            style={{ cursor: "pointer" }}
+            key={item._id}
+            onClick={() => {
+              setReport(item);
+              setAddReceipt(true);
+            }}
+          >
             <td>{item.name}</td>
-            <TableActions
+            {/* <TableActions
               className={s.actions}
               actions={[
                 {
                   icon: <FaRegEye />,
                   label: "View",
-                  callBack: () => {
+                  onClick: () => {
                     setReport(item);
                     setAddReceipt(true);
                   },
                 },
               ]}
-            />
+            /> */}
           </tr>
         ))}
       </Table>

@@ -99,7 +99,7 @@ const Collections = ({ setSidebarOpen }) => {
                       {
                         icon: <FaPencilAlt />,
                         label: "Edit",
-                        callBack: () => {
+                        onClick: () => {
                           setEdit(item);
                           setAddCollection(true);
                         },
@@ -112,7 +112,7 @@ const Collections = ({ setSidebarOpen }) => {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
                         disabled: deleting,
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this Collection?`,

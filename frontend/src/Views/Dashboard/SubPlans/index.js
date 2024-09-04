@@ -79,7 +79,7 @@ const SubPlans = ({ setSidebarOpen }) => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setSubPlan(item);
                     setAddSubPlan(true);
                   },
@@ -89,7 +89,7 @@ const SubPlans = ({ setSidebarOpen }) => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this Plan?`,

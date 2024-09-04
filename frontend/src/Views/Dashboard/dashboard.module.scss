@@ -33,7 +33,7 @@
       place-items: center;
       margin: auto;
       overflow: hidden;
-      padding: 0.5rem 0;
+      padding: 0.5rem 1rem;
       overflow: hidden;
       .profile {
         z-index: 10;
@@ -90,9 +90,6 @@
             border-color: rgba(black, 0.1);
           }
         }
-        &:hover {
-          background: rgba($primary-color, 0.3);
-        }
         a {
           padding: 1rem 2rem;
           z-index: 5;
@@ -105,13 +102,14 @@
             width: 24px;
             display: grid;
             place-items: center;
-            font-size: 1.25em;
-            color: $primary-color;
+            font-size: 1.5em;
+            color: $primary-color-dark1;
             margin: 0 0.375rem;
             transition: margin 0.25s ease-in-out;
             position: relative;
             svg {
               position: absolute;
+              background: white;
               &.filled {
                 clip-path: circle(0 at center);
                 transition: 0.25s ease-in-out;
@@ -125,6 +123,7 @@
             opacity: 0;
             transition: 0.15s width ease-in-out, 0.15s opacity ease-in-out;
             flex: 1;
+            line-height: 1em;
           }
         }
         &:active {
@@ -204,14 +203,11 @@
       bottom: 0.5rem;
       font-size: 0.75rem;
       text-align: center;
-      color: rgba(var(--font-color), 0.25);
+      color: rgba(black, 0.45);
       padding-bottom: 1rem;
       pointer-events: none;
       min-width: 185px;
       transition: 0.15s opacity ease-in-out;
-      :global(.light) & {
-        color: rgba(var(--font-color), 0.4);
-      }
     }
 
     &.open {

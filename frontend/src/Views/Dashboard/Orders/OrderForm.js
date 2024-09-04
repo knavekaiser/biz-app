@@ -69,165 +69,170 @@ const Form = ({ edit, orders, onSuccess }) => {
   const handlePrint = useReactToPrint({ content: () => printRef.current });
   return (
     <div
-      className={`grid gap-1 p-1 ${s.addOrderForm} ${
-        viewOnly ? s.viewOnly : ""
-      }`}
+      className={`grid gap-1 ${s.addOrderForm} ${viewOnly ? s.viewOnly : ""}`}
     >
-      {viewOnly && (
-        <div className={`flex wrap gap-1 ${s.orderDetail}`}>
-          <div className="flex gap-1 all-columns justify-end align-center">
-            {checkPermission("order_update") && (
-              <button className="btn" onClick={() => setViewOnly(false)}>
-                Edit
-              </button>
-            )}
-            {/* <button className="btn" onClick={handlePrint}>
-              Print
-            </button> */}
-          </div>
-          <div className={s.box}>
-            <h3>Customer Information</h3>
-            <Detail label="Name" value={edit.customer?.name} />
-            <Detail
-              label="Detail"
-              value={
-                edit.customer?.detail?.split("\n").map((line, i, arr) => (
-                  <span key={i}>
-                    {line}
-                    {arr[i + 1] && <br />}
-                  </span>
-                )) || null
-              }
-            />
-          </div>
-          <div className={s.box}>
-            <h3>Order Information</h3>
-            <Detail
-              label="Status"
-              value={edit.status}
-              className="flex justify-space-between"
-            />
-            <Detail
-              label="Date"
-              value={moment(edit?.dateTime, "DD-MM-YYYY")}
-              className="flex justify-space-between"
-            />
-            {/* <Detail
+      <div className="grid gap-1 p-1">
+        {viewOnly && (
+          <div className={`flex wrap gap-1 ${s.orderDetail}`}>
+            <div className={s.box}>
+              <h3>Customer Information</h3>
+              <Detail label="Name" value={edit.customer?.name} />
+              <Detail
+                label="Detail"
+                value={
+                  edit.customer?.detail?.split("\n").map((line, i, arr) => (
+                    <span key={i}>
+                      {line}
+                      {arr[i + 1] && <br />}
+                    </span>
+                  )) || null
+                }
+              />
+            </div>
+            <div className={s.box}>
+              <h3>Order Information</h3>
+              <Detail
+                label="Status"
+                value={edit.status}
+                className="flex justify-space-between"
+              />
+              <Detail
+                label="Date"
+                value={moment(edit?.dateTime, "DD-MM-YYYY")}
+                className="flex justify-space-between"
+              />
+              {/* <Detail
               label="Gross"
               value={edit.items
                 .reduce((p, c) => p + c.qty * c.price, 0)
                 .fix(2, config?.numberSeparator)}
               className="flex justify-space-between"
             /> */}
-            <Detail
-              label="Total"
-              value={edit.items
-                .reduce((p, c) => p + c.qty * c.price, 0)
-                .fix(2, config?.numberSeparator)}
-              className="flex justify-space-between"
-            />
+              <Detail
+                label="Total"
+                value={edit.items
+                  .reduce((p, c) => p + c.qty * c.price, 0)
+                  .fix(2, config?.numberSeparator)}
+                className="flex justify-space-between"
+              />
+            </div>
           </div>
+        )}
+
+        <h3>Items</h3>
+        {items.length > 0 ? (
+          <Table
+            className={s.items}
+            columns={[
+              { label: "Product" },
+              { label: "Qty", className: "text-right" },
+              { label: "Unit" },
+              { label: "Rate", className: "text-right" },
+              { label: "Total", className: "text-right" },
+              ...(viewOnly ? [] : [{ label: "Action", action: true }]),
+            ]}
+          >
+            {items.map((item, i) => (
+              <tr key={i}>
+                <td className={s.name}>
+                  <span className="ellipsis">{item.name}</span>
+                </td>
+                <td className="text-right">{item.qty}</td>
+                <td>{item.unit}</td>
+                <td className="text-right">
+                  {item.price.fix(2, config?.numberSeparator)}
+                </td>
+                <td className="text-right">
+                  {(item.price * item.qty).fix(2, config?.numberSeparator)}
+                </td>
+                {!viewOnly && (
+                  <TableActions
+                    actions={[
+                      {
+                        icon: <FaPencilAlt />,
+                        label: "Edit",
+                        onClick: () => setEditItem(item),
+                      },
+                      {
+                        icon: <FaRegTrashAlt />,
+                        label: "Delete",
+                        onClick: () =>
+                          Prompt({
+                            type: "confirmation",
+                            message: `Are you sure you want to remove this Item?`,
+                            callback: () => {
+                              setItems((prev) =>
+                                prev.filter(
+                                  (product) => product._id !== item._id
+                                )
+                              );
+                            },
+                          }),
+                      },
+                    ]}
+                  />
+                )}
+              </tr>
+            ))}
+          </Table>
+        ) : (
+          <p className={s.noContent}>No items yet.</p>
+        )}
+        {err && <p className="error">{err}</p>}
+
+        {edit && (
+          <div style={{ display: "none" }}>
+            <PrintInvoice ref={printRef} order={edit} user={user} />
+          </div>
+        )}
+
+        {!viewOnly && (
+          <>
+            <ItemForm
+              key={editItem ? "edit" : "add"}
+              edit={editItem}
+              orders={orders}
+              onSuccess={(newItem) => {
+                setErr(null);
+                if (editItem) {
+                  setItems((prev) =>
+                    prev.map((item) =>
+                      item._id === newItem._id ? newItem : item
+                    )
+                  );
+                  setEditItem(null);
+                } else {
+                  setItems((prev) => [...prev, newItem]);
+                }
+              }}
+            />
+
+            <h3 className="mt-1">Other Information</h3>
+
+            <MainForm
+              disabled={editItem}
+              edit={edit}
+              items={items}
+              orders={orders}
+              setErr={setErr}
+              onSuccess={onSuccess}
+              setViewOnly={setViewOnly}
+            />
+          </>
+        )}
+      </div>
+
+      {viewOnly && (
+        <div className="flex gap-1 all-columns border-t p-1 align-center">
+          {checkPermission("order_update") && (
+            <button className="btn medium" onClick={() => setViewOnly(false)}>
+              Edit
+            </button>
+          )}
+          {/* <button className="btn" onClick={handlePrint}>
+              Print
+            </button> */}
         </div>
-      )}
-
-      <h3>Items</h3>
-      {items.length > 0 ? (
-        <Table
-          className={s.items}
-          columns={[
-            { label: "Product" },
-            { label: "Qty", className: "text-right" },
-            { label: "Unit" },
-            { label: "Rate", className: "text-right" },
-            { label: "Total", className: "text-right" },
-            ...(viewOnly ? [] : [{ label: "Action", action: true }]),
-          ]}
-        >
-          {items.map((item, i) => (
-            <tr key={i}>
-              <td className={s.name}>
-                <span className="ellipsis">{item.name}</span>
-              </td>
-              <td className="text-right">{item.qty}</td>
-              <td>{item.unit}</td>
-              <td className="text-right">
-                {item.price.fix(2, config?.numberSeparator)}
-              </td>
-              <td className="text-right">
-                {(item.price * item.qty).fix(2, config?.numberSeparator)}
-              </td>
-              {!viewOnly && (
-                <TableActions
-                  actions={[
-                    {
-                      icon: <FaPencilAlt />,
-                      label: "Edit",
-                      callBack: () => setEditItem(item),
-                    },
-                    {
-                      icon: <FaRegTrashAlt />,
-                      label: "Delete",
-                      callBack: () =>
-                        Prompt({
-                          type: "confirmation",
-                          message: `Are you sure you want to remove this Item?`,
-                          callback: () => {
-                            setItems((prev) =>
-                              prev.filter((product) => product._id !== item._id)
-                            );
-                          },
-                        }),
-                    },
-                  ]}
-                />
-              )}
-            </tr>
-          ))}
-        </Table>
-      ) : (
-        <p className={s.noContent}>No items yet.</p>
-      )}
-      {err && <p className="error">{err}</p>}
-
-      {edit && (
-        <div style={{ display: "none" }}>
-          <PrintInvoice ref={printRef} order={edit} user={user} />
-        </div>
-      )}
-
-      {!viewOnly && (
-        <>
-          <ItemForm
-            key={editItem ? "edit" : "add"}
-            edit={editItem}
-            orders={orders}
-            onSuccess={(newItem) => {
-              setErr(null);
-              if (editItem) {
-                setItems((prev) =>
-                  prev.map((item) =>
-                    item._id === newItem._id ? newItem : item
-                  )
-                );
-                setEditItem(null);
-              } else {
-                setItems((prev) => [...prev, newItem]);
-              }
-            }}
-          />
-
-          <h3 className="mt-1">Other Information</h3>
-
-          <MainForm
-            disabled={editItem}
-            edit={edit}
-            items={items}
-            orders={orders}
-            setErr={setErr}
-            onSuccess={onSuccess}
-            setViewOnly={setViewOnly}
-          />
-        </>
       )}
     </div>
   );
@@ -440,7 +445,7 @@ const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
           //   Cancel
           // </button>
         }
-        <button className="btn" disabled={disabled || loading}>
+        <button className="btn medium" disabled={disabled || loading}>
           {edit ? "Update" : "Submit"}
         </button>
       </div>

@@ -58,7 +58,7 @@ const Categories = () => {
                 {
                   icon: <FaPencilAlt />,
                   label: "Edit",
-                  callBack: () => {
+                  onClick: () => {
                     setCategory(item);
                     setAddCategory(true);
                   },
@@ -68,7 +68,7 @@ const Categories = () => {
                       {
                         icon: <FaRegTrashAlt />,
                         label: "Delete",
-                        callBack: () =>
+                        onClick: () =>
                           Prompt({
                             type: "confirmation",
                             message: `Are you sure you want to remove this category?`,
