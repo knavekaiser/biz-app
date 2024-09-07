@@ -131,7 +131,7 @@ const BusinessInformation = ({ next }) => {
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business?._id}`
-      : endpoints.businessProfile
+      : endpoints.companyProfile
   );
   useEffect(() => {
     const client = business?.business || user;
