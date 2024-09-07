@@ -362,7 +362,7 @@ const BankDetail = ({ next }) => {
   const { put: updateBankDetail, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
-      : endpoints.businessProfile
+      : endpoints.companyProfile
   );
 
   return (
@@ -456,7 +456,7 @@ const OwnerDetails = ({ next }) => {
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
-      : endpoints.businessProfile
+      : endpoints.companyProfile
   );
 
   useEffect(() => {

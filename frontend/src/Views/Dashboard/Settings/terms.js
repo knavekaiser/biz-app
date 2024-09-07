@@ -24,7 +24,7 @@ const TermsAndConditions = ({ next }) => {
   const { put: updateTerms, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
-      : endpoints.businessProfile
+      : endpoints.companyProfile
   );
 
   useEffect(() => {
