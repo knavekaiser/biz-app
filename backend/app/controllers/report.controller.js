@@ -274,6 +274,48 @@ export const genPipeline = async (req, res) => {
         );
       });
 
+    if (
+      columns.some(
+        (col) => col.field === "assignedTo" && col.type === "localField"
+      )
+    ) {
+      pipeline.push(
+        ...[
+          {
+            $lookup: {
+              from: "staffs",
+              localField: "assignedTo",
+              foreignField: "_id",
+              as: "assignedStaff",
+            },
+          },
+          {
+            $lookup: {
+              from: "companies",
+              localField: "assignedTo",
+              foreignField: "_id",
+              as: "assignedCompany",
+            },
+          },
+          {
+            $set: {
+              assignedTo: {
+                $getField: {
+                  input: {
+                    $ifNull: [
+                      { $first: "$assignedCompany" },
+                      { $first: "$assignedStaff" },
+                    ],
+                  },
+                  field: "name",
+                },
+              },
+            },
+          },
+        ]
+      );
+    }
+
     const project = {};
     columns.forEach((col) => {
       if (col.type === "module-coll-lookup") {
@@ -297,6 +339,8 @@ export const genPipeline = async (req, res) => {
             input: `$${submoduleColumn.label}`,
           },
         };
+      } else if (col.type === "localField" && col.field === "assignedTo") {
+        project[col.label] = `$${col.field}`;
       } else {
         project[col.label] = `$${col.field}`;
       }

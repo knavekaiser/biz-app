@@ -238,13 +238,8 @@ const Form = ({ edit, onSuccess }) => {
         );
         if (step === 1) {
           let parsed = null;
-          try {
-            parsed = JSON.parse(values.pipeline);
-          } catch (err) {
-            parsed = [];
-          }
-          if (!parsed || !parsed.length) {
-            await genPipeline({
+          const generate = async () =>
+            genPipeline({
               table: {
                 name: selectedModule.name,
                 type: "module",
@@ -257,11 +252,25 @@ const Form = ({ edit, onSuccess }) => {
                 } else {
                   Prompt({ type: "error", message: data.message });
                 }
+                setStep(2);
               })
               .catch((err) => Prompt({ type: "error", message: err.message }));
+          try {
+            parsed = JSON.parse(values.pipeline);
+          } catch (err) {
+            parsed = [];
           }
-          setStep(2);
-          return;
+          if (!parsed || !parsed.length) {
+            await generate();
+            return;
+          } else {
+            return Prompt({
+              type: "confirmation",
+              message: "Do you want to regenerate the pipeline?",
+              callback: async () => generate(),
+              onDecline: () => setStep(2),
+            });
+          }
         }
 
         try {
@@ -509,6 +518,7 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
         .map((f) => ({
           label: `${f.parent.name}: ${f.label}`,
           value: `${f.parent.name}-${f.name}`,
+          fieldLabel: f.label,
           parent: f.parent,
         })) || []
     );
@@ -520,6 +530,7 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
     reset,
     watch,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: useYup(
       yup.object({
@@ -550,7 +561,7 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
   });
 
   const table = watch("table");
-  const type = watch("type");
+  const label = watch("label");
 
   useEffect(() => {
     reset({
@@ -621,7 +632,17 @@ const ColumnForm = ({ table: baseTable, edit, onSuccess, tables }) => {
       })}
       className={`p-1 grid gap-1`}
     >
-      <Combobox label="Field" name="field" control={control} options={fields} />
+      <Combobox
+        label="Field"
+        name="field"
+        control={control}
+        options={fields}
+        onChange={(opt) => {
+          if (!label || !fields.some((f) => f.fieldLabel === opt.fieldLabel)) {
+            setValue("label", opt.fieldLabel);
+          }
+        }}
+      />
       <Input {...register("label")} label="Label" error={errors.label} />
       {/* <Combobox
         label="Type"

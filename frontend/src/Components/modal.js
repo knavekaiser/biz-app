@@ -63,7 +63,14 @@ export const Modal = forwardRef(
 );
 
 let root = null;
-export const Prompt = ({ className, type, message, btns, callback }) => {
+export const Prompt = ({
+  className,
+  type,
+  message,
+  btns,
+  callback,
+  onDecline,
+}) => {
   if (type === "error") {
     // console.trace(message);
   }
@@ -76,8 +83,14 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
     callback();
     cleanup();
   };
+  const close = () => {
+    cleanup();
+  };
   const decline = () => {
     cleanup();
+    if (type === "confirmation" && onDecline) {
+      onDecline();
+    }
     ["information", "success", "error"].includes(type) &&
       callback &&
       callback();
@@ -87,7 +100,7 @@ export const Prompt = ({ className, type, message, btns, callback }) => {
       <div className={`promptBackdrop`} />
       <div data-testid="prompt" className={`prompt ${className || ""}`}>
         <div className="content">
-          <button className="clear close" onClick={decline}>
+          <button className="clear close" onClick={close}>
             <IoClose />
           </button>
           {type === "confirmation" && (
