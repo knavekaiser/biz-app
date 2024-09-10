@@ -130,9 +130,11 @@ export const Table = ({
           {productTable && productView === "grid" ? null : (
             <tr
               style={{
-                gridTemplateColumns: columns
-                  .map((col) => col.width || "minmax(50px, 1fr)")
-                  .join(" "),
+                ...(columns.some((col) => col.width) && {
+                  gridTemplateColumns: columns
+                    .map((col) => col.width || "minmax(50px, 1fr)")
+                    .join(" "),
+                }),
                 ...theadTrStyle,
               }}
             >
