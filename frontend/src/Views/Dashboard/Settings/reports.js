@@ -15,7 +15,7 @@ import {
   Moment,
 } from "Components/elements";
 import s from "./settings.module.scss";
-import { IoMdArrowForward } from "react-icons/io";
+import { IoMdArrowForward, IoMdMenu } from "react-icons/io";
 
 const Reports = () => {
   const [addReport, setAddReport] = useState(false);
@@ -238,7 +238,17 @@ const Form = ({ edit, onSuccess }) => {
         );
         if (step === 1) {
           let parsed = null;
-          const generate = async () =>
+          const tableRows = Array.from(
+            document.querySelector(".col-table").querySelectorAll("tbody tr")
+          ).map((el) => el.id);
+          values.columns = values.columns.sort((a, b) =>
+            tableRows.findIndex((id) => id === a._id) >
+            tableRows.findIndex((id) => id === b._id)
+              ? 1
+              : -1
+          );
+          const generate = async () => {
+            setValue("columns", values.columns);
             genPipeline({
               table: {
                 name: selectedModule.name,
@@ -255,6 +265,7 @@ const Form = ({ edit, onSuccess }) => {
                 setStep(2);
               })
               .catch((err) => Prompt({ type: "error", message: err.message }));
+          };
           try {
             parsed = JSON.parse(values.pipeline);
           } catch (err) {
@@ -320,7 +331,7 @@ const Form = ({ edit, onSuccess }) => {
           />
           <div>
             <div className="flex justify-space-between align-center mb-1">
-              <h5>Items</h5>
+              <h4>Columns</h4>
               <button
                 className="btn"
                 type="button"
@@ -330,16 +341,33 @@ const Form = ({ edit, onSuccess }) => {
               </button>
             </div>
             <Table
+              sortable={{
+                handle: ".handle",
+                columns,
+              }}
               columns={[
+                { label: "", width: "3rem" },
                 { label: "Label" },
                 // { label: "Type" },
                 { label: "Table" },
                 { label: "field" },
-                { label: "Actions" },
+                { label: "Actions", width: "4rem" },
               ]}
+              className="col-table"
             >
               {columns?.map((item, i) => (
-                <tr key={item.label}>
+                <tr
+                  id={item._id}
+                  key={item.label}
+                  style={{
+                    gridTemplateColumns: "3rem 1fr 1fr 1fr 4rem",
+                  }}
+                >
+                  <td>
+                    <button className="btn clear iconOnly handle">
+                      <IoMdMenu /> {item.order}
+                    </button>
+                  </td>
                   <td>{item.label}</td>
                   {/* <td>{item.type}</td> */}
                   <td>{item.table?.name}</td>

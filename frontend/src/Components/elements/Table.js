@@ -128,7 +128,14 @@ export const Table = ({
             <td>Showing Records: {(children || dynamicData).length}</td>
           </tr>
           {productTable && productView === "grid" ? null : (
-            <tr style={theadTrStyle}>
+            <tr
+              style={{
+                gridTemplateColumns: columns
+                  .map((col) => col.width || "minmax(50px, 1fr)")
+                  .join(" "),
+                ...theadTrStyle,
+              }}
+            >
               {columns.map((column, i) => (
                 <th
                   key={i}
@@ -149,7 +156,14 @@ export const Table = ({
         className={productTable && productView === "grid" ? s.productGrid : ""}
       >
         {loading || loadingData ? (
-          <tr className={s.loading}>
+          <tr
+            style={{
+              gridTemplateColumns: columns
+                .map((col) => col.width || "minmax(50px, 1fr)")
+                .join(" "),
+            }}
+            className={s.loading}
+          >
             <td>
               <span className={s.icon}>
                 <FaCircleNotch />
@@ -162,7 +176,14 @@ export const Table = ({
             {children ||
               dynamicData.map((item, i) =>
                 productTable && productView === "grid" ? (
-                  <tr key={item._id}>
+                  <tr
+                    key={item._id}
+                    style={{
+                      gridTemplateColumns: columns
+                        .map((col) => col.width || "minmax(50px, 1fr)")
+                        .join(" "),
+                    }}
+                  >
                     <td>
                       <ProductThumb
                         product={item}
@@ -185,7 +206,15 @@ export const Table = ({
               )}
           </>
         ) : (
-          <tr className={s.placeholder} style={tbodyTrStyle}>
+          <tr
+            className={s.placeholder}
+            style={{
+              gridTemplateColumns: columns
+                .map((col) => col.width || "minmax(50px, 1fr)")
+                .join(" "),
+              ...tbodyTrStyle,
+            }}
+          >
             <td>{placeholder || "Nothing yet..."}</td>
           </tr>
         )}
