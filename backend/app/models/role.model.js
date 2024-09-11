@@ -5,7 +5,7 @@ export default mongoose.model(
   "Role",
   new Schema(
     {
-      user: { type: Schema.Types.ObjectId, ref: "Company", required: true },
+      company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
       name: { type: Schema.Types.String, required: true },
       permissions: [{ type: Schema.Types.String }],
     },
