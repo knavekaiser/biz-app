@@ -27,21 +27,20 @@
     border-right: 1px solid rgba(black, 0.2);
     .user {
       display: grid;
-      grid-template-columns: 3.5rem 0 0;
+      grid-template-columns: 3.5rem 0;
       grid-gap: 0;
-      justify-content: center;
-      place-items: center;
-      margin: auto;
+      align-items: center;
+      // margin: auto;
       overflow: hidden;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem;
       overflow: hidden;
       .profile {
+        margin: 6px auto;
         z-index: 10;
         height: 3rem;
         width: 3rem;
         outline: 2px solid $primary-color;
         outline-offset: 2px;
-        margin-bottom: 6px;
         border-radius: 50%;
         transform: scale(0.9);
         transition: transform 0.25s ease-in-out;
@@ -212,7 +211,7 @@
 
     &.open {
       .user {
-        grid-template-columns: 3.5rem 1fr 2rem;
+        grid-template-columns: 3.5rem 1fr;
         grid-gap: 0.5rem;
         justify-content: unset;
         width: 100%;

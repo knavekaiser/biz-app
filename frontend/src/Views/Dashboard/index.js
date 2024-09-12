@@ -601,32 +601,43 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
   return (
     <>
       <div className={`${s.header} ${sidebarOpen ? s.open : ""}`}>
-        <div>
-          <div
-            className={`${s.user} ${user.userType === "staff" ? s.staff : ""}`}
-          >
-            <div className={s.profile}>
-              <Link
+        <div
+          className={`${s.user} ${user.userType === "staff" ? s.staff : ""}`}
+        >
+          <div className={s.profile}>
+            {/* <Link
                 to={paths.dashboard.base + paths.dashboard.profile}
                 onClick={() => setSidebarOpen(false)}
-              >
-                {user.logo || user.photo ? (
-                  <img
-                    src={user?.logo || user?.photo}
-                    alt={`${user?.name} Logo`}
-                    onError={(e) => {
-                      e.target.src = "/assets/user.png";
-                    }}
-                  />
-                ) : (
-                  <FaRegUser />
-                )}
-              </Link>
-            </div>
-            <div>
+              > */}
+            {user.logo || user.businesses?.[0]?.business?.logo || user.photo ? (
+              <img
+                src={
+                  process.env.REACT_APP_PUBLIC_R2_URL +
+                  (user?.logo ||
+                    user.businesses?.[0]?.business?.logo ||
+                    user?.photo)
+                }
+                alt={`${user?.name} Logo`}
+              />
+            ) : (
+              <FaRegUser style={{ transform: "translateY(-2px)" }} />
+            )}
+            {/* </Link> */}
+          </div>
+          <div>
+            {user.userType === "staff" ? (
+              <>
+                <h2 className={"ellipsis l-1"}>
+                  {user.businesses?.[0]?.business?.name}
+                </h2>
+                <p className={s.role}>{user.name}</p>
+              </>
+            ) : (
               <h2 className={"ellipsis l-1"}>{user.name}</h2>
-              <p className={s.role}>{user.role?.name}</p>
-            </div>
+            )}
+            {/* <p className={s.role}>
+                {user.businesses?.[0]?.roles.map((role) => role.name)}
+              </p> */}
           </div>
         </div>
 
