@@ -17,14 +17,21 @@ export default function (app) {
     "/",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_page_create"),
-    file.uploadNew(
-      [{ name: "files", multiple: true }, { name: "thumbnail" }],
-      "/dynamic_pages",
+    file.upload([
       {
+        name: "files",
+        path: "/dynamic_pages",
+        multiple: true,
         fileSize: appConfig.supportedFileSizes,
         fileTypes: appConfig.supportedFileTypes,
-      }
-    ),
+      },
+      {
+        name: "thumbnail",
+        path: "/dynamic_pages",
+        fileSize: appConfig.supportedFileSizes,
+        fileTypes: appConfig.supportedFileTypes,
+      },
+    ]),
     validate(schema.create),
     controller.create
   );
@@ -32,10 +39,15 @@ export default function (app) {
     "/:_id",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_page_update"),
-    file.uploadNew([{ name: "files", multiple: true }], "/dynamic_page", {
-      fileSize: appConfig.supportedFileSizes,
-      fileTypes: appConfig.supportedFileTypes,
-    }),
+    file.upload([
+      {
+        name: "files",
+        multiple: true,
+        path: "/dynamic_page",
+        fileSize: appConfig.supportedFileSizes,
+        fileTypes: appConfig.supportedFileTypes,
+      },
+    ]),
     validate(schema.update),
     controller.update
   );

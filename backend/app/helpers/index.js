@@ -128,3 +128,4 @@ export * as dbHelper from "./db.helper.js";
 export * as fileHelper from "./file.helper.js";
 export * as aiHelper from "./ai.helper.js";
 export * as razorpayHelper from "./razorpay.helper.js";
+export * as cdnHelper from "./cdn.helper.js";

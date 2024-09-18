@@ -24,6 +24,7 @@ const paths = {
   categories: "categories",
   subcategories: "sub-categories",
   subPlans: "subscription-plans",
+  accounting: "accounting",
   chats: "chats",
 
   settings: {

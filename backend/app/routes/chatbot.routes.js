@@ -12,10 +12,14 @@ export default function (app) {
   router.put(
     "/:_id",
     authJwt.verifyToken,
-    file.uploadNew({ name: "avatar" }, "/chatbot_avatars", {
-      fileSize: appConfig.supportedImageSizes,
-      fileTypes: appConfig.supportedImageTypes,
-    }),
+    file.upload([
+      {
+        name: "avatar",
+        path: "/chatbot_avatars",
+        fileSize: appConfig.supportedImageSizes,
+        fileTypes: appConfig.supportedImageTypes,
+      },
+    ]),
     validate(schema.update),
     controller.updateChatbot
   );

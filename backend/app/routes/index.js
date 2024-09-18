@@ -24,6 +24,7 @@ import dynamicPageRoutes from "./dynamicPage.routes.js";
 import chatbotRoutes from "./chatbot.routes.js";
 import reportRoutes from "./report.routes.js";
 import commonRoutes from "./common.routes.js";
+import accountingRoutes from "./accounting.routes.js";
 
 export default function (app) {
   adminRoutes(app);
@@ -52,4 +53,5 @@ export default function (app) {
   chatbotRoutes(app);
   reportRoutes(app);
   commonRoutes(app);
+  accountingRoutes(app);
 }

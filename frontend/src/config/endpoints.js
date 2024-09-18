@@ -69,6 +69,8 @@ const endpoints = {
   generateReportPipeline: `${baseApiUrl}/api/reports/generate-pipeline`,
   testReportPipeline: `${baseApiUrl}/api/reports/test-pipeline`,
 
+  accountingMasters: `${baseApiUrl}/api/accounting/masters`,
+
   comifyChat: `${
     process.env.NODE_ENV === "development"
       ? "http://localhost:8060"

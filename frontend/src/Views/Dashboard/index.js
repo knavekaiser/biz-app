@@ -42,6 +42,8 @@ import {
 import {
   BsCart3,
   BsCartFill,
+  BsDiagram2,
+  BsDiagram2Fill,
   BsFillTagsFill,
   BsGear,
   BsGearFill,
@@ -80,6 +82,7 @@ const Roles = lazy(() => import("./Roles"));
 const Employees = lazy(() => import("./Employees"));
 const Chats = lazy(() => import("./Chats"));
 const Reports = lazy(() => import("./Reports"));
+const Accounting = lazy(() => import("./Accounting"));
 
 const Dashboard = () => {
   const { user, business, userType, checkPermission } = useContext(SiteContext);
@@ -132,6 +135,22 @@ const Dashboard = () => {
         label: "Micro Apps",
         path: paths.businesses,
         target: "_blank",
+      });
+      menuItems.push({
+        section: "collection",
+        icon: (
+          <BsDiagram2
+            style={{ marginTop: "0.2em", transform: "rotate(-90deg)" }}
+          />
+        ),
+        activeIcon: (
+          <BsDiagram2Fill
+            style={{ marginTop: "0.2em", transform: "rotate(-90deg)" }}
+            className={s.filled}
+          />
+        ),
+        label: "Accounting",
+        path: paths.accounting,
       });
       if (checkPermission("quote_read")) {
         menuItems.push({
@@ -503,6 +522,14 @@ const Dashboard = () => {
             element={
               <Suspense fallback={<LoadingSaklleton />}>
                 <Reports setSidebarOpen={setSidebarOpen} />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.accounting}
+            element={
+              <Suspense fallback={<LoadingSaklleton />}>
+                <Accounting setSidebarOpen={setSidebarOpen} />
               </Suspense>
             }
           />

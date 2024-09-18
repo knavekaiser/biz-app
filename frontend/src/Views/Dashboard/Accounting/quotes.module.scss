@@ -1,0 +1,275 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  padding: 1rem;
+  // max-width: 60rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .innerWrapper {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    grid-gap: 1rem;
+    .sidebar {
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      overflow: auto;
+      .addButton {
+        margin-left: auto;
+        margin-right: 0;
+        color: $primary-color;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      & > .addButton {
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+      }
+      .listItem {
+        display: grid;
+        .label {
+          padding: 0.25rem;
+          display: flex;
+          align-items: center;
+          grid-gap: 0.5rem;
+          button {
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+          }
+          .addButton {
+            opacity: 0;
+          }
+          &:hover {
+            background: rgba(0, 0, 0, 0.05);
+            .addButton {
+              opacity: 1;
+            }
+          }
+        }
+        .nestedList {
+          margin-left: 0.5rem;
+          padding-left: 0.5rem;
+          border-left: 1px dashed rgb(168, 168, 168);
+        }
+      }
+    }
+  }
+  .quotes {
+    tr {
+      grid-template-columns: 8rem 1fr 6rem 6rem 3rem;
+    }
+  }
+}
+
+.masterFormModal {
+  width: 100%;
+  max-width: 25rem;
+  .masterForm {
+    padding: 1rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+.print {
+  height: 100%;
+  width: 100%;
+  display: block;
+  header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    // grid-gap: 0 1rem;
+    .logo {
+      height: 80px;
+      width: 80px;
+      object-fit: contain;
+    }
+    div {
+      margin-top: -0.5rem;
+    }
+    h4 {
+      flex-basis: 100%;
+      text-align: center;
+      font-size: 2rem;
+      color: $primary-color-dark2;
+    }
+  }
+  .box {
+    border: 1px solid black;
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+  .items,
+  .taxes {
+    border: 1px solid black;
+    thead {
+      background-color: white;
+      tr {
+        th {
+          color: black;
+          padding: 0.5rem 0.5rem;
+        }
+        border-bottom: 1px solid black;
+      }
+    }
+    tbody {
+      td {
+        padding: 0.35rem 0.5rem;
+      }
+      tr:first-child {
+        td {
+          padding-top: 0.5rem;
+        }
+      }
+      tr:last-child {
+        td {
+          padding-bottom: 0.75rem;
+        }
+      }
+      tr {
+        border: none;
+      }
+    }
+    tr {
+      grid-gap: 0;
+      padding: 0;
+    }
+    td,
+    th {
+      height: 100%;
+      &:not(:last-child) {
+        border-right: 1px solid black;
+      }
+    }
+  }
+  .items {
+    tr {
+      // grid-template-columns: 3rem 1fr 5rem 5rem 6rem 8rem;
+    }
+  }
+  .taxes {
+    page-break-inside: avoid;
+    tr {
+      grid-template-columns: 3rem 1fr 8rem 9rem 8rem;
+    }
+  }
+  .totalAmount {
+    page-break-inside: avoid;
+    display: flex;
+    border: 1px solid black;
+    border-radius: 0.5rem;
+    .word {
+      flex: 1;
+      border-right: 1px solid black;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .digit {
+      font-weight: 600;
+    }
+    .word,
+    .digit {
+      padding: 1.5rem;
+    }
+  }
+  footer {
+    page-break-inside: avoid;
+    .sign {
+      flex: 1;
+      text-align: right;
+      .signature {
+        object-fit: contain;
+        width: 8rem;
+        max-height: 8rem;
+      }
+    }
+  }
+}
+
+@page {
+  margin: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
+    .quotes {
+      margin: 0;
+      border: none;
+      thead {
+        display: none;
+      }
+      tr {
+        border-radius: 0.5rem;
+        margin: 0.5rem;
+        background-color: white;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        border: none !important;
+        grid-gap: 10px;
+        grid-template-columns: 1fr 0.7fr;
+        grid-row-gap: 0px;
+        .date {
+          grid-column: 1 / 2;
+          grid-row: 1 / 2;
+          font-weight: bold;
+          color: $primary-color-dark2;
+          padding-bottom: 0;
+          font-size: 1.1rem;
+        }
+        .customer {
+          grid-column: 1 / 2;
+          grid-row: 3 / 4;
+          padding-top: 0;
+          color: $primary-color-dark2;
+        }
+        .net {
+          grid-column: 2 / 3;
+          grid-row: 1 / 2;
+          font-weight: bold;
+          color: $primary-color-dark2;
+          padding-bottom: 0;
+          font-size: 1.1rem;
+        }
+        .actions {
+          grid-column: 2 / 3;
+          grid-row: 3 / 4;
+          justify-content: flex-end;
+          padding-top: 0;
+        }
+      }
+    }
+  }
+  .addQuoteForm {
+    .itemForm {
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: flex-end;
+      .itemName {
+        grid-column: 1 / -1;
+      }
+      & > button {
+        grid-column: 1 / -1;
+      }
+    }
+    .mainForm {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media print {
+  .print {
+    padding-bottom: 0;
+  }
+}

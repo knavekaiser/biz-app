@@ -18,3 +18,4 @@ export * as faqDocument from "./faqDocument.js";
 export * as chat from "./chat.js";
 export * as chatbot from "./chatbot.js";
 export * as dynamicPage from "./dynamicPage.js";
+export * as accounting from "./accounting.js";

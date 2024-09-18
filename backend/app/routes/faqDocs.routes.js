@@ -17,10 +17,15 @@ export default function (app) {
     "/",
     authJwt.verifyToken,
     authJwt.checkPermission("faq_documents_create"),
-    file.uploadNew([{ name: "files", multiple: true }], "/faq_documents", {
-      fileSize: appConfig.supportedFileSizes,
-      fileTypes: appConfig.supportedFileTypes,
-    }),
+    file.upload([
+      {
+        name: "files",
+        multiple: true,
+        path: "/faq_documents",
+        fileSize: appConfig.supportedFileSizes,
+        fileTypes: appConfig.supportedFileTypes,
+      },
+    ]),
     validate(schema.create),
     controller.create
   );
@@ -34,10 +39,15 @@ export default function (app) {
     "/:_id",
     authJwt.verifyToken,
     authJwt.checkPermission("faq_documents_update"),
-    file.uploadNew([{ name: "files", multiple: true }], "/faq_documents", {
-      fileSize: appConfig.supportedFileSizes,
-      fileTypes: appConfig.supportedFileTypes,
-    }),
+    file.upload([
+      {
+        name: "files",
+        multiple: true,
+        path: "/faq_documents",
+        fileSize: appConfig.supportedFileSizes,
+        fileTypes: appConfig.supportedFileTypes,
+      },
+    ]),
     validate(schema.update),
     controller.update
   );
