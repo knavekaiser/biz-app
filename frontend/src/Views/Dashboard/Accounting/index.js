@@ -104,13 +104,13 @@ const Accounting = ({ setSidebarOpen }) => {
   const treeData = useMemo(() => buildTree(masters), [masters]);
 
   useEffect(() => {
-    // getMasters()
-    //   .then(({ data }) => {
-    //     if (data.success) {
-    //       return setMasters(data.data);
-    //     }
-    //   })
-    //   .catch((err) => Prompt({ type: "error", message: err.message }));
+    getMasters()
+      .then(({ data }) => {
+        if (data.success) {
+          return setMasters(data.data);
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
   return (
     <div className={`${s.content} grid gap-1 m-a`}>
