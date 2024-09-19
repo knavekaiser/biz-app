@@ -102,8 +102,9 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1220);
 
   useEffect(() => {
+    let menuItems = [];
     if (userType === "company" || (userType === "staff" && business)) {
-      const menuItems = [
+      menuItems = [
         {
           section: "home",
           icon: <BsHouseDoor />,
@@ -284,10 +285,8 @@ const Dashboard = () => {
           path: paths.settings.baseUrl,
         });
       }
-
-      setSidebarItems(menuItems);
     } else if (userType === "staff" && !business) {
-      setSidebarItems([
+      menuItems = [
         {
           section: "home",
           icon: <BsHouseDoor />,
@@ -320,9 +319,11 @@ const Dashboard = () => {
           path: paths.businesses,
           target: "_blank",
         },
-      ]);
+      ];
     }
-  }, [userType, business]);
+
+    setSidebarItems(menuItems);
+  }, [userType, user, business]);
 
   if (!user) {
     return (
@@ -645,6 +646,9 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
                     user?.photo)
                 }
                 alt={`${user?.name} Logo`}
+                onError={(e) => {
+                  e.target.src = "/assets/user.png";
+                }}
               />
             ) : (
               <FaRegUser style={{ transform: "translateY(-2px)" }} />
