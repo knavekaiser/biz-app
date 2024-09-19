@@ -16,6 +16,7 @@ import {
   BsPlusSquare,
 } from "react-icons/bs";
 import { GoPlus } from "react-icons/go";
+import { FiEdit3 } from "react-icons/fi";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -66,14 +67,19 @@ const AccountNode = ({ account, setAddMaster }) => {
           </>
         )}
         <strong>{account.name}</strong>
-        {account.isGroup && (
-          <button
-            className={s.addButton}
-            onClick={() => setAddMaster({ parent: account._id })}
-          >
-            <BsFillPlusSquareFill />
+        <div className={s.btns}>
+          <button className={s.addButton} onClick={() => setAddMaster(account)}>
+            <FiEdit3 />
           </button>
-        )}
+          {account.isGroup && (
+            <button
+              className={s.addButton}
+              onClick={() => setAddMaster({ parent: account._id })}
+            >
+              <BsFillPlusSquareFill />
+            </button>
+          )}
+        </div>
       </div>
       {open && account.children?.length > 0 && (
         <ul className={s.nestedList}>
@@ -268,7 +274,7 @@ const Accounting = ({ setSidebarOpen }) => {
       <Modal
         open={addMaster}
         head
-        label={`${quote ? "View / Update" : "Add"} Account`}
+        label={`${addMaster?._id ? "Update" : "Add"} Account`}
         className={s.masterFormModal}
         setOpen={() => {
           setAddMaster(null);
@@ -278,7 +284,7 @@ const Accounting = ({ setSidebarOpen }) => {
           edit={addMaster}
           masters={masters}
           onSuccess={(newMaster) => {
-            if (quote) {
+            if (addMaster?._id) {
               setMasters((prev) =>
                 prev.map((item) =>
                   item._id === newMaster._id ? newMaster : item

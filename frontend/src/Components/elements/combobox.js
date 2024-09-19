@@ -332,7 +332,7 @@ export const Select = ({
     (inputValue, selected) => {
       fetchData({
         query: {
-          ...(getQuery && inputValue && getQuery(inputValue, selected)),
+          ...(getQuery && getQuery(inputValue, selected)),
           pageSize: 10 + (selectedOptions.length || 0),
         },
       })

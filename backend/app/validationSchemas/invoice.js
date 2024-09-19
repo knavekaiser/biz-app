@@ -17,10 +17,10 @@ export const create = yup.object({
       .min(1)
       .required()
       .typeError("items must be an array"),
-    customer: yup.object().shape({
-      name: yup.string().required(),
-      detail: yup.string().required(),
-    }),
+    // customer: yup.object().shape({
+    //   name: yup.string().required(),
+    //   detail: yup.string().required(),
+    // }),
   }),
 });
 export const update = yup.object({
@@ -39,9 +39,9 @@ export const update = yup.object({
       )
       .min(1)
       .required(),
-    customer: yup.object().shape({
-      name: yup.string().required(),
-      detail: yup.string().required(),
-    }),
+    // customer: yup.object().shape({
+    //   name: yup.string().required(),
+    //   detail: yup.string().required(),
+    // }),
   }),
 });

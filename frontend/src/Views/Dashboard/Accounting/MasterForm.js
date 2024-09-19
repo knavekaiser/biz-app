@@ -12,8 +12,18 @@ const mainSchema = yup.object({
   parent: yup.string(),
   type: yup
     .string()
-    .oneOf(["Asset", "Liability", "Income", "Expense"], "Please select a type0")
-    .required("Please select a type"),
+    .oneOf([
+      "Cash",
+      "Bank",
+      "Customers",
+      "Suppliers",
+      "Sales",
+      "Purchase",
+      "Stock",
+      "null",
+      null,
+    ])
+    .nullable(),
   isGroup: yup.boolean().required(),
   openingBalance: yup
     .number()
@@ -42,8 +52,8 @@ const Form = ({ edit, masters = [], onSuccess }) => {
     reset({
       name: edit?.name || "",
       parent: edit?.parent || "null",
-      type: edit?.type || "",
-      isGroup: edit?.isGroup || true,
+      type: edit?.type || "null",
+      isGroup: edit?.isGroup ?? true,
       openingBalance: edit?.openingBalance || 0,
     });
   }, [edit]);
@@ -52,6 +62,9 @@ const Form = ({ edit, masters = [], onSuccess }) => {
       onSubmit={handleSubmit((values) => {
         if (values.parent === "null") {
           values.parent = null;
+        }
+        if (values.type === "null") {
+          values.type = null;
         }
         (edit?._id ? updateMaster : createMaster)(values)
           .then(({ data }) => {
@@ -79,13 +92,16 @@ const Form = ({ edit, masters = [], onSuccess }) => {
       <Combobox
         label="Type"
         name="type"
-        formOptions={{ required: true }}
         control={control}
         options={[
-          { label: "Asset", value: "Asset" },
-          { label: "Liability", value: "Liability" },
-          { label: "Income", value: "Income" },
-          { label: "Expense", value: "Expense" },
+          { label: "None", value: "null" },
+          { label: "Cash", value: "Cash" },
+          { label: "Bank", value: "Bank" },
+          { label: "Customers", value: "Customers" },
+          { label: "Suppliers", value: "Suppliers" },
+          { label: "Sales", value: "Sales" },
+          { label: "Purchase", value: "Purchase" },
+          { label: "Stock", value: "Stock" },
         ]}
       />
 

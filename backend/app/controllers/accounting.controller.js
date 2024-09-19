@@ -9,6 +9,12 @@ export const get = async (req, res) => {
     if (req.params.id) {
       conditions._id = req.params.id;
     }
+    if (req.query.name) {
+      conditions.name = { $regex: req.query.name, $options: "i" };
+    }
+    if (req.query.isGroup) {
+      conditions.isGroup = req.query.isGroup === "true";
+    }
 
     let pipeline = [{ $match: conditions }];
 

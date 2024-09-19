@@ -60,7 +60,7 @@ const Invoices = ({ setSidebarOpen }) => {
         columns={[
           { label: "No." },
           { label: "Date" },
-          { label: "Customer" },
+          { label: "Account" },
           { label: "Status" },
           { label: "Net Amount", className: "text-right" },
           { label: "Due", className: "text-right" },
@@ -83,7 +83,9 @@ const Invoices = ({ setSidebarOpen }) => {
             <td className={s.date}>
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
             </td>
-            <td className={s.customer}>{item.customer?.name}</td>
+            <td className={s.customer}>
+              {item.accountingEntries?.[0]?.accountName}
+            </td>
             <td>{item.status}</td>
             <td className={`text-right ${s.net}`}>
               {(

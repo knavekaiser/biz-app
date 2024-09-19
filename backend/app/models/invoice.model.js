@@ -17,10 +17,11 @@ export default mongoose.model(
           unit: { type: Schema.Types.String, required: true },
         }),
       ],
-      customer: {
-        name: { type: String },
-        detail: { type: String },
-      },
+      accountingEntries: [],
+      // customer: {
+      //   name: { type: String },
+      //   detail: { type: String },
+      // },
       // status: { type: Schema.Types.String, default: "pending", required: true },
     },
     { timestamps: true }

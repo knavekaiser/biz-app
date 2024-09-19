@@ -6,8 +6,17 @@ export const create = yup.object({
     parent: yup.string().nullable(),
     type: yup
       .string()
-      .oneOf(["Asset", "Liability", "Income", "Expense"])
-      .required(),
+      .oneOf([
+        "Cash",
+        "Bank",
+        "Customers",
+        "Suppliers",
+        "Sales",
+        "Purchase",
+        "Stock",
+        null,
+      ])
+      .nullable(),
     isGroup: yup.boolean().required(),
     openingBalance: yup.number().required(),
   }),
@@ -18,8 +27,17 @@ export const update = yup.object({
     parent: yup.string().nullable(),
     type: yup
       .string()
-      .oneOf(["Asset", "Liability", "Income", "Expense"])
-      .required(),
+      .oneOf([
+        "Cash",
+        "Bank",
+        "Customers",
+        "Suppliers",
+        "Sales",
+        "Purchase",
+        "Stock",
+        null,
+      ])
+      .nullable(),
     isGroup: yup.boolean().required(),
     openingBalance: yup.number().required(),
   }),

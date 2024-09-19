@@ -9,6 +9,7 @@ import {
   TableActions,
   SearchField,
   moment,
+  Select,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
@@ -23,8 +24,8 @@ import PrintInvoice from "./printInvoice";
 const mainSchema = yup.object({
   date: yup.string().required(),
   gst: yup.number().required().typeError("Enter a valid Number"),
-  customerName: yup.string().required(),
-  customerDetail: yup.string().required(),
+  // customerName: yup.string().required(),
+  // customerDetail: yup.string().required(),
 });
 
 const itemSchema = yup.object({
@@ -87,9 +88,12 @@ const Form = ({ edit, sales, onSuccess }) => {
             </button>
           </div>
           <div className={s.box}>
-            <h3>Customer Information</h3>
-            <Detail label="Name" value={edit.customer?.name} />
+            <h3>Account Information</h3>
             <Detail
+              label="Name"
+              value={edit.accountingEntries?.[0]?.accountName}
+            />
+            {/* <Detail
               label="Detail"
               value={
                 edit.customer?.detail?.split("\n").map((line, i, arr) => (
@@ -99,7 +103,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                   </span>
                 )) || null
               }
-            />
+            /> */}
           </div>
           <div className={s.box}>
             <h3>Invoice Information</h3>
@@ -356,8 +360,10 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       ...edit,
       // status: edit?.status || "pending",
       date: moment(edit?.date, "YYYY-MM-DD"),
-      customerName: edit?.customer?.name || "",
-      customerDetail: edit?.customer?.detail || "",
+      accountId: edit?.accountingEntries?.[0]?.accountId || "",
+      accountName: edit?.accountingEntries?.[0]?.accountName || "",
+      // customerName: edit?.customer?.name || "",
+      // customerDetail: edit?.customer?.detail || "",
     });
   }, [edit]);
   return (
@@ -370,11 +376,13 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
         (edit ? updateInvoice : saveInvoice)({
           dateTime: values.date,
           gst: values.gst,
+          accountId: values.accountId,
+          accountName: values.accountName,
           // status: values.status,
-          customer: {
-            name: values.customerName,
-            detail: values.customerDetail,
-          },
+          // customer: {
+          //   name: values.customerName,
+          //   detail: values.customerDetail,
+          // },
           items: items.map((item) => ({ ...item, _id: undefined })),
         })
           .then(({ data }) => {
@@ -415,41 +423,35 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       />
 
       <div className="all-columns">
-        <h3>Customer Information</h3>
+        <h3>Account Information</h3>
       </div>
 
-      <SearchField
-        label="Name"
-        data={[...new Set(sales.map((item) => item.customer.name))].map(
-          (name) => ({
-            label: name,
-            value: name,
-            data: sales.find((item) => item.customer.name === name)?.customer,
-          })
-        )}
-        register={register}
-        name="customerName"
+      <Select
+        label="Account"
+        control={control}
+        name="accountId"
         formOptions={{ required: true }}
-        renderListItem={(item) => <>{item.label}</>}
-        watch={watch}
-        setValue={setValue}
-        onChange={(item) => {
-          if (typeof item === "string") {
-            setValue("customerName", item);
-          } else {
-            setValue("customerName", item.name);
-            setValue("customerDetail", item.detail);
-          }
+        url={endpoints.accountingMasters}
+        getQuery={(v) => ({
+          isGroup: "true",
+          name: v,
+        })}
+        handleData={(data) => ({
+          label: `${data.name}${data.type ? ` - ${data.type}` : ""}`,
+          value: data._id,
+          account: data,
+        })}
+        onChange={(opt) => {
+          setValue("accountName", opt.account?.name);
         }}
-        error={errors.customerName}
       />
 
-      <Textarea
+      {/* <Textarea
         label="Detail"
         {...register("customerDetail")}
         required
         error={errors["customerDetail"]}
-      />
+      /> */}
 
       <div className="btns">
         {
