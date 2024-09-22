@@ -17,10 +17,11 @@ export default mongoose.model(
           unit: { type: Schema.Types.String, required: true },
         }),
       ],
-      vendor: {
-        name: { type: String },
-        detail: { type: String },
-      },
+      accountingEntries: [],
+      // vendor: {
+      //   name: { type: String },
+      //   detail: { type: String },
+      // },
     },
     { timestamps: true }
   )

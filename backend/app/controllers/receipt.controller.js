@@ -1,5 +1,6 @@
 import { appConfig } from "../config/index.js";
-import { Receipt, Config } from "../models/index.js";
+import { Receipt, Config, Account } from "../models/index.js";
+import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -19,10 +20,29 @@ export const create = async (req, res) => {
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
+    const accountingEntries = [];
+    const account = await Account.findOne({ id: req.body.accountI });
+    if (["Cash", "Bank"].includes(account.type)) {
+      accountingEntries.push({
+        accountId: ObjectId(req.body.accountId),
+        accountName: req.body.accountName,
+        debit: 0,
+        credit: req.body.amount,
+      });
+    } else {
+      accountingEntries.push({
+        accountId: ObjectId(req.body.accountId),
+        accountName: req.body.accountName,
+        debit: req.body.amount,
+        credit: 0,
+      });
+    }
+
     new Receipt({
       ...req.body,
       user: req.business?._id || req.authUser._id,
       no: nextReceiptNo || 1,
+      accountingEntries,
     })
       .save()
       .then(async (data) => {

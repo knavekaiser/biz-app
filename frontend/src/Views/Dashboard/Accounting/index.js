@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext, useMemo } from "react";
 import { SiteContext } from "SiteContext";
-import { Table, TableActions, Moment } from "Components/elements";
+import { Table, TableActions, Moment, Tabs, Select } from "Components/elements";
 import { FaRegEye, FaRegTrashAlt } from "react-icons/fa";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
@@ -17,6 +17,7 @@ import {
 } from "react-icons/bs";
 import { GoPlus } from "react-icons/go";
 import { FiEdit3 } from "react-icons/fi";
+import VoucherFilters from "./Filters";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -103,6 +104,8 @@ const Accounting = ({ setSidebarOpen }) => {
   const [masters, setMasters] = useState([]);
   const [quote, setQuote] = useState(null);
   const [addQuote, setAddQuote] = useState(false);
+  const [tab, setTab] = useState("voucherListing");
+  const [filters, setFilters] = useState({});
 
   const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
   const { remove: deleteQuote } = useFetch(endpoints.quotes + "/{ID}");
@@ -118,6 +121,7 @@ const Accounting = ({ setSidebarOpen }) => {
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
+  console.log("list --->", filters);
   return (
     <div className={`${s.content} grid gap-1 m-a`}>
       <div className={`flex ${s.head}`}>
@@ -168,78 +172,104 @@ const Accounting = ({ setSidebarOpen }) => {
             )}
           </ul>
         </div>
-        <Table
-          loading={loading}
-          className={s.quotes}
-          columns={[
-            { label: "Date" },
-            { label: "Customer" },
-            { label: "Status" },
-            { label: "Net Amount", className: "text-right" },
-            { label: "Action" },
-          ]}
-        >
-          {quotes.map((item) => (
-            <tr
-              onClick={() => {
-                setQuote(item);
-                setAddQuote(true);
-              }}
-              style={{ cursor: "pointer" }}
-              key={item._id}
-            >
-              <td className={s.date}>
-                <Moment format="DD/MM/YYYY">{item.date}</Moment>
-              </td>
-              <td className={s.customer}>{item.customer?.name}</td>
-              <td>{item.status}</td>
-              <td className={`text-right ${s.net}`}>
-                {item.items
-                  .reduce((p, c) => p + c.qty * c.price, 0)
-                  .fix(2, config?.numberSeparator)}
-              </td>
-              <TableActions
-                className={s.actions}
-                actions={[
+        <div>
+          <Tabs
+            activeTab={tab}
+            tabs={[
+              { label: "Voucher Listing", value: "voucherListing" },
+              // { label: "Reports", value: "reports" },
+              // { label: "More Reports", value: "moreReports" },
+            ]}
+            onChange={(tab) => setTab(tab.value)}
+          />
+          {tab === "voucherListing" && (
+            <div>
+              <Table
+                url={endpoints.accountingVouchers}
+                // filters={filters}
+                filterFields={[
                   {
-                    icon: <FaRegEye />,
-                    label: "View",
-                    onClick: () => {
-                      setQuote(item);
-                      setAddQuote(true);
-                    },
+                    label: "Type",
+                    fieldType: "select",
+                    name: "type",
+                    optionType: "predefined",
+                    options: [
+                      { label: "Invoice", value: "Invoice" },
+                      { label: "Purchase", value: "Purchase" },
+                      { label: "Receipt", value: "Receipt" },
+                      { label: "Payment", value: "Payment" },
+
+                      // { label: "None", value: "null" },
+                      // { label: "Cash", value: "Cash" },
+                      // { label: "Bank", value: "Bank" },
+                      // { label: "Customers", value: "Customers" },
+                      // { label: "Suppliers", value: "Suppliers" },
+                      // { label: "Sales", value: "Sales" },
+                      // { label: "Purchase", value: "Purchase" },
+                      // { label: "Stock", value: "Stock" },
+                    ],
                   },
                   {
-                    icon: <FaRegTrashAlt />,
-                    label: "Delete",
-                    onClick: () =>
-                      Prompt({
-                        type: "confirmation",
-                        message: `Are you sure you want to remove this record?`,
-                        callback: () => {
-                          deleteQuote(
-                            {},
-                            { params: { "{ID}": item._id } }
-                          ).then(({ data }) => {
-                            if (data.success) {
-                              setMasters((prev) =>
-                                prev.filter((quote) => quote._id !== item._id)
-                              );
-                            } else {
-                              Prompt({
-                                type: "error",
-                                message: data.message,
-                              });
-                            }
-                          });
-                        },
-                      }),
+                    label: "Start Date",
+                    fieldType: "input",
+                    inputType: "datetime-local",
+                    name: "startDate",
+                  },
+                  {
+                    label: "End Date",
+                    fieldType: "input",
+                    inputType: "datetime-local",
+                    name: "endDate",
                   },
                 ]}
+                className={s.vouchers}
+                columns={[
+                  { label: "Date" },
+                  { label: "No" },
+                  { label: "Type" },
+                  { label: "Account Name" },
+                  { label: "Debit", className: "text-right" },
+                  { label: "Credit", className: "text-right" },
+                  // { label: "Action" },
+                ]}
+                renderRow={(row, i) => (
+                  <tr key={i}>
+                    <td>
+                      <Moment format="DD-MM-YYYY hh:mma">
+                        {row.createdAt}
+                      </Moment>
+                    </td>
+                    <td>{row.no}</td>
+                    <td>{row.type}</td>
+                    <td>{row.accountName}</td>
+                    <td className="text-right">{row.debit || 0}</td>
+                    <td className="text-right">{row.credit || 0}</td>
+                  </tr>
+                )}
+                tfoot={(data) => (
+                  <tfoot>
+                    <tr>
+                      <td />
+                      <td />
+                      <td />
+                      <td className="text-right">Total</td>
+                      <td className="text-right">
+                        {data
+                          .reduce((p, c) => p + c.debit, 0)
+                          .toLocaleString("en-IN")}
+                      </td>
+                      <td className="text-right">
+                        {data
+                          .reduce((p, c) => p + c.credit, 0)
+                          .toLocaleString("en-IN")}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
               />
-            </tr>
-          ))}
-        </Table>
+            </div>
+          )}
+        </div>
       </div>
 
       <Modal

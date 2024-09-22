@@ -15,6 +15,9 @@ export const get = async (req, res) => {
     if (req.query.isGroup) {
       conditions.isGroup = req.query.isGroup === "true";
     }
+    if (req.query.type) {
+      conditions.type = req.query.type;
+    }
 
     let pipeline = [{ $match: conditions }];
 
@@ -81,6 +84,159 @@ export const remove = async (req, res) => {
         responseFn.success(res, {}, responseStr.record_deleted);
       })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const vouchers = async (req, res) => {
+  try {
+    const entryConditions = {
+      user: req.company?._id || req.authUser._id,
+    };
+    const conditions = {};
+    if (req.query.type) {
+      conditions.type = req.query.type;
+    }
+    if (req.query.startDate && req.query.endDate) {
+      conditions.createdAt = {
+        $gte: new Date(req.query.startDate),
+        $lt: new Date(req.query.endDate),
+      };
+    }
+    Account.aggregate([
+      { $limit: 1 },
+      {
+        $lookup: {
+          from: "invoices",
+          pipeline: [
+            {
+              $unwind: {
+                path: "$accountingEntries",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            { $match: entryConditions },
+            {
+              $set: {
+                "accountingEntries.no": "$no",
+                "accountingEntries.type": "Invoice",
+                "accountingEntries.createdAt": "$createdAt",
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$accountingEntries",
+              },
+            },
+          ],
+          as: "saleEntries",
+        },
+      },
+      {
+        $lookup: {
+          from: "purchases",
+          pipeline: [
+            {
+              $unwind: {
+                path: "$accountingEntries",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            { $match: entryConditions },
+            {
+              $set: {
+                "accountingEntries.no": "$no",
+                "accountingEntries.type": "Purchase",
+                "accountingEntries.createdAt": "$createdAt",
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$accountingEntries",
+              },
+            },
+          ],
+          as: "purchaseEntries",
+        },
+      },
+      {
+        $lookup: {
+          from: "receipts",
+          pipeline: [
+            {
+              $unwind: {
+                path: "$accountingEntries",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            { $match: entryConditions },
+            {
+              $set: {
+                "accountingEntries.no": "$no",
+                "accountingEntries.type": "Receipt",
+                "accountingEntries.createdAt": "$createdAt",
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$accountingEntries",
+              },
+            },
+          ],
+          as: "receiptEntries",
+        },
+      },
+      {
+        $lookup: {
+          from: "payments",
+          pipeline: [
+            {
+              $unwind: {
+                path: "$accountingEntries",
+                preserveNullAndEmptyArrays: false,
+              },
+            },
+            { $match: entryConditions },
+            {
+              $set: {
+                "accountingEntries.no": "$no",
+                "accountingEntries.type": "Payment",
+                "accountingEntries.createdAt": "$createdAt",
+              },
+            },
+            {
+              $replaceRoot: {
+                newRoot: "$accountingEntries",
+              },
+            },
+          ],
+          as: "paymentEntries",
+        },
+      },
+      {
+        $set: {
+          saleEntries: null,
+          purchaseEntries: null,
+          receiptEntries: null,
+          paymentEntries: null,
+          entries: {
+            $concatArrays: [
+              "$saleEntries",
+              "$purchaseEntries",
+              "$receiptEntries",
+              "$paymentEntries",
+            ],
+          },
+        },
+      },
+      { $unwind: { path: "$entries" } },
+      { $replaceRoot: { newRoot: "$entries" } },
+      { $sort: { createdAt: 1 } },
+      { $match: conditions },
+    ]).then((data) => {
+      return responseFn.success(res, { data });
+    });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }

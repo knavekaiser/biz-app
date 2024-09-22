@@ -3,11 +3,9 @@ import { SiteContext } from "SiteContext";
 import { useForm } from "react-hook-form";
 import {
   Input,
-  Textarea,
   Combobox,
   Table,
   TableActions,
-  SearchField,
   Select,
   Tabs,
   moment,
@@ -31,8 +29,9 @@ const mainSchema = yup.object({
     .min(1, "Enter more than 0")
     .required()
     .typeError("Enter a valid amount"),
-  vendorName: yup.string().required("Vendor name is a required field"),
-  vendorDetail: yup.string().required("Vendor detail is a required field"),
+  accountId: yup.string().required(),
+  // vendorName: yup.string().required("Vendor name is a required field"),
+  // vendorDetail: yup.string().required("Vendor detail is a required field"),
 });
 
 const itemSchema = yup.object({
@@ -106,9 +105,12 @@ const Form = ({ edit, payments, onSuccess }) => {
             }
           </div>
           <div className={s.box}>
-            <h3>Vendor Information</h3>
-            <Detail label="Name" value={edit.vendor?.name} />
+            <h3>Account Information</h3>
             <Detail
+              label="Name"
+              value={edit.accountingEntries?.[0]?.accountName}
+            />
+            {/* <Detail
               label="Detail"
               value={
                 edit.vendor?.detail?.split("\n").map((line, i, arr) => (
@@ -118,15 +120,20 @@ const Form = ({ edit, payments, onSuccess }) => {
                   </span>
                 )) || null
               }
-            />
+            /> */}
           </div>
           <div className={s.box}>
             <h3>Payment Information</h3>
             <Detail
               label="Inv No"
+              className="flex justify-space-between"
               value={`${edit.no}${config?.print?.paymentNoSuffix || ""}`}
             />
-            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
+            <Detail
+              label="Date"
+              className="flex justify-space-between"
+              value={moment(edit?.date, "DD-MM-YYYY")}
+            />
             <Detail
               label="Amount"
               value={edit.amount.fix(2, config?.numberSeparator)}
@@ -331,10 +338,12 @@ const MainForm = ({
         dateTime: values.date,
         amount: values.amount,
         type: values.type,
-        vendor: {
-          name: values.vendorName,
-          detail: values.vendorDetail,
-        },
+        accountId: values.accountId,
+        accountName: values.accountName,
+        // vendor: {
+        //   name: values.vendorName,
+        //   detail: values.vendorDetail,
+        // },
         purchases: items.map((item) => ({ ...item, _id: undefined })),
       })
         .then(({ data }) => {
@@ -349,6 +358,7 @@ const MainForm = ({
   );
 
   const vendorName = watch("vendorName");
+  const type = watch("type");
 
   useEffect(() => {
     reset({
@@ -380,7 +390,16 @@ const MainForm = ({
           options={[
             { label: "Cash", value: "Cash" },
             { label: "Bank Transfer", value: "Bank Transfer" },
+            { label: "Customers", value: "Customers" },
+            { label: "Suppliers", value: "Suppliers" },
+            { label: "Sales", value: "Sales" },
+            { label: "Purchase", value: "Purchase" },
+            { label: "Stock", value: "Stock" },
           ]}
+          onChange={() => {
+            setValue("accountId", "");
+            setValue("accountName", "");
+          }}
         />
 
         <Input
@@ -393,31 +412,31 @@ const MainForm = ({
         />
 
         <div className="all-columns">
-          <h3>Vendor Information</h3>
+          <h3>Account Information</h3>
         </div>
 
         <Select
-          disabled={edit}
+          label="Account"
           control={control}
-          label="Name"
-          options={[...new Set(purchases.map((item) => item.vendor.name))].map(
-            (name) => ({
-              label: name,
-              value: name,
-              data: purchases.find((item) => item.vendor.name === name)?.vendor,
-            })
-          )}
-          name="vendorName"
+          name="accountId"
           formOptions={{ required: true }}
-          renderListItem={(item) => <>{item.label}</>}
-          onChange={(item) => {
-            setValue("vendorName", item.data.name);
-            setValue("vendorDetail", item.data.detail);
-            setItems([]);
+          url={endpoints.accountingMasters}
+          getQuery={(v) => ({
+            ...(type && { type }),
+            isGroup: "false",
+            name: v,
+          })}
+          handleData={(data) => ({
+            label: `${data.name}${data.type ? ` - ${data.type}` : ""}`,
+            value: data._id,
+            account: data,
+          })}
+          onChange={(opt) => {
+            setValue("accountName", opt.account?.name);
           }}
         />
 
-        <Textarea label="Detail" readOnly {...register("vendorDetail")} />
+        {/* <Textarea label="Detail" readOnly {...register("vendorDetail")} /> */}
       </form>
 
       <div className="all-columns flex justify-center">
@@ -457,7 +476,7 @@ const MainForm = ({
         adjustPurchaseTab === "table" &&
         (purchases.filter(
           (purchase) =>
-            purchase.vendor.name === vendorName &&
+            purchase.vendor?.name === vendorName &&
             (items.some((item) => item.no === purchase.no) || purchase.due)
         ).length > 0 ? (
           <Table
@@ -474,7 +493,7 @@ const MainForm = ({
             {purchases
               .filter(
                 (purchase) =>
-                  purchase.vendor.name === vendorName &&
+                  purchase.vendor?.name === vendorName &&
                   (items.some((item) => item.no === purchase.no) ||
                     purchase.due)
               )
@@ -498,7 +517,7 @@ const MainForm = ({
         <>
           <ItemForm
             purchases={purchases.filter(
-              (item) => item.vendor.name === vendorName
+              (item) => item.vendor?.name === vendorName
             )}
             key={editItem ? "edit" : "add"}
             edit={editItem}

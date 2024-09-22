@@ -372,7 +372,7 @@ export const Select = ({
           Prompt({ type: "error", message: err.message });
         });
     },
-    [url, control._formValues[name], selectedOptions]
+    [url, control._formValues[name], selectedOptions, getQuery]
   );
 
   useEffect(() => {

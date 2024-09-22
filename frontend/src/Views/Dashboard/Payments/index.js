@@ -57,7 +57,7 @@ const Payments = ({ setSidebarOpen }) => {
         columns={[
           { label: "No." },
           { label: "Date" },
-          { label: "Vendor" },
+          { label: "Account" },
           { label: "Amount", className: "text-right" },
           { label: "Action" },
         ]}
@@ -78,7 +78,9 @@ const Payments = ({ setSidebarOpen }) => {
             <td className={s.date}>
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
             </td>
-            <td className={s.customer}>{item.vendor?.name}</td>
+            <td className={s.customer}>
+              {item.accountingEntries?.[0]?.accountName}
+            </td>
             <td className={`text-right ${s.net}`}>
               {item.amount.fix(2, config?.numberSeparator)}
             </td>

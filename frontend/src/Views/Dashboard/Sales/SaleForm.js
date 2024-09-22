@@ -24,6 +24,7 @@ import PrintInvoice from "./printInvoice";
 const mainSchema = yup.object({
   date: yup.string().required(),
   gst: yup.number().required().typeError("Enter a valid Number"),
+  accountId: yup.string().required(),
   // customerName: yup.string().required(),
   // customerDetail: yup.string().required(),
 });

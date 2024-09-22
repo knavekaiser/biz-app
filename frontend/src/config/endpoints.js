@@ -70,6 +70,7 @@ const endpoints = {
   testReportPipeline: `${baseApiUrl}/api/reports/test-pipeline`,
 
   accountingMasters: `${baseApiUrl}/api/accounting/masters`,
+  accountingVouchers: `${baseApiUrl}/api/accounting/vouchers`,
 
   comifyChat: `${
     process.env.NODE_ENV === "development"

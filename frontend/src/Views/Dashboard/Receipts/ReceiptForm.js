@@ -31,8 +31,9 @@ const mainSchema = yup.object({
     .min(1, "Enter more than 0")
     .required()
     .typeError("Enter a valid amount"),
-  customerName: yup.string().required("Customer name is a required field"),
-  customerDetail: yup.string().required("Customer detail is a required field"),
+  accountId: yup.string().required(),
+  // customerName: yup.string().required("Customer name is a required field"),
+  // customerDetail: yup.string().required("Customer detail is a required field"),
 });
 
 const itemSchema = yup.object({
@@ -289,7 +290,6 @@ const MainForm = ({
     reset,
     setValue,
     watch,
-    clearErrors,
     control,
     formState: { errors },
   } = useForm({
@@ -301,6 +301,8 @@ const MainForm = ({
     put: updateInvoice,
     loading,
   } = useFetch(endpoints.receipts + `/${edit?._id || ""}`);
+
+  const type = watch("type");
 
   const submitForm = useCallback(
     (values) => {
@@ -331,10 +333,12 @@ const MainForm = ({
         dateTime: values.date,
         amount: values.amount,
         type: values.type,
-        customer: {
-          name: values.customerName,
-          detail: values.customerDetail,
-        },
+        accountId: values.accountId,
+        accountName: values.accountName,
+        // customer: {
+        //   name: values.customerName,
+        //   detail: values.customerDetail,
+        // },
         invoices: items.map((item) => ({ ...item, _id: undefined })),
       })
         .then(({ data }) => {
@@ -380,7 +384,16 @@ const MainForm = ({
           options={[
             { label: "Cash", value: "Cash" },
             { label: "Bank Transfer", value: "Bank Transfer" },
+            { label: "Customers", value: "Customers" },
+            { label: "Suppliers", value: "Suppliers" },
+            { label: "Sales", value: "Sales" },
+            { label: "Purchase", value: "Purchase" },
+            { label: "Stock", value: "Stock" },
           ]}
+          onChange={() => {
+            setValue("accountId", "");
+            setValue("accountName", "");
+          }}
         />
 
         <Input
@@ -393,32 +406,31 @@ const MainForm = ({
         />
 
         <div className="all-columns">
-          <h3>Customer Information</h3>
+          <h3>Account Information</h3>
         </div>
 
         <Select
-          disabled={edit}
+          label="Account"
           control={control}
-          label="Name"
-          options={[...new Set(invoices.map((item) => item.customer.name))].map(
-            (name) => ({
-              label: name,
-              value: name,
-              data: invoices.find((item) => item.customer.name === name)
-                ?.customer,
-            })
-          )}
-          name="customerName"
+          name="accountId"
           formOptions={{ required: true }}
-          renderListItem={(item) => <>{item.label}</>}
-          onChange={(item) => {
-            setValue("customerName", item.data.name);
-            setValue("customerDetail", item.data.detail);
-            setItems([]);
+          url={endpoints.accountingMasters}
+          getQuery={(v) => ({
+            ...(type && { type }),
+            isGroup: "false",
+            name: v,
+          })}
+          handleData={(data) => ({
+            label: `${data.name}${data.type ? ` - ${data.type}` : ""}`,
+            value: data._id,
+            account: data,
+          })}
+          onChange={(opt) => {
+            setValue("accountName", opt.account?.name);
           }}
         />
 
-        <Textarea label="Detail" readOnly {...register("customerDetail")} />
+        {/* <Textarea label="Detail" readOnly {...register("customerDetail")} /> */}
       </form>
 
       <div className="all-columns flex justify-center">

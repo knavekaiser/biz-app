@@ -1,6 +1,6 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
-import { Purchase, Config } from "../models/index.js";
+import { Purchase, Config, Account } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -115,10 +115,49 @@ export const create = async (req, res) => {
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
+    const totalCartPrice = req.body.items.reduce(
+      (p, c) => p + c.price * c.qty,
+      0
+    );
+    const tax = totalCartPrice.percent(req.body.gst);
+    const accountingEntries = [
+      {
+        accountId: ObjectId(req.body.accountId),
+        accountName: req.body.accountName,
+        debit: 0,
+        credit: totalCartPrice + tax,
+      },
+    ];
+    const purchaseAccount = await Account.findOne({
+      company: req.company?._id || req.authUser._id,
+      name: "Purchase",
+    });
+    if (purchaseAccount) {
+      accountingEntries.push({
+        accountId: purchaseAccount._id,
+        accountName: purchaseAccount.name,
+        debit: totalCartPrice,
+        credit: 0,
+      });
+    }
+    const taxAccount = await Account.findOne({
+      company: req.company?._id || req.authUser._id,
+      name: "Tax",
+    });
+    if (taxAccount) {
+      accountingEntries.push({
+        accountId: taxAccount._id,
+        accountName: taxAccount.name,
+        debit: tax,
+        credit: 0,
+      });
+    }
+
     new Purchase({
       ...req.body,
       user: req.business?._id || req.authUser._id,
       no: nextPurchaseNo || 1,
+      accountingEntries,
     })
       .save()
       .then(async (data) => {

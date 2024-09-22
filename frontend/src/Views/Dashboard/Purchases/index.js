@@ -57,7 +57,7 @@ const Purchases = ({ setSidebarOpen }) => {
         columns={[
           { label: "No." },
           { label: "Date" },
-          { label: "Customer" },
+          { label: "Account" },
           { label: "Net Amount", className: "text-right" },
           { label: "Action" },
         ]}
@@ -78,7 +78,9 @@ const Purchases = ({ setSidebarOpen }) => {
             <td className={s.date}>
               <Moment format="DD/MM/YYYY">{item.date}</Moment>
             </td>
-            <td className={s.vendor}>{item.vendor?.name}</td>
+            <td className={s.vendor}>
+              {item.accountingEntries?.[0]?.accountName}
+            </td>
             <td className={`text-right ${s.net}`}>
               {(
                 item.items.reduce((p, c) => p + c.qty * c.price, 0) +

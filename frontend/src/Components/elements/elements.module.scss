@@ -808,6 +808,7 @@
     .filters {
       background: white;
       padding: 0.5rem;
+      grid-template-columns: 1fr !important;
       td {
         width: 100%;
         form {

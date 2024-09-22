@@ -40,7 +40,6 @@ export const Table = ({
   filterFields,
   tfoot,
 }) => {
-  const { business } = useContext(SiteContext);
   const [productView, setProductView] = useState("rows");
   const [productTable, setProductTable] = useState(url?.endsWith("/Product"));
   const [filters, setFilters] = useState({});
@@ -81,7 +80,7 @@ export const Table = ({
     [metadata, filters]
   );
   useEffect(() => {
-    reset({ pageSize: metadata.pageSize });
+    reset({ pageSize: metadata?.pageSize });
   }, []);
 
   useEffect(() => {
@@ -221,7 +220,7 @@ export const Table = ({
           </tr>
         )}
       </tbody>
-      {tfoot}
+      {typeof tfoot === "function" ? tfoot(dynamicData) : tfoot}
       {pagination && (
         <tfoot>
           <tr className={s.pagination}>
@@ -426,7 +425,7 @@ const Filters = ({
       })}
     >
       {fields}
-      <div className="btns">
+      <div className="flex gap_5">
         {productTable && (
           <button
             title={`View in ${productView === "rows" ? "grid" : "row"}`}
@@ -440,7 +439,7 @@ const Filters = ({
         )}
         <button className={"btn"}>Search</button>
         <button
-          className={"btn"}
+          className={"btn secondary"}
           type="button"
           onClick={() => {
             reset();
