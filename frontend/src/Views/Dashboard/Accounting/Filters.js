@@ -51,6 +51,7 @@ const VoucherFilters = ({ filters, setFilters }) => {
           { label: "Sales", value: "Sales" },
           { label: "Purchase", value: "Purchase" },
           { label: "Stock", value: "Stock" },
+          { label: "Tax", value: "Tax" },
         ]}
       />
 

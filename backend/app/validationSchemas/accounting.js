@@ -14,6 +14,7 @@ export const create = yup.object({
         "Sales",
         "Purchase",
         "Stock",
+        "Tax",
         null,
       ])
       .nullable(),
@@ -35,6 +36,7 @@ export const update = yup.object({
         "Sales",
         "Purchase",
         "Stock",
+        "Tax",
         null,
       ])
       .nullable(),

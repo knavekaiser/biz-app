@@ -21,6 +21,7 @@ const mainSchema = yup.object({
       "Purchase",
       "Stock",
       "null",
+      "Tax",
       null,
     ])
     .nullable(),
@@ -102,6 +103,7 @@ const Form = ({ edit, masters = [], onSuccess }) => {
           { label: "Sales", value: "Sales" },
           { label: "Purchase", value: "Purchase" },
           { label: "Stock", value: "Stock" },
+          { label: "Tax", value: "Tax" },
         ]}
       />
 
