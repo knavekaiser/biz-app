@@ -3,7 +3,7 @@ import yup from "yup";
 export const create = yup.object({
   body: yup.object({
     dateTime: yup.string().required(),
-    type: yup.string().required(),
+    // type: yup.string().required(),
     amount: yup.number().min(0).required(),
     purchases: yup
       .array()
@@ -24,7 +24,7 @@ export const create = yup.object({
 export const update = yup.object({
   body: yup.object({
     dateTime: yup.string().required(),
-    type: yup.string().required(),
+    // type: yup.string().required(),
     amount: yup.number().min(0).required(),
     purchases: yup
       .array()

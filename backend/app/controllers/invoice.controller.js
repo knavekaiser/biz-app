@@ -135,7 +135,7 @@ export const create = async (req, res) => {
       (p, c) => p + c.price * c.qty,
       0
     );
-    const tax = totalCartPrice.percent(req.body.gst);
+    const tax = totalCartPrice.percent(req.body.gst) || 0;
     const accountingEntries = [
       {
         accountId: ObjectId(req.body.accountId),
@@ -146,7 +146,7 @@ export const create = async (req, res) => {
     ];
     const salesAccount = await Account.findOne({
       company: req.company?._id || req.authUser._id,
-      name: "Sales",
+      type: "Sales",
     });
     if (salesAccount) {
       accountingEntries.push({

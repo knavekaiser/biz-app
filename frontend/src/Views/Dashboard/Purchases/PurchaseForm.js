@@ -425,7 +425,8 @@ const MainForm = ({
         formOptions={{ required: true }}
         url={endpoints.accountingMasters}
         getQuery={(v) => ({
-          isGroup: "true",
+          types: "Cash,Bank,Suppliers",
+          isGroup: "false",
           name: v,
         })}
         handleData={(data) => ({

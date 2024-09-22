@@ -18,6 +18,9 @@ export const get = async (req, res) => {
     if (req.query.type) {
       conditions.type = req.query.type;
     }
+    if (req.query.types) {
+      conditions.type = { $in: req.query.types.split(",") };
+    }
 
     let pipeline = [{ $match: conditions }];
 

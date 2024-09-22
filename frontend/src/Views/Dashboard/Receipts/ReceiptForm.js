@@ -25,13 +25,14 @@ import PrintInvoice from "./printInvoice";
 
 const mainSchema = yup.object({
   date: yup.string().required(),
-  type: yup.string().required(),
+  // type: yup.string().required(),
   amount: yup
     .number()
     .min(1, "Enter more than 0")
     .required()
     .typeError("Enter a valid amount"),
-  accountId: yup.string().required(),
+  customerAccountId: yup.string().required(),
+  cashAccountId: yup.string().required(),
   // customerName: yup.string().required("Customer name is a required field"),
   // customerDetail: yup.string().required("Customer detail is a required field"),
 });
@@ -302,8 +303,6 @@ const MainForm = ({
     loading,
   } = useFetch(endpoints.receipts + `/${edit?._id || ""}`);
 
-  const type = watch("type");
-
   const submitForm = useCallback(
     (values) => {
       if (items.length > 0) {
@@ -333,8 +332,10 @@ const MainForm = ({
         dateTime: values.date,
         amount: values.amount,
         type: values.type,
-        accountId: values.accountId,
-        accountName: values.accountName,
+        customerAccountId: values.customerAccountId,
+        customerAccountName: values.customerAccountName,
+        cashAccountId: values.cashAccountId,
+        cashAccountName: values.cashAccountName,
         // customer: {
         //   name: values.customerName,
         //   detail: values.customerDetail,
@@ -362,6 +363,7 @@ const MainForm = ({
       customerDetail: edit?.customer?.detail || "",
     });
   }, [edit]);
+
   return (
     <div className={`${s.mainForm} grid gap-1`}>
       <form
@@ -376,23 +378,24 @@ const MainForm = ({
           error={errors.date}
         />
 
-        <Combobox
-          label="Type"
-          name="type"
+        <Select
+          label="Cash/Bank Account"
           control={control}
+          name="cashAccountId"
           formOptions={{ required: true }}
-          options={[
-            { label: "Cash", value: "Cash" },
-            { label: "Bank Transfer", value: "Bank Transfer" },
-            { label: "Customers", value: "Customers" },
-            { label: "Suppliers", value: "Suppliers" },
-            { label: "Sales", value: "Sales" },
-            { label: "Purchase", value: "Purchase" },
-            { label: "Stock", value: "Stock" },
-          ]}
-          onChange={() => {
-            setValue("accountId", "");
-            setValue("accountName", "");
+          url={endpoints.accountingMasters}
+          getQuery={(v) => ({
+            types: "Cash,Bank",
+            isGroup: "false",
+            name: v,
+          })}
+          handleData={(data) => ({
+            label: `${data.name}${data.type ? ` - ${data.type}` : ""}`,
+            value: data._id,
+            account: data,
+          })}
+          onChange={(opt) => {
+            setValue("cashAccountName", opt.account?.name);
           }}
         />
 
@@ -410,13 +413,12 @@ const MainForm = ({
         </div>
 
         <Select
-          label="Account"
+          label="Customer Account"
           control={control}
-          name="accountId"
+          name="customerAccountId"
           formOptions={{ required: true }}
           url={endpoints.accountingMasters}
           getQuery={(v) => ({
-            ...(type && { type }),
             isGroup: "false",
             name: v,
           })}
@@ -426,7 +428,7 @@ const MainForm = ({
             account: data,
           })}
           onChange={(opt) => {
-            setValue("accountName", opt.account?.name);
+            setValue("customerAccountName", opt.account?.name);
           }}
         />
 

@@ -434,7 +434,8 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
         formOptions={{ required: true }}
         url={endpoints.accountingMasters}
         getQuery={(v) => ({
-          isGroup: "true",
+          types: "Cash,Bank,Customers",
+          isGroup: "false",
           name: v,
         })}
         handleData={(data) => ({

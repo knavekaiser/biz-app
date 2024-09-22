@@ -130,7 +130,7 @@ export const create = async (req, res) => {
     ];
     const purchaseAccount = await Account.findOne({
       company: req.company?._id || req.authUser._id,
-      name: "Purchase",
+      type: "Purchase",
     });
     if (purchaseAccount) {
       accountingEntries.push({

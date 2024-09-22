@@ -20,23 +20,20 @@ export const create = async (req, res) => {
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
-    const accountingEntries = [];
-    const account = await Account.findOne({ id: req.body.accountI });
-    if (["Cash", "Bank"].includes(account.type)) {
-      accountingEntries.push({
-        accountId: ObjectId(req.body.accountId),
-        accountName: req.body.accountName,
+    const accountingEntries = [
+      {
+        accountId: ObjectId(req.body.cashAccountId),
+        accountName: req.body.cashAccountName,
         debit: req.body.amount,
         credit: 0,
-      });
-    } else {
-      accountingEntries.push({
-        accountId: ObjectId(req.body.accountId),
-        accountName: req.body.accountName,
+      },
+      {
+        accountId: ObjectId(req.body.customerAccountId),
+        accountName: req.body.customerAccountName,
         debit: 0,
         credit: req.body.amount,
-      });
-    }
+      },
+    ];
 
     new Payment({
       ...req.body,
