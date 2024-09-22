@@ -428,7 +428,7 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       </div>
 
       <Select
-        label="Account"
+        label="Customer Account"
         control={control}
         name="accountId"
         formOptions={{ required: true }}

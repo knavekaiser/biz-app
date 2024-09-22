@@ -29,7 +29,7 @@ const mainSchema = yup.object({
     .min(1, "Enter more than 0")
     .required()
     .typeError("Enter a valid amount"),
-  customerAccountId: yup.string().required(),
+  supplierAccountId: yup.string().required(),
   cashAccountId: yup.string().required(),
   // vendorName: yup.string().required("Vendor name is a required field"),
   // vendorDetail: yup.string().required("Vendor detail is a required field"),
@@ -339,8 +339,8 @@ const MainForm = ({
         dateTime: values.date,
         amount: values.amount,
         type: values.type,
-        customerAccountId: values.customerAccountId,
-        customerAccountName: values.customerAccountName,
+        supplierAccountId: values.supplierAccountId,
+        supplierAccountName: values.supplierAccountName,
         cashAccountId: values.cashAccountId,
         cashAccountName: values.cashAccountName,
         // vendor: {
@@ -419,9 +419,9 @@ const MainForm = ({
         </div>
 
         <Select
-          label="Customer Account"
+          label="Supplier Account"
           control={control}
-          name="customerAccountId"
+          name="supplierAccountId"
           formOptions={{ required: true }}
           url={endpoints.accountingMasters}
           getQuery={(v) => ({
@@ -434,7 +434,7 @@ const MainForm = ({
             account: data,
           })}
           onChange={(opt) => {
-            setValue("customerAccountName", opt.account?.name);
+            setValue("supplierAccountName", opt.account?.name);
           }}
         />
 

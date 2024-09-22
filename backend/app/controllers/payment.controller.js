@@ -28,8 +28,8 @@ export const create = async (req, res) => {
         credit: 0,
       },
       {
-        accountId: ObjectId(req.body.customerAccountId),
-        accountName: req.body.customerAccountName,
+        accountId: ObjectId(req.body.supplierAccountId),
+        accountName: req.body.supplierAccountName,
         debit: 0,
         credit: req.body.amount,
       },

@@ -419,7 +419,7 @@ const MainForm = ({
       </div>
 
       <Select
-        label="Account"
+        label="Supplier Account"
         control={control}
         name="accountId"
         formOptions={{ required: true }}
