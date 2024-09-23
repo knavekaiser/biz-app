@@ -18,10 +18,10 @@ export default mongoose.model(
         }),
       ],
       accountingEntries: [],
-      // vendor: {
-      //   name: { type: String },
-      //   detail: { type: String },
-      // },
+      vendor: {
+        //   name: { type: String },
+        detail: { type: String },
+      },
     },
     { timestamps: true }
   )

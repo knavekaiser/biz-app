@@ -152,7 +152,7 @@ If the system returns an empty array, tell the user that no products were found.
     //         message: `You are an AI integrated in an e-commerce app. You are to generate a 3 word chat title based on the following question: ${req.body.message}.
 
     // Respond with the title only, no extra text whatsoever. don't put quotes around the title.`,
-    //         metadata: { company: req.company || req.authUser },
+    //         metadata: { company: req.business || req.authUser },
     //         stream: false,
     //       })
     //       .then((resp) => resp?.output || null)

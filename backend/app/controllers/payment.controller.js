@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { Payment, Config, Account } from "../models/index.js";
+import { Payment, Config } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
@@ -14,32 +14,34 @@ export const findAll = async (req, res) => {
   }
 };
 
+const generateEntries = (body) => {
+  return [
+    {
+      accountId: ObjectId(body.cashAccountId),
+      accountName: body.cashAccountName,
+      debit: body.amount,
+      credit: 0,
+    },
+    {
+      accountId: ObjectId(body.supplierAccountId),
+      accountName: body.supplierAccountName,
+      debit: 0,
+      credit: body.amount,
+    },
+  ];
+};
 export const create = async (req, res) => {
   try {
     const { nextPaymentNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
-    const accountingEntries = [
-      {
-        accountId: ObjectId(req.body.cashAccountId),
-        accountName: req.body.cashAccountName,
-        debit: req.body.amount,
-        credit: 0,
-      },
-      {
-        accountId: ObjectId(req.body.supplierAccountId),
-        accountName: req.body.supplierAccountName,
-        debit: 0,
-        credit: req.body.amount,
-      },
-    ];
+    req.body.accountingEntries = generateEntries(req.body);
 
     new Payment({
       ...req.body,
       user: req.business?._id || req.authUser._id,
       no: nextPaymentNo || 1,
-      accountingEntries,
     })
       .save()
       .then(async (data) => {
@@ -59,6 +61,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     delete req.body.no;
+    req.body.accountingEntries = generateEntries(req.body);
     Payment.findOneAndUpdate(
       { _id: req.params.id, user: req.business?._id || req.authUser._id },
       req.body,

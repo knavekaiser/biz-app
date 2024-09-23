@@ -323,7 +323,7 @@ Respond with the title only, no extra text whatsoever. don't put quotes around t
             },
           ],
           100,
-          { company: req.company || req.authUser }
+          { company: req.business || req.authUser }
         )
         .then((resp) => resp?.message?.content || null);
 
@@ -593,7 +593,7 @@ export const sendMessage = async (req, res) => {
             content: msg.content,
           })),
           max_tokens,
-          { company: req.company || req.authUser }
+          { company: req.business || req.authUser }
         );
         const { message: newMsg, usage } = resp;
         newMsg._id = mongoose.Types.ObjectId();

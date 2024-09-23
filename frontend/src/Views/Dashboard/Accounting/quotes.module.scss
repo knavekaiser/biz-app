@@ -10,12 +10,12 @@
   grid-template-rows: min-content 1fr;
   .innerWrapper {
     display: grid;
-    grid-template-columns: 18rem 1fr;
-    grid-gap: 1rem;
+    grid-template-columns: 0 1fr;
+    grid-gap: 0;
+    transition: grid-template-columns 0.5s ease-in-out,
+      grid-gap 0.5s ease-in-out;
     .sidebar {
-      border: 1px solid rgba(0, 0, 0, 0.2);
       border-radius: 0.5rem;
-      padding: 0.5rem;
       overflow: auto;
       .addButton {
         margin-left: auto;
@@ -64,10 +64,27 @@
         }
       }
     }
+    &.open {
+      grid-gap: 1rem;
+      grid-template-columns: 18rem 1fr;
+      .sidebar {
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+      }
+    }
   }
-  .vouchers {
-    tr {
-      grid-template-columns: 9rem 3rem 8rem 1fr 7rem 7rem;
+  .innerContent {
+    .innerContentWrapper {
+      display: grid;
+      .vouchers {
+        tr {
+          grid-template-columns: 6rem 3rem 8rem 1fr 7rem 7rem;
+        }
+        .footer {
+          border-top: 1px solid rgb(109, 109, 109);
+          padding-top: 0.5rem;
+        }
+      }
     }
   }
 }

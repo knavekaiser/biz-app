@@ -60,7 +60,10 @@ const PrintInvoice = forwardRef(({ purchase, user }, ref) => {
       <div className={`${s.info} flex wrap gap-1 mt-1`}>
         <div className={`${s.box} flex-1`}>
           <p>To:</p>
-          <Detail label="Name" value={purchase.vendor?.name} />
+          <Detail
+            label="Name"
+            value={purchase.accountingEntries?.[0]?.accountName}
+          />
           <Detail
             label="Detail"
             value={

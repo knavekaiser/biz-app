@@ -14,32 +14,35 @@ export const findAll = async (req, res) => {
   }
 };
 
+const generateEntries = (body) => {
+  return [
+    {
+      accountId: ObjectId(body.cashAccountId),
+      accountName: body.cashAccountName,
+      debit: 0,
+      credit: body.amount,
+    },
+    {
+      accountId: ObjectId(body.customerAccountId),
+      accountName: body.customerAccountName,
+      debit: body.amount,
+      credit: 0,
+    },
+  ];
+};
+
 export const create = async (req, res) => {
   try {
     const { nextReceiptNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
-    const accountingEntries = [
-      {
-        accountId: ObjectId(req.body.cashAccountId),
-        accountName: req.body.cashAccountName,
-        debit: 0,
-        credit: req.body.amount,
-      },
-      {
-        accountId: ObjectId(req.body.customerAccountId),
-        accountName: req.body.customerAccountName,
-        debit: req.body.amount,
-        credit: 0,
-      },
-    ];
+    req.body.accountingEntries = generateEntries(req.body);
 
     new Receipt({
       ...req.body,
       user: req.business?._id || req.authUser._id,
       no: nextReceiptNo || 1,
-      accountingEntries,
     })
       .save()
       .then(async (data) => {
@@ -59,6 +62,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     delete req.body.no;
+    req.body.accountingEntries = generateEntries(req.body);
     Receipt.findOneAndUpdate(
       { _id: req.params.id, user: req.business?._id || req.authUser._id },
       req.body,

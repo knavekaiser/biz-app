@@ -10,6 +10,7 @@ import {
   Tabs,
   moment,
   Moment,
+  Textarea,
 } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
@@ -32,7 +33,7 @@ const mainSchema = yup.object({
   supplierAccountId: yup.string().required(),
   cashAccountId: yup.string().required(),
   // vendorName: yup.string().required("Vendor name is a required field"),
-  // vendorDetail: yup.string().required("Vendor detail is a required field"),
+  vendorDetail: yup.string().required("Vendor detail is a required field"),
 });
 
 const itemSchema = yup.object({
@@ -111,7 +112,7 @@ const Form = ({ edit, payments, onSuccess }) => {
               label="Name"
               value={edit.accountingEntries?.[0]?.accountName}
             />
-            {/* <Detail
+            <Detail
               label="Detail"
               value={
                 edit.vendor?.detail?.split("\n").map((line, i, arr) => (
@@ -121,7 +122,7 @@ const Form = ({ edit, payments, onSuccess }) => {
                   </span>
                 )) || null
               }
-            /> */}
+            />
           </div>
           <div className={s.box}>
             <h3>Payment Information</h3>
@@ -343,10 +344,10 @@ const MainForm = ({
         supplierAccountName: values.supplierAccountName,
         cashAccountId: values.cashAccountId,
         cashAccountName: values.cashAccountName,
-        // vendor: {
-        //   name: values.vendorName,
-        //   detail: values.vendorDetail,
-        // },
+        vendor: {
+          //   name: values.vendorName,
+          detail: values.vendorDetail,
+        },
         purchases: items.map((item) => ({ ...item, _id: undefined })),
       })
         .then(({ data }) => {
@@ -366,7 +367,11 @@ const MainForm = ({
     reset({
       ...edit,
       date: moment(edit?.date, "YYYY-MM-DD"),
-      vendorName: edit?.vendor?.name || "",
+      cashAccountId: edit?.accountingEntries?.[0]?.accountId || "",
+      cashAccountName: edit?.accountingEntries?.[0]?.accountName || "",
+      supplierAccountId: edit?.accountingEntries?.[1]?.accountId || "",
+      supplierAccountName: edit?.accountingEntries?.[1]?.accountName || "",
+      // vendorName: edit?.vendor?.name || "",
       vendorDetail: edit?.vendor?.detail || "",
     });
   }, [edit]);
@@ -438,7 +443,7 @@ const MainForm = ({
           }}
         />
 
-        {/* <Textarea label="Detail" readOnly {...register("vendorDetail")} /> */}
+        <Textarea label="Detail" {...register("vendorDetail")} />
       </form>
 
       <div className="all-columns flex justify-center">

@@ -10,10 +10,10 @@ export default mongoose.model(
       dateTime: { type: Schema.Types.Date, required: true },
       // type: { type: Schema.Types.String, required: true },
       amount: { type: Schema.Types.Number, required: true },
-      // customer: {
-      //   name: { type: String },
-      //   detail: { type: String },
-      // },
+      customer: {
+        //   name: { type: String },
+        detail: { type: String },
+      },
       accountingEntries: [],
       invoices: [
         new Schema({

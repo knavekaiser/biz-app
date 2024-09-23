@@ -5,7 +5,7 @@ const { responseFn, responseStr } = appConfig;
 
 export const get = async (req, res) => {
   try {
-    const conditions = { company: req.company?._id || req.authUser._id };
+    const conditions = { company: req.business?._id || req.authUser._id };
     if (req.params.id) {
       conditions._id = req.params.id;
     }
@@ -37,7 +37,7 @@ export const get = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    new Account({ ...req.body, company: req.company?._id || req.authUser._id })
+    new Account({ ...req.body, company: req.business?._id || req.authUser._id })
       .save()
       .then(async (data) => {
         responseFn.success(res, { data });
@@ -60,7 +60,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     Account.findOneAndUpdate(
-      { _id: req.params.id, company: req.company?._id || req.authUser._id },
+      { _id: req.params.id, company: req.business?._id || req.authUser._id },
       { ...req.body },
       { new: true }
     )
@@ -81,7 +81,7 @@ export const remove = async (req, res) => {
 
     Account.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      company: req.company?._id || req.authUser._id,
+      company: req.business?._id || req.authUser._id,
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);
@@ -95,7 +95,7 @@ export const remove = async (req, res) => {
 export const vouchers = async (req, res) => {
   try {
     const entryConditions = {
-      user: req.company?._id || req.authUser._id,
+      user: req.business?._id || req.authUser._id,
     };
     const conditions = {};
     if (req.query.type) {
@@ -116,12 +116,14 @@ export const vouchers = async (req, res) => {
             {
               $unwind: {
                 path: "$accountingEntries",
+                includeArrayIndex: "accountingEntries.index",
                 preserveNullAndEmptyArrays: false,
               },
             },
             { $match: entryConditions },
             {
               $set: {
+                "accountingEntries.rec_id": "$_id",
                 "accountingEntries.no": "$no",
                 "accountingEntries.type": "Invoice",
                 "accountingEntries.createdAt": "$createdAt",
@@ -143,12 +145,14 @@ export const vouchers = async (req, res) => {
             {
               $unwind: {
                 path: "$accountingEntries",
+                includeArrayIndex: "accountingEntries.index",
                 preserveNullAndEmptyArrays: false,
               },
             },
             { $match: entryConditions },
             {
               $set: {
+                "accountingEntries.rec_id": "$_id",
                 "accountingEntries.no": "$no",
                 "accountingEntries.type": "Purchase",
                 "accountingEntries.createdAt": "$createdAt",
@@ -170,12 +174,14 @@ export const vouchers = async (req, res) => {
             {
               $unwind: {
                 path: "$accountingEntries",
+                includeArrayIndex: "accountingEntries.index",
                 preserveNullAndEmptyArrays: false,
               },
             },
             { $match: entryConditions },
             {
               $set: {
+                "accountingEntries.rec_id": "$_id",
                 "accountingEntries.no": "$no",
                 "accountingEntries.type": "Receipt",
                 "accountingEntries.createdAt": "$createdAt",
@@ -197,12 +203,14 @@ export const vouchers = async (req, res) => {
             {
               $unwind: {
                 path: "$accountingEntries",
+                includeArrayIndex: "accountingEntries.index",
                 preserveNullAndEmptyArrays: false,
               },
             },
             { $match: entryConditions },
             {
               $set: {
+                "accountingEntries.rec_id": "$_id",
                 "accountingEntries.no": "$no",
                 "accountingEntries.type": "Payment",
                 "accountingEntries.createdAt": "$createdAt",
@@ -235,7 +243,7 @@ export const vouchers = async (req, res) => {
       },
       { $unwind: { path: "$entries" } },
       { $replaceRoot: { newRoot: "$entries" } },
-      { $sort: { createdAt: 1 } },
+      { $sort: { createdAt: 1, index: 1 } },
       { $match: conditions },
     ]).then((data) => {
       return responseFn.success(res, { data });

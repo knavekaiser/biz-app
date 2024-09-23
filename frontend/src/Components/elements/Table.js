@@ -38,6 +38,7 @@ export const Table = ({
   url,
   filters: defaultFilters,
   filterFields,
+  countRecord,
   tfoot,
 }) => {
   const [productView, setProductView] = useState("rows");
@@ -124,7 +125,10 @@ export const Table = ({
             </tr>
           ) : null}
           <tr className={`${s.filters} ${s.rowCount}`}>
-            <td>Showing Records: {(children || dynamicData).length}</td>
+            <td>
+              Showing Records:{" "}
+              {countRecord?.(dynamicData) || (children || dynamicData).length}
+            </td>
           </tr>
           {productTable && productView === "grid" ? null : (
             <tr
@@ -202,7 +206,7 @@ export const Table = ({
                     </td>
                   </tr>
                 ) : (
-                  renderRow(item, i)
+                  renderRow(item, i, dynamicData)
                 )
               )}
           </>
@@ -688,7 +692,7 @@ export const DynamicTable = ({
           .join(" "),
       }}
     >
-      {data.map((item, i) => renderRow(item, i))}
+      {data.map((item, i) => renderRow(item, i, data))}
     </Table>
   );
 };

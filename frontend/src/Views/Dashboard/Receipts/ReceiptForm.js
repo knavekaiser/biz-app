@@ -34,7 +34,7 @@ const mainSchema = yup.object({
   customerAccountId: yup.string().required(),
   cashAccountId: yup.string().required(),
   // customerName: yup.string().required("Customer name is a required field"),
-  // customerDetail: yup.string().required("Customer detail is a required field"),
+  customerDetail: yup.string().required("Customer detail is a required field"),
 });
 
 const itemSchema = yup.object({
@@ -109,7 +109,10 @@ const Form = ({ edit, receipts, onSuccess }) => {
           </div>
           <div className={s.box}>
             <h3>Customer Information</h3>
-            <Detail label="Name" value={edit.customer?.name} />
+            <Detail
+              label="Name"
+              value={edit.accountingEntries?.[0]?.accountName}
+            />
             <Detail
               label="Detail"
               value={
@@ -126,9 +129,14 @@ const Form = ({ edit, receipts, onSuccess }) => {
             <h3>Receipt Information</h3>
             <Detail
               label="Inv No"
+              className="flex justify-space-between"
               value={`${edit.no}${config?.print?.receiptNoSuffix || ""}`}
             />
-            <Detail label="Date" value={moment(edit?.date, "DD-MM-YYYY")} />
+            <Detail
+              label="Date"
+              className="flex justify-space-between"
+              value={moment(edit?.date, "DD-MM-YYYY")}
+            />
             <Detail
               label="Amount"
               value={edit.amount.fix(2, config?.numberSeparator)}
@@ -336,10 +344,10 @@ const MainForm = ({
         customerAccountName: values.customerAccountName,
         cashAccountId: values.cashAccountId,
         cashAccountName: values.cashAccountName,
-        // customer: {
-        //   name: values.customerName,
-        //   detail: values.customerDetail,
-        // },
+        customer: {
+          //   name: values.customerName,
+          detail: values.customerDetail,
+        },
         invoices: items.map((item) => ({ ...item, _id: undefined })),
       })
         .then(({ data }) => {
@@ -359,7 +367,11 @@ const MainForm = ({
     reset({
       ...edit,
       date: moment(edit?.date, "YYYY-MM-DD"),
-      customerName: edit?.customer?.name || "",
+      cashAccountId: edit?.accountingEntries?.[0]?.accountId || "",
+      cashAccountName: edit?.accountingEntries?.[0]?.accountName || "",
+      customerAccountId: edit?.accountingEntries?.[1]?.accountId || "",
+      customerAccountName: edit?.accountingEntries?.[1]?.accountName || "",
+      // customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
     });
   }, [edit]);
@@ -432,7 +444,7 @@ const MainForm = ({
           }}
         />
 
-        {/* <Textarea label="Detail" readOnly {...register("customerDetail")} /> */}
+        <Textarea label="Detail" {...register("customerDetail")} />
       </form>
 
       <div className="all-columns flex justify-center">

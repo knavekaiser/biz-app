@@ -125,55 +125,59 @@ export const findAll = async (req, res) => {
   }
 };
 
+const generateEntries = async (body, comapny_id) => {
+  const totalCartPrice = body.items.reduce((p, c) => p + c.price * c.qty, 0);
+  const tax = totalCartPrice.percent(body.gst) || 0;
+  const accountingEntries = [
+    {
+      accountId: ObjectId(body.accountId),
+      accountName: body.accountName,
+      debit: totalCartPrice + tax,
+      credit: 0,
+    },
+  ];
+  const salesAccount = await Account.findOne({
+    company: comapny_id,
+    type: "Sales",
+  });
+  if (salesAccount) {
+    accountingEntries.push({
+      accountId: salesAccount._id,
+      accountName: salesAccount.name,
+      debit: 0,
+      credit: totalCartPrice,
+    });
+  }
+  const taxAccount = await Account.findOne({
+    company: comapny_id,
+    name: "Tax",
+  });
+  if (taxAccount) {
+    accountingEntries.push({
+      accountId: taxAccount._id,
+      accountName: taxAccount.name,
+      debit: 0,
+      credit: tax,
+    });
+  }
+  return accountingEntries;
+};
+
 export const create = async (req, res) => {
   try {
     const { nextInvoiceNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
-    const totalCartPrice = req.body.items.reduce(
-      (p, c) => p + c.price * c.qty,
-      0
+    req.body.accountingEntries = await generateEntries(
+      req.body,
+      req.business?._id || req.authUser._id
     );
-    const tax = totalCartPrice.percent(req.body.gst) || 0;
-    const accountingEntries = [
-      {
-        accountId: ObjectId(req.body.accountId),
-        accountName: req.body.accountName,
-        debit: totalCartPrice + tax,
-        credit: 0,
-      },
-    ];
-    const salesAccount = await Account.findOne({
-      company: req.company?._id || req.authUser._id,
-      type: "Sales",
-    });
-    if (salesAccount) {
-      accountingEntries.push({
-        accountId: salesAccount._id,
-        accountName: salesAccount.name,
-        debit: 0,
-        credit: totalCartPrice,
-      });
-    }
-    const taxAccount = await Account.findOne({
-      company: req.company?._id || req.authUser._id,
-      name: "Tax",
-    });
-    if (taxAccount) {
-      accountingEntries.push({
-        accountId: taxAccount._id,
-        accountName: taxAccount.name,
-        debit: 0,
-        credit: tax,
-      });
-    }
 
     new Invoice({
       ...req.body,
       user: req.business?._id || req.authUser._id,
       no: nextInvoiceNo || 1,
-      accountingEntries,
     })
       .save()
       .then(async (data) => {
@@ -193,6 +197,12 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     delete req.body.no;
+
+    req.body.accountingEntries = await generateEntries(
+      req.body,
+      req.business?._id || req.authUser._id
+    );
+
     Invoice.findOneAndUpdate(
       { _id: req.params.id, user: req.business?._id || req.authUser._id },
       req.body,

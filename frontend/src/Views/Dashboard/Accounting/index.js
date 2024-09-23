@@ -6,6 +6,7 @@ import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
+import { LuListTree } from "react-icons/lu";
 
 import MasterForm from "./MasterForm";
 import QuoteForm from "./QuoteForm";
@@ -17,7 +18,7 @@ import {
 } from "react-icons/bs";
 import { GoPlus } from "react-icons/go";
 import { FiEdit3 } from "react-icons/fi";
-import VoucherFilters from "./Filters";
+import { PiTreeViewBold } from "react-icons/pi";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -43,7 +44,7 @@ const buildTree = (accounts) => {
 };
 
 const AccountNode = ({ account, setAddMaster }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(account?.isGroup);
   return (
     <li style={{ whiteSpace: "nowrap" }} className={s.listItem}>
       <div className={s.label}>
@@ -75,7 +76,9 @@ const AccountNode = ({ account, setAddMaster }) => {
           {account.isGroup && (
             <button
               className={s.addButton}
-              onClick={() => setAddMaster({ parent: account._id })}
+              onClick={() =>
+                setAddMaster({ parent: account._id, type: account.type || "" })
+              }
             >
               <BsFillPlusSquareFill />
             </button>
@@ -105,6 +108,7 @@ const Accounting = ({ setSidebarOpen }) => {
   const [quote, setQuote] = useState(null);
   const [addQuote, setAddQuote] = useState(false);
   const [tab, setTab] = useState("voucherListing");
+  const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState({});
 
   const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
@@ -121,7 +125,6 @@ const Accounting = ({ setSidebarOpen }) => {
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
-  console.log("list --->", filters);
   return (
     <div className={`${s.content} grid gap-1 m-a`}>
       <div className={`flex ${s.head}`}>
@@ -143,7 +146,7 @@ const Accounting = ({ setSidebarOpen }) => {
         </div>
       </div>
 
-      <div className={s.innerWrapper}>
+      <div className={`${s.innerWrapper} ${open ? s.open : ""}`}>
         <div className={s.sidebar}>
           <button className={s.addButton} onClick={() => setAddMaster({})}>
             <BsFillPlusSquareFill />
@@ -172,20 +175,35 @@ const Accounting = ({ setSidebarOpen }) => {
             )}
           </ul>
         </div>
-        <div>
-          <Tabs
-            activeTab={tab}
-            tabs={[
-              { label: "Voucher Listing", value: "voucherListing" },
-              // { label: "Reports", value: "reports" },
-              // { label: "More Reports", value: "moreReports" },
-            ]}
-            onChange={(tab) => setTab(tab.value)}
-          />
+        <div className={s.innerContent}>
+          <div className="flex gap-1 align-center">
+            <button
+              className="btn clear iconOnly"
+              onClick={() => setOpen(!open)}
+            >
+              <PiTreeViewBold />
+            </button>
+            <Tabs
+              activeTab={tab}
+              tabs={[
+                { label: "Voucher Listing", value: "voucherListing" },
+                // { label: "Reports", value: "reports" },
+                // { label: "More Reports", value: "moreReports" },
+              ]}
+              onChange={(tab) => setTab(tab.value)}
+            />
+          </div>
           {tab === "voucherListing" && (
-            <div>
+            <div className={s.innerContentWrapper}>
               <Table
                 url={endpoints.accountingVouchers}
+                countRecord={(data = []) =>
+                  data.reduce(
+                    (p, c, i, arr) =>
+                      p + (arr[i - 1]?.rec_id !== c.rec_id ? 1 : 0),
+                    0
+                  )
+                }
                 // filters={filters}
                 filterFields={[
                   {
@@ -232,36 +250,44 @@ const Accounting = ({ setSidebarOpen }) => {
                   { label: "Credit", className: "text-right" },
                   // { label: "Action" },
                 ]}
-                renderRow={(row, i) => (
+                renderRow={(row, i, arr) => (
                   <tr key={i}>
-                    <td>
-                      <Moment format="DD-MM-YYYY hh:mma">
-                        {row.createdAt}
-                      </Moment>
+                    <td className="grid">
+                      {arr[i - 1]?.rec_id !== row.rec_id && (
+                        <>
+                          <Moment
+                            style={{ fontSize: "14px" }}
+                            format="DD MMM YYYY"
+                          >
+                            {row.createdAt}
+                          </Moment>
+                          <Moment format="hh:mma">{row.createdAt}</Moment>
+                        </>
+                      )}
                     </td>
-                    <td>{row.no}</td>
-                    <td>{row.type}</td>
+                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
                     <td>{row.accountName}</td>
-                    <td className="text-right">{row.debit || 0}</td>
-                    <td className="text-right">{row.credit || 0}</td>
+                    <td className="text-right">
+                      {row.debit ? row.debit.toFixed(2) : null}
+                    </td>
+                    <td className="text-right">
+                      {row.credit ? row.credit.toFixed(2) : null}
+                    </td>
                   </tr>
                 )}
                 tfoot={(data) => (
                   <tfoot>
-                    <tr>
+                    <tr className={s.footer}>
                       <td />
                       <td />
                       <td />
                       <td className="text-right">Total</td>
                       <td className="text-right">
-                        {data
-                          .reduce((p, c) => p + c.debit, 0)
-                          .toLocaleString("en-IN")}
+                        {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
                       </td>
                       <td className="text-right">
-                        {data
-                          .reduce((p, c) => p + c.credit, 0)
-                          .toLocaleString("en-IN")}
+                        {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>

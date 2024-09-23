@@ -192,7 +192,7 @@ export const getAnalytics = async (req, res) => {
 
 export const genPipeline = async (req, res) => {
   try {
-    const companyId = req.company?._id || req.authUser._id;
+    const companyId = req.business?._id || req.authUser._id;
     const baseTable = req.body.table;
     const columns = req.body.columns;
 
@@ -387,7 +387,7 @@ const getModelForReport = async ({ companyId, table }) => {
 };
 export const testPipeline = async (req, res) => {
   try {
-    const companyId = req.company?._id || req.authUser._id;
+    const companyId = req.business?._id || req.authUser._id;
     const Model = await getModelForReport({ companyId, table: req.body.table });
 
     const data = await Model.aggregate(req.body.pipeline);

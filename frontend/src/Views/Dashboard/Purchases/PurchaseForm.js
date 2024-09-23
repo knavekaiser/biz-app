@@ -26,7 +26,7 @@ const mainSchema = yup.object({
   gst: yup.number().required().typeError("Enter a valid Number"),
   accountId: yup.string().required(),
   // vendorName: yup.string().required(),
-  // vendorDetail: yup.string().required(),
+  vendorDetail: yup.string().required(),
 });
 
 const itemSchema = yup.object({
@@ -94,7 +94,7 @@ const Form = ({ edit, purchases, onSuccess }) => {
               label="Name"
               value={edit.accountingEntries?.[0]?.accountName}
             />
-            {/* <Detail
+            <Detail
               label="Detail"
               value={
                 edit.vendor?.detail?.split("\n").map((line, i, arr) => (
@@ -104,7 +104,7 @@ const Form = ({ edit, purchases, onSuccess }) => {
                   </span>
                 )) || null
               }
-            /> */}
+            />
           </div>
           <div className={s.box}>
             <h3>Purchase Information</h3>
@@ -367,7 +367,9 @@ const MainForm = ({
     reset({
       ...edit,
       date: moment(edit?.date, "YYYY-MM-DD"),
-      vendorName: edit?.vendor?.name || "",
+      accountId: edit?.accountingEntries?.[0]?.accountId || "",
+      accountName: edit?.accountingEntries?.[0]?.accountName || "",
+      // vendorName: edit?.vendor?.name || "",
       vendorDetail: edit?.vendor?.detail || "",
     });
   }, [edit]);
@@ -383,10 +385,10 @@ const MainForm = ({
           gst: values.gst,
           accountId: values.accountId,
           accountName: values.accountName,
-          // vendor: {
-          //   name: values.vendorName,
-          //   detail: values.vendorDetail,
-          // },
+          vendor: {
+            //   name: values.vendorName,
+            detail: values.vendorDetail,
+          },
           items: items.map((item) => ({ ...item, _id: undefined })),
         })
           .then(({ data }) => {
@@ -439,12 +441,12 @@ const MainForm = ({
         }}
       />
 
-      {/* <Textarea
+      <Textarea
         label="Detail"
         {...register("vendorDetail")}
         required
         error={errors["vendorDetail"]}
-      /> */}
+      />
 
       <div className="btns">
         {

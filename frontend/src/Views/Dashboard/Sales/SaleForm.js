@@ -26,7 +26,7 @@ const mainSchema = yup.object({
   gst: yup.number().required().typeError("Enter a valid Number"),
   accountId: yup.string().required(),
   // customerName: yup.string().required(),
-  // customerDetail: yup.string().required(),
+  customerDetail: yup.string().required(),
 });
 
 const itemSchema = yup.object({
@@ -94,7 +94,7 @@ const Form = ({ edit, sales, onSuccess }) => {
               label="Name"
               value={edit.accountingEntries?.[0]?.accountName}
             />
-            {/* <Detail
+            <Detail
               label="Detail"
               value={
                 edit.customer?.detail?.split("\n").map((line, i, arr) => (
@@ -104,7 +104,7 @@ const Form = ({ edit, sales, onSuccess }) => {
                   </span>
                 )) || null
               }
-            /> */}
+            />
           </div>
           <div className={s.box}>
             <h3>Invoice Information</h3>
@@ -364,7 +364,7 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
       accountId: edit?.accountingEntries?.[0]?.accountId || "",
       accountName: edit?.accountingEntries?.[0]?.accountName || "",
       // customerName: edit?.customer?.name || "",
-      // customerDetail: edit?.customer?.detail || "",
+      customerDetail: edit?.customer?.detail || "",
     });
   }, [edit]);
   return (
@@ -380,10 +380,10 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
           accountId: values.accountId,
           accountName: values.accountName,
           // status: values.status,
-          // customer: {
-          //   name: values.customerName,
-          //   detail: values.customerDetail,
-          // },
+          customer: {
+            //   name: values.customerName,
+            detail: values.customerDetail,
+          },
           items: items.map((item) => ({ ...item, _id: undefined })),
         })
           .then(({ data }) => {
@@ -448,12 +448,12 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
         }}
       />
 
-      {/* <Textarea
+      <Textarea
         label="Detail"
         {...register("customerDetail")}
         required
         error={errors["customerDetail"]}
-      /> */}
+      />
 
       <div className="btns">
         {
