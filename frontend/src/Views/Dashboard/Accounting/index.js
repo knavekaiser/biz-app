@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Table, Moment, Tabs } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
@@ -40,12 +40,32 @@ const buildTree = (accounts) => {
 };
 
 const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
-  const [children, setChildren] = useState(account.children || []);
-  const [open, setOpen] = useState(
-    account?.isGroup ? children.length > 0 : false
-  );
+  const [children, setChildren] = useState([]);
+  const [open, setOpen] = useState(false);
   const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
 
+  useEffect(() => {
+    if (account.children) {
+      if (account.children.length === account.totalChildren) {
+        setChildren(account.children);
+        setOpen(account?.isGroup ? account.children.length > 0 : false);
+      } else if (
+        account.children.length &&
+        account.totalChildren > account.children.length
+      ) {
+        getMasters({ query: { parent: account._id } })
+          .then(({ data }) => {
+            if (data.success) {
+              setChildren(data.data);
+              setOpen(true);
+            } else {
+              Prompt({ type: "error", message: data.message });
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
+      }
+    }
+  }, [account.children]);
   return (
     <li style={{ whiteSpace: "nowrap" }} className={s.listItem}>
       <div className={s.label}>
@@ -137,10 +157,12 @@ const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
 };
 
 const Accounting = ({ setSidebarOpen }) => {
+  const voucherTableRef = useRef();
   const [addMaster, setAddMaster] = useState(null);
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [analysysAcc, setAnalysysAcc] = useState([]);
   const [filters, setFilters] = useState({});
 
   const { get: getMasters } = useFetch(endpoints.accountingMasters);
@@ -224,7 +246,7 @@ const Accounting = ({ setSidebarOpen }) => {
               activeTab={tab}
               tabs={[
                 { label: "Voucher Listing", value: "voucherListing" },
-                // { label: "Reports", value: "reports" },
+                { label: "Acconting Analysys", value: "analysys" },
                 // { label: "More Reports", value: "moreReports" },
               ]}
               onChange={(tab) => setTab(tab.value)}
@@ -233,6 +255,7 @@ const Accounting = ({ setSidebarOpen }) => {
           {tab === "voucherListing" && (
             <div className={s.innerContentWrapper}>
               <Table
+                ref={voucherTableRef}
                 url={endpoints.accountingVouchers}
                 countRecord={(data = []) =>
                   data.reduce(
@@ -288,7 +311,17 @@ const Accounting = ({ setSidebarOpen }) => {
                   // { label: "Action" },
                 ]}
                 renderRow={(row, i, arr) => (
-                  <tr key={i}>
+                  <tr
+                    key={i}
+                    onClick={() => {
+                      setAnalysysAcc(() =>
+                        voucherTableRef.current?.data.filter(
+                          (item) => item.rec_id === row.rec_id
+                        )
+                      );
+                      setTab("analysys");
+                    }}
+                  >
                     <td className="grid">
                       {arr[i - 1]?.rec_id !== row.rec_id && (
                         <>
@@ -332,6 +365,7 @@ const Accounting = ({ setSidebarOpen }) => {
               />
             </div>
           )}
+          {tab === "analysys" && <Analysys accounts={analysysAcc} />}
         </div>
       </div>
 
@@ -361,6 +395,70 @@ const Accounting = ({ setSidebarOpen }) => {
           }}
         />
       </Modal>
+    </div>
+  );
+};
+
+const Analysys = ({ accounts }) => {
+  return (
+    <div className={s.innerContentWrapper}>
+      {accounts?.length > 0 ? (
+        <Table
+          className={s.vouchers}
+          columns={[
+            { label: "Date" },
+            { label: "No" },
+            { label: "Type" },
+            { label: "Account Name" },
+            { label: "Debit", className: "text-right" },
+            { label: "Credit", className: "text-right" },
+          ]}
+          tfoot={
+            <tfoot>
+              <tr className={s.footer}>
+                <td />
+                <td />
+                <td />
+                <td className="text-right">Total</td>
+                <td className="text-right">
+                  {accounts.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                </td>
+                <td className="text-right">
+                  {accounts.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                </td>
+              </tr>
+            </tfoot>
+          }
+        >
+          {accounts.map((row, i, arr) => {
+            return (
+              <tr key={i}>
+                <td className="grid">
+                  {arr[i - 1]?.rec_id !== row.rec_id && (
+                    <>
+                      <Moment style={{ fontSize: "14px" }} format="DD MMM YYYY">
+                        {row.createdAt}
+                      </Moment>
+                      <Moment format="hh:mma">{row.createdAt}</Moment>
+                    </>
+                  )}
+                </td>
+                <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+                <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
+                <td>{row.accountName}</td>
+                <td className="text-right">
+                  {row.debit ? row.debit.toFixed(2) : null}
+                </td>
+                <td className="text-right">
+                  {row.credit ? row.credit.toFixed(2) : null}
+                </td>
+              </tr>
+            );
+          })}
+        </Table>
+      ) : (
+        <p className={s.analysysPlaceholder}>No row has been selected.</p>
+      )}
     </div>
   );
 };

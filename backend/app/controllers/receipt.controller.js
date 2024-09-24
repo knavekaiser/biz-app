@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { Receipt, Config, Account } from "../models/index.js";
+import { Receipt, Config } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
@@ -19,14 +19,14 @@ const generateEntries = (body) => {
     {
       accountId: ObjectId(body.cashAccountId),
       accountName: body.cashAccountName,
-      debit: 0,
-      credit: body.amount,
+      debit: body.amount,
+      credit: 0,
     },
     {
       accountId: ObjectId(body.customerAccountId),
       accountName: body.customerAccountName,
-      debit: body.amount,
-      credit: 0,
+      debit: 0,
+      credit: body.amount,
     },
   ];
 };

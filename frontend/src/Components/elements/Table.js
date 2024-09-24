@@ -1,4 +1,12 @@
-import { useRef, useState, useEffect, useCallback, useContext } from "react";
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useContext,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import Sortable from "sortablejs";
 import s from "./elements.module.scss";
 import { FaCircleNotch, FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -22,266 +30,282 @@ import { ProductThumb } from "../ui/productThumbnail";
 import { useParams } from "react-router-dom";
 import Menu from "./menu";
 
-export const Table = ({
-  admin,
-  columns,
-  className,
-  theadTrStyle,
-  tbodyTrStyle,
-  children,
-  sortable,
-  actions,
-  loading,
-  placeholder,
-  renderRow,
-  pagination,
-  url,
-  filters: defaultFilters,
-  filterFields,
-  countRecord,
-  tfoot,
-}) => {
-  const [productView, setProductView] = useState("rows");
-  const [productTable, setProductTable] = useState(url?.endsWith("/Product"));
-  const [filters, setFilters] = useState({});
-  const { control, reset } = useForm();
-  const [metadata, setMetadata] = useState({
-    total: 0,
-    page: 1,
-    pageSize: 20,
-  });
-  const [dynamicData, setDynamicData] = useState([]);
-  const { get: fetchData, loading: loadingData } = useFetch(url);
-
-  const tbody = useRef();
-  const table = useRef();
-
-  const getData = useCallback(
-    (newMetadata) => {
-      fetchData({
-        query: {
-          ...(pagination && {
-            page: metadata.page,
-            pageSize: metadata.pageSize,
-            ...newMetadata,
-          }),
-          ...filters,
-        },
-      })
-        .then(({ data }) => {
-          if (data.success) {
-            setDynamicData(data.data);
-            setMetadata(data.metadata);
-          } else {
-            Prompt({ type: "error", message: data.message });
-          }
-        })
-        .catch((err) => Prompt({ type: "error", message: err.message }));
+export const Table = forwardRef(
+  (
+    {
+      admin,
+      columns,
+      className,
+      theadTrStyle,
+      tbodyTrStyle,
+      children,
+      sortable,
+      actions,
+      loading,
+      placeholder,
+      renderRow,
+      pagination,
+      url,
+      filters: defaultFilters,
+      filterFields,
+      countRecord,
+      tfoot,
     },
-    [metadata, filters]
-  );
-  useEffect(() => {
-    reset({ pageSize: metadata?.pageSize });
-  }, []);
+    ref
+  ) => {
+    const [productView, setProductView] = useState("rows");
+    const [productTable, setProductTable] = useState(url?.endsWith("/Product"));
+    const [filters, setFilters] = useState({});
+    const { control, reset } = useForm();
+    const [metadata, setMetadata] = useState({
+      total: 0,
+      page: 1,
+      pageSize: 20,
+    });
+    const [dynamicData, setDynamicData] = useState([]);
+    const { get: fetchData, loading: loadingData } = useFetch(url);
 
-  useEffect(() => {
-    if (url) {
-      getData({ page: 1 });
-    }
-  }, [filters]);
+    const tbody = useRef();
 
-  useEffect(() => {
-    setFilters(defaultFilters);
-  }, [defaultFilters]);
+    const getData = useCallback(
+      (newMetadata) => {
+        fetchData({
+          query: {
+            ...(pagination && {
+              page: metadata.page,
+              pageSize: metadata.pageSize,
+              ...newMetadata,
+            }),
+            ...filters,
+          },
+        })
+          .then(({ data }) => {
+            if (data.success) {
+              setDynamicData(data.data);
+              setMetadata(data.metadata);
+            } else {
+              Prompt({ type: "error", message: data.message });
+            }
+          })
+          .catch((err) => Prompt({ type: "error", message: err.message }));
+      },
+      [metadata, filters]
+    );
+    useEffect(() => {
+      reset({ pageSize: metadata?.pageSize });
+    }, []);
 
-  useEffect(() => {
-    if (sortable) {
-      Sortable.create(tbody.current, {
-        animation: 250,
-        easing: "ease-in-out",
-        removeCloneOnHide: true,
-        ...sortable,
-      });
-    }
-  }, []);
-  return (
-    <table
-      ref={table}
-      className={`${s.table} ${className || ""} ${actions ? s.actions : ""}`}
-      cellPadding={0}
-      cellSpacing={0}
-    >
-      {(columns || filterFields?.length) && (
-        <thead>
-          {filterFields?.length ? (
-            <tr className={s.filters}>
+    useImperativeHandle(
+      ref,
+      () => ({
+        data: dynamicData,
+        setData: setDynamicData,
+        setMetadata,
+      }),
+      [dynamicData, setDynamicData]
+    );
+
+    useEffect(() => {
+      if (url) {
+        getData({ page: 1 });
+      }
+    }, [filters]);
+
+    useEffect(() => {
+      setFilters(defaultFilters);
+    }, [defaultFilters]);
+
+    useEffect(() => {
+      if (sortable) {
+        Sortable.create(tbody.current, {
+          animation: 250,
+          easing: "ease-in-out",
+          removeCloneOnHide: true,
+          ...sortable,
+        });
+      }
+    }, []);
+    return (
+      <table
+        ref={ref}
+        className={`${s.table} ${className || ""} ${actions ? s.actions : ""}`}
+        cellPadding={0}
+        cellSpacing={0}
+      >
+        {(columns || filterFields?.length) && (
+          <thead>
+            {filterFields?.length ? (
+              <tr className={s.filters}>
+                <td>
+                  <Filters
+                    productTable={productTable}
+                    productView={productView}
+                    setProductView={setProductView}
+                    admin={admin}
+                    filterFields={filterFields}
+                    filters={filters}
+                    setFilters={setFilters}
+                  />
+                </td>
+              </tr>
+            ) : null}
+            <tr className={`${s.filters} ${s.rowCount}`}>
               <td>
-                <Filters
-                  productTable={productTable}
-                  productView={productView}
-                  setProductView={setProductView}
-                  admin={admin}
-                  filterFields={filterFields}
-                  filters={filters}
-                  setFilters={setFilters}
-                />
+                Showing Records:{" "}
+                {countRecord?.(dynamicData) || (children || dynamicData).length}
               </td>
             </tr>
-          ) : null}
-          <tr className={`${s.filters} ${s.rowCount}`}>
-            <td>
-              Showing Records:{" "}
-              {countRecord?.(dynamicData) || (children || dynamicData).length}
-            </td>
-          </tr>
-          {productTable && productView === "grid" ? null : (
+            {productTable && productView === "grid" ? null : (
+              <tr
+                style={{
+                  ...(columns.some((col) => col.width) && {
+                    gridTemplateColumns: columns
+                      .map((col) => col.width || "minmax(50px, 1fr)")
+                      .join(" "),
+                  }),
+                  ...theadTrStyle,
+                }}
+              >
+                {columns.map((column, i) => (
+                  <th
+                    key={i}
+                    className={`${column.action ? s.action : ""} ${
+                      column.className || ""
+                    }`}
+                    style={{ ...column.style }}
+                  >
+                    {column.label}
+                  </th>
+                ))}
+              </tr>
+            )}
+          </thead>
+        )}
+        <tbody
+          ref={tbody}
+          className={
+            productTable && productView === "grid" ? s.productGrid : ""
+          }
+        >
+          {loading || loadingData ? (
             <tr
               style={{
-                ...(columns.some((col) => col.width) && {
-                  gridTemplateColumns: columns
-                    .map((col) => col.width || "minmax(50px, 1fr)")
-                    .join(" "),
-                }),
-                ...theadTrStyle,
+                gridTemplateColumns: columns
+                  .map((col) => col.width || "minmax(50px, 1fr)")
+                  .join(" "),
+              }}
+              className={s.loading}
+            >
+              <td>
+                <span className={s.icon}>
+                  <FaCircleNotch />
+                </span>
+              </td>
+            </tr>
+          ) : ((Array.isArray(children) ? children : [children]) || dynamicData)
+              .length > 0 ? (
+            <>
+              {children ||
+                dynamicData.map((item, i) =>
+                  productTable && productView === "grid" ? (
+                    <tr
+                      key={item._id}
+                      style={{
+                        gridTemplateColumns: columns
+                          .map((col) => col.width || "minmax(50px, 1fr)")
+                          .join(" "),
+                      }}
+                    >
+                      <td>
+                        <ProductThumb
+                          product={item}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const editAction = actions(item)?.find(
+                              (ac) => ac.label === "Edit"
+                            )?.callBack;
+                            if (editAction) {
+                              editAction(item);
+                            }
+                            // console.log(editAction);
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ) : (
+                    renderRow(item, i, dynamicData)
+                  )
+                )}
+            </>
+          ) : (
+            <tr
+              className={s.placeholder}
+              style={{
+                gridTemplateColumns: columns
+                  .map((col) => col.width || "minmax(50px, 1fr)")
+                  .join(" "),
+                ...tbodyTrStyle,
               }}
             >
-              {columns.map((column, i) => (
-                <th
-                  key={i}
-                  className={`${column.action ? s.action : ""} ${
-                    column.className || ""
-                  }`}
-                  style={{ ...column.style }}
-                >
-                  {column.label}
-                </th>
-              ))}
+              <td>{placeholder || "Nothing yet..."}</td>
             </tr>
           )}
-        </thead>
-      )}
-      <tbody
-        ref={tbody}
-        className={productTable && productView === "grid" ? s.productGrid : ""}
-      >
-        {loading || loadingData ? (
-          <tr
-            style={{
-              gridTemplateColumns: columns
-                .map((col) => col.width || "minmax(50px, 1fr)")
-                .join(" "),
-            }}
-            className={s.loading}
-          >
-            <td>
-              <span className={s.icon}>
-                <FaCircleNotch />
-              </span>
-            </td>
-          </tr>
-        ) : ((Array.isArray(children) ? children : [children]) || dynamicData)
-            .length > 0 ? (
-          <>
-            {children ||
-              dynamicData.map((item, i) =>
-                productTable && productView === "grid" ? (
-                  <tr
-                    key={item._id}
-                    style={{
-                      gridTemplateColumns: columns
-                        .map((col) => col.width || "minmax(50px, 1fr)")
-                        .join(" "),
-                    }}
-                  >
-                    <td>
-                      <ProductThumb
-                        product={item}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const editAction = actions(item)?.find(
-                            (ac) => ac.label === "Edit"
-                          )?.callBack;
-                          if (editAction) {
-                            editAction(item);
-                          }
-                          // console.log(editAction);
-                        }}
-                      />
-                    </td>
-                  </tr>
-                ) : (
-                  renderRow(item, i, dynamicData)
-                )
-              )}
-          </>
-        ) : (
-          <tr
-            className={s.placeholder}
-            style={{
-              gridTemplateColumns: columns
-                .map((col) => col.width || "minmax(50px, 1fr)")
-                .join(" "),
-              ...tbodyTrStyle,
-            }}
-          >
-            <td>{placeholder || "Nothing yet..."}</td>
-          </tr>
+        </tbody>
+        {typeof tfoot === "function" ? tfoot(dynamicData) : tfoot}
+        {pagination && (
+          <tfoot>
+            <tr className={s.pagination}>
+              <td>
+                <Combobox
+                  control={control}
+                  name="pageSize"
+                  label="Per Page"
+                  className={s.perPage}
+                  options={[
+                    { label: "10", value: 10 },
+                    { label: "20", value: 20 },
+                    { label: "30", value: 30 },
+                    { label: "50", value: 50 },
+                    { label: "100", value: 100 },
+                  ]}
+                  onChange={(v) => {
+                    getData({ pageSize: v.value });
+                  }}
+                />
+                <span className={s.pageSummary}>
+                  {metadata.pageSize * (metadata.page - 1) + 1}-
+                  {metadata.pageSize * (metadata.page - 1) + dynamicData.length}{" "}
+                  of {metadata.total}
+                </span>
+                <button
+                  title="Previous Page"
+                  className="btn clear"
+                  disabled={metadata.page <= 1}
+                  onClick={() => {
+                    getData({ page: metadata.page - 1 });
+                  }}
+                >
+                  <FaChevronLeft />
+                </button>
+                <span className={s.currentPage}>{metadata.page}</span>
+                <button
+                  title="Next Page"
+                  className="btn clear"
+                  disabled={metadata.page * metadata.pageSize >= metadata.total}
+                  onClick={() => {
+                    getData({ page: metadata.page + 1 });
+                  }}
+                >
+                  <FaChevronRight />
+                </button>
+              </td>
+            </tr>
+          </tfoot>
         )}
-      </tbody>
-      {typeof tfoot === "function" ? tfoot(dynamicData) : tfoot}
-      {pagination && (
-        <tfoot>
-          <tr className={s.pagination}>
-            <td>
-              <Combobox
-                control={control}
-                name="pageSize"
-                label="Per Page"
-                className={s.perPage}
-                options={[
-                  { label: "10", value: 10 },
-                  { label: "20", value: 20 },
-                  { label: "30", value: 30 },
-                  { label: "50", value: 50 },
-                  { label: "100", value: 100 },
-                ]}
-                onChange={(v) => {
-                  getData({ pageSize: v.value });
-                }}
-              />
-              <span className={s.pageSummary}>
-                {metadata.pageSize * (metadata.page - 1) + 1}-
-                {metadata.pageSize * (metadata.page - 1) + dynamicData.length}{" "}
-                of {metadata.total}
-              </span>
-              <button
-                title="Previous Page"
-                className="btn clear"
-                disabled={metadata.page <= 1}
-                onClick={() => {
-                  getData({ page: metadata.page - 1 });
-                }}
-              >
-                <FaChevronLeft />
-              </button>
-              <span className={s.currentPage}>{metadata.page}</span>
-              <button
-                title="Next Page"
-                className="btn clear"
-                disabled={metadata.page * metadata.pageSize >= metadata.total}
-                onClick={() => {
-                  getData({ page: metadata.page + 1 });
-                }}
-              >
-                <FaChevronRight />
-              </button>
-            </td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
-  );
-};
+      </table>
+    );
+  }
+);
 
 const Filters = ({
   productTable,

@@ -19,14 +19,14 @@ const generateEntries = (body) => {
     {
       accountId: ObjectId(body.cashAccountId),
       accountName: body.cashAccountName,
-      debit: body.amount,
-      credit: 0,
+      debit: 0,
+      credit: body.amount,
     },
     {
       accountId: ObjectId(body.supplierAccountId),
       accountName: body.supplierAccountName,
-      debit: 0,
-      credit: body.amount,
+      debit: body.amount,
+      credit: 0,
     },
   ];
 };
