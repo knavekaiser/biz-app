@@ -381,16 +381,14 @@ const Accounting = ({ setSidebarOpen }) => {
         <MasterForm
           edit={addMaster}
           masters={masters}
-          onSuccess={(newMaster) => {
-            if (addMaster?._id) {
-              setMasters((prev) =>
-                prev.map((item) =>
-                  item._id === newMaster._id ? newMaster : item
-                )
-              );
-            } else {
-              setMasters((prev) => [...prev, newMaster]);
-            }
+          onSuccess={() => {
+            getMasters({ query: { isGroup: "true" } })
+              .then(({ data }) => {
+                if (data.success) {
+                  return setMasters(data.data);
+                }
+              })
+              .catch((err) => Prompt({ type: "error", message: err.message }));
             setAddMaster(false);
           }}
         />
