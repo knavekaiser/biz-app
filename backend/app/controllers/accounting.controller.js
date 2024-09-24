@@ -1,5 +1,6 @@
 import { appConfig } from "../config/index.js";
 import { Account } from "../models/index.js";
+import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -18,11 +19,29 @@ export const get = async (req, res) => {
     if (req.query.type) {
       conditions.type = req.query.type;
     }
+    if (req.query.parent) {
+      conditions.parent = ObjectId(req.query.parent);
+    }
     if (req.query.types) {
       conditions.type = { $in: req.query.types.split(",") };
     }
 
     let pipeline = [{ $match: conditions }];
+    if (conditions.isGroup) {
+      pipeline.push(
+        ...[
+          {
+            $lookup: {
+              from: "accounts",
+              localField: "_id",
+              foreignField: "parent",
+              as: "totalChildren",
+            },
+          },
+          { $set: { totalChildren: { $size: "$totalChildren" } } },
+        ]
+      );
+    }
 
     Account.aggregate(pipeline)
       .then((data) => {
@@ -100,6 +119,9 @@ export const vouchers = async (req, res) => {
     const conditions = {};
     if (req.query.type) {
       conditions.type = req.query.type;
+    }
+    if (req.query.accountId) {
+      conditions.accountId = ObjectId(req.query.accountId);
     }
     if (req.query.startDate && req.query.endDate) {
       conditions.createdAt = {

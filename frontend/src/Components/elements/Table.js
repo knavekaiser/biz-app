@@ -88,7 +88,11 @@ export const Table = ({
     if (url) {
       getData({ page: 1 });
     }
-  }, [filters, defaultFilters]);
+  }, [filters]);
+
+  useEffect(() => {
+    setFilters(defaultFilters);
+  }, [defaultFilters]);
 
   useEffect(() => {
     if (sortable) {

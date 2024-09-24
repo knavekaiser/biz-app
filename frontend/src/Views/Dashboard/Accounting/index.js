@@ -1,24 +1,20 @@
-import { useState, useEffect, useContext, useMemo } from "react";
-import { SiteContext } from "SiteContext";
-import { Table, TableActions, Moment, Tabs, Select } from "Components/elements";
-import { FaRegEye, FaRegTrashAlt } from "react-icons/fa";
+import { useState, useEffect, useMemo } from "react";
+import { Table, Moment, Tabs } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
-import { LuListTree } from "react-icons/lu";
 
 import MasterForm from "./MasterForm";
-import QuoteForm from "./QuoteForm";
 import {
   BsDashSquare,
   BsFillPlusSquareFill,
   BsList,
   BsPlusSquare,
 } from "react-icons/bs";
-import { GoPlus } from "react-icons/go";
 import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
+import { CgSpinner } from "react-icons/cg";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -43,16 +39,46 @@ const buildTree = (accounts) => {
   return tree;
 };
 
-const AccountNode = ({ account, setAddMaster }) => {
-  const [open, setOpen] = useState(account?.isGroup);
+const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
+  const [children, setChildren] = useState(account.children || []);
+  const [open, setOpen] = useState(
+    account?.isGroup ? children.length > 0 : false
+  );
+  const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
+
   return (
     <li style={{ whiteSpace: "nowrap" }} className={s.listItem}>
       <div className={s.label}>
         {account.isGroup && (
           <>
-            {account.children?.length > 0 ? (
-              <button onClick={() => setOpen(!open)}>
-                {open ? <BsDashSquare /> : <BsPlusSquare />}
+            {(children?.length || account.totalChildren) > 0 ? (
+              <button
+                onClick={() => {
+                  if (children?.length === account.totalChildren) {
+                    setOpen(!open);
+                  } else {
+                    getMasters({ query: { parent: account._id } })
+                      .then(({ data }) => {
+                        if (data.success) {
+                          setChildren(data.data);
+                          setOpen(true);
+                        } else {
+                          Prompt({ type: "error", message: data.message });
+                        }
+                      })
+                      .catch((err) =>
+                        Prompt({ type: "error", message: err.message })
+                      );
+                  }
+                }}
+              >
+                {loading ? (
+                  <CgSpinner className="spin" />
+                ) : open ? (
+                  <BsDashSquare />
+                ) : (
+                  <BsPlusSquare />
+                )}
               </button>
             ) : (
               <button
@@ -64,11 +90,20 @@ const AccountNode = ({ account, setAddMaster }) => {
                   borderRadius: "2px",
                   pointerEvents: "none",
                 }}
-              ></button>
+              />
             )}
           </>
         )}
-        <strong>{account.name}</strong>
+        <strong
+          className={!account.isGroup ? s.accountName : ""}
+          onClick={() => {
+            if (!account.isGroup) {
+              onClick(account);
+            }
+          }}
+        >
+          {account.name}
+        </strong>
         <div className={s.btns}>
           <button className={s.addButton} onClick={() => setAddMaster(account)}>
             <FiEdit3 />
@@ -85,13 +120,14 @@ const AccountNode = ({ account, setAddMaster }) => {
           )}
         </div>
       </div>
-      {open && account.children?.length > 0 && (
+      {open && children.length > 0 && (
         <ul className={s.nestedList}>
-          {account.children.map((child) => (
+          {children.map((child) => (
             <AccountNode
               key={child._id}
               account={child}
               setAddMaster={setAddMaster}
+              onClick={onClick}
             />
           ))}
         </ul>
@@ -101,23 +137,18 @@ const AccountNode = ({ account, setAddMaster }) => {
 };
 
 const Accounting = ({ setSidebarOpen }) => {
-  const { config } = useContext(SiteContext);
-  const [quotes, setQuotes] = useState([]);
   const [addMaster, setAddMaster] = useState(null);
   const [masters, setMasters] = useState([]);
-  const [quote, setQuote] = useState(null);
-  const [addQuote, setAddQuote] = useState(false);
   const [tab, setTab] = useState("voucherListing");
   const [open, setOpen] = useState(false);
   const [filters, setFilters] = useState({});
 
-  const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
-  const { remove: deleteQuote } = useFetch(endpoints.quotes + "/{ID}");
+  const { get: getMasters } = useFetch(endpoints.accountingMasters);
 
   const treeData = useMemo(() => buildTree(masters), [masters]);
 
   useEffect(() => {
-    getMasters()
+    getMasters({ query: { isGroup: "true" } })
       .then(({ data }) => {
         if (data.success) {
           return setMasters(data.data);
@@ -158,6 +189,12 @@ const Accounting = ({ setSidebarOpen }) => {
                   key={account._id}
                   account={account}
                   setAddMaster={setAddMaster}
+                  onClick={(account) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      accountId: account._id,
+                    }))
+                  }
                 />
               ))
             ) : (
@@ -204,7 +241,7 @@ const Accounting = ({ setSidebarOpen }) => {
                     0
                   )
                 }
-                // filters={filters}
+                filters={filters}
                 filterFields={[
                   {
                     label: "Type",
@@ -297,35 +334,6 @@ const Accounting = ({ setSidebarOpen }) => {
           )}
         </div>
       </div>
-
-      <Modal
-        open={addQuote}
-        head
-        label={`${quote ? "View / Update" : "Add"} Record`}
-        className={s.addQuoteFormModal}
-        setOpen={() => {
-          setQuote(null);
-          setAddQuote(false);
-        }}
-      >
-        <QuoteForm
-          edit={quote}
-          quotes={quotes}
-          onSuccess={(newQuote) => {
-            if (quote) {
-              setMasters((prev) =>
-                prev.map((item) =>
-                  item._id === newQuote._id ? newQuote : item
-                )
-              );
-              setQuote(null);
-            } else {
-              setMasters((prev) => [...prev, newQuote]);
-            }
-            setAddQuote(false);
-          }}
-        />
-      </Modal>
 
       <Modal
         open={addMaster}

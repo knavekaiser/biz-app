@@ -149,6 +149,9 @@ a {
   position: absolute;
   inset: 0;
 }
+.spin {
+  animation: spin 1.5s linear infinite;
+}
 
 @keyframes spin {
   0% {

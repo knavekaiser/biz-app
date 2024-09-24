@@ -50,6 +50,12 @@
           .addButton {
             opacity: 0;
           }
+          .accountName {
+            cursor: pointer;
+            &:hover {
+              text-decoration: underline;
+            }
+          }
           &:hover {
             background: rgba(0, 0, 0, 0.05);
             .addButton {
