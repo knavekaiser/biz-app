@@ -15,6 +15,7 @@ import {
 import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
+import { da } from "date-fns/locale";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -163,9 +164,11 @@ const Accounting = ({ setSidebarOpen }) => {
   const [tab, setTab] = useState("voucherListing");
   const [open, setOpen] = useState(true);
   const [analysysAcc, setAnalysysAcc] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
   const [filters, setFilters] = useState({});
 
   const { get: getMasters } = useFetch(endpoints.accountingMasters);
+  const { get: getVouchers } = useFetch(endpoints.accountingVouchers);
 
   const treeData = useMemo(() => buildTree(masters), [masters]);
 
@@ -178,6 +181,18 @@ const Accounting = ({ setSidebarOpen }) => {
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
+
+  useEffect(() => {
+    getVouchers({ query: filters })
+      .then(({ data }) => {
+        if (data.success) {
+          setVouchers(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, [filters]);
   return (
     <div className={`${s.content} grid gap-1 m-a`}>
       <div className={`flex ${s.head}`}>
@@ -211,12 +226,33 @@ const Accounting = ({ setSidebarOpen }) => {
                   key={account._id}
                   account={account}
                   setAddMaster={setAddMaster}
-                  onClick={(account) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      accountId: account._id,
-                    }))
-                  }
+                  onClick={(account) => {
+                    const firstRecords = (vouchers || []).filter(
+                      (item) => item.accountId === account._id
+                    );
+                    const otherRecords = (vouchers || []).filter((item) =>
+                      firstRecords.some((rec) => rec.rec_id === item.rec_id)
+                    );
+                    setAnalysysAcc(
+                      [...firstRecords, ...otherRecords]
+                        .filter(
+                          (obj, index, self) =>
+                            index ===
+                            self.findIndex(
+                              (o) =>
+                                o.rec_id === obj.rec_id && o.index === obj.index
+                            )
+                        )
+                        .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                        .sort((a, b) => (a.index > b.index ? 1 : -1))
+                    );
+                    setTab("analysys");
+
+                    // setFilters((prev) => ({
+                    //   ...prev,
+                    //   accountId: account._id,
+                    // }));
+                  }}
                 />
               ))
             ) : (
@@ -246,7 +282,7 @@ const Accounting = ({ setSidebarOpen }) => {
               activeTab={tab}
               tabs={[
                 { label: "Voucher Listing", value: "voucherListing" },
-                { label: "Acconting Analysys", value: "analysys" },
+                { label: "Accounting Analysys", value: "analysys" },
                 // { label: "More Reports", value: "moreReports" },
               ]}
               onChange={(tab) => setTab(tab.value)}
@@ -310,17 +346,34 @@ const Accounting = ({ setSidebarOpen }) => {
                   { label: "Credit", className: "text-right" },
                   // { label: "Action" },
                 ]}
-                renderRow={(row, i, arr) => (
+                tfoot={(data) => (
+                  <tfoot>
+                    <tr className={s.footer}>
+                      <td />
+                      <td />
+                      <td />
+                      <td className="text-right">Total</td>
+                      <td className="text-right">
+                        {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                      </td>
+                      <td className="text-right">
+                        {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              >
+                {vouchers.map((row, i, arr) => (
                   <tr
                     key={i}
-                    onClick={() => {
-                      setAnalysysAcc(() =>
-                        voucherTableRef.current?.data.filter(
-                          (item) => item.rec_id === row.rec_id
-                        )
-                      );
-                      setTab("analysys");
-                    }}
+                    // onClick={() => {
+                    //   setAnalysysAcc(() =>
+                    //     voucherTableRef.current?.data.filter(
+                    //       (item) => item.rec_id === row.rec_id
+                    //     )
+                    //   );
+                    //   setTab("analysys");
+                    // }}
                   >
                     <td className="grid">
                       {arr[i - 1]?.rec_id !== row.rec_id && (
@@ -345,24 +398,8 @@ const Accounting = ({ setSidebarOpen }) => {
                       {row.credit ? row.credit.toFixed(2) : null}
                     </td>
                   </tr>
-                )}
-                tfoot={(data) => (
-                  <tfoot>
-                    <tr className={s.footer}>
-                      <td />
-                      <td />
-                      <td />
-                      <td className="text-right">Total</td>
-                      <td className="text-right">
-                        {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
-                      </td>
-                      <td className="text-right">
-                        {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                )}
-              />
+                ))}
+              </Table>
             </div>
           )}
           {tab === "analysys" && <Analysys accounts={analysysAcc} />}
@@ -401,61 +438,73 @@ const Analysys = ({ accounts }) => {
   return (
     <div className={s.innerContentWrapper}>
       {accounts?.length > 0 ? (
-        <Table
-          className={s.vouchers}
-          columns={[
-            { label: "Date" },
-            { label: "No" },
-            { label: "Type" },
-            { label: "Account Name" },
-            { label: "Debit", className: "text-right" },
-            { label: "Credit", className: "text-right" },
-          ]}
-          tfoot={
-            <tfoot>
-              <tr className={s.footer}>
-                <td />
-                <td />
-                <td />
-                <td className="text-right">Total</td>
-                <td className="text-right">
-                  {accounts.reduce((p, c) => p + c.debit, 0).toFixed(2)}
-                </td>
-                <td className="text-right">
-                  {accounts.reduce((p, c) => p + c.credit, 0).toFixed(2)}
-                </td>
-              </tr>
-            </tfoot>
-          }
-        >
-          {accounts.map((row, i, arr) => {
-            return (
-              <tr key={i}>
-                <td className="grid">
-                  {arr[i - 1]?.rec_id !== row.rec_id && (
-                    <>
-                      <Moment style={{ fontSize: "14px" }} format="DD MMM YYYY">
-                        {row.createdAt}
-                      </Moment>
-                      <Moment format="hh:mma">{row.createdAt}</Moment>
-                    </>
-                  )}
-                </td>
-                <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
-                <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                <td>{row.accountName}</td>
-                <td className="text-right">
-                  {row.debit ? row.debit.toFixed(2) : null}
-                </td>
-                <td className="text-right">
-                  {row.credit ? row.credit.toFixed(2) : null}
-                </td>
-              </tr>
-            );
-          })}
-        </Table>
+        <>
+          <p
+            style={{ fontWeight: "600", fontSize: "1.2em" }}
+            className="mt-1 pl_5"
+          >
+            {accounts[0].accountName}
+          </p>
+          <Table
+            className={s.vouchers}
+            columns={[
+              { label: "Date" },
+              { label: "No" },
+              { label: "Type" },
+              { label: "Account Name" },
+              { label: "Debit", className: "text-right" },
+              { label: "Credit", className: "text-right" },
+            ]}
+            tfoot={
+              <tfoot>
+                <tr className={s.footer}>
+                  <td />
+                  <td />
+                  <td />
+                  <td className="text-right">Total</td>
+                  <td className="text-right">
+                    {accounts.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                  </td>
+                  <td className="text-right">
+                    {accounts.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            }
+          >
+            {accounts.map((row, i, arr) => {
+              // if (i === 0) return null;
+              return (
+                <tr key={i}>
+                  <td className="grid">
+                    {arr[i - 1]?.rec_id !== row.rec_id && (
+                      <>
+                        <Moment
+                          style={{ fontSize: "14px" }}
+                          format="DD MMM YYYY"
+                        >
+                          {row.createdAt}
+                        </Moment>
+                        <Moment format="hh:mma">{row.createdAt}</Moment>
+                      </>
+                    )}
+                  </td>
+                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
+                  <td>{row.accountName}</td>
+                  <td className="text-right">
+                    {row.debit ? row.debit.toFixed(2) : null}
+                  </td>
+                  <td className="text-right">
+                    {row.credit ? row.credit.toFixed(2) : null}
+                  </td>
+                </tr>
+              );
+            })}
+          </Table>
+        </>
       ) : (
-        <p className={s.analysysPlaceholder}>No row has been selected.</p>
+        <p className={s.analysysPlaceholder}>No account has been selected.</p>
       )}
     </div>
   );
