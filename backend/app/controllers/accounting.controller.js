@@ -26,22 +26,18 @@ export const get = async (req, res) => {
       conditions.type = { $in: req.query.types.split(",") };
     }
 
-    let pipeline = [{ $match: conditions }];
-    if (conditions.isGroup) {
-      pipeline.push(
-        ...[
-          {
-            $lookup: {
-              from: "accounts",
-              localField: "_id",
-              foreignField: "parent",
-              as: "totalChildren",
-            },
-          },
-          { $set: { totalChildren: { $size: "$totalChildren" } } },
-        ]
-      );
-    }
+    let pipeline = [
+      { $match: conditions },
+      {
+        $lookup: {
+          from: "accounts",
+          localField: "_id",
+          foreignField: "parent",
+          as: "totalChildren",
+        },
+      },
+      { $set: { totalChildren: { $size: "$totalChildren" } } },
+    ];
 
     Account.aggregate(pipeline)
       .then((data) => {

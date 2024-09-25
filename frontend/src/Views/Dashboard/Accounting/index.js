@@ -47,10 +47,7 @@ const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
 
   useEffect(() => {
     if (account.children) {
-      if (account.children.length === account.totalChildren) {
-        setChildren(account.children);
-        setOpen(account?.isGroup ? account.children.length > 0 : false);
-      } else if (
+      if (
         account.children.length &&
         account.totalChildren > account.children.length
       ) {
@@ -64,6 +61,9 @@ const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
             }
           })
           .catch((err) => Prompt({ type: "error", message: err.message }));
+      } else {
+        setChildren(account.children);
+        setOpen(account?.isGroup ? account.children.length > 0 : false);
       }
     }
   }, [account.children]);
@@ -242,11 +242,62 @@ const Accounting = ({ setSidebarOpen }) => {
                               o.rec_id === obj.rec_id && o.index === obj.index
                           )
                       )
+                      .filter((row) => row.accountId !== account._id)
+                      .reduce((p, c) => {
+                        const index = p.findIndex((item) =>
+                          item.some((row) => row.rec_id === c.rec_id)
+                        );
+                        if (index === -1) {
+                          p.push([c]);
+                        } else {
+                          p[index].push(c);
+                        }
+                        return p;
+                      }, [])
+                      .map((item) => {
+                        if (item.length <= 1) {
+                          return item[0];
+                        } else {
+                          return {
+                            ...item[0],
+                            details: item.map((row) => ({
+                              label: row.accountName,
+                              value: row.credit || row.debit,
+                            })),
+                            credit: item.reduce((p, c) => p + c.credit, 0),
+                            debit: item.reduce((p, c) => p + c.debit, 0),
+                          };
+                        }
+                      })
                       .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                      .sort((a, b) => (a.index > b.index ? 1 : -1));
+                      .sort((a, b) => (a.index > b.index ? 1 : -1))
+                      .reduce((p, c) => {
+                        if (c.details?.length) {
+                          p.push(
+                            ...[
+                              c,
+                              ...c.details.map((item) => ({
+                                createdAt: null,
+                                no: null,
+                                type: null,
+                                accountName: (
+                                  <p>
+                                    {item.label}: {item.value.toFixed(2)}
+                                  </p>
+                                ),
+                                debit: null,
+                                credit: null,
+                              })),
+                            ]
+                          );
+                        } else {
+                          p.push(c);
+                        }
+                        return p;
+                      }, []);
                     setAnalysysAcc({
-                      account: allRecords[0],
-                      rows: allRecords.slice(1),
+                      account,
+                      rows: allRecords,
                     });
                     setTab("analysys");
 
@@ -447,7 +498,7 @@ const Analysys = ({ account, rows }) => {
             style={{ fontWeight: "600", fontSize: "1.2em" }}
             className="mt-1 pl_5"
           >
-            {account.accountName}
+            {account.name}
           </p>
           <Table
             className={s.vouchers}
@@ -476,60 +527,36 @@ const Analysys = ({ account, rows }) => {
               </tfoot>
             }
           >
-            {rows.length <= 2 ? (
-              rows.map((row, i, arr) => {
-                return (
-                  <tr key={i}>
-                    <td className="grid">
-                      {arr[i - 1]?.rec_id !== row.rec_id && (
-                        <>
-                          <Moment
-                            style={{ fontSize: "14px" }}
-                            format="DD MMM YYYY"
-                          >
-                            {row.createdAt}
-                          </Moment>
-                          <Moment format="hh:mma">{row.createdAt}</Moment>
-                        </>
-                      )}
-                    </td>
-                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
-                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                    <td>{row.accountName}</td>
-                    <td className="text-right">
-                      {row.debit ? row.debit.toFixed(2) : null}
-                    </td>
-                    <td className="text-right">
-                      {row.credit ? row.credit.toFixed(2) : null}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td />
-                <td />
-                <td />
-                <td
-                  style={{
-                    background: "#e4e4e4",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    margin: 0,
-                    padding: "0 0.5rem",
-                  }}
-                >
-                  Details:
-                </td>
-                <td className="text-right">
-                  {rows.reduce((p, c) => p + c.debit, 0).toFixed(2)}
-                </td>
-                <td className="text-right">
-                  {rows.reduce((p, c) => p + c.credit, 0).toFixed(2)}
-                </td>
-              </tr>
-            )}
+            {rows.map((row, i, arr) => {
+              return (
+                <tr key={i}>
+                  <td className="grid">
+                    {row.createdAt && arr[i - 1]?.rec_id !== row.rec_id && (
+                      <>
+                        <Moment
+                          style={{ fontSize: "14px" }}
+                          format="DD MMM YYYY"
+                        >
+                          {row.createdAt}
+                        </Moment>
+                        <Moment format="hh:mma">{row.createdAt}</Moment>
+                      </>
+                    )}
+                  </td>
+                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
+                  <td className="grid">
+                    {row.details?.length > 0 ? "Details:" : row.accountName}
+                  </td>
+                  <td className="text-right">
+                    {row.debit ? row.debit.toFixed(2) : null}
+                  </td>
+                  <td className="text-right">
+                    {row.credit ? row.credit.toFixed(2) : null}
+                  </td>
+                </tr>
+              );
+            })}
           </Table>
         </>
       ) : (
