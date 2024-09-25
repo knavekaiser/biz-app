@@ -163,7 +163,7 @@ const Accounting = ({ setSidebarOpen }) => {
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
   const [open, setOpen] = useState(true);
-  const [analysysAcc, setAnalysysAcc] = useState([]);
+  const [analysysAcc, setAnalysysAcc] = useState({});
   const [vouchers, setVouchers] = useState([]);
   const [filters, setFilters] = useState({});
 
@@ -233,19 +233,21 @@ const Accounting = ({ setSidebarOpen }) => {
                     const otherRecords = (vouchers || []).filter((item) =>
                       firstRecords.some((rec) => rec.rec_id === item.rec_id)
                     );
-                    setAnalysysAcc(
-                      [...firstRecords, ...otherRecords]
-                        .filter(
-                          (obj, index, self) =>
-                            index ===
-                            self.findIndex(
-                              (o) =>
-                                o.rec_id === obj.rec_id && o.index === obj.index
-                            )
-                        )
-                        .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                        .sort((a, b) => (a.index > b.index ? 1 : -1))
-                    );
+                    const allRecords = [...firstRecords, ...otherRecords]
+                      .filter(
+                        (obj, index, self) =>
+                          index ===
+                          self.findIndex(
+                            (o) =>
+                              o.rec_id === obj.rec_id && o.index === obj.index
+                          )
+                      )
+                      .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                      .sort((a, b) => (a.index > b.index ? 1 : -1));
+                    setAnalysysAcc({
+                      account: allRecords[0],
+                      rows: allRecords.slice(1),
+                    });
                     setTab("analysys");
 
                     // setFilters((prev) => ({
@@ -402,7 +404,9 @@ const Accounting = ({ setSidebarOpen }) => {
               </Table>
             </div>
           )}
-          {tab === "analysys" && <Analysys accounts={analysysAcc} />}
+          {tab === "analysys" && (
+            <Analysys account={analysysAcc?.account} rows={analysysAcc?.rows} />
+          )}
         </div>
       </div>
 
@@ -434,16 +438,16 @@ const Accounting = ({ setSidebarOpen }) => {
   );
 };
 
-const Analysys = ({ accounts }) => {
+const Analysys = ({ account, rows }) => {
   return (
     <div className={s.innerContentWrapper}>
-      {accounts?.length > 0 ? (
+      {rows?.length > 0 ? (
         <>
           <p
             style={{ fontWeight: "600", fontSize: "1.2em" }}
             className="mt-1 pl_5"
           >
-            {accounts[0].accountName}
+            {account.accountName}
           </p>
           <Table
             className={s.vouchers}
@@ -456,51 +460,76 @@ const Analysys = ({ accounts }) => {
               { label: "Credit", className: "text-right" },
             ]}
             tfoot={
-              <tfoot>
+              <tfoot style={{ marginTop: "0" }}>
                 <tr className={s.footer}>
                   <td />
                   <td />
                   <td />
                   <td className="text-right">Total</td>
                   <td className="text-right">
-                    {accounts.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                    {rows.reduce((p, c) => p + c.debit, 0).toFixed(2)}
                   </td>
                   <td className="text-right">
-                    {accounts.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                    {rows.reduce((p, c) => p + c.credit, 0).toFixed(2)}
                   </td>
                 </tr>
               </tfoot>
             }
           >
-            {accounts.map((row, i, arr) => {
-              // if (i === 0) return null;
-              return (
-                <tr key={i}>
-                  <td className="grid">
-                    {arr[i - 1]?.rec_id !== row.rec_id && (
-                      <>
-                        <Moment
-                          style={{ fontSize: "14px" }}
-                          format="DD MMM YYYY"
-                        >
-                          {row.createdAt}
-                        </Moment>
-                        <Moment format="hh:mma">{row.createdAt}</Moment>
-                      </>
-                    )}
-                  </td>
-                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
-                  <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                  <td>{row.accountName}</td>
-                  <td className="text-right">
-                    {row.debit ? row.debit.toFixed(2) : null}
-                  </td>
-                  <td className="text-right">
-                    {row.credit ? row.credit.toFixed(2) : null}
-                  </td>
-                </tr>
-              );
-            })}
+            {rows.length <= 2 ? (
+              rows.map((row, i, arr) => {
+                return (
+                  <tr key={i}>
+                    <td className="grid">
+                      {arr[i - 1]?.rec_id !== row.rec_id && (
+                        <>
+                          <Moment
+                            style={{ fontSize: "14px" }}
+                            format="DD MMM YYYY"
+                          >
+                            {row.createdAt}
+                          </Moment>
+                          <Moment format="hh:mma">{row.createdAt}</Moment>
+                        </>
+                      )}
+                    </td>
+                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
+                    <td>{row.accountName}</td>
+                    <td className="text-right">
+                      {row.debit ? row.debit.toFixed(2) : null}
+                    </td>
+                    <td className="text-right">
+                      {row.credit ? row.credit.toFixed(2) : null}
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td />
+                <td />
+                <td />
+                <td
+                  style={{
+                    background: "#e4e4e4",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    margin: 0,
+                    padding: "0 0.5rem",
+                  }}
+                >
+                  Details:
+                </td>
+                <td className="text-right">
+                  {rows.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                </td>
+                <td className="text-right">
+                  {rows.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                </td>
+              </tr>
+            )}
           </Table>
         </>
       ) : (
