@@ -233,15 +233,19 @@ const Accounting = ({ setSidebarOpen }) => {
                     const otherRecords = (vouchers || []).filter((item) =>
                       firstRecords.some((rec) => rec.rec_id === item.rec_id)
                     );
-                    const allRecords = [...firstRecords, ...otherRecords]
-                      .filter(
-                        (obj, index, self) =>
-                          index ===
-                          self.findIndex(
-                            (o) =>
-                              o.rec_id === obj.rec_id && o.index === obj.index
-                          )
-                      )
+                    const allRecords = [
+                      ...firstRecords,
+                      ...otherRecords,
+                    ].filter(
+                      (obj, index, self) =>
+                        index ===
+                        self.findIndex(
+                          (o) =>
+                            o.rec_id === obj.rec_id && o.index === obj.index
+                        )
+                    );
+
+                    const detailedRows = allRecords
                       .filter((row) => row.accountId !== account._id)
                       .reduce((p, c) => {
                         const index = p.findIndex((item) =>
@@ -255,8 +259,15 @@ const Accounting = ({ setSidebarOpen }) => {
                         return p;
                       }, [])
                       .map((item) => {
+                        const accRec = allRecords.find(
+                          (rec) => rec.rec_id === item[0].rec_id
+                        );
                         if (item.length <= 1) {
-                          return item[0];
+                          return {
+                            ...item[0],
+                            debit: accRec.debit,
+                            credit: accRec.credit,
+                          };
                         } else {
                           return {
                             ...item[0],
@@ -264,8 +275,10 @@ const Accounting = ({ setSidebarOpen }) => {
                               label: row.accountName,
                               value: row.credit || row.debit,
                             })),
-                            credit: item.reduce((p, c) => p + c.credit, 0),
-                            debit: item.reduce((p, c) => p + c.debit, 0),
+                            // credit: item.reduce((p, c) => p + c.credit, 0),
+                            // debit: item.reduce((p, c) => p + c.debit, 0),
+                            debit: accRec.debit,
+                            credit: accRec.credit,
                           };
                         }
                       })
@@ -297,7 +310,7 @@ const Accounting = ({ setSidebarOpen }) => {
                       }, []);
                     setAnalysysAcc({
                       account,
-                      rows: allRecords,
+                      rows: detailedRows,
                     });
                     setTab("analysys");
 
