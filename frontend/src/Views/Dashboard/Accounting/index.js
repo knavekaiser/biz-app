@@ -40,7 +40,12 @@ const buildTree = (accounts) => {
   return tree;
 };
 
-const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
+const AccountNode = ({
+  account,
+  setAddMaster,
+  highlight,
+  onClick = () => {},
+}) => {
   const [children, setChildren] = useState([]);
   const [open, setOpen] = useState(false);
   const { get: getMasters, loading } = useFetch(endpoints.accountingMasters);
@@ -116,11 +121,9 @@ const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
           </>
         )}
         <strong
-          className={!account.isGroup ? s.accountName : ""}
+          className={`${s.accountName} ${highlight ? s.highlight : ""}`}
           onClick={() => {
-            if (!account.isGroup) {
-              onClick(account);
-            }
+            onClick(account);
           }}
         >
           {account.name}
@@ -146,6 +149,7 @@ const AccountNode = ({ account, setAddMaster, onClick = () => {} }) => {
           {children.map((child) => (
             <AccountNode
               key={child._id}
+              highlight={highlight}
               account={child}
               setAddMaster={setAddMaster}
               onClick={onClick}
@@ -163,7 +167,8 @@ const Accounting = ({ setSidebarOpen }) => {
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
   const [open, setOpen] = useState(true);
-  const [analysysAcc, setAnalysysAcc] = useState({});
+  const [analysysAcc, setAnalysysAcc] = useState(null);
+  const [ledger, setLedger] = useState({});
   const [vouchers, setVouchers] = useState([]);
   const [filters, setFilters] = useState({});
 
@@ -226,98 +231,99 @@ const Accounting = ({ setSidebarOpen }) => {
                   key={account._id}
                   account={account}
                   setAddMaster={setAddMaster}
+                  highlight={account?._id === ledger?.account?._id}
                   onClick={(account) => {
-                    const firstRecords = (vouchers || []).filter(
-                      (item) => item.accountId === account._id
-                    );
-                    const otherRecords = (vouchers || []).filter((item) =>
-                      firstRecords.some((rec) => rec.rec_id === item.rec_id)
-                    );
-                    const allRecords = [
-                      ...firstRecords,
-                      ...otherRecords,
-                    ].filter(
-                      (obj, index, self) =>
-                        index ===
-                        self.findIndex(
-                          (o) =>
-                            o.rec_id === obj.rec_id && o.index === obj.index
-                        )
-                    );
+                    if (account.isGroup) {
+                      setAnalysysAcc(account);
+                      setTab("analysys");
+                    } else {
+                      const firstRecords = (vouchers || []).filter(
+                        (item) => item.accountId === account._id
+                      );
+                      const otherRecords = (vouchers || []).filter((item) =>
+                        firstRecords.some((rec) => rec.rec_id === item.rec_id)
+                      );
+                      const allRecords = [
+                        ...firstRecords,
+                        ...otherRecords,
+                      ].filter(
+                        (obj, index, self) =>
+                          index ===
+                          self.findIndex(
+                            (o) =>
+                              o.rec_id === obj.rec_id && o.index === obj.index
+                          )
+                      );
 
-                    const detailedRows = allRecords
-                      .filter((row) => row.accountId !== account._id)
-                      .reduce((p, c) => {
-                        const index = p.findIndex((item) =>
-                          item.some((row) => row.rec_id === c.rec_id)
-                        );
-                        if (index === -1) {
-                          p.push([c]);
-                        } else {
-                          p[index].push(c);
-                        }
-                        return p;
-                      }, [])
-                      .map((item) => {
-                        const accRec = allRecords.find(
-                          (rec) => rec.rec_id === item[0].rec_id
-                        );
-                        if (item.length <= 1) {
-                          return {
-                            ...item[0],
-                            debit: accRec.debit,
-                            credit: accRec.credit,
-                          };
-                        } else {
-                          return {
-                            ...item[0],
-                            details: item.map((row) => ({
-                              label: row.accountName,
-                              value: row.credit || row.debit,
-                            })),
-                            // credit: item.reduce((p, c) => p + c.credit, 0),
-                            // debit: item.reduce((p, c) => p + c.debit, 0),
-                            debit: accRec.debit,
-                            credit: accRec.credit,
-                          };
-                        }
-                      })
-                      .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                      .sort((a, b) => (a.index > b.index ? 1 : -1))
-                      .reduce((p, c) => {
-                        if (c.details?.length) {
-                          p.push(
-                            ...[
-                              c,
-                              ...c.details.map((item) => ({
-                                createdAt: null,
-                                no: null,
-                                type: null,
-                                accountName: (
-                                  <p>
-                                    {item.label}: {item.value.toFixed(2)}
-                                  </p>
-                                ),
-                                debit: null,
-                                credit: null,
-                              })),
-                            ]
+                      const detailedRows = allRecords
+                        .filter((row) => row.accountId !== account._id)
+                        .reduce((p, c) => {
+                          const index = p.findIndex((item) =>
+                            item.some((row) => row.rec_id === c.rec_id)
                           );
-                        } else {
-                          p.push(c);
-                        }
-                        return p;
-                      }, []);
-                    setAnalysysAcc({
-                      account,
-                      rows: detailedRows,
-                    });
-                    setTab("analysys");
-
-                    // setFilters((prev) => ({
-                    //   ...prev,
-                    //   accountId: account._id,
-                    // }));
+                          if (index === -1) {
+                            p.push([c]);
+                          } else {
+                            p[index].push(c);
+                          }
+                          return p;
+                        }, [])
+                        .map((item) => {
+                          const accRec = allRecords.find(
+                            (rec) => rec.rec_id === item[0].rec_id
+                          );
+                          if (item.length <= 1) {
+                            return {
+                              ...item[0],
+                              debit: accRec.debit,
+                              credit: accRec.credit,
+                            };
+                          } else {
+                            return {
+                              ...item[0],
+                              details: item.map((row) => ({
+                                label: row.accountName,
+                                value: row.credit || row.debit,
+                              })),
+                              // credit: item.reduce((p, c) => p + c.credit, 0),
+                              // debit: item.reduce((p, c) => p + c.debit, 0),
+                              debit: accRec.debit,
+                              credit: accRec.credit,
+                            };
+                          }
+                        })
+                        .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                        .sort((a, b) => (a.index > b.index ? 1 : -1))
+                        .reduce((p, c) => {
+                          if (c.details?.length) {
+                            p.push(
+                              ...[
+                                c,
+                                ...c.details.map((item) => ({
+                                  createdAt: null,
+                                  no: null,
+                                  type: null,
+                                  accountName: (
+                                    <p>
+                                      {item.label}: {item.value.toFixed(2)}
+                                    </p>
+                                  ),
+                                  debit: null,
+                                  credit: null,
+                                })),
+                              ]
+                            );
+                          } else {
+                            p.push(c);
+                          }
+                          return p;
+                        }, []);
+                      setLedger({
+                        account,
+                        rows: detailedRows,
+                      });
+                      setTab("ledgers");
+                    }
                   }}
                 />
               ))
@@ -348,6 +354,7 @@ const Accounting = ({ setSidebarOpen }) => {
               activeTab={tab}
               tabs={[
                 { label: "Voucher Listing", value: "voucherListing" },
+                { label: "Ledgers", value: "ledgers" },
                 { label: "Accounting Analysys", value: "analysys" },
                 // { label: "More Reports", value: "moreReports" },
               ]}
@@ -468,9 +475,10 @@ const Accounting = ({ setSidebarOpen }) => {
               </Table>
             </div>
           )}
-          {tab === "analysys" && (
-            <Analysys account={analysysAcc?.account} rows={analysysAcc?.rows} />
+          {tab === "ledgers" && (
+            <Ledgers account={ledger?.account} rows={ledger?.rows} />
           )}
+          {tab === "analysys" && <Analysys account={analysysAcc} />}
         </div>
       </div>
 
@@ -502,7 +510,7 @@ const Accounting = ({ setSidebarOpen }) => {
   );
 };
 
-const Analysys = ({ account, rows }) => {
+const Ledgers = ({ account, rows }) => {
   return (
     <div className={s.innerContentWrapper}>
       {rows?.length > 0 ? (
@@ -572,11 +580,165 @@ const Analysys = ({ account, rows }) => {
             })}
           </Table>
         </>
+      ) : account ? (
+        <p className={s.analysysPlaceholder}>
+          No records found for <strong>{account.name}</strong>.
+        </p>
       ) : (
         <p className={s.analysysPlaceholder}>No account has been selected.</p>
       )}
     </div>
   );
+};
+
+const Analysys = ({ account }) => {
+  const [months, setMonths] = useState([]);
+  const [data, setData] = useState([]);
+  const [calculation, setCalculation] = useState("sub_debit");
+  const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
+  useEffect(() => {
+    if (account) {
+      get({ query: { accountId: account._id } })
+        .then(({ data }) => {
+          if (data.success) {
+            setData(data.data);
+            setMonths(data.months);
+          } else {
+            Prompt({ type: "error", message: data.message });
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    } else {
+      setData([]);
+      setMonths([]);
+    }
+  }, [account]);
+  return (
+    <div className={s.innerContentWrapper}>
+      {account ? (
+        <div>
+          <div className="mt-1 flex gap-2 align-center">
+            <p
+              style={{ fontWeight: "600", fontSize: "1.2em" }}
+              className="pl_5"
+            >
+              {account.name}
+            </p>
+            <div className="flex gap-2">
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="sub_debit"
+                  defaultChecked
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Sum Of Debits
+              </label>
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="sub_credit"
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Sum Of Credit
+              </label>
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="net"
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Net
+              </label>
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="balance"
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Balance
+              </label>
+            </div>
+          </div>
+          <Table
+            loading={loading}
+            className={s.analysys}
+            columns={[
+              { label: account.name },
+              ...months.map((item) => ({
+                label: item.label,
+                className: "text-right",
+              })),
+            ]}
+            tfoot={
+              <tfoot style={{ marginTop: "0" }}>
+                <tr
+                  className={s.footer}
+                  style={{
+                    borderTop: "1px solid #979797",
+                    padding: "0 0.5rem",
+                    paddingTop: "1rem",
+                  }}
+                >
+                  <td>Total</td>
+                  {months.map((month, i) => (
+                    <td key={i} className="text-right">
+                      {analyzeAccounts(
+                        calculation,
+                        data.reduce((prev, curr, j) => {
+                          prev.push(...curr.entries[i]);
+                          return prev;
+                        }, [])
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            }
+          >
+            {data.map((row, i, arr) => {
+              return (
+                <tr key={i}>
+                  <td className="grid">{row.name}</td>
+                  {months.map((month, i) => (
+                    <td key={i} className="text-right">
+                      {analyzeAccounts(
+                        calculation,
+                        row.entries[i],
+                        row.openingBalance
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </Table>
+        </div>
+      ) : (
+        <p className={s.analysysPlaceholder}>No group has been selected.</p>
+      )}
+    </div>
+  );
+};
+
+const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
+  let result = null;
+  if (calculation === "sub_debit") {
+    result = entries.reduce((p, c) => p + c.debit, 0);
+  } else if (calculation === "sub_credit") {
+    result = entries.reduce((p, c) => p + c.credit, 0);
+  } else if (calculation === "net") {
+    result = entries.reduce((p, c) => p + c.debit - c.credit, 0);
+  } else if (calculation === "balance") {
+    // result =
+    //   entries.reduce((p, c) => p + c.debit - c.credit, 0) + openingBalance;
+    return;
+  }
+  return result.toFixed(2);
 };
 
 export default Accounting;

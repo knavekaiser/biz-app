@@ -8,6 +8,11 @@ const router = express.Router();
 export default function (app) {
   router.get("/masters", authJwt.verifyToken, controller.get);
   router.get("/vouchers", authJwt.verifyToken, controller.vouchers);
+  router.get(
+    "/monthly-analysys",
+    authJwt.verifyToken,
+    controller.monthlyAnalysys
+  );
   router.post(
     "/masters",
     authJwt.verifyToken,

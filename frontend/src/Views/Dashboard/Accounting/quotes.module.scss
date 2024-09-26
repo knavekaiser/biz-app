@@ -55,6 +55,9 @@
             &:hover {
               text-decoration: underline;
             }
+            &.highlight {
+              color: red;
+            }
           }
           &:hover {
             background: rgba(0, 0, 0, 0.05);
