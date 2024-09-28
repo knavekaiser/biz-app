@@ -32,7 +32,9 @@ const endpoints = {
   findBusinesses: `${baseApiUrl}/api/companies/find`,
 
   invoices: `${baseApiUrl}/api/invoices`,
+  salesReturns: `${baseApiUrl}/api/sales-returns`,
   purchases: `${baseApiUrl}/api/purchases`,
+  purchaseReturns: `${baseApiUrl}/api/purchase-returns`,
   orders: `${baseApiUrl}/api/orders`,
   generateOrderFromQuote: `${baseApiUrl}/api/orders/generate-from-quote`,
   quotes: `${baseApiUrl}/api/quotes`,

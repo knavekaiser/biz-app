@@ -141,6 +141,35 @@ const entryPipeline = (entryConditions) => {
     },
     {
       $lookup: {
+        from: "salesreturns",
+        pipeline: [
+          {
+            $unwind: {
+              path: "$accountingEntries",
+              includeArrayIndex: "accountingEntries.index",
+              preserveNullAndEmptyArrays: false,
+            },
+          },
+          { $match: entryConditions },
+          {
+            $set: {
+              "accountingEntries.rec_id": "$_id",
+              "accountingEntries.no": "$no",
+              "accountingEntries.type": "Sales Return",
+              "accountingEntries.createdAt": "$createdAt",
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: "$accountingEntries",
+            },
+          },
+        ],
+        as: "salesReturnEntries",
+      },
+    },
+    {
+      $lookup: {
         from: "purchases",
         pipeline: [
           {
@@ -166,6 +195,35 @@ const entryPipeline = (entryConditions) => {
           },
         ],
         as: "purchaseEntries",
+      },
+    },
+    {
+      $lookup: {
+        from: "purchasereturns",
+        pipeline: [
+          {
+            $unwind: {
+              path: "$accountingEntries",
+              includeArrayIndex: "accountingEntries.index",
+              preserveNullAndEmptyArrays: false,
+            },
+          },
+          { $match: entryConditions },
+          {
+            $set: {
+              "accountingEntries.rec_id": "$_id",
+              "accountingEntries.no": "$no",
+              "accountingEntries.type": "Purchase Return",
+              "accountingEntries.createdAt": "$createdAt",
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: "$accountingEntries",
+            },
+          },
+        ],
+        as: "purchaseReturnEntries",
       },
     },
     {
@@ -328,7 +386,7 @@ export const monthlyAnalysys = async (req, res) => {
       : [];
 
     if (!accounts.length) {
-      return responseFn.success(res, { data: { data: [], months: [] } });
+      return responseFn.success(res, { data: [], months: [] });
     }
 
     const entryConditions = {

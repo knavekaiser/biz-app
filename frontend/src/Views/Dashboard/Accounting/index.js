@@ -43,7 +43,8 @@ const buildTree = (accounts) => {
 const AccountNode = ({
   account,
   setAddMaster,
-  highlight,
+  activeGroup,
+  activeLeaf,
   onClick = () => {},
 }) => {
   const [children, setChildren] = useState([]);
@@ -121,7 +122,12 @@ const AccountNode = ({
           </>
         )}
         <strong
-          className={`${s.accountName} ${highlight ? s.highlight : ""}`}
+          className={`${s.accountName} ${
+            (account.isGroup && activeGroup === account._id) ||
+            (!account.isGroup && activeLeaf === account._id)
+              ? s.highlight
+              : ""
+          }`}
           onClick={() => {
             onClick(account);
           }}
@@ -145,11 +151,16 @@ const AccountNode = ({
         </div>
       </div>
       {open && children.length > 0 && (
-        <ul className={s.nestedList}>
+        <ul
+          className={`${s.nestedList} ${
+            account.isGroup && activeGroup === account._id ? s.highlight : ""
+          }`}
+        >
           {children.map((child) => (
             <AccountNode
               key={child._id}
-              highlight={highlight}
+              activeGroup={activeGroup}
+              activeLeaf={activeLeaf}
               account={child}
               setAddMaster={setAddMaster}
               onClick={onClick}
@@ -231,7 +242,8 @@ const Accounting = ({ setSidebarOpen }) => {
                   key={account._id}
                   account={account}
                   setAddMaster={setAddMaster}
-                  highlight={account?._id === ledger?.account?._id}
+                  activeGroup={tab === "analysys" ? analysysAcc?._id : null}
+                  activeLeaf={tab === "ledgers" ? ledger?.account?._id : null}
                   onClick={(account) => {
                     if (account.isGroup) {
                       setAnalysysAcc(account);
@@ -669,7 +681,7 @@ const Analysys = ({ account }) => {
             className={s.analysys}
             columns={[
               { label: account.name },
-              ...months.map((item) => ({
+              ...(months || []).map((item) => ({
                 label: item.label,
                 className: "text-right",
               })),
@@ -685,7 +697,7 @@ const Analysys = ({ account }) => {
                   }}
                 >
                   <td>Total</td>
-                  {months.map((month, i) => (
+                  {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
                         calculation,
@@ -700,11 +712,11 @@ const Analysys = ({ account }) => {
               </tfoot>
             }
           >
-            {data.map((row, i, arr) => {
+            {(data || []).map((row, i, arr) => {
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
-                  {months.map((month, i) => (
+                  {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
                         calculation,

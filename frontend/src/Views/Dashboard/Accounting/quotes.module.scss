@@ -56,7 +56,7 @@
               text-decoration: underline;
             }
             &.highlight {
-              color: red;
+              color: $primary-color-dark1;
             }
           }
           &:hover {
@@ -70,6 +70,9 @@
           margin-left: 0.75rem;
           padding-left: 0.5rem;
           border-left: 1px dashed rgb(168, 168, 168);
+          &.highlight strong {
+            color: $primary-color;
+          }
         }
       }
     }

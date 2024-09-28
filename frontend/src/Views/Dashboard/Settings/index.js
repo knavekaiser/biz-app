@@ -560,7 +560,17 @@ const configSchema = yup.object({
     .min(1, "Invoice Number can not be less than 1")
     .required()
     .typeError("Enter a valid number"),
+  nextSalesReturnNo: yup
+    .number()
+    .min(1, "Sales return number can not be less than 1")
+    .required()
+    .typeError("Enter a valid number"),
   nextPurchaseNo: yup
+    .number()
+    .min(1, "Invoice Number can not be less than 1")
+    .required()
+    .typeError("Enter a valid number"),
+  nextPurchaseReturnNo: yup
     .number()
     .min(1, "Invoice Number can not be less than 1")
     .required()
@@ -598,7 +608,9 @@ const Config = ({ next }) => {
     if (config) {
       reset({
         nextInvoiceNo: config.nextInvoiceNo,
+        nextSalesReturnNo: config.nextSalesReturnNo,
         nextPurchaseNo: config.nextPurchaseNo,
+        nextPurchaseReturnNo: config.nextPurchaseReturnNo,
         nextReceiptNo: config.nextReceiptNo,
         printQuoteCurrency:
           config?.printQuote?.currency || config.print.currency,
@@ -636,7 +648,9 @@ const Config = ({ next }) => {
         updateConfig({
           unitsOfMeasure,
           nextInvoiceNo: values.nextInvoiceNo,
+          nextSalesReturnNo: values.nextSalesReturnNo,
           nextPurchaseNo: values.nextPurchaseNo,
+          nextPurchaseReturnNo: values.nextPurchaseReturnNo,
           nextReceiptNo: values.nextReceiptNo,
           numberSeparator: values.numberSeparator,
           print: {
@@ -707,9 +721,21 @@ const Config = ({ next }) => {
       />
 
       <Input
+        label="Next Sales Return Number"
+        {...register("nextSalesReturnNo")}
+        error={errors.nextSalesReturnNo}
+      />
+
+      <Input
         label="Next Purchase Number"
         {...register("nextPurchaseNo")}
         error={errors.nextPurchaseNo}
+      />
+
+      <Input
+        label="Next Purchase Return Number"
+        {...register("nextPurchaseReturnNo")}
+        error={errors.nextPurchaseReturnNo}
       />
 
       <Input

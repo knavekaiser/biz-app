@@ -17,7 +17,18 @@ export default mongoose.model(
           unit: { type: Schema.Types.String, required: true },
         }),
       ],
-      accountingEntries: [],
+      accountingEntries: [
+        new Schema({
+          accountId: {
+            type: Schema.Types.ObjectId,
+            ref: "Account",
+            required: true,
+          },
+          accountName: { type: Schema.Types.String, required: true },
+          debit: { type: Schema.Types.Number, required: true },
+          credit: { type: Schema.Types.Number, required: true },
+        }),
+      ],
       customer: {
         // name: { type: String },
         detail: { type: String },

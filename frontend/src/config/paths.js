@@ -10,7 +10,9 @@ const paths = {
   businesses: "businesses",
 
   sales: "sales",
+  salesReturns: "sales-returns",
   purchases: "purchases",
+  purchaseReturns: "purchase-returns",
   receipts: "receipts",
   payments: "payments",
   orders: "orders",

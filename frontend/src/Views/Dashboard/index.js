@@ -72,9 +72,11 @@ const Settings = lazy(() => import("./Settings"));
 const Businesses = lazy(() => import("./Businesses"));
 const AdminBusinesses = lazy(() => import("./AdminBusinesses"));
 const Invoices = lazy(() => import("./Sales"));
+const SalesReturns = lazy(() => import("./SalesReturns"));
 const Orders = lazy(() => import("./Orders"));
 const Quotes = lazy(() => import("./Quotes"));
 const Purchases = lazy(() => import("./Purchases"));
+const PurchaseReturns = lazy(() => import("./PurchaseReturns"));
 const Receipts = lazy(() => import("./Receipts"));
 const Payments = lazy(() => import("./Payments"));
 const DynamicTables = lazy(() => import("./DynamicTables"));
@@ -190,6 +192,20 @@ const Dashboard = () => {
           path: paths.sales,
         });
       }
+      if (checkPermission("sales_return_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <PiInvoiceLight style={{ fontSize: "1.15em" }} />,
+          activeIcon: (
+            <PiInvoiceFill
+              style={{ fontSize: "1.15em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Sales Returns",
+          path: paths.salesReturns,
+        });
+      }
       if (checkPermission("purchase_read")) {
         menuItems.push({
           section: "collection",
@@ -202,6 +218,20 @@ const Dashboard = () => {
           ),
           label: "Purchases",
           path: paths.purchases,
+        });
+      }
+      if (checkPermission("purchase_return_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <RiShoppingBag2Line style={{ fontSize: "1.1em" }} />,
+          activeIcon: (
+            <RiShoppingBag2Fill
+              style={{ fontSize: "1.1em" }}
+              className={s.filled}
+            />
+          ),
+          label: "Purchase Returns",
+          path: paths.purchaseReturns,
         });
       }
       if (checkPermission("reciept_read")) {
@@ -488,12 +518,32 @@ const Dashboard = () => {
               }
             />
           )}
+          {checkPermission("sales_return_read") && (
+            <Route
+              path={paths.salesReturns}
+              element={
+                <Suspense fallback={<LoadingSaklleton />}>
+                  <SalesReturns setSidebarOpen={setSidebarOpen} />
+                </Suspense>
+              }
+            />
+          )}
           {checkPermission("purchase_read") && (
             <Route
               path={paths.purchases}
               element={
                 <Suspense fallback={<LoadingSaklleton />}>
                   <Purchases setSidebarOpen={setSidebarOpen} />
+                </Suspense>
+              }
+            />
+          )}
+          {checkPermission("purchase_return_read") && (
+            <Route
+              path={paths.purchaseReturns}
+              element={
+                <Suspense fallback={<LoadingSaklleton />}>
+                  <PurchaseReturns setSidebarOpen={setSidebarOpen} />
                 </Suspense>
               }
             />

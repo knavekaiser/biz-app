@@ -10,13 +10,23 @@ const paths = [
     actions: ["read", "create", "update", "delete"],
   },
   {
-    label: "invoice",
+    label: "Invoice",
     value: "invoice",
+    actions: ["read", "create", "update", "delete"],
+  },
+  {
+    label: "Sales Return",
+    value: "sales_return",
     actions: ["read", "create", "update", "delete"],
   },
   {
     label: "Purchase",
     value: "purchase",
+    actions: ["read", "create", "update", "delete"],
+  },
+  {
+    label: "Purchase Return",
+    value: "purchase_return",
     actions: ["read", "create", "update", "delete"],
   },
   {
