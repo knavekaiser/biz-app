@@ -377,7 +377,7 @@ const getLast12Months = () => {
       value: `${date.getFullYear()}-${date.getMonth()}`,
     });
   }
-  return months;
+  return months.reverse();
 };
 export const monthlyAnalysys = async (req, res) => {
   try {

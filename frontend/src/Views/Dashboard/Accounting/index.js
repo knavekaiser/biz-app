@@ -746,9 +746,9 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   } else if (calculation === "net") {
     result = entries.reduce((p, c) => p + c.debit - c.credit, 0);
   } else if (calculation === "balance") {
-    // result =
-    //   entries.reduce((p, c) => p + c.debit - c.credit, 0) + openingBalance;
-    return;
+    result =
+      entries.reduce((p, c) => p + c.debit - c.credit, 0) + openingBalance;
+    // return;
   }
   return result.toFixed(2);
 };
