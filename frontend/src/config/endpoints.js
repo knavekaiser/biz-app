@@ -74,6 +74,7 @@ const endpoints = {
   accountingMasters: `${baseApiUrl}/api/accounting/masters`,
   accountingVouchers: `${baseApiUrl}/api/accounting/vouchers`,
   accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
+  accountingjournals: `${baseApiUrl}/api/accounting/journals`,
 
   comifyChat: `${
     process.env.NODE_ENV === "development"

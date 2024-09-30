@@ -26,45 +26,19 @@ const VoucherFilters = ({ filters, setFilters }) => {
       })}
       className={`${s.voucherFilters} grid gap-1`}
     >
-      {/* <Input label="Name" {...register("name")} required error={errors.name} />
-
-      <Combobox
-        label="Parent"
-        name="parent"
-        control={control}
-        options={[
-          { label: "None", value: "null" },
-          ...masters.map((item) => ({ label: item.name, value: item._id })),
-        ]}
-      /> */}
-
       <Combobox
         label="Type"
         name="type"
         control={control}
         options={[
-          { label: "None", value: "null" },
-          { label: "Cash", value: "Cash" },
-          { label: "Bank", value: "Bank" },
-          { label: "Customers", value: "Customers" },
-          { label: "Suppliers", value: "Suppliers" },
-          { label: "Sales", value: "Sales" },
+          { label: "Invoice", value: "Invoice" },
+          { label: "Sales Return", value: "Sales Return" },
           { label: "Purchase", value: "Purchase" },
-          { label: "Stock", value: "Stock" },
-          { label: "Tax", value: "Tax" },
+          { label: "Purchase Return", value: "Purchase Return" },
+          { label: "Receipt", value: "Receipt" },
+          { label: "Payment", value: "Payment" },
         ]}
       />
-
-      {/* <Combobox
-        label="Is Group"
-        name="isGroup"
-        control={control}
-        formOptions={{ required: true }}
-        options={[
-          { label: "No", value: false },
-          { label: "Yes", value: true },
-        ]}
-      /> */}
 
       <Input
         label="Start Date"

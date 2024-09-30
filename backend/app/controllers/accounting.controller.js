@@ -293,7 +293,9 @@ const entryPipeline = (entryConditions) => {
         entries: {
           $concatArrays: [
             "$saleEntries",
+            "$salesReturnEntries",
             "$purchaseEntries",
+            "$purchaseReturnEntries",
             "$receiptEntries",
             "$paymentEntries",
           ],
@@ -327,6 +329,40 @@ export const vouchers = async (req, res) => {
       ...entryPipeline(entryConditions),
       { $sort: { createdAt: 1, index: 1 } },
       { $match: conditions },
+    ]).then((data) => {
+      return responseFn.success(res, { data });
+    });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
+export const getJournals = async (req, res) => {
+  try {
+    const entryConditions = {
+      user: req.business?._id || req.authUser._id,
+    };
+    const conditions = {};
+    if (req.query.type) {
+      conditions.type = req.query.type;
+    }
+    if (req.query.accountIds) {
+      conditions.accountId = {
+        $in: req.query.accountIds.split(",").map((_id) => ObjectId(_id)),
+      };
+    }
+    Account.aggregate([
+      ...entryPipeline(entryConditions),
+      { $sort: { createdAt: 1, index: 1 } },
+      { $match: conditions },
+      {
+        $group: {
+          _id: "$accountId",
+          accountName: { $first: "$accountName" },
+          debit: { $sum: "$debit" },
+          credit: { $sum: "$credit" },
+        },
+      },
     ]).then((data) => {
       return responseFn.success(res, { data });
     });

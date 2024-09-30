@@ -444,7 +444,12 @@ const MainForm = ({
           }}
         />
 
-        <Textarea label="Detail" {...register("customerDetail")} />
+        <Textarea
+          label="Detail"
+          required
+          {...register("customerDetail")}
+          error={errors.customerDetail}
+        />
       </form>
 
       <div className="all-columns flex justify-center">

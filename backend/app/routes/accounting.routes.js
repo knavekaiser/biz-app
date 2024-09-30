@@ -6,6 +6,7 @@ import express from "express";
 const router = express.Router();
 
 export default function (app) {
+  router.get("/journals", authJwt.verifyToken, controller.getJournals);
   router.get("/masters", authJwt.verifyToken, controller.get);
   router.get("/vouchers", authJwt.verifyToken, controller.vouchers);
   router.get(

@@ -16,6 +16,7 @@ import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
 import { da } from "date-fns/locale";
+import VoucherFilters from "./Filters";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -45,6 +46,7 @@ const AccountNode = ({
   setAddMaster,
   activeGroup,
   activeLeaf,
+  activeLeavs = [],
   onClick = () => {},
 }) => {
   const [children, setChildren] = useState([]);
@@ -73,6 +75,7 @@ const AccountNode = ({
       }
     }
   }, [account.children]);
+
   return (
     <li style={{ whiteSpace: "nowrap" }} className={s.listItem}>
       <div className={s.label}>
@@ -124,7 +127,8 @@ const AccountNode = ({
         <strong
           className={`${s.accountName} ${
             (account.isGroup && activeGroup === account._id) ||
-            (!account.isGroup && activeLeaf === account._id)
+            (!account.isGroup && activeLeaf === account._id) ||
+            activeLeavs.includes(account._id)
               ? s.highlight
               : ""
           }`}
@@ -161,6 +165,7 @@ const AccountNode = ({
               key={child._id}
               activeGroup={activeGroup}
               activeLeaf={activeLeaf}
+              activeLeavs={activeLeavs}
               account={child}
               setAddMaster={setAddMaster}
               onClick={onClick}
@@ -173,7 +178,6 @@ const AccountNode = ({
 };
 
 const Accounting = ({ setSidebarOpen }) => {
-  const voucherTableRef = useRef();
   const [addMaster, setAddMaster] = useState(null);
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
@@ -181,10 +185,9 @@ const Accounting = ({ setSidebarOpen }) => {
   const [analysysAcc, setAnalysysAcc] = useState(null);
   const [ledger, setLedger] = useState({});
   const [vouchers, setVouchers] = useState([]);
-  const [filters, setFilters] = useState({});
+  const [journalAcc, setJournalAcc] = useState([]);
 
   const { get: getMasters } = useFetch(endpoints.accountingMasters);
-  const { get: getVouchers } = useFetch(endpoints.accountingVouchers);
 
   const treeData = useMemo(() => buildTree(masters), [masters]);
 
@@ -198,17 +201,6 @@ const Accounting = ({ setSidebarOpen }) => {
       .catch((err) => Prompt({ type: "error", message: err.message }));
   }, []);
 
-  useEffect(() => {
-    getVouchers({ query: filters })
-      .then(({ data }) => {
-        if (data.success) {
-          setVouchers(data.data);
-        } else {
-          Prompt({ type: "error", message: data.message });
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, [filters]);
   return (
     <div className={`${s.content} grid gap-1 m-a`}>
       <div className={`flex ${s.head}`}>
@@ -244,7 +236,25 @@ const Accounting = ({ setSidebarOpen }) => {
                   setAddMaster={setAddMaster}
                   activeGroup={tab === "analysys" ? analysysAcc?._id : null}
                   activeLeaf={tab === "ledgers" ? ledger?.account?._id : null}
+                  activeLeavs={
+                    tab === "journals" ? journalAcc.map((acc) => acc._id) : []
+                  }
                   onClick={(account) => {
+                    if (tab === "journals") {
+                      if (!account.isGroup) {
+                        setJournalAcc((prev) =>
+                          prev.some((acc) => acc._id === account._id)
+                            ? prev.filter((acc) => acc._id !== account._id)
+                            : [...prev, account].filter(
+                                (acc, i, arr) =>
+                                  arr.findIndex(
+                                    (item) => item._id === acc._id
+                                  ) === i
+                              )
+                        );
+                      }
+                      return;
+                    }
                     if (account.isGroup) {
                       setAnalysysAcc(account);
                       setTab("analysys");
@@ -368,129 +378,19 @@ const Accounting = ({ setSidebarOpen }) => {
                 { label: "Voucher Listing", value: "voucherListing" },
                 { label: "Ledgers", value: "ledgers" },
                 { label: "Accounting Analysys", value: "analysys" },
-                // { label: "More Reports", value: "moreReports" },
+                { label: "Journals", value: "journals" },
               ]}
               onChange={(tab) => setTab(tab.value)}
             />
           </div>
           {tab === "voucherListing" && (
-            <div className={s.innerContentWrapper}>
-              <Table
-                ref={voucherTableRef}
-                url={endpoints.accountingVouchers}
-                countRecord={(data = []) =>
-                  data.reduce(
-                    (p, c, i, arr) =>
-                      p + (arr[i - 1]?.rec_id !== c.rec_id ? 1 : 0),
-                    0
-                  )
-                }
-                filters={filters}
-                filterFields={[
-                  {
-                    label: "Type",
-                    fieldType: "select",
-                    name: "type",
-                    optionType: "predefined",
-                    options: [
-                      { label: "Invoice", value: "Invoice" },
-                      { label: "Purchase", value: "Purchase" },
-                      { label: "Receipt", value: "Receipt" },
-                      { label: "Payment", value: "Payment" },
-
-                      // { label: "None", value: "null" },
-                      // { label: "Cash", value: "Cash" },
-                      // { label: "Bank", value: "Bank" },
-                      // { label: "Customers", value: "Customers" },
-                      // { label: "Suppliers", value: "Suppliers" },
-                      // { label: "Sales", value: "Sales" },
-                      // { label: "Purchase", value: "Purchase" },
-                      // { label: "Stock", value: "Stock" },
-                    ],
-                  },
-                  {
-                    label: "Start Date",
-                    fieldType: "input",
-                    inputType: "datetime-local",
-                    name: "startDate",
-                  },
-                  {
-                    label: "End Date",
-                    fieldType: "input",
-                    inputType: "datetime-local",
-                    name: "endDate",
-                  },
-                ]}
-                className={s.vouchers}
-                columns={[
-                  { label: "Date" },
-                  { label: "No" },
-                  { label: "Type" },
-                  { label: "Account Name" },
-                  { label: "Debit", className: "text-right" },
-                  { label: "Credit", className: "text-right" },
-                  // { label: "Action" },
-                ]}
-                tfoot={(data) => (
-                  <tfoot>
-                    <tr className={s.footer}>
-                      <td />
-                      <td />
-                      <td />
-                      <td className="text-right">Total</td>
-                      <td className="text-right">
-                        {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
-                      </td>
-                      <td className="text-right">
-                        {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                )}
-              >
-                {vouchers.map((row, i, arr) => (
-                  <tr
-                    key={i}
-                    // onClick={() => {
-                    //   setAnalysysAcc(() =>
-                    //     voucherTableRef.current?.data.filter(
-                    //       (item) => item.rec_id === row.rec_id
-                    //     )
-                    //   );
-                    //   setTab("analysys");
-                    // }}
-                  >
-                    <td className="grid">
-                      {arr[i - 1]?.rec_id !== row.rec_id && (
-                        <>
-                          <Moment
-                            style={{ fontSize: "14px" }}
-                            format="DD MMM YYYY"
-                          >
-                            {row.createdAt}
-                          </Moment>
-                          <Moment format="hh:mma">{row.createdAt}</Moment>
-                        </>
-                      )}
-                    </td>
-                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
-                    <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                    <td>{row.accountName}</td>
-                    <td className="text-right">
-                      {row.debit ? row.debit.toFixed(2) : null}
-                    </td>
-                    <td className="text-right">
-                      {row.credit ? row.credit.toFixed(2) : null}
-                    </td>
-                  </tr>
-                ))}
-              </Table>
-            </div>
+            <Vouchers vouchers={vouchers} setVouchers={setVouchers} />
           )}
           {tab === "ledgers" && (
             <Ledgers account={ledger?.account} rows={ledger?.rows} />
           )}
           {tab === "analysys" && <Analysys account={analysysAcc} />}
+          {tab === "journals" && <Journals accounts={journalAcc} />}
         </div>
       </div>
 
@@ -518,6 +418,90 @@ const Accounting = ({ setSidebarOpen }) => {
           }}
         />
       </Modal>
+    </div>
+  );
+};
+
+const Vouchers = ({ vouchers, setVouchers }) => {
+  const [filters, setFilters] = useState({});
+  const voucherTableRef = useRef();
+
+  const { get: getVouchers } = useFetch(endpoints.accountingVouchers);
+
+  useEffect(() => {
+    getVouchers({ query: filters })
+      .then(({ data }) => {
+        if (data.success) {
+          setVouchers(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, [filters]);
+
+  return (
+    <div className={s.innerContentWrapper}>
+      <VoucherFilters filters={filters} setFilters={setFilters} />
+      <Table
+        ref={voucherTableRef}
+        countRecord={() =>
+          vouchers.reduce(
+            (p, c, i, arr) => p + (arr[i - 1]?.rec_id !== c.rec_id ? 1 : 0),
+            0
+          )
+        }
+        className={s.vouchers}
+        columns={[
+          { label: "Date" },
+          { label: "No" },
+          { label: "Type" },
+          { label: "Account Name" },
+          { label: "Debit", className: "text-right" },
+          { label: "Credit", className: "text-right" },
+          // { label: "Action" },
+        ]}
+        tfoot={() => (
+          <tfoot>
+            <tr className={s.footer}>
+              <td />
+              <td />
+              <td />
+              <td className="text-right">Total</td>
+              <td className="text-right">
+                {vouchers.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+              </td>
+              <td className="text-right">
+                {vouchers.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+              </td>
+            </tr>
+          </tfoot>
+        )}
+      >
+        {vouchers.map((row, i, arr) => (
+          <tr key={i}>
+            <td className="grid">
+              {arr[i - 1]?.rec_id !== row.rec_id && (
+                <>
+                  <Moment style={{ fontSize: "14px" }} format="DD MMM YYYY">
+                    {row.createdAt}
+                  </Moment>
+                  <Moment format="hh:mma">{row.createdAt}</Moment>
+                </>
+              )}
+            </td>
+            <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
+            <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
+            <td>{row.accountName}</td>
+            <td className="text-right">
+              {row.debit ? row.debit.toFixed(2) : null}
+            </td>
+            <td className="text-right">
+              {row.credit ? row.credit.toFixed(2) : null}
+            </td>
+          </tr>
+        ))}
+      </Table>
     </div>
   );
 };
@@ -751,6 +735,103 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
     // return;
   }
   return result.toFixed(2);
+};
+
+const Journals = ({ accounts }) => {
+  const [data, setData] = useState([]);
+  const { get, loading } = useFetch(endpoints.accountingjournals);
+
+  useEffect(() => {
+    get({ query: { accountIds: accounts.map((acc) => acc._id).join(",") } })
+      .then(({ data }) => {
+        if (data.success) {
+          setData(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, [accounts]);
+  return (
+    <div className={s.innerContentWrapper}>
+      {accounts.length ? (
+        <div>
+          <div className="mt-1 flex gap-2 align-center">
+            <p
+              style={{ fontWeight: "600", fontSize: "1.2em" }}
+              className="pl_5"
+            >
+              {accounts.length} Accounts
+            </p>
+          </div>
+          <Table
+            loading={loading}
+            className={s.analysys}
+            columns={[
+              { label: "Account" },
+              { label: "Debit", className: "text-right" },
+              { label: "Credit", className: "text-right" },
+              { label: "Balance", className: "text-right" },
+            ]}
+            tfoot={
+              <tfoot style={{ marginTop: "0" }}>
+                <tr
+                  className={s.footer}
+                  style={{
+                    borderTop: "1px solid #979797",
+                    padding: "0 0.5rem",
+                    paddingTop: "1rem",
+                  }}
+                >
+                  <td>Total</td>
+                  <td className="text-right">
+                    {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                  </td>
+                  <td className="text-right">
+                    {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                  </td>
+                  <td className="text-right">
+                    {data
+                      .reduce((p, c) => {
+                        const balance =
+                          c.debit -
+                          c.credit +
+                          (accounts.find((acc) => acc._id === c._id)
+                            ?.openingBalance || 0);
+                        return p + balance;
+                      }, 0)
+                      .toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            }
+          >
+            {(data || []).map((row, i) => {
+              const balance =
+                row.debit -
+                row.credit +
+                (accounts.find((acc) => acc._id === row._id)?.openingBalance ||
+                  0);
+              return (
+                <tr key={i}>
+                  <td className="grid">{row.accountName}</td>
+                  <td className="grid text-right">
+                    {row.debit ? row.debit.toFixed(2) : null}
+                  </td>
+                  <td className="grid text-right">
+                    {row.credit ? row.credit.toFixed(2) : null}
+                  </td>
+                  <td className="grid text-right">{balance.toFixed(2)}</td>
+                </tr>
+              );
+            })}
+          </Table>
+        </div>
+      ) : (
+        <p className={s.analysysPlaceholder}>No group has been selected.</p>
+      )}
+    </div>
+  );
 };
 
 export default Accounting;

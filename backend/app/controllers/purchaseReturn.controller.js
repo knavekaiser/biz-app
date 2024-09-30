@@ -154,7 +154,7 @@ export const create = async (req, res) => {
 
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.autHUser._id
+      req.business?._id || req.authUser._id
     );
 
     new PurchaseReturn({
@@ -173,6 +173,7 @@ export const create = async (req, res) => {
       })
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
