@@ -68,6 +68,8 @@ import {
   RiShoppingBag2Line,
 } from "react-icons/ri";
 import { CgSpinner } from "react-icons/cg";
+import { Combobox } from "Components/elements";
+import { useForm } from "react-hook-form";
 
 const Home = lazy(() => import("./Home"));
 const Settings = lazy(() => import("./Settings"));
@@ -118,7 +120,7 @@ const Dashboard = () => {
           path: paths.dashboard.replace("/*", ""),
         },
       ];
-      if (["staff", "admin"].includes(userType)) {
+      if (["admin"].includes(userType)) {
         menuItems.push({
           section: "home",
           icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
@@ -338,18 +340,18 @@ const Dashboard = () => {
           label: "Home",
           path: paths.dashboard.replace("/*", ""),
         },
-        {
-          section: "home",
-          icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
-          activeIcon: (
-            <MdBusinessCenter
-              style={{ fontSize: "1.2em" }}
-              className={s.filled}
-            />
-          ),
-          label: "Businesses",
-          path: paths.businesses,
-        },
+        // {
+        //   section: "home",
+        //   icon: <MdOutlineBusinessCenter style={{ fontSize: "1.2em" }} />,
+        //   activeIcon: (
+        //     <MdBusinessCenter
+        //       style={{ fontSize: "1.2em" }}
+        //       className={s.filled}
+        //     />
+        //   ),
+        //   label: "Businesses",
+        //   path: paths.businesses,
+        // },
         {
           section: "other-app",
           icon: <PiUsersFour style={{ fontSize: "1.2em" }} />,
@@ -471,14 +473,14 @@ const Dashboard = () => {
 
         <div className={s.content}>
           <Routes>
-            <Route
+            {/* <Route
               path={paths.businesses}
               element={
                 <Suspense fallback={<LoadingSaklleton />}>
                   <Businesses />
                 </Suspense>
               }
-            />
+            /> */}
             <Route
               path={"/"}
               element={
@@ -648,16 +650,18 @@ const Dashboard = () => {
               }
             />
           )}
-          {userType === "staff" && (
-            <Route
-              path={paths.businesses}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <Businesses setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-          )}
+          {
+            // userType === "staff" && (
+            // <Route
+            //   path={paths.businesses}
+            //   element={
+            //     <Suspense fallback={<LoadingSaklleton />}>
+            //       <Businesses setSidebarOpen={setSidebarOpen} />
+            //     </Suspense>
+            //   }
+            // />
+            // )
+          }
           {userType === "admin" && (
             <Route
               path={paths.businesses}
@@ -693,7 +697,7 @@ const Dashboard = () => {
 };
 
 const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
-  const { user, setUser, setConfig } = useContext(SiteContext);
+  const { user, setUser, userType, setConfig } = useContext(SiteContext);
   const location = useLocation();
 
   const { post: logout } = useFetch(
@@ -745,6 +749,12 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
               </p> */}
           </div>
         </div>
+
+        {sidebarOpen && userType === "staff" && user?.businesses?.length > 1 ? (
+          <BusinessPicker />
+        ) : (
+          <span />
+        )}
 
         <ul className={s.links}>
           {sidebarItems.map((item, i, arr) => {
@@ -844,7 +854,7 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
                     if (data.success) {
                       setUser(null);
                       setConfig(null);
-                      window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.origin}/dashboard`;
+                      window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.origin}/dashboard/accounting`;
                     }
                   });
                 },
@@ -866,6 +876,40 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
         onClick={() => setSidebarOpen(false)}
       />
     </>
+  );
+};
+
+const BusinessPicker = () => {
+  const { user, business, setBusiness, setConfig } = useContext(SiteContext);
+  const { control, watch, setValue } = useForm({
+    defaultValues: { business: business?._id || "" },
+  });
+  const currBusiness = watch("business");
+  useEffect(() => {
+    if (business && !currBusiness && user?.businesses?.length) {
+      setValue("business", user.businesses[0].business._id);
+    }
+  }, [business, currBusiness]);
+  return (
+    <Combobox
+      label="Business"
+      control={control}
+      name="business"
+      options={(user?.businesses || []).map((item) => ({
+        label: item.business?.name,
+        value: item.business?._id,
+        item,
+      }))}
+      onChange={(opt) => {
+        setBusiness({
+          business: opt.item.business,
+          permissions: [
+            ...(opt.item?.roles.map((item) => item.permissions) || []),
+          ].flat(),
+        });
+        setConfig(opt.item.config);
+      }}
+    />
   );
 };
 

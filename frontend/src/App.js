@@ -18,7 +18,8 @@ function resizeWindow() {
 }
 
 function App() {
-  const { setUser, userType, setUserType } = useContext(SiteContext);
+  const { setUser, userType, setUserType, setBusiness, setConfig } =
+    useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,6 +35,18 @@ function App() {
           localStorage.setItem("userType", data.data.userType);
           setUser(data.data);
           setUserType(data.data.userType);
+
+          if (data.data.userType === "staff" && data.data.businesses?.length) {
+            const business = data.data.businesses[0];
+            setBusiness({
+              business: business.business,
+              permissions: [
+                ...(business.roles.map((item) => item.permissions) || []),
+              ].flat(),
+            });
+            setConfig(business.config);
+          }
+
           // const path = ["/signin", "/signup"].includes(location.pathname)
           //   ? paths.home
           //   : location.pathname || paths.home;
@@ -43,7 +56,7 @@ function App() {
       .catch((err) => {
         if (err === 401) {
           if (location.pathname.startsWith("/dashboard")) {
-            window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.href}`;
+            window.location.href = `${process.env.REACT_APP_PUBLIC_AUTH_APP_URL}/signin?_target=${window.location.href}/dashboard/accounting`;
           }
           return;
         }

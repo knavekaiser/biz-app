@@ -10,6 +10,7 @@ import { BsArrowLeft } from "react-icons/bs";
 import { FiChevronRight } from "react-icons/fi";
 import { BiFilterAlt } from "react-icons/bi";
 import Filters from "./Filter";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [filters, setFilters] = useState({});
@@ -18,6 +19,8 @@ const Home = () => {
 
   const { get: fetchStores, loading } = useFetch(endpoints.homeStores);
   const { get: getConfig } = useFetch(endpoints.homeConfig);
+
+  const navigate = useNavigate();
 
   const getStores = useCallback(() => {
     fetchStores({
@@ -47,6 +50,10 @@ const Home = () => {
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
+
+  useEffect(() => {
+    navigate("/dashboard/accounting");
   }, []);
 
   return (
