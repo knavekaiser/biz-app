@@ -36,6 +36,7 @@ export default mongoose.model(
       nextPurchaseNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextPurchaseReturnNo: { type: Schema.Types.Number, min: 0, default: 1 },
       nextReceiptNo: { type: Schema.Types.Number, min: 0, default: 1 },
+      nextJournalNo: { type: Schema.Types.Number, min: 0, default: 1 },
       businessType: { type: Schema.Types.String },
       siteConfig: {
         theme: {

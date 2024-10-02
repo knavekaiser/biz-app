@@ -567,17 +567,22 @@ const configSchema = yup.object({
     .typeError("Enter a valid number"),
   nextPurchaseNo: yup
     .number()
-    .min(1, "Invoice Number can not be less than 1")
+    .min(1, "Purchase Number can not be less than 1")
     .required()
     .typeError("Enter a valid number"),
   nextPurchaseReturnNo: yup
     .number()
-    .min(1, "Invoice Number can not be less than 1")
+    .min(1, "Purchase Return Number can not be less than 1")
     .required()
     .typeError("Enter a valid number"),
   nextReceiptNo: yup
     .number()
-    .min(1, "Invoice Number can not be less than 1")
+    .min(1, "Receipt Number can not be less than 1")
+    .required()
+    .typeError("Enter a valid number"),
+  nextJournalNo: yup
+    .number()
+    .min(1, "Journal Number can not be less than 1")
     .required()
     .typeError("Enter a valid number"),
   printCurrency: yup.string().max(3, "Currency can only be 3 characters long"),
@@ -612,6 +617,7 @@ const Config = ({ next }) => {
         nextPurchaseNo: config.nextPurchaseNo,
         nextPurchaseReturnNo: config.nextPurchaseReturnNo,
         nextReceiptNo: config.nextReceiptNo,
+        nextJournalNo: config.nextJournalNo,
         printQuoteCurrency:
           config?.printQuote?.currency || config.print.currency,
         printQuoteItemColumns:
@@ -652,6 +658,7 @@ const Config = ({ next }) => {
           nextPurchaseNo: values.nextPurchaseNo,
           nextPurchaseReturnNo: values.nextPurchaseReturnNo,
           nextReceiptNo: values.nextReceiptNo,
+          nextJournalNo: values.nextJournalNo,
           numberSeparator: values.numberSeparator,
           print: {
             itemColumns: values.printItemColumns,
@@ -742,6 +749,12 @@ const Config = ({ next }) => {
         label="Next Receipt Number"
         {...register("nextReceiptNo")}
         error={errors.nextReceiptNo}
+      />
+
+      <Input
+        label="Next Journal Number"
+        {...register("nextJournalNo")}
+        error={errors.nextJournalNo}
       />
 
       <Input

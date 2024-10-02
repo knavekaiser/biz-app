@@ -9,14 +9,11 @@ const accountId = yup
       isGroup: false,
     });
     if (account) {
-      if (this.options.context.req.body.entries) {
-        const index = this.options.context.req.body.entries?.findIndex(
-          (item) => item.accountId === v
-        );
-        this.options.context.req.body.entries[index].accountName = account.name;
-      } else {
-        this.options.context.req.body.accountName = account.name;
-      }
+      const index = this.options.context.req.body.accountingEntries?.findIndex(
+        (item) => item.accountId === v
+      );
+      this.options.context.req.body.accountingEntries[index].accountName =
+        account.name;
       return true;
     }
     return false;
@@ -25,7 +22,9 @@ const accountId = yup
 
 export const create = yup.object({
   body: yup.object({
-    entries: yup
+    dateTime: yup.string().required(),
+    detail: yup.string().nullable(),
+    accountingEntries: yup
       .array()
       .of(
         yup.object({
@@ -47,8 +46,18 @@ export const update = yup.object({
       ),
   }),
   body: yup.object({
-    accountId,
-    debit: yup.number().min(0).required(),
-    credit: yup.number().min(0).required(),
+    dateTime: yup.string().required(),
+    detail: yup.string().nullable(),
+    accountingEntries: yup
+      .array()
+      .of(
+        yup.object({
+          accountId,
+          debit: yup.number().min(0).required(),
+          credit: yup.number().min(0).required(),
+        })
+      )
+      .min(1)
+      .required(),
   }),
 });

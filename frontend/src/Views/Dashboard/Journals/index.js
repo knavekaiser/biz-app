@@ -3,16 +3,16 @@ import { SiteContext } from "SiteContext";
 import { Table, TableActions, Moment } from "Components/elements";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { Prompt, Modal } from "Components/modal";
-import s from "./payments.module.scss";
+import s from "./journals.module.scss";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
 
-import JournalForm from "./PaymentForm";
+import JournalForm from "./JournalForm";
 import { BsList } from "react-icons/bs";
 import { GoPlus } from "react-icons/go";
 import { FaPencil } from "react-icons/fa6";
 
-const Payments = ({ setSidebarOpen }) => {
+const Journals = ({ setSidebarOpen }) => {
   const { config, checkPermission } = useContext(SiteContext);
   const [journals, setJournals] = useState([]);
   const [entry, setEntry] = useState(null);
@@ -54,27 +54,36 @@ const Payments = ({ setSidebarOpen }) => {
       </div>
       <Table
         loading={loading}
-        className={s.payments}
+        className={s.journals}
         columns={[
           { label: "Date" },
+          { label: "No" },
           { label: "Account" },
           { label: "Debit", className: "text-right" },
           { label: "Credit", className: "text-right" },
           { label: "Action" },
         ]}
       >
-        {journals.map((item) => (
+        {journals.map((item, i, arr) => (
           <tr
-            onClick={() => {
-              setEntry(item);
-              setAddEntry(true);
-            }}
-            style={{ cursor: "pointer" }}
+            // onClick={() => {
+            //   setEntry(item);
+            //   setAddEntry(true);
+            // }}
+            // style={{ cursor: "pointer" }}
             key={item._id}
           >
-            <td className={s.date}>
-              <Moment format="DD/MM/YYYY">{item.updatedAt}</Moment>
+            <td className="grid">
+              {arr[i - 1]?.rec_id !== item.rec_id && (
+                <>
+                  <Moment style={{ fontSize: "14px" }} format="DD MMM YYYY">
+                    {item.dateTime}
+                  </Moment>
+                  <Moment format="hh:mma">{item.dateTime}</Moment>
+                </>
+              )}
             </td>
+            <td>{arr[i - 1]?.rec_id !== item.rec_id && item.no}</td>
             <td className={s.customer}>{item.accountName}</td>
             <td className="text-right">
               {item.debit
@@ -84,51 +93,60 @@ const Payments = ({ setSidebarOpen }) => {
             <td className={`text-right`}>
               {item.credit ? item.credit.fix(2, config?.numberSeparator) : null}
             </td>
-            <TableActions
-              className={s.actions}
-              actions={[
-                {
-                  icon: <FaPencil />,
-                  label: "Edit",
-                  onClick: () => {
-                    setEntry(item);
-                    setAddEntry(true);
+            {arr[i - 1]?.rec_id !== item.rec_id && (
+              <TableActions
+                className={s.actions}
+                actions={[
+                  {
+                    icon: <FaPencil />,
+                    label: "Edit",
+                    onClick: () => {
+                      setEntry({
+                        _id: item.rec_id,
+                        dateTime: item.dateTime,
+                        detail: item.detail,
+                        entries: arr
+                          .filter((i) => i.rec_id === item.rec_id)
+                          .sort((a, b) => (a.index > b.index ? 1 : -1)),
+                      });
+                      setAddEntry(true);
+                    },
                   },
-                },
-                ...(checkPermission("journal_delete")
-                  ? [
-                      {
-                        icon: <FaRegTrashAlt />,
-                        label: "Delete",
-                        onClick: () =>
-                          Prompt({
-                            type: "confirmation",
-                            message: `Are you sure you want to remove this entry?`,
-                            callback: () => {
-                              deleteEntry(
-                                {},
-                                { params: { "{ID}": item._id } }
-                              ).then(({ data }) => {
-                                if (data.success) {
-                                  setJournals((prev) =>
-                                    prev.filter(
-                                      (entry) => entry._id !== item._id
-                                    )
-                                  );
-                                } else {
-                                  Prompt({
-                                    type: "error",
-                                    message: data.message,
-                                  });
-                                }
-                              });
-                            },
-                          }),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
+                  ...(checkPermission("journal_delete")
+                    ? [
+                        {
+                          icon: <FaRegTrashAlt />,
+                          label: "Delete",
+                          onClick: () =>
+                            Prompt({
+                              type: "confirmation",
+                              message: `Are you sure you want to remove this entry?`,
+                              callback: () => {
+                                deleteEntry(
+                                  {},
+                                  { params: { "{ID}": item.rec_id } }
+                                ).then(({ data }) => {
+                                  if (data.success) {
+                                    setJournals((prev) =>
+                                      prev.filter(
+                                        (entry) => entry.rec_id !== item.rec_id
+                                      )
+                                    );
+                                  } else {
+                                    Prompt({
+                                      type: "error",
+                                      message: data.message,
+                                    });
+                                  }
+                                });
+                              },
+                            }),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            )}
           </tr>
         ))}
       </Table>
@@ -136,7 +154,7 @@ const Payments = ({ setSidebarOpen }) => {
         open={addEntry}
         head
         label={`${entry ? "Update" : "Add"} Journal Entries`}
-        className={s.addPaymentFormModal}
+        className={s.addFormModal}
         setOpen={() => {
           setEntry(null);
           setAddEntry(false);
@@ -144,18 +162,16 @@ const Payments = ({ setSidebarOpen }) => {
       >
         <JournalForm
           edit={entry}
-          payments={journals}
-          onSuccess={(newEntry) => {
-            if (entry) {
-              setJournals((prev) =>
-                prev.map((item) =>
-                  item._id === newEntry._id ? newEntry : item
-                )
-              );
-              setEntry(null);
-            } else {
-              setJournals((prev) => [...prev, ...newEntry]);
-            }
+          onSuccess={(newEntries) => {
+            setJournals((prev) =>
+              [
+                ...newEntries,
+                ...prev.filter((item) => item.rec_id !== newEntries[0].rec_id),
+              ].sort((a, b) =>
+                new Date(a.dateTime) > new Date(b.dateTime) ? 1 : -1
+              )
+            );
+            setEntry(null);
             setAddEntry(false);
           }}
         />
@@ -164,4 +180,4 @@ const Payments = ({ setSidebarOpen }) => {
   );
 };
 
-export default Payments;
+export default Journals;
