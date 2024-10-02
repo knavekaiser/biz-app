@@ -58,6 +58,7 @@ export const create = async (req, res) => {
         responseFn.success(res, { data });
       })
       .catch((err) => {
+        console.log(err);
         if (err.code === 11000) {
           return responseFn.error(
             res,

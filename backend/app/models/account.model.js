@@ -12,6 +12,5 @@ const schema = new Schema(
   },
   { timestamps: true }
 );
-schema.index({ name: 1, user: 1 }, { unique: true });
 
 export default mongoose.model("Account", schema);
