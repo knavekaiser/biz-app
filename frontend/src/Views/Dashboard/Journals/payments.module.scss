@@ -1,0 +1,98 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  padding: 1rem;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  // max-width: 80rem;
+  width: 100%;
+  grid-template-rows: 1fr;
+}
+.payments {
+  tr {
+    grid-template-columns: 6rem 1fr 8rem 8rem 3rem;
+  }
+}
+
+.addPaymentFormModal {
+  width: 100%;
+  max-width: 50rem;
+}
+.addPaymentForm {
+  :global(.btns) {
+    margin-top: 2rem;
+  }
+  .entryForm {
+    display: grid;
+    grid-template-columns: 6rem 1fr 5rem 8rem 3rem;
+    grid-gap: 1rem;
+    align-items: flex-end;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
+  }
+  .payments,
+  .addPaymentForm .purchaseTable {
+    margin: 0;
+    border: none;
+    thead {
+      display: none;
+    }
+    tr {
+      border-radius: 0.5rem;
+      margin: 0.5rem;
+      background-color: white;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+      border: none !important;
+      grid-gap: 10px;
+      grid-template-columns: 1fr 0.7fr;
+      grid-row-gap: 0px;
+      .date {
+        grid-column: 1 / 2;
+        grid-row: 1 / 2;
+        font-weight: bold;
+        color: $primary-color-dark2;
+        padding-bottom: 0;
+        font-size: 1.1rem;
+      }
+      .customer {
+        grid-column: 1 / 2;
+        grid-row: 3 / 4;
+        padding-top: 0;
+        color: $primary-color-dark2;
+      }
+      .net {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        font-weight: bold;
+        color: $primary-color-dark2;
+        padding-bottom: 0;
+        font-size: 1.1rem;
+      }
+      .actions {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        justify-content: flex-end;
+        padding-top: 0;
+      }
+    }
+  }
+  .addPaymentForm {
+    width: 100vw;
+    .mainForm {
+      .mainFormWrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

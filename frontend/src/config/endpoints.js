@@ -40,6 +40,7 @@ const endpoints = {
   quotes: `${baseApiUrl}/api/quotes`,
   receipts: `${baseApiUrl}/api/receipts`,
   payments: `${baseApiUrl}/api/payments`,
+  journals: `${baseApiUrl}/api/journals`,
   stores: `${baseApiUrl}/api/stores`,
   storeConfig: `${baseApiUrl}/api/store-config`,
   categories: `${baseApiUrl}/api/categories`,
@@ -74,7 +75,7 @@ const endpoints = {
   accountingMasters: `${baseApiUrl}/api/accounting/masters`,
   accountingVouchers: `${baseApiUrl}/api/accounting/vouchers`,
   accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
-  accountingjournals: `${baseApiUrl}/api/accounting/journals`,
+  journals: `${baseApiUrl}/api/journals`,
 
   comifyChat: `${
     process.env.NODE_ENV === "development"

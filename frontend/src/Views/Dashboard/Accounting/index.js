@@ -378,7 +378,7 @@ const Accounting = ({ setSidebarOpen }) => {
                 { label: "Voucher Listing", value: "voucherListing" },
                 { label: "Ledgers", value: "ledgers" },
                 { label: "Accounting Analysys", value: "analysys" },
-                { label: "Journals", value: "journals" },
+                // { label: "Journals", value: "journals" },
               ]}
               onChange={(tab) => setTab(tab.value)}
             />
@@ -390,7 +390,9 @@ const Accounting = ({ setSidebarOpen }) => {
             <Ledgers account={ledger?.account} rows={ledger?.rows} />
           )}
           {tab === "analysys" && <Analysys account={analysysAcc} />}
-          {tab === "journals" && <Journals accounts={journalAcc} />}
+          {
+            // tab === "journals" && <Journals accounts={journalAcc} />
+          }
         </div>
       </div>
 

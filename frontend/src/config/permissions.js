@@ -35,6 +35,11 @@ const paths = [
     actions: ["read", "create", "update", "delete"],
   },
   {
+    label: "Journal",
+    value: "journal",
+    actions: ["read", "create", "update", "delete"],
+  },
+  {
     label: "Dynamic Table",
     value: "dynamic_table",
     actions: ["read", "create", "update", "delete"],

@@ -35,3 +35,4 @@ export { default as Module } from "./module.model.js";
 export { default as Submodule } from "./submodule.model.js";
 export { default as Report } from "./report.model.js";
 export { default as Account } from "./account.model.js";
+export { default as Journal } from "./journal.model.js";

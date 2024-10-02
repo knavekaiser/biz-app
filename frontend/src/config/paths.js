@@ -15,6 +15,7 @@ const paths = {
   purchaseReturns: "purchase-returns",
   receipts: "receipts",
   payments: "payments",
+  journals: "journals",
   orders: "orders",
   quotes: "quotes",
   dynamicTables: "dynamic-tables/*",

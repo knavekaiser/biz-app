@@ -8,6 +8,7 @@ import purchaseReturnRoutes from "./purchaseReturn.routes.js";
 import receiptRoutes from "./receipt.routes.js";
 import configRoutes from "./config.routes.js";
 import paymentRoutes from "./payment.routes.js";
+import journalRoutes from "./journal.routes.js";
 import collectionRoutes from "./collection.routes.js";
 import dynamicRoutes from "./dynamic.routes.js";
 import adminCollectionRoutes from "./adminCollection.routes.js";
@@ -39,6 +40,7 @@ export default function (app) {
   receiptRoutes(app);
   configRoutes(app);
   paymentRoutes(app);
+  journalRoutes(app);
   collectionRoutes(app);
   dynamicRoutes(app);
   adminCollectionRoutes(app);

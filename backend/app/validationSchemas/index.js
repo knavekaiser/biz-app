@@ -4,6 +4,7 @@ export * as invoice from "./invoice.js";
 export * as receipt from "./receipts.js";
 export * as purchase from "./purchase.js";
 export * as payment from "./payment.js";
+export * as journal from "./journal.js";
 export * as config from "./config.js";
 export * as collection from "./collection.js";
 export * as whitelabel from "./whitelabel.js";

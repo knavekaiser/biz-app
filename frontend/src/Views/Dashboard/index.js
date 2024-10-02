@@ -60,6 +60,8 @@ import {
 } from "react-icons/hi";
 import { PiInvoiceFill, PiInvoiceLight } from "react-icons/pi";
 import {
+  RiBookletFill,
+  RiBookletLine,
   RiMoneyDollarBoxFill,
   RiMoneyDollarBoxLine,
   RiShoppingBag2Fill,
@@ -79,6 +81,7 @@ const Purchases = lazy(() => import("./Purchases"));
 const PurchaseReturns = lazy(() => import("./PurchaseReturns"));
 const Receipts = lazy(() => import("./Receipts"));
 const Payments = lazy(() => import("./Payments"));
+const Journals = lazy(() => import("./Journals"));
 const DynamicTables = lazy(() => import("./DynamicTables"));
 const Roles = lazy(() => import("./Roles"));
 const Employees = lazy(() => import("./Employees"));
@@ -255,6 +258,17 @@ const Dashboard = () => {
           ),
           label: "Payments",
           path: paths.payments,
+        });
+      }
+      if (checkPermission("journal_read")) {
+        menuItems.push({
+          section: "collection",
+          icon: <RiBookletLine style={{ fontSize: "1.1em" }} />,
+          activeIcon: (
+            <RiBookletFill style={{ fontSize: "1.1em" }} className={s.filled} />
+          ),
+          label: "Journals",
+          path: paths.journals,
         });
       }
       menuItems.push({
@@ -564,6 +578,16 @@ const Dashboard = () => {
               element={
                 <Suspense fallback={<LoadingSaklleton />}>
                   <Payments setSidebarOpen={setSidebarOpen} />
+                </Suspense>
+              }
+            />
+          )}
+          {checkPermission("journal_read") && (
+            <Route
+              path={paths.journals}
+              element={
+                <Suspense fallback={<LoadingSaklleton />}>
+                  <Journals setSidebarOpen={setSidebarOpen} />
                 </Suspense>
               }
             />
