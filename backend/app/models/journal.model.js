@@ -5,7 +5,7 @@ export default mongoose.model(
   "Journal",
   new Schema(
     {
-      company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
+      user: { type: Schema.Types.ObjectId, ref: "Company", required: true },
       no: { type: Schema.Types.Number, min: 1, required: true },
       dateTime: { type: Schema.Types.Date, required: true },
       detail: { type: Schema.Types.String, required: true },

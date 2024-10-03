@@ -24,7 +24,7 @@ const entryPipeline = [
 ];
 export const findAll = async (req, res) => {
   try {
-    const condition = { company: req.business?._id || req.authUser._id };
+    const condition = { user: req.business?._id || req.authUser._id };
     if (req.query.accountId) {
       condition.accountId = req.query.accountId;
     }
@@ -45,7 +45,7 @@ export const create = async (req, res) => {
 
     new Journal({
       ...req.body,
-      company: req.business?._id || req.authUser._id,
+      user: req.business?._id || req.authUser._id,
       no: nextJournalNo || 1,
     })
       .save()
@@ -72,10 +72,10 @@ export const update = async (req, res) => {
     delete req.body.no;
     Journal.findOneAndUpdate(
       {
-        company: req.business?._id || req.authUser._id,
+        user: req.business?._id || req.authUser._id,
         _id: req.params._id,
       },
-      { ...req.body, company: req.business?._id || req.authUser._id },
+      { ...req.body, user: req.business?._id || req.authUser._id },
       { new: true }
     )
       .then(async (data) => {
@@ -98,7 +98,7 @@ export const deleteEntry = async (req, res) => {
     }
     Journal.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      company: req.business?._id || req.authUser._id,
+      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

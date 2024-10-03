@@ -109,182 +109,57 @@ export const remove = async (req, res) => {
 };
 
 const entryPipeline = (entryConditions) => {
+  const getLookupStage = ({ from, as, type }) => ({
+    $lookup: {
+      from,
+      pipeline: [
+        {
+          $unwind: {
+            path: "$accountingEntries",
+            includeArrayIndex: "accountingEntries.index",
+            preserveNullAndEmptyArrays: false,
+          },
+        },
+        { $match: entryConditions },
+        {
+          $set: {
+            "accountingEntries.rec_id": "$_id",
+            "accountingEntries.no": "$no",
+            "accountingEntries.type": type,
+            "accountingEntries.createdAt": "$createdAt",
+            "accountingEntries.updatedAt": "$updatedAt",
+          },
+        },
+        {
+          $replaceRoot: {
+            newRoot: "$accountingEntries",
+          },
+        },
+      ],
+      as,
+    },
+  });
   return [
     { $limit: 1 },
-    {
-      $lookup: {
-        from: "invoices",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Invoice",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "saleEntries",
-      },
-    },
-    {
-      $lookup: {
-        from: "salesreturns",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Sales Return",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "salesReturnEntries",
-      },
-    },
-    {
-      $lookup: {
-        from: "purchases",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Purchase",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "purchaseEntries",
-      },
-    },
-    {
-      $lookup: {
-        from: "purchasereturns",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Purchase Return",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "purchaseReturnEntries",
-      },
-    },
-    {
-      $lookup: {
-        from: "receipts",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Receipt",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "receiptEntries",
-      },
-    },
-    {
-      $lookup: {
-        from: "payments",
-        pipeline: [
-          {
-            $unwind: {
-              path: "$accountingEntries",
-              includeArrayIndex: "accountingEntries.index",
-              preserveNullAndEmptyArrays: false,
-            },
-          },
-          { $match: entryConditions },
-          {
-            $set: {
-              "accountingEntries.rec_id": "$_id",
-              "accountingEntries.no": "$no",
-              "accountingEntries.type": "Payment",
-              "accountingEntries.createdAt": "$createdAt",
-            },
-          },
-          {
-            $replaceRoot: {
-              newRoot: "$accountingEntries",
-            },
-          },
-        ],
-        as: "paymentEntries",
-      },
-    },
+    getLookupStage({ from: "invoices", as: "saleEntries", type: "Invoice" }),
+    getLookupStage({
+      from: "salesreturns",
+      as: "salesReturnEntries",
+      type: "Sales Return",
+    }),
+    getLookupStage({
+      from: "purchases",
+      as: "purchaseEntries",
+      type: "Purchase",
+    }),
+    getLookupStage({
+      from: "purchasereturns",
+      as: "purchaseReturnEntries",
+      type: "Purchase Return",
+    }),
+    getLookupStage({ from: "receipts", as: "receiptEntries", type: "Receipt" }),
+    getLookupStage({ from: "payments", as: "paymentEntries", type: "Payment" }),
+    getLookupStage({ from: "journals", as: "journalEntries", type: "Journal" }),
     {
       $set: {
         saleEntries: null,
@@ -299,6 +174,7 @@ const entryPipeline = (entryConditions) => {
             "$purchaseReturnEntries",
             "$receiptEntries",
             "$paymentEntries",
+            "$journalEntries",
           ],
         },
       },
@@ -328,7 +204,7 @@ export const vouchers = async (req, res) => {
     }
     Account.aggregate([
       ...entryPipeline(entryConditions),
-      { $sort: { createdAt: 1, index: 1 } },
+      { $sort: { updatedAt: 1, index: 1 } },
       { $match: conditions },
     ]).then((data) => {
       return responseFn.success(res, { data });
@@ -354,7 +230,7 @@ export const getJournals = async (req, res) => {
     }
     Account.aggregate([
       ...entryPipeline(entryConditions),
-      { $sort: { createdAt: 1, index: 1 } },
+      { $sort: { updatedAt: 1, index: 1 } },
       { $match: conditions },
       {
         $group: {
