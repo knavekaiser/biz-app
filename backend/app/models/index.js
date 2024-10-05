@@ -65,7 +65,7 @@ export const StoreConfig = mainDB.model("StoreConfig", storeConfig);
 // ======================================================== Proprietary Collections
 export const getModel = ({ companyId, name, finPeriodId }) => {
   const db = dbConn.useDb(
-    `${process.db.PRIMARY_DB}_${companyId}${
+    `${process.env.PRIMARY_DB}_${companyId}${
       finPeriodId ? "_" + finPeriodId : ""
     }`,
     { useCache: true }
