@@ -1,13 +1,18 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
 
-import { Company, FaqDoc } from "../models/index.js";
+import { Company, getModel } from "../models/index.js";
 import { fileHelper } from "../helpers/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const getChatbot = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: req.business._id,
+      name: "FaqDoc",
+    });
+
     const topics = await FaqDoc.aggregate([
       {
         $match: {

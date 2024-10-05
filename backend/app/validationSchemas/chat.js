@@ -1,5 +1,5 @@
 import yup from "yup";
-import { FaqDoc, Chat } from "../models/index.js";
+import { getModel } from "../models/index.js";
 
 export const initChat = yup.object({
   body: yup.object({
@@ -7,15 +7,25 @@ export const initChat = yup.object({
     topic: yup
       .string()
       .max(60)
-      .test("checkTopic", "Topic not found", (v) =>
-        v ? FaqDoc.findOne({ topic: v }) : true
-      ),
+      .test("checkTopic", "Topic not found", function (v) {
+        const req = this.options.context.req;
+        const FaqDoc = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FaqDoc",
+        });
+        return v ? FaqDoc.findOne({ topic: v }) : true;
+      }),
     parentTopic: yup
       .string()
       .max(60)
-      .test("checkParentTopic", "Topic not found", (v) =>
-        v ? FaqDoc.findOne({ topic: v }) : true
-      ),
+      .test("checkTopic", "Topic not found", function (v) {
+        const req = this.options.context.req;
+        const FaqDoc = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FaqDoc",
+        });
+        return v ? FaqDoc.findOne({ topic: v }) : true;
+      }),
     name: yup.string().max(60).required(),
     email: yup.string().max(150).email().required(),
     message: yup
@@ -37,9 +47,14 @@ export const sendMessage = yup.object({
     _id: yup
       .string()
       .required()
-      .test("checkChat", "Chat does not exist", (v) =>
-        Chat.findOne({ _id: v })
-      ),
+      .test("checkChat", "Chat does not exist", function (v) {
+        const req = this.options.context.req;
+        const Chat = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "Chat",
+        });
+        return Chat.findOne({ _id: v });
+      }),
   }),
 });
 export const vote = yup.object({
@@ -50,9 +65,14 @@ export const vote = yup.object({
     chat_id: yup
       .string()
       .required()
-      .test("checkChat", "Chat does not exist", (v) =>
-        Chat.findOne({ _id: v })
-      ),
+      .test("checkChat", "Chat does not exist", function (v) {
+        const req = this.options.context.req;
+        const Chat = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "Chat",
+        });
+        return Chat.findOne({ _id: v });
+      }),
     message_id: yup.string().required(), // check if the chat exists
   }),
 });

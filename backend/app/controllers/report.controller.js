@@ -1,12 +1,17 @@
 import { appConfig } from "../config/index.js";
 import { dbHelper } from "../helpers/index.js";
-import { Chat, Module, Report, Submodule } from "../models/index.js";
+import { getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
 export const getAnalytics = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     const { granularity, minDate, maxDate } = req.query;
     const condition = {};
     if (req.business) {
@@ -354,6 +359,15 @@ export const genPipeline = async (req, res) => {
 };
 
 const getModelForReport = async ({ companyId, table }) => {
+  const Module = getModel({
+    companyId: (req.business || req.authUser)._id,
+    name: "Module",
+  });
+  const Submodule = getModel({
+    companyId: (req.business || req.authUser)._id,
+    name: "Submodule",
+  });
+
   let tableName = `${companyId}_${table.name}`;
   if (["module-coll", "submodule-coll"].includes(table.type)) {
     tableName = `${companyId}_${table.module || table.submodule}_${table.name}`;
@@ -361,7 +375,13 @@ const getModelForReport = async ({ companyId, table }) => {
 
   let Model = null;
   if (table.type === "collection") {
-    Model = await dbHelper.getModel(tableName).then((data) => data.Model);
+    Model = await dbHelper
+      .getModel({
+        companyId: (req.business || req.authUser)._id,
+        finPeriodId: req.finPeriod._id,
+        name: tableName,
+      })
+      .then((data) => data.Model);
   } else if (["module", "submodule"].includes(table.type)) {
     const module = await (table.type === "module" ? Module : Submodule).findOne(
       { name: table.name }
@@ -399,6 +419,12 @@ export const testPipeline = async (req, res) => {
 
 export const genReport = async (req, res) => {
   try {
+    const Report = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Report",
+    });
+
     const reportTemplate = await Report.findOne({ _id: req.params._id });
     const companyId = reportTemplate.company;
     const table = reportTemplate.tables.find((t) => t.type === "module");
@@ -431,6 +457,12 @@ export const genReport = async (req, res) => {
 
 export const getReports = async (req, res) => {
   try {
+    const Report = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Report",
+    });
+
     const conditions = {
       company: ObjectId(req.business?._id || req.authUser._id),
     };
@@ -470,6 +502,12 @@ export const createReport = async (req, res) => {
 
 export const updateReport = async (req, res) => {
   try {
+    const Report = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Report",
+    });
+
     Report.findOneAndUpdate(
       { _id: req.params._id, company: req.business?._id || req.authUser._id },
       req.body,
@@ -486,6 +524,12 @@ export const updateReport = async (req, res) => {
 
 export const deleteReport = async (req, res) => {
   try {
+    const Report = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Report",
+    });
+
     Report.deleteMany({
       _id: req.params._id,
       company: req.business?._id || req.authUser._id,

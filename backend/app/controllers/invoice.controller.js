@@ -1,14 +1,18 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
-import { Invoice, Config, Account } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    const conditions = {
-      user: ObjectId(req.business?._id || req.authUser._id),
-    };
+    const Invoice = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Invoice",
+    });
+
+    const conditions = {};
     if (+req.query.no) {
       conditions.no = +req.query.no;
     }
@@ -22,7 +26,6 @@ export const findAll = async (req, res) => {
           pipeline: [
             {
               $match: {
-                user: ObjectId(req.business?._id || req.authUser._id),
                 ...(conditions.no && { "invoices.no": conditions.no }),
               },
             },
@@ -125,7 +128,13 @@ export const findAll = async (req, res) => {
   }
 };
 
-const generateEntries = async (body, comapny_id) => {
+const generateEntries = async (body, companyId, finPeriodId) => {
+  const Account = getModel({
+    companyId,
+    finPeriodId,
+    name: "Account",
+  });
+
   const totalCartPrice = body.items.reduce((p, c) => p + c.price * c.qty, 0);
   const tax = totalCartPrice.percent(body.gst) || 0;
   const accountingEntries = [
@@ -136,10 +145,7 @@ const generateEntries = async (body, comapny_id) => {
       credit: 0,
     },
   ];
-  const salesAccount = await Account.findOne({
-    company: comapny_id,
-    type: "Sales",
-  });
+  const salesAccount = await Account.findOne({ type: "Sales" });
   if (salesAccount) {
     accountingEntries.push({
       accountId: salesAccount._id,
@@ -148,10 +154,7 @@ const generateEntries = async (body, comapny_id) => {
       credit: totalCartPrice,
     });
   }
-  const taxAccount = await Account.findOne({
-    company: comapny_id,
-    name: "Tax",
-  });
+  const taxAccount = await Account.findOne({ name: "Tax" });
   if (taxAccount) {
     accountingEntries.push({
       accountId: taxAccount._id,
@@ -165,18 +168,24 @@ const generateEntries = async (body, comapny_id) => {
 
 export const create = async (req, res) => {
   try {
+    const Invoice = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Invoice",
+    });
+
     const { nextInvoiceNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
 
     new Invoice({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextInvoiceNo || 1,
     })
       .save()
@@ -196,18 +205,21 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Invoice = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Invoice",
+    });
+
     delete req.body.no;
 
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
 
-    Invoice.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    Invoice.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -219,12 +231,17 @@ export const update = async (req, res) => {
 
 export const deleteInvoice = async (req, res) => {
   try {
+    const Invoice = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Invoice",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
     Invoice.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

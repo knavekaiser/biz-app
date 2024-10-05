@@ -29,6 +29,7 @@ const paths = {
   subPlans: "subscription-plans",
   accounting: "accounting",
   chats: "chats",
+  finPeriods: "financial-periods",
 
   settings: {
     baseUrl: "settings/*",

@@ -7,7 +7,13 @@ import {
   useState,
 } from "react";
 import { SiteContext } from "SiteContext";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { paths } from "config";
 import { FaArrowLeftLong } from "react-icons/fa6";
 
@@ -36,6 +42,7 @@ import {
   IoPricetagsOutline,
   IoReceipt,
   IoReceiptOutline,
+  IoSettingsOutline,
   IoShieldCheckmark,
   IoShieldCheckmarkOutline,
 } from "react-icons/io5";
@@ -73,6 +80,7 @@ import { useForm } from "react-hook-form";
 
 const Home = lazy(() => import("./Home"));
 const Settings = lazy(() => import("./Settings"));
+const FinPeriods = lazy(() => import("./FinPeriods"));
 const Businesses = lazy(() => import("./Businesses"));
 const AdminBusinesses = lazy(() => import("./AdminBusinesses"));
 const Invoices = lazy(() => import("./Sales"));
@@ -92,7 +100,8 @@ const Reports = lazy(() => import("./Reports"));
 const Accounting = lazy(() => import("./Accounting"));
 
 const Dashboard = () => {
-  const { user, business, userType, checkPermission } = useContext(SiteContext);
+  const { user, business, userType, finPeriod, checkPermission } =
+    useContext(SiteContext);
   const [sidebarItems, setSidebarItems] = useState([
     {
       icon: <BsHouseDoor style={{ fontSize: "1.2em", marginTop: "-0.15em" }} />,
@@ -107,10 +116,14 @@ const Dashboard = () => {
     },
   ]);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 1220);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let menuItems = [];
-    if (userType === "company" || (userType === "staff" && business)) {
+    if (
+      finPeriod &&
+      (userType === "company" || (userType === "staff" && business))
+    ) {
       menuItems = [
         {
           section: "home",
@@ -369,7 +382,13 @@ const Dashboard = () => {
     }
 
     setSidebarItems(menuItems);
-  }, [userType, user, business]);
+  }, [userType, user, business, finPeriod]);
+
+  useEffect(() => {
+    if (!finPeriod && checkPermission("fin_period_creat")) {
+      navigate(paths.finPeriods);
+    }
+  }, [finPeriod]);
 
   if (!user) {
     return (
@@ -390,54 +409,6 @@ const Dashboard = () => {
 
         <div className={s.content}>
           <Routes>
-            {/* <Route
-              path={paths.subPlans}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <SubPlans setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-            <Route
-              path={paths.storeListings}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <StoreListings setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-            <Route
-              path={paths.businesses}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <AdminBusinesses setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-            <Route
-              path={paths.settings.baseUrl}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <AdminSettings setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-            <Route
-              path={paths.dynamicTables}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <AdminDynamicTables setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            />
-            <Route
-              path={paths.chats}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <Chats setSidebarOpen={setSidebarOpen} />
-                </Suspense>
-              }
-            /> */}
             <Route
               path={"*"}
               element={
@@ -462,7 +433,7 @@ const Dashboard = () => {
       </div>
     );
   }
-  if (localStorage.getItem("userType") === "staff" && !business) {
+  if (!finPeriod) {
     return (
       <div className={s.container}>
         <Sidebar
@@ -473,14 +444,16 @@ const Dashboard = () => {
 
         <div className={s.content}>
           <Routes>
-            {/* <Route
-              path={paths.businesses}
-              element={
-                <Suspense fallback={<LoadingSaklleton />}>
-                  <Businesses />
-                </Suspense>
-              }
-            /> */}
+            {checkPermission("fin_period_read") && (
+              <Route
+                path={paths.finPeriods}
+                element={
+                  <Suspense fallback={<LoadingSaklleton />}>
+                    <FinPeriods setSidebarOpen={setSidebarOpen} />
+                  </Suspense>
+                }
+              />
+            )}
             <Route
               path={"/"}
               element={
@@ -494,6 +467,7 @@ const Dashboard = () => {
       </div>
     );
   }
+
   return (
     <div className={s.container}>
       <Sidebar
@@ -504,6 +478,16 @@ const Dashboard = () => {
 
       <div className={s.content}>
         <Routes>
+          {checkPermission("fin_period_read") && (
+            <Route
+              path={paths.finPeriods}
+              element={
+                <Suspense fallback={<LoadingSaklleton />}>
+                  <FinPeriods setSidebarOpen={setSidebarOpen} />
+                </Suspense>
+              }
+            />
+          )}
           {checkPermission("quote_read") && (
             <Route
               path={paths.quotes}
@@ -750,11 +734,11 @@ const Sidebar = ({ sidebarOpen, sidebarItems, setSidebarOpen }) => {
           </div>
         </div>
 
-        {sidebarOpen && userType === "staff" && user?.businesses?.length > 1 ? (
-          <BusinessPicker />
-        ) : (
-          <span />
-        )}
+        {sidebarOpen &&
+          userType === "staff" &&
+          user?.businesses?.length > 1 && <BusinessPicker />}
+
+        {sidebarOpen && <FinPeriodPicker />}
 
         <ul className={s.links}>
           {sidebarItems.map((item, i, arr) => {
@@ -910,6 +894,41 @@ const BusinessPicker = () => {
         setConfig(opt.item.config);
       }}
     />
+  );
+};
+
+const FinPeriodPicker = () => {
+  const { finPeriod, finPeriods, setFinPeriod } = useContext(SiteContext);
+  const { control, watch, setValue } = useForm({
+    defaultValues: { business: finPeriod?._id || "" },
+  });
+  const currPeriod = watch("finPeriod");
+  useEffect(() => {
+    if (finPeriod && !currPeriod && finPeriods?.length) {
+      setValue("finPeriod", finPeriods[0]._id);
+    }
+  }, [finPeriod, currPeriod]);
+  return (
+    <div className="flex gap_5 align-end" style={{ padding: "0 1rem" }}>
+      <Combobox
+        label="Financial Period"
+        control={control}
+        name="finPeriod"
+        options={(finPeriods || []).map((item) => ({
+          label: item.label,
+          value: item._id,
+          item,
+        }))}
+        onChange={(opt) => {
+          setFinPeriod(opt.item);
+        }}
+      />
+      <Link to={paths.finPeriods}>
+        <button className="btn clear iconOnly" style={{ padding: 0 }}>
+          <IoSettingsOutline />
+        </button>
+      </Link>
+    </div>
   );
 };
 

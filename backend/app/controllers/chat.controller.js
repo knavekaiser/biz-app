@@ -1,14 +1,17 @@
 import { appConfig } from "../config/index.js";
 import { aiHelper, dbHelper } from "../helpers/index.js";
-import { FaqDoc, Chat, SubPlan } from "../models/index.js";
-import { pipeline } from "node:stream/promises";
+import { SubPlan, getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
-import mongoose from "mongoose";
 
 const { responseFn, responseStr } = appConfig;
 
 export const getTopics = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     const topics = await FaqDoc.find({
       user: req.business?._id || null,
       showOnChat: true,
@@ -22,14 +25,23 @@ export const getTopics = async (req, res) => {
 
 export const initChat = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     let messages = [];
 
-    const { Model: ProductModel } = await dbHelper.getModel(
-      req.business._id + "_" + "Product"
-    );
-    const { Model: CategoryModel } = await dbHelper.getModel(
-      req.business._id + "_" + "Category"
-    );
+    const { Model: ProductModel } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
+    const { Model: CategoryModel } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Category",
+    });
     if (!ProductModel)
       return responseFn.error(res, {}, responseStr.record_not_found);
 
@@ -79,7 +91,7 @@ Possible product categories and subcategories are:
 ${await CategoryModel.aggregate([
   {
     $lookup: {
-      from: `${req.business._id}_Subcategory`,
+      from: `dynamic_Subcategory`,
       localField: "name",
       foreignField: "category",
       as: "subcategories",
@@ -165,7 +177,6 @@ If the system returns an empty array, tell the user that no products were found.
         name: req.body.name,
         email: req.body.email,
       },
-      business: req.business?._id,
       messages: [...messages, { role: "user", content: req.body.message }],
     }).save();
 
@@ -271,6 +282,11 @@ If the system returns an empty array, tell the user that no products were found.
 
 export const getChat = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     Chat.findOne({ _id: req.params._id })
       .then((chat) =>
         chat
@@ -302,6 +318,11 @@ export const getChat = async (req, res) => {
 
 export const getChats = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     let { page, pageSize } = req.query;
     page = +page;
     pageSize = +pageSize;
@@ -366,6 +387,11 @@ export const getChats = async (req, res) => {
 
 export const sendMessage = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     let chat = await Chat.findOne({ _id: req.params._id });
 
     if (req.business?.subscription.plan) {
@@ -455,6 +481,11 @@ export const sendMessage = async (req, res) => {
 
 export const vote = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     Chat.updateOne(
       {
         _id: req.params.chat_id,
@@ -477,12 +508,16 @@ export const vote = async (req, res) => {
 
 export const deleteChat = async (req, res) => {
   try {
+    const Chat = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Chat",
+    });
+
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
     Chat.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      business: req.business?._id || req.authUser._id,
     })
       .then((data) => {
         if (data.deletedCount) {

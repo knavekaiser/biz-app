@@ -1,15 +1,20 @@
 import yup from "yup";
-import { Account, Journal } from "../models/index.js";
+import { getModel } from "../models/index.js";
 
 const accountId = yup
   .string()
   .test("checkAccount", "Account does not exist.", async function (v) {
+    const req = this.options.context.req;
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Account",
+    });
     const account = await Account.findOne({
       _id: v,
       isGroup: false,
     });
     if (account) {
-      const index = this.options.context.req.body.accountingEntries?.findIndex(
+      const index = req.body.accountingEntries?.findIndex(
         (item) => item.accountId === v
       );
       this.options.context.req.body.accountingEntries[index].accountName =
@@ -39,11 +44,14 @@ export const create = yup.object({
 });
 export const update = yup.object({
   params: yup.object({
-    _id: yup
-      .string()
-      .test("checkEntry", "Entry does not exist.", (v) =>
-        Journal.findOne({ _id: v })
-      ),
+    _id: yup.string().test("checkEntry", "Entry does not exist.", function (v) {
+      const req = this.options.context.req;
+      const Journal = getModel({
+        companyId: (req.business || req.authUser)._id,
+        name: "Journal",
+      });
+      return Journal.findOne({ _id: v });
+    }),
   }),
   body: yup.object({
     dateTime: yup.string().required(),

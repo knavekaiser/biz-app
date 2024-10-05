@@ -84,7 +84,7 @@ For vectorSearch: You will generate attributes from the user's query, which will
         "This is an optional field that will filter products by matching vectors."
       ),
   }),
-  func: async ({ vectorSearch, business_id, pipeline = [] }) => {
+  func: async ({ vectorSearch, business_id, fin_period_id, pipeline = [] }) => {
     let _ids = null;
     if (vectorSearch) {
       const embedding = await openai.embeddings
@@ -112,9 +112,11 @@ Summary: ${vectorSearch.query?.summary}`,
         };
       }
     }
-    const { Model, collection } = await dbHelper.getModel(
-      business_id + "_" + "Product"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: business_id,
+      finPeriodId: fin_period_id,
+      name: "Product",
+    });
     const wholePipeline = [
       // ...(_ids ? [_ids] : []),
       // ...pipeline,

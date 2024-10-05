@@ -60,7 +60,7 @@ export const findAll = async (req, res) => {
       .forEach((field) => {
         pipeline.push({
           $lookup: {
-            from: `${collection.user}_${field.collection}`,
+            from: `dynamic_${field.collection}`,
             let: { fieldName: `$${field.name}` },
             pipeline: [
               {
@@ -270,25 +270,31 @@ export const update = async (req, res) => {
     )
       .then(async (data) => {
         if (collection.name === "Category" && record.name !== data.name) {
-          const { Model: Product } = await dbHelper.getModel(
-            collection.user + "_" + "Product"
-          );
+          const { Model: Product } = await dbHelper.getModel({
+            companyId: (req.business || req.authUser)._id,
+            finPeriodId: req.finPeriod._id,
+            name: "Product",
+          });
           await Product.updateMany(
             { category: record.name },
             { category: data.name }
           );
-          const { Model: Subcategory } = await dbHelper.getModel(
-            collection.user + "_" + "Subcategory"
-          );
+          const { Model: Subcategory } = await dbHelper.getModel({
+            companyId: (req.business || req.authUser)._id,
+            finPeriodId: req.finPeriod._id,
+            name: "Subcategory",
+          });
           await Subcategory.updateMany(
             { category: record.name },
             { category: data.name }
           );
         }
         if (collection.name === "Subcategory" && record.name !== data.name) {
-          const { Model: Product } = await dbHelper.getModel(
-            collection.user + "_" + "Product"
-          );
+          const { Model: Product } = await dbHelper.getModel({
+            companyId: (req.business || req.authUser)._id,
+            finPeriodId: req.finPeriod._id,
+            name: "Product",
+          });
           await Product.updateMany(
             { subcategory: record.name },
             { subcategory: data.name }

@@ -1,11 +1,17 @@
 import { appConfig } from "../config/index.js";
-import { Account } from "../models/index.js";
+import { getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
 export const get = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     const conditions = { company: req.business?._id || req.authUser._id };
     if (req.params.id) {
       conditions._id = req.params.id;
@@ -52,6 +58,12 @@ export const get = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     new Account({ ...req.body, company: req.business?._id || req.authUser._id })
       .save()
       .then(async (data) => {
@@ -75,6 +87,12 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     Account.findOneAndUpdate(
       { _id: req.params.id, company: req.business?._id || req.authUser._id },
       { ...req.body },
@@ -91,6 +109,12 @@ export const update = async (req, res) => {
 
 export const remove = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
@@ -186,6 +210,12 @@ const entryPipeline = (entryConditions) => {
 
 export const vouchers = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     const entryConditions = {
       user: req.business?._id || req.authUser._id,
     };
@@ -216,6 +246,12 @@ export const vouchers = async (req, res) => {
 
 export const getJournals = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     const entryConditions = {
       user: req.business?._id || req.authUser._id,
     };
@@ -249,6 +285,12 @@ export const getJournals = async (req, res) => {
 };
 
 const getAccounts = async (accountId) => {
+  const Account = getModel({
+    companyId: (req.business || req.authUser)._id,
+    finPeriodId: req.finPeriod._id,
+    name: "Account",
+  });
+
   const allAccounts = [];
   await Account.find({
     parent: Array.isArray(accountId) ? { $in: accountId } : accountId,
@@ -294,6 +336,12 @@ const getLast12Months = () => {
 };
 export const monthlyAnalysys = async (req, res) => {
   try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
     const accounts = req.query.accountId
       ? await getAccounts(req.query.accountId)
       : [];

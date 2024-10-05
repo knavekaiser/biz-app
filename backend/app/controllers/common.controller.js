@@ -24,9 +24,11 @@ export const razorpayWebhook = async (req, res) => {
 
     if (req.body.event === "order.paid") {
       const { order } = req.body?.payload;
-      const { Model } = await dbHelper.getModel(
-        order.entity.notes.business_id + "_Order"
-      );
+      const { Model } = await dbHelper.getModel({
+        companyId: order.entity.notes.business_id,
+        finPeriodId: order.entity.notes.fin_period_id,
+        name: "Order",
+      });
       await Model.findOneAndUpdate(
         { _id: order.entity.notes.order_id, paymentStatus: "pending" },
         { paymentStatus: "paid" }
@@ -34,9 +36,11 @@ export const razorpayWebhook = async (req, res) => {
     }
     if (req.body.event === "payment.authorized") {
       const { payment } = req.body?.payload;
-      const { Model } = await dbHelper.getModel(
-        payment.entity.notes.business_id + "_Order"
-      );
+      const { Model } = await dbHelper.getModel({
+        companyId: order.entity.notes.business_id,
+        finPeriodId: order.entity.notes.fin_period_id,
+        name: "Order",
+      });
       await Model.findOneAndUpdate(
         { _id: payment.entity.notes.order_id, paymentStatus: "pending" },
         { paymentStatus: "paid" }

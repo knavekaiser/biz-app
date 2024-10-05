@@ -1,11 +1,16 @@
 import { appConfig } from "../config/index.js";
 import { fileHelper, aiHelper } from "../helpers/index.js";
-import { FaqDoc, SubPlan } from "../models/index.js";
+import { getModel, SubPlan } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     let { page, pageSize } = req.query;
     page = +page;
     pageSize = +pageSize;
@@ -49,6 +54,11 @@ export const findAll = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     const subPlan = await SubPlan.findOne({
       _id: (req.business || req.authUser).subscription?.plan,
     });
@@ -98,6 +108,11 @@ export const create = async (req, res) => {
 
 export const generateUserContext = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     const faqDoc = await FaqDoc.findOne({ _id: req.params._id });
 
     const context = await aiHelper.getContext({
@@ -146,6 +161,11 @@ const compareArrWithObj = (arr1, arr2) =>
 
 export const update = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     const doc = await FaqDoc.findOne({ _id: req.params._id });
     const subPlan = await SubPlan.findOne({
       _id: (req.business || req.authUser).subscription?.plan,
@@ -216,6 +236,11 @@ export const update = async (req, res) => {
 
 export const deleteDoc = async (req, res) => {
   try {
+    const FaqDoc = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "FaqDoc",
+    });
+
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }

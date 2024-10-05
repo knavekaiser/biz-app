@@ -1,12 +1,18 @@
 import { appConfig } from "../config/index.js";
-import { Payment, Config } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    Payment.find({ user: req.business?._id || req.authUser._id })
+    const Payment = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Payment",
+    });
+
+    Payment.find({})
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -32,6 +38,12 @@ const generateEntries = (body) => {
 };
 export const create = async (req, res) => {
   try {
+    const Payment = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Payment",
+    });
+
     const { nextPaymentNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
@@ -40,7 +52,6 @@ export const create = async (req, res) => {
 
     new Payment({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextPaymentNo || 1,
     })
       .save()
@@ -60,13 +71,15 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Payment = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Payment",
+    });
+
     delete req.body.no;
     req.body.accountingEntries = generateEntries(req.body);
-    Payment.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    Payment.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -78,12 +91,17 @@ export const update = async (req, res) => {
 
 export const deletePayment = async (req, res) => {
   try {
+    const Payment = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Payment",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
     Payment.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

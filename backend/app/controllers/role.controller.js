@@ -5,7 +5,7 @@ const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    Role.find({ user: req.business?._id || req.authUser._id })
+    Role.find({ company: req.business?._id || req.authUser._id })
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -17,7 +17,7 @@ export const create = async (req, res) => {
   try {
     new Role({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
+      company: req.business?._id || req.authUser._id,
     })
       .save()
       .then(async (data) => responseFn.success(res, { data }))
@@ -30,7 +30,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     Role.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
+      { _id: req.params.id, company: req.business?._id || req.authUser._id },
       req.body,
       { new: true }
     )
@@ -50,7 +50,7 @@ export const deleteRole = async (req, res) => {
     }
     Role.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
+      company: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

@@ -6,7 +6,14 @@ import {
   fileHelper,
   emailHelper,
 } from "../helpers/index.js";
-import { Company, Otp, Config, Collection, SubPlan } from "../models/index.js";
+import {
+  Company,
+  Otp,
+  Config,
+  // Collection,
+  SubPlan,
+  getModel,
+} from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 const { genId } = appHelper;
@@ -314,16 +321,22 @@ export const logout = async (req, res) => {
 export const profile = (req, res) => {
   try {
     Company.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
-      .then(async (data) =>
+      .then(async (data) => {
+        const FinPeriod = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FinancialPeriod",
+        });
+
         responseFn.success(res, {
           data: {
             ...data._doc,
             userType: "company",
             chatbot: data.chatbots?.[0] || null,
             chatbots: undefined,
+            finPeriods: await FinPeriod.find(),
           },
-        })
-      )
+        });
+      })
       .catch((error) => responseFn.error(res, {}, error.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);

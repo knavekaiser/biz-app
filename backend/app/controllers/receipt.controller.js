@@ -1,12 +1,18 @@
 import { appConfig } from "../config/index.js";
-import { Receipt, Config } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    Receipt.find({ user: req.business?._id || req.authUser._id })
+    const Receipt = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Receipt",
+    });
+
+    Receipt.find({})
       .then((data) => responseFn.success(res, { data }))
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
@@ -33,6 +39,12 @@ const generateEntries = (body) => {
 
 export const create = async (req, res) => {
   try {
+    const Receipt = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Receipt",
+    });
+
     const { nextReceiptNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
@@ -41,7 +53,6 @@ export const create = async (req, res) => {
 
     new Receipt({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextReceiptNo || 1,
     })
       .save()
@@ -61,13 +72,15 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Receipt = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Receipt",
+    });
+
     delete req.body.no;
     req.body.accountingEntries = generateEntries(req.body);
-    Receipt.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    Receipt.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -79,12 +92,17 @@ export const update = async (req, res) => {
 
 export const deleteReceipt = async (req, res) => {
   try {
+    const Receipt = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Receipt",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
     Receipt.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

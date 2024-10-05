@@ -1,5 +1,5 @@
 import yup from "yup";
-import { FaqDoc } from "../models/index.js";
+import { getModel } from "../models/index.js";
 
 export const create = yup.object({
   body: yup.object({
@@ -8,6 +8,10 @@ export const create = yup.object({
       .required()
       .test("topicNameCheck", async function (v) {
         const req = this.options.context.req;
+        const FaqDoc = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FaqDoc",
+        });
         const existingTopic = await FaqDoc.findOne({
           user: req.business?._id || req.authUser._id,
           topic: { $regex: new RegExp(v, "i") },
@@ -32,6 +36,10 @@ export const update = yup.object({
     topic: yup.string().test("topicNameCheck", async function (v) {
       if (!v) return true;
       const req = this.options.context.req;
+      const FaqDoc = getModel({
+        companyId: (req.business || req.authUser)._id,
+        name: "FaqDoc",
+      });
       const existingTopic = await FaqDoc.findOne({
         _id: { $ne: req.params._id },
         user: req.business?._id || req.authUser._id,
@@ -54,11 +62,14 @@ export const update = yup.object({
       .string()
       .nullable()
       .objectId()
-      .test(
-        "parentTopicCheck",
-        "Parent Topic does not exist",
-        (v) => !v || FaqDoc.findOne({ _id: v })
-      )
+      .test("parentTopicCheck", "Parent Topic does not exist", function (v) {
+        const req = this.options.context.req;
+        const FaqDoc = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FaqDoc",
+        });
+        return !v || FaqDoc.findOne({ _id: v });
+      })
       .test(
         "parentTopicCheck",
         "Parent topic can't be the same one as child topic",
@@ -76,7 +87,14 @@ export const generateUserContext = yup.object({
     _id: yup
       .string()
       .objectId()
-      .test("check", "Topic not found", (v) => FaqDoc.findOne({ _id: v }))
+      .test("check", "Topic not found", function (v) {
+        const req = this.options.context.req;
+        const FaqDoc = getModel({
+          companyId: (req.business || req.authUser)._id,
+          name: "FaqDoc",
+        });
+        return FaqDoc.findOne({ _id: v });
+      })
       .required(),
   }),
 });

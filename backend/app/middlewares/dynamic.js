@@ -24,13 +24,14 @@ export const getModel = async (req, res, next) => {
         return responseFn.error(res, {}, responseStr.forbidden, 403);
       }
     }
-    const { Model, collection } = await dbHelper.getModel(
-      (req.authToken.userType === "admin"
-        ? req.query.business || req.business._id
-        : req.business?._id || req.authUser._id) +
-        "_" +
-        req.params.table
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId:
+        req.authToken.userType === "admin"
+          ? req.query.business || req.business._id
+          : (req.business || req.authUser)?._id,
+      finPeriodId: req.finPeriod?._id,
+      name: req.params.table,
+    });
     if (!Model || !collection) {
       return responseFn.error(
         res,

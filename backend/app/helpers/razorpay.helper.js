@@ -5,7 +5,12 @@ var instance = new Razorpay({
   key_secret: process.env.RAZORPAY_API_SECRET,
 });
 
-export const createOrder = ({ business_id, order_id, amount }) => {
+export const createOrder = ({
+  business_id,
+  order_id,
+  fin_period_id,
+  amount,
+}) => {
   return new Promise((resolve, reject) => {
     instance.orders.create(
       {
@@ -14,6 +19,7 @@ export const createOrder = ({ business_id, order_id, amount }) => {
         notes: {
           business_id,
           order_id,
+          fin_period_id,
         },
       },
       function (err, order) {

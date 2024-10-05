@@ -10,4 +10,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("AdSchema", schema);
+export default schema;

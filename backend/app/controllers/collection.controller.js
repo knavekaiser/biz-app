@@ -1,17 +1,26 @@
 import mongoose from "mongoose";
 import { appConfig } from "../config/index.js";
-import { Company, Collection, Module, Submodule } from "../models/index.js";
+import { Company, getModel } from "../models/index.js";
 import { ObjectId } from "mongodb";
 
 const { responseFn, responseStr } = appConfig;
 
 export const getAll = async (req, res) => {
   try {
+    const Module = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Module",
+    });
+    const Submodule = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Submodule",
+    });
+
     const conditions = { user: req.business?._id || req.authUser._id };
     if (req.authToken.userType === "admin") {
       conditions.user = req.query.business || req.business._id;
     }
-    const collections = await Collection.find(conditions);
+
     const modules = await Module.find(conditions);
     const submodules = await Submodule.find(conditions).populate(
       "module",
@@ -20,15 +29,6 @@ export const getAll = async (req, res) => {
 
     responseFn.success(res, {
       data: [
-        // ...collections.map((col) => ({
-        //   label: `Collection: ${col.name}`,
-        //   name: col.name,
-        //   type: "collection",
-        //   fields: [
-        //     { name: "_id", label: "ID", unique: true, fieldType: null },
-        //     ...col.fields,
-        //   ],
-        // })),
         ...modules
           .map((mod) => [
             {
@@ -117,6 +117,12 @@ export const getAll = async (req, res) => {
 
 export const findAll = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     const _id =
       req.params.id && req.params.id.match(/^[0-9a-fA-F]{24}$/)
         ? ObjectId(req.params.id)
@@ -173,6 +179,12 @@ export const findAll = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     new Collection({
       ...req.body,
       user: req.business?._id || req.authUser._id,
@@ -189,6 +201,12 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     delete req.body.name;
     Collection.findOneAndUpdate(
       { _id: req.params.id, user: req.business?._id || req.authUser._id },
@@ -206,6 +224,12 @@ export const update = async (req, res) => {
 
 export const deleteColl = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
@@ -259,6 +283,12 @@ export const getSchemaTemplates = async (req, res) => {
 
 export const addSchemaTemplates = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     const schemas = await Collection.find({
       user: ObjectId(req.body.schema_id),
     }).then((data) =>

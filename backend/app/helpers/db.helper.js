@@ -1,6 +1,6 @@
-import Collection from "../models/collection.model.js";
 import AdminCollection from "../models/adminCollection.model.js";
 import mongoose from "mongoose";
+import { dbConn, getModel as getMongoModel } from "../models/index.js";
 
 const Schema = mongoose.Schema;
 
@@ -94,9 +94,15 @@ const getFields = (fields) => {
   return _fields;
 };
 
-export const getModel = async (table) => {
-  const [_id, name] = table.split("_");
-  const collection = await Collection.findOne({ name, user: _id });
+const conns = {};
+
+export const getModel = async ({ companyId, finPeriodId, name }) => {
+  const Collection = getMongoModel({
+    companyId,
+    finPeriodId,
+    name: "Collection",
+  });
+  const collection = await Collection.findOne({ name });
 
   if (!collection) {
     return {
@@ -105,17 +111,25 @@ export const getModel = async (table) => {
   }
   const fields = getFields(collection.fields);
 
-  if (mongoose.models[table]) {
-    delete mongoose.models[table];
+  const dbName = `${process.env.PRIMARY_DB}_${companyId}${
+    finPeriodId ? "_" + finPeriodId : ""
+  }`;
+  if (!conns[dbName]) {
+    conns[dbName] = dbConn.useDb(dbName, { useCache: true });
+  }
+
+  const tableName = "dynamic_" + name;
+  if (conns[dbName].models[tableName]) {
+    delete conns[dbName].models[tableName];
   }
 
   return {
-    Model: mongoose.model(
-      table,
+    Model: conns[dbName].model(
+      tableName,
       new Schema(fields, { timestamps: true }),
-      table
+      tableName
     ),
-    collection: { ...collection._doc, __name: table },
+    collection: { ...collection._doc, __name: tableName },
   };
 };
 
@@ -157,7 +171,7 @@ export const getDynamicPipeline = ({
         ...[
           {
             $lookup: {
-              from: `${business_id}_${field.collection}`,
+              from: `dynamic_${field.collection}`,
               localField: field.name,
               foreignField: field.optionValue,
               as: field.name,
@@ -183,7 +197,7 @@ export const getDynamicPipeline = ({
       ...[
         {
           $lookup: {
-            from: `${business_id}_Campaign`,
+            from: `dynamic_Campaign`,
             let: { product: "$$ROOT" },
             pipeline: [
               {
@@ -403,7 +417,7 @@ export const getRatingPipeline = ({ business }) => {
   return [
     {
       $lookup: {
-        from: `${business._id}_Review`,
+        from: `dynamic_Review`,
         let: { p_id: "$_id" },
         pipeline: [
           {
@@ -453,7 +467,7 @@ export const getRatingBreakdownPipeline = ({ business }) => {
   return [
     {
       $lookup: {
-        from: `${business._id}_Review`,
+        from: `dynamic_Review`,
         let: { p_id: "$_id" },
         pipeline: [
           {

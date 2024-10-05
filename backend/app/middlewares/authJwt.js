@@ -1,7 +1,14 @@
 import { appConfig } from "../config/index.js";
 import { jwtVerify } from "jose";
 
-import { Company, Staff, Role, Admin, SubPlan } from "../models/index.js";
+import {
+  Company,
+  Staff,
+  Role,
+  Admin,
+  SubPlan,
+  getModel,
+} from "../models/index.js";
 import { dbHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
 
@@ -11,6 +18,7 @@ export const verifyToken = async (req, res, next) => {
   const setCookie = req.headers["x-set-cookie"] === "true";
   const token = req.cookies.access_token || req.headers["x-access-token"];
   const business_id = req.headers["x-business-id"];
+  const fin_period_id = req.headers["x-financial-period-id"];
 
   if (!token) {
     res.clearCookie("access_token");
@@ -32,9 +40,11 @@ export const verifyToken = async (req, res, next) => {
 
     let Model = Company;
     if (req.business) {
-      const { Model: model } = await dbHelper.getModel(
-        req.business._id + "_Customer"
-      );
+      const { Model: model } = await dbHelper.getModel({
+        companyId: business_id,
+        finPeriodId: fin_period_id,
+        name: "Customer",
+      });
       if (model) {
         Model = model;
       } else {
@@ -74,8 +84,24 @@ export const verifyToken = async (req, res, next) => {
         }
       }
     }
+
     req.authUser = user;
     req.authToken = decoded;
+
+    if (fin_period_id) {
+      const FinPeriod = getModel({
+        companyId: (req.business || req.authUser)._id,
+        name: "FinancialPeriod",
+      });
+      req.finPeriod = await FinPeriod.findOne({ _id: fin_period_id });
+      if (!req.finPeriod) {
+        return responseFn.error(
+          res,
+          {},
+          responseStr.record_not_found.replace("Record", "Financial Period")
+        );
+      }
+    }
 
     if (setCookie) {
       res.cookie("access_token", token, {

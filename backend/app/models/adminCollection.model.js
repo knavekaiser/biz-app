@@ -10,4 +10,4 @@ const schema = new Schema(
 );
 schema.index({ name: 1 }, { unique: true });
 
-export default mongoose.model("AdminSchema", schema);
+export default schema;

@@ -1,7 +1,7 @@
 import { appConfig } from "../config/index.js";
 import { dbHelper, appHelper, razorpayHelper } from "../helpers/index.js";
 import { ObjectId } from "mongodb";
-import { Company, Config, Collection, DynamicPage } from "../models/index.js";
+import { Company, Config, getModel } from "../models/index.js";
 import mongoose from "mongoose";
 
 const { responseFn, responseStr } = appConfig;
@@ -9,6 +9,12 @@ const { normalizeDomain } = appHelper;
 
 export const getSiteConfig = async (req, res) => {
   try {
+    const Collection = getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Collection",
+    });
+
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
@@ -85,9 +91,11 @@ export const sitemapUrls = async (req, res) => {
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
-    const { Model: Product } = await dbHelper.getModel(
-      req.business._id + "_" + "Product"
-    );
+    const { Model: Product } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
 
     const product_ids = await Product.find().select("_id");
     const defaultUrls = [
@@ -112,6 +120,11 @@ export const sitemapUrls = async (req, res) => {
 
 export const getDynamicPages = async (req, res) => {
   try {
+    const DynamicPage = getModel({
+      companyId: req.business._id,
+      name: "DynamicPage",
+    });
+
     let domain = normalizeDomain(req.headers["origin"]);
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
@@ -143,9 +156,11 @@ export const getDynamicPages = async (req, res) => {
 
 export const browse = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_" + "Product"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const query = {};
@@ -220,7 +235,7 @@ export const browse = async (req, res) => {
       ...dbHelper.getRatingBreakdownPipeline({ business: req.business }),
       {
         $lookup: {
-          from: `${req.business._id}_Category`,
+          from: `dynamic_Category`,
           localField: "category",
           foreignField: "name",
           as: "cat",
@@ -281,9 +296,11 @@ export const getRelatedProducts = async (req, res) => {
   try {
     const config = await Config.findOne({ user: req.business._id });
 
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_" + "Product"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     if (!mongoose.isValidObjectId(req.params._id)) {
@@ -403,9 +420,11 @@ export const getRelatedProducts = async (req, res) => {
 
 export const getElements = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_" + req.params.table
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: req.params.table,
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const queries = {};
@@ -423,9 +442,11 @@ export const getElements = async (req, res) => {
 
 export const getLandingPageShelves = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Product"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const shelves = await Config.findOne({ user: req.business._id }).then(
@@ -517,9 +538,11 @@ export const getLandingPageShelves = async (req, res) => {
 
 export const getLandingPageCategories = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Category"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Category",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.aggregate([
@@ -552,9 +575,11 @@ export const validateAccount = async (req, res) => {
         responseStr.field_required.replace("{field}", "Phone or Email")
       );
     }
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Customer"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Customer",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.findOne(req.body).then((customer) => {
@@ -579,9 +604,11 @@ export const signup = async (req, res) => {
     );
   }
 
-  const { Model, collection } = await dbHelper.getModel(
-    req.business._id + "_Customer"
-  );
+  const { Model, collection } = await dbHelper.getModel({
+    companyId: req.business._id,
+    finPeriodId: req.finPeriod._id,
+    name: "Customer",
+  });
   if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
   const customer = await Model.findOne({
@@ -614,9 +641,11 @@ export const login = async (req, res) => {
         responseStr.field_required.replace("{field}", "Phone or Email")
       );
     }
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Customer"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Customer",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const user = await Model.findOne({
@@ -645,9 +674,11 @@ export const logout = async (req, res) => {
 
 export const profile = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Customer"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Customer",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
     Model.findOne({ _id: req.authUser.id }, "-password -__v -updatedAt")
       .then(async (data) => responseFn.success(res, { data }))
@@ -659,9 +690,11 @@ export const profile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Customer"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Customer",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
     const update = {};
     ["name"].forEach((key) => {
@@ -688,17 +721,21 @@ export const updateProfile = async (req, res) => {
 
 export const addReview = async (req, res) => {
   try {
-    const { Model: Product } = await dbHelper.getModel(
-      req.business._id + "_Product"
-    );
+    const { Model: Product } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
     const product = await Product.findOne({ _id: req.body.product });
     if (!product) {
       return responseFn.error(res, {}, responseStr.record_not_found);
     }
 
-    const { Model, collection } = await dbHelper.getModel(
-      req.business._id + "_Review"
-    );
+    const { Model, collection } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Review",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     new Model({
@@ -718,14 +755,18 @@ export const addReview = async (req, res) => {
 
 export const getReviews = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Review");
+    const { Model } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Review",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.aggregate([
       { $match: { product: ObjectId(req.params._id) } },
       {
         $lookup: {
-          from: `${req.business._id}_Customer`,
+          from: `dynamic_Customer`,
           localField: "customer",
           foreignField: "_id",
           as: "_customer",
@@ -758,7 +799,11 @@ export const getReviews = async (req, res) => {
 
 export const getCart = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    const { Model } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Order",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.findOne({ customer: req.authUser._id, status: "cart" })
@@ -771,7 +816,11 @@ export const getCart = async (req, res) => {
 
 export const updateCart = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    const { Model } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Order",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     let cart = await Model.findOne({
@@ -808,7 +857,11 @@ export const updateCart = async (req, res) => {
 
 export const orders = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    const { Model } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Order",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     Model.find({
@@ -824,7 +877,11 @@ export const orders = async (req, res) => {
 
 export const placeOrder = async (req, res) => {
   try {
-    const { Model } = await dbHelper.getModel(req.business._id + "_Order");
+    const { Model } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Order",
+    });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
 
     const cart = await Model.findOne({
@@ -846,6 +903,7 @@ export const placeOrder = async (req, res) => {
         ? await razorpayHelper
             .createOrder({
               business_id: req.business._id,
+              fin_period_id: req.finPeriod._id,
               order_id: cart._id,
               amount: cart.price,
             })
@@ -883,16 +941,18 @@ export const placeOrder = async (req, res) => {
 
 export const categories = async (req, res) => {
   try {
-    const { Model: Category } = await dbHelper.getModel(
-      req.business._id + "_Category"
-    );
+    const { Model: Category } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Category",
+    });
     if (!Category)
       return responseFn.error(res, {}, responseStr.record_not_found);
 
     Category.aggregate([
       {
         $lookup: {
-          from: `${req.business._id}_Subcategory`,
+          from: `dynamic_Subcategory`,
           as: "subcategories",
           let: {
             cat: "$$ROOT",

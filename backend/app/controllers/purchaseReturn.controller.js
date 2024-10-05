@@ -1,14 +1,18 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
-import { PurchaseReturn, Config, Account } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    const conditions = {
-      user: ObjectId(req.business?._id || req.authUser._id),
-    };
+    const PurchaseReturn = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "PurchaseReturn",
+    });
+
+    const conditions = {};
     if (+req.query.no) {
       conditions.no = +req.query.no;
     }
@@ -22,7 +26,6 @@ export const findAll = async (req, res) => {
           pipeline: [
             {
               $match: {
-                user: ObjectId(req.business?._id || req.authUser._id),
                 ...(conditions.no && { "purchases.no": conditions.no }),
               },
             },
@@ -109,7 +112,13 @@ export const findAll = async (req, res) => {
   }
 };
 
-const generateEntries = async (body, company_id) => {
+const generateEntries = async (body, companyId, finPeriodId) => {
+  const Account = getModel({
+    companyId,
+    finPeriodId,
+    name: "Account",
+  });
+
   const totalCartPrice = body.items.reduce((p, c) => p + c.price * c.qty, 0);
   const tax = totalCartPrice.percent(body.gst);
   const accountingEntries = [
@@ -120,10 +129,7 @@ const generateEntries = async (body, company_id) => {
       credit: 0,
     },
   ];
-  const purchaseAccount = await Account.findOne({
-    company: company_id,
-    type: "Purchase",
-  });
+  const purchaseAccount = await Account.findOne({ type: "Purchase" });
   if (purchaseAccount) {
     accountingEntries.push({
       accountId: purchaseAccount._id,
@@ -132,10 +138,7 @@ const generateEntries = async (body, company_id) => {
       credit: totalCartPrice,
     });
   }
-  const taxAccount = await Account.findOne({
-    company: company_id,
-    name: "Tax",
-  });
+  const taxAccount = await Account.findOne({ name: "Tax" });
   if (taxAccount) {
     accountingEntries.push({
       accountId: taxAccount._id,
@@ -148,18 +151,24 @@ const generateEntries = async (body, company_id) => {
 };
 export const create = async (req, res) => {
   try {
+    const PurchaseReturn = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "PurchaseReturn",
+    });
+
     const { nextPurchaseReturnNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
 
     new PurchaseReturn({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextPurchaseReturnNo || 1,
     })
       .save()
@@ -180,10 +189,17 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const PurchaseReturn = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "PurchaseReturn",
+    });
+
     delete req.body.no;
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
     PurchaseReturn.findOneAndUpdate({ _id: req.params.id }, req.body, {
       new: true,
@@ -199,6 +215,12 @@ export const update = async (req, res) => {
 
 export const deletePruchase = async (req, res) => {
   try {
+    const PurchaseReturn = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "PurchaseReturn",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }

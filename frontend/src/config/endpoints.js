@@ -30,6 +30,7 @@ const endpoints = {
 
   businesses: `${baseApiUrl}/api/companies`,
   findBusinesses: `${baseApiUrl}/api/companies/find`,
+  finPeriods: `${baseApiUrl}/api/financial-periods`,
 
   invoices: `${baseApiUrl}/api/invoices`,
   salesReturns: `${baseApiUrl}/api/sales-returns`,

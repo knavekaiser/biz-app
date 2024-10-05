@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { Config, Journal } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -24,7 +24,13 @@ const entryPipeline = [
 ];
 export const findAll = async (req, res) => {
   try {
-    const condition = { user: req.business?._id || req.authUser._id };
+    const Journal = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Journal",
+    });
+
+    const condition = {};
     if (req.query.accountId) {
       condition.accountId = req.query.accountId;
     }
@@ -39,13 +45,18 @@ export const findAll = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
+    const Journal = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Journal",
+    });
+
     const { nextJournalNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
     new Journal({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextJournalNo || 1,
     })
       .save()
@@ -69,15 +80,14 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Journal = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Journal",
+    });
+
     delete req.body.no;
-    Journal.findOneAndUpdate(
-      {
-        user: req.business?._id || req.authUser._id,
-        _id: req.params._id,
-      },
-      { ...req.body, user: req.business?._id || req.authUser._id },
-      { new: true }
-    )
+    Journal.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
       .then(async (data) => {
         const newEntries = await Journal.aggregate([
           { $match: { _id: data._id } },
@@ -93,12 +103,17 @@ export const update = async (req, res) => {
 
 export const deleteEntry = async (req, res) => {
   try {
+    const Journal = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Journal",
+    });
+
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }
     Journal.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));

@@ -6,6 +6,8 @@ export const Provider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [config, setConfig] = useState(null);
   const [business, setBusiness] = useState(null);
+  const [finPeriod, setFinPeriod] = useState(null);
+  const [finPeriods, setFinPeriods] = useState([]);
   const [userType, setUserType] = useState(
     localStorage.getItem("userType") || "company"
   );
@@ -75,6 +77,19 @@ export const Provider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (!finPeriod && finPeriods?.length) {
+      setFinPeriod(finPeriods[0]);
+    }
+  }, [finPeriods?.length, finPeriod]);
+  useEffect(() => {
+    if (finPeriod) {
+      localStorage.setItem("fin_period_id", finPeriod._id);
+    } else {
+      localStorage.removeItem("fin_period_id");
+    }
+  }, [finPeriod]);
+
   return (
     <SiteContext.Provider
       value={{
@@ -87,6 +102,10 @@ export const Provider = ({ children }) => {
         checkPermission,
         userType,
         setUserType,
+        finPeriod,
+        setFinPeriod,
+        finPeriods,
+        setFinPeriods,
       }}
     >
       {children}

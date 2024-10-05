@@ -1,6 +1,6 @@
 import { appConfig } from "../config/index.js";
 import { appHelper } from "../helpers/index.js";
-import { Staff, Otp, Config } from "../models/index.js";
+import { Staff, Otp, Config, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 const { genId } = appHelper;
@@ -175,17 +175,30 @@ export const profile = (req, res) => {
       .then(async (data) => {
         let businesses = null;
         if (data.businesses.length) {
-          businesses = await Config.find({
+          const allConfigs = await Config.find({
             user: { $in: data.businesses.map((item) => item.business._id) },
-          }).then((configs) => {
-            return data.businesses.map((item) => ({
-              ...item._doc,
-              config: configs.find(
-                (config) =>
-                  config.user.toString() === item.business._id.toString()
-              ),
-            }));
           });
+          const allFinPeriod = await Promise.all(
+            businesses.map(async (business) => {
+              const FinPeriod = getModel({
+                companyId: business._id,
+                name: "FinancialPeriod",
+              });
+              return FinPeriod.find().then((data) =>
+                data.map({ ...item.toJSON(), company: business._id })
+              );
+            })
+          ).then((data) => data.flat());
+          businesses = data.businesses.map((item) => ({
+            ...item._doc,
+            config: allConfigs.find(
+              (config) =>
+                config.user.toString() === item.business._id.toString()
+            ),
+            finPeriods: allFinPeriod.filter(
+              (item) => item.company.toString() === item.business._id.toString()
+            ),
+          }));
         }
         responseFn.success(res, {
           data: {

@@ -18,8 +18,15 @@ function resizeWindow() {
 }
 
 function App() {
-  const { setUser, userType, setUserType, setBusiness, setConfig } =
-    useContext(SiteContext);
+  const {
+    setUser,
+    userType,
+    setUserType,
+    setFinPeriod,
+    setFinPeriods,
+    setBusiness,
+    setConfig,
+  } = useContext(SiteContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -45,6 +52,18 @@ function App() {
               ].flat(),
             });
             setConfig(business.config);
+            if (business.finPeriods?.length) {
+              setFinPeriods(business.finPeriods);
+              setFinPeriod(business.finPeriods[0]);
+            }
+          }
+
+          if (
+            data.data.userType === "company" &&
+            data.data.finPeriods?.length
+          ) {
+            setFinPeriods(data.data.finPeriods);
+            setFinPeriod(data.data.finPeriods[0]);
           }
 
           // const path = ["/signin", "/signup"].includes(location.pathname)

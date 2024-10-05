@@ -1,11 +1,16 @@
 import { appConfig } from "../config/index.js";
 import { fileHelper } from "../helpers/index.js";
-import { DynamicPage } from "../models/index.js";
+import { getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
+    const DynamicPage = getModel({
+      companyId: req.business._id,
+      name: "DynamicPage",
+    });
+
     let { page, pageSize } = req.query;
     page = +page;
     pageSize = +pageSize;
@@ -49,6 +54,11 @@ export const findAll = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
+    const DynamicPage = getModel({
+      companyId: req.business._id,
+      name: "DynamicPage",
+    });
+
     new DynamicPage({
       ...req.body,
       user: req.business?._id || req.authUser._id,
@@ -66,6 +76,11 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const DynamicPage = getModel({
+      companyId: req.business._id,
+      name: "DynamicPage",
+    });
+
     const doc = await DynamicPage.findOne({ _id: req.params._id });
 
     let filesToRemove = [];
@@ -100,6 +115,11 @@ export const update = async (req, res) => {
 
 export const deletePage = async (req, res) => {
   try {
+    const DynamicPage = getModel({
+      companyId: req.business._id,
+      name: "DynamicPage",
+    });
+
     if (!req.params._id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }

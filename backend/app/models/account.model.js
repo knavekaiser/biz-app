@@ -13,4 +13,4 @@ const schema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Account", schema);
+export default schema;

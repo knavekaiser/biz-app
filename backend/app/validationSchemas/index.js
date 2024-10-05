@@ -20,3 +20,4 @@ export * as chat from "./chat.js";
 export * as chatbot from "./chatbot.js";
 export * as dynamicPage from "./dynamicPage.js";
 export * as accounting from "./accounting.js";
+export * as finPeriod from "./finPeriod.js";

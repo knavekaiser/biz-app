@@ -153,12 +153,16 @@ export const initChat = async (req, res) => {
 
     let resp = null;
 
-    const { Model: ProductModel } = await dbHelper.getModel(
-      req.business._id + "_" + "Product"
-    );
-    const { Model: CategoryModel } = await dbHelper.getModel(
-      req.business._id + "_" + "Category"
-    );
+    const { Model: ProductModel } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Product",
+    });
+    const { Model: CategoryModel } = await dbHelper.getModel({
+      companyId: req.business._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Category",
+    });
     if (!ProductModel)
       return responseFn.error(res, {}, responseStr.record_not_found);
 
@@ -223,7 +227,7 @@ Possible product categories and subcategories are:
 ${await CategoryModel.aggregate([
   {
     $lookup: {
-      from: `${req.business._id}_Subcategory`,
+      from: `dynamic_Subcategory`,
       localField: "name",
       foreignField: "category",
       as: "subcategories",

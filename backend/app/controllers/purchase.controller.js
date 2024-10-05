@@ -1,14 +1,17 @@
 import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
-import { Purchase, Config, Account } from "../models/index.js";
+import { Config, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
 export const findAll = async (req, res) => {
   try {
-    const conditions = {
-      user: ObjectId(req.business?._id || req.authUser._id),
-    };
+    const Purchase = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Purchase",
+    });
+    const conditions = {};
     if (+req.query.no) {
       conditions.no = +req.query.no;
     }
@@ -22,7 +25,6 @@ export const findAll = async (req, res) => {
           pipeline: [
             {
               $match: {
-                user: ObjectId(req.business?._id || req.authUser._id),
                 ...(conditions.no && { "purchases.no": conditions.no }),
               },
             },
@@ -109,7 +111,13 @@ export const findAll = async (req, res) => {
   }
 };
 
-const generateEntries = async (body, company_id) => {
+const generateEntries = async (body, companyId, finPeriodId) => {
+  const Account = getModel({
+    companyId,
+    finPeriodId,
+    name: "Account",
+  });
+
   const totalCartPrice = body.items.reduce((p, c) => p + c.price * c.qty, 0);
   const tax = totalCartPrice.percent(body.gst);
   const accountingEntries = [
@@ -148,18 +156,24 @@ const generateEntries = async (body, company_id) => {
 };
 export const create = async (req, res) => {
   try {
+    const Purchase = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Purchase",
+    });
+
     const { nextPurchaseNo } =
       (await Config.findOne({ user: req.business?._id || req.authUser._id })) ||
       {};
 
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
 
     new Purchase({
       ...req.body,
-      user: req.business?._id || req.authUser._id,
       no: nextPurchaseNo || 1,
     })
       .save()
@@ -179,10 +193,17 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    const Purchase = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Purchase",
+    });
+
     delete req.body.no;
     req.body.accountingEntries = await generateEntries(
       req.body,
-      req.business?._id || req.authUser._id
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
     );
     Purchase.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
@@ -196,6 +217,12 @@ export const update = async (req, res) => {
 
 export const deletePruchase = async (req, res) => {
   try {
+    const Purchase = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Purchase",
+    });
+
     if (!req.params.id && !req.body.ids?.length) {
       return responseFn.error(res, {}, responseStr.select_atleast_one_record);
     }

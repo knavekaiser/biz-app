@@ -1,5 +1,5 @@
 import yup from "yup";
-import { Account } from "../models/index.js";
+import { getModel } from "../models/index.js";
 
 export const create = yup.object({
   body: yup.object({
@@ -11,6 +11,10 @@ export const create = yup.object({
         function (v) {
           const req = this.options.context.req;
           const company = req.business?._id || req.authUser._id;
+          const Account = getModel({
+            companyId: company,
+            name: "Account",
+          });
           return Account.findOne({
             company,
             name: v,
@@ -47,6 +51,10 @@ export const update = yup.object({
         function (v) {
           const req = this.options.context.req;
           const company = req.business?._id || req.authUser._id;
+          const Account = getModel({
+            companyId: company,
+            name: "Account",
+          });
           return Account.findOne({
             _id: { $ne: req.params.id },
             company,
