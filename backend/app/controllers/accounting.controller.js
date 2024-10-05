@@ -12,7 +12,7 @@ export const get = async (req, res) => {
       name: "Account",
     });
 
-    const conditions = { company: req.business?._id || req.authUser._id };
+    const conditions = {};
     if (req.params.id) {
       conditions._id = req.params.id;
     }
@@ -64,7 +64,7 @@ export const create = async (req, res) => {
       name: "Account",
     });
 
-    new Account({ ...req.body, company: req.business?._id || req.authUser._id })
+    new Account(req.body)
       .save()
       .then(async (data) => {
         responseFn.success(res, { data });
@@ -93,11 +93,7 @@ export const update = async (req, res) => {
       name: "Account",
     });
 
-    Account.findOneAndUpdate(
-      { _id: req.params.id, company: req.business?._id || req.authUser._id },
-      { ...req.body },
-      { new: true }
-    )
+    Account.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then(async (data) => {
         responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -121,7 +117,6 @@ export const remove = async (req, res) => {
 
     Account.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      company: req.business?._id || req.authUser._id,
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);
@@ -216,9 +211,7 @@ export const vouchers = async (req, res) => {
       name: "Account",
     });
 
-    const entryConditions = {
-      user: req.business?._id || req.authUser._id,
-    };
+    const entryConditions = {};
     const conditions = {};
     if (req.query.type) {
       conditions.type = req.query.type;

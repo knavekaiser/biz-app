@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const schema = new Schema(
   {
     name: { type: Schema.Types.String, required: true },
-    company: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     parent: { type: Schema.Types.ObjectId, ref: "Account" },
     type: { type: Schema.Types.String },
     isGroup: { type: Boolean, required: true },
