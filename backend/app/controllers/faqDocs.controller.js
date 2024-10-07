@@ -15,7 +15,7 @@ export const findAll = async (req, res) => {
     page = +page;
     pageSize = +pageSize;
 
-    const condition = { user: req.business?._id || req.authUser._id };
+    const condition = {};
     if (req.query.topic) {
       condition.topic = { $regex: req.query.topic, $options: "i" };
     }
@@ -80,10 +80,7 @@ export const create = async (req, res) => {
 
     req.body.tokenCount = tokenCount;
     let newDoc = null;
-    new FaqDoc({
-      ...req.body,
-      user: req.business?._id || req.authUser._id,
-    })
+    new FaqDoc(req.body)
       .save()
       .then(async (data) => {
         newDoc = data;
@@ -197,11 +194,7 @@ export const update = async (req, res) => {
     }
 
     req.body.tokenCount = tokenCount;
-    FaqDoc.findOneAndUpdate(
-      { _id: req.params._id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    FaqDoc.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
       .then(async (data) => {
         if (
           !data.vectorIds?.length ||
@@ -247,12 +240,10 @@ export const deleteDoc = async (req, res) => {
 
     const doc = await FaqDoc.find({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
     });
 
     FaqDoc.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);

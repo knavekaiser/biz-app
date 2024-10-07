@@ -7,10 +7,7 @@ const { responseFn, responseStr } = appConfig;
 
 export const getTopics = async (req, res) => {
   try {
-    const topics = await FaqDoc.find({
-      user: req.business?._id || null,
-      showOnChat: true,
-    });
+    const topics = await FaqDoc.find({ showOnChat: true });
 
     responseFn.success(res, { data: topics.map((item) => item.topic) });
   } catch (error) {
@@ -21,7 +18,7 @@ export const getTopics = async (req, res) => {
 export const initChatOld = async (req, res) => {
   try {
     if (!req.body.topic) {
-      const availableTopics = await FaqDoc.find({ user: req.business._id });
+      const availableTopics = await FaqDoc.find({});
       if (availableTopics.length === 0) {
         return responseFn.error(
           res,

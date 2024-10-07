@@ -16,7 +16,6 @@ export const getChatbot = async (req, res) => {
     const topics = await FaqDoc.aggregate([
       {
         $match: {
-          user: req.business._id,
           showOnChat: true,
           parentTopic: null,
         },

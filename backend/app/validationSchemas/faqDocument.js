@@ -13,7 +13,6 @@ export const create = yup.object({
           name: "FaqDoc",
         });
         const existingTopic = await FaqDoc.findOne({
-          user: req.business?._id || req.authUser._id,
           topic: { $regex: new RegExp(v, "i") },
         });
         return (
@@ -42,7 +41,6 @@ export const update = yup.object({
       });
       const existingTopic = await FaqDoc.findOne({
         _id: { $ne: req.params._id },
-        user: req.business?._id || req.authUser._id,
         topic: { $regex: new RegExp(v, "i") },
       });
       return (

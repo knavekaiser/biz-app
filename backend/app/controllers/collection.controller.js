@@ -16,7 +16,7 @@ export const getAll = async (req, res) => {
       name: "Submodule",
     });
 
-    const conditions = { user: req.business?._id || req.authUser._id };
+    const conditions = {};
     if (req.authToken.userType === "admin") {
       conditions.user = req.query.business || req.business._id;
     }
@@ -131,7 +131,7 @@ export const findAll = async (req, res) => {
       req.params.id && !req.params.id.match(/^[0-9a-fA-F]{24}$/)
         ? req.params.id
         : null;
-    const conditions = { user: req.business?._id || req.authUser._id };
+    const conditions = {};
     if (req.authToken.userType === "admin") {
       conditions.user = req.query.business || req.business._id;
     }
@@ -185,10 +185,7 @@ export const create = async (req, res) => {
       name: "Collection",
     });
 
-    new Collection({
-      ...req.body,
-      user: req.business?._id || req.authUser._id,
-    })
+    new Collection(req.body)
       .save()
       .then(async (data) => {
         return responseFn.success(res, { data });
@@ -208,11 +205,7 @@ export const update = async (req, res) => {
     });
 
     delete req.body.name;
-    Collection.findOneAndUpdate(
-      { _id: req.params.id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    Collection.findOneAndUpdate({ _id: req.params.id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -238,7 +231,6 @@ export const deleteColl = async (req, res) => {
     });
     Collection.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params.id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => {
         for (const collection of collections) {
@@ -289,9 +281,7 @@ export const addSchemaTemplates = async (req, res) => {
       name: "Collection",
     });
 
-    const schemas = await Collection.find({
-      user: ObjectId(req.body.schema_id),
-    }).then((data) =>
+    const schemas = await Collection.find({}).then((data) =>
       data.map((item) => ({
         name: item.name,
         fields: item.fields,
@@ -301,7 +291,6 @@ export const addSchemaTemplates = async (req, res) => {
 
     await Collection.deleteMany({
       name: { $in: schemas.map((item) => item.name) },
-      user: req.business?._id || req.authUser._id,
     });
 
     Collection.insertMany(schemas, { ordered: 1 })

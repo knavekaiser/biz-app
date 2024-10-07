@@ -15,7 +15,7 @@ export const findAll = async (req, res) => {
     page = +page;
     pageSize = +pageSize;
 
-    const condition = { user: req.business?._id || req.authUser._id };
+    const condition = {};
     if (req.query.topic) {
       condition.topic = { $regex: req.query.topic, $options: "i" };
     }
@@ -59,10 +59,7 @@ export const create = async (req, res) => {
       name: "DynamicPage",
     });
 
-    new DynamicPage({
-      ...req.body,
-      user: req.business?._id || req.authUser._id,
-    })
+    new DynamicPage(req.body)
       .save()
       .then(async (data) => responseFn.success(res, { data }))
       .catch((err) => {
@@ -91,11 +88,9 @@ export const update = async (req, res) => {
       filesToRemove.push(req.body.thumbnail);
     }
 
-    DynamicPage.findOneAndUpdate(
-      { _id: req.params._id, user: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    DynamicPage.findOneAndUpdate({ _id: req.params._id }, req.body, {
+      new: true,
+    })
       .then((data) => {
         responseFn.success(res, { data }, responseStr.record_updated);
         if (filesToRemove.length) {
@@ -126,12 +121,10 @@ export const deletePage = async (req, res) => {
 
     const files = await DynamicPage.find({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
     }).then((data) => data.map((item) => item.files).flat());
 
     DynamicPage.deleteMany({
       _id: { $in: [...(req.body.ids || []), req.params._id] },
-      user: req.business?._id || req.authUser._id,
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);

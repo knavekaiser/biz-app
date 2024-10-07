@@ -21,11 +21,9 @@ export const getSiteConfig = async (req, res) => {
 
     const productCollection = await Collection.findOne({
       name: "Product",
-      user: req.business._id,
     });
     const orderCollection = await Collection.findOne({
       name: "Order",
-      user: req.business._id,
     });
     Company.aggregate([
       { $match: { domain } },
@@ -129,7 +127,7 @@ export const getDynamicPages = async (req, res) => {
     if (!domain) return responseFn.error(res, {}, responseStr.record_not_found);
     // if (domain.includes("localhost:")) domain = "infinai.loca.lt";
 
-    const condition = { user: req.business._id };
+    const condition = {};
     if (req.params.path) {
       condition.path = { $in: [req.params.path, "/" + req.params.path] };
     }

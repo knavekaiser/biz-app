@@ -12,10 +12,7 @@ export const getTopics = async (req, res) => {
       name: "FaqDoc",
     });
 
-    const topics = await FaqDoc.find({
-      user: req.business?._id || null,
-      showOnChat: true,
-    });
+    const topics = await FaqDoc.find({ showOnChat: true });
 
     responseFn.success(res, { data: topics.map((item) => item.topic) });
   } catch (error) {

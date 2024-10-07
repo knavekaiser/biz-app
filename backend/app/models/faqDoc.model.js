@@ -3,7 +3,6 @@ const Schema = mongoose.Schema;
 
 export default new Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     parentTopic: {
       type: Schema.Types.ObjectId,
       ref: "FAQ Document",
