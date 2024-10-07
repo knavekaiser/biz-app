@@ -277,10 +277,10 @@ export const getJournals = async (req, res) => {
   }
 };
 
-const getAccounts = async (accountId) => {
+const getAccounts = async ({ companyId, finPeriodId, accountId }) => {
   const Account = getModel({
-    companyId: (req.business || req.authUser)._id,
-    finPeriodId: req.finPeriod._id,
+    companyId,
+    finPeriodId,
     name: "Account",
   });
 
@@ -291,9 +291,13 @@ const getAccounts = async (accountId) => {
     allAccounts.push(...accounts.filter((item) => !item.isGroup));
     if (accounts.some((item) => item.isGroup)) {
       allAccounts.push(
-        ...(await getAccounts(
-          accounts.filter((item) => item.isGroup).map((item) => item._id)
-        ))
+        ...(await getAccounts({
+          companyId,
+          finPeriodId,
+          accountId: accounts
+            .filter((item) => item.isGroup)
+            .map((item) => item._id),
+        }))
       );
     }
   });
@@ -336,7 +340,11 @@ export const monthlyAnalysys = async (req, res) => {
     });
 
     const accounts = req.query.accountId
-      ? await getAccounts(req.query.accountId)
+      ? await getAccounts({
+          companyId: (req.business || req.authUser)._id,
+          finPeriodId: req.finPeriod._id,
+          accountId: req.query.accountId,
+        })
       : [];
 
     if (!accounts.length) {
