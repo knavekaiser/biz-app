@@ -245,9 +245,7 @@ export const getJournals = async (req, res) => {
       name: "Account",
     });
 
-    const entryConditions = {
-      user: req.business?._id || req.authUser._id,
-    };
+    const entryConditions = {};
     const conditions = {};
     if (req.query.type) {
       conditions.type = req.query.type;
@@ -351,9 +349,7 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
-    const entryConditions = {
-      user: req.business?._id || req.authUser._id,
-    };
+    const entryConditions = {};
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
     };
