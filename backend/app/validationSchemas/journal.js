@@ -7,6 +7,7 @@ const accountId = yup
     const req = this.options.context.req;
     const Account = getModel({
       companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
       name: "Account",
     });
     const account = await Account.findOne({
@@ -48,6 +49,7 @@ export const update = yup.object({
       const req = this.options.context.req;
       const Journal = getModel({
         companyId: (req.business || req.authUser)._id,
+        finPeriodId: req.finPeriod._id,
         name: "Journal",
       });
       return Journal.findOne({ _id: v });
