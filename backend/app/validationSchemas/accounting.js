@@ -13,6 +13,7 @@ export const create = yup.object({
           const company = req.business?._id || req.authUser._id;
           const Account = getModel({
             companyId: company,
+            finPeriodId: req.finPeriod._id,
             name: "Account",
           });
           return Account.findOne({
@@ -53,6 +54,7 @@ export const update = yup.object({
           const company = req.business?._id || req.authUser._id;
           const Account = getModel({
             companyId: company,
+            finPeriodId: req.finPeriod._id,
             name: "Account",
           });
           return Account.findOne({
