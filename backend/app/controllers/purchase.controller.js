@@ -129,7 +129,7 @@ const generateEntries = async (body, companyId, finPeriodId) => {
     },
   ];
   const purchaseAccount = await Account.findOne({
-    company: company_id,
+    company: companyId,
     type: "Purchase",
   });
   if (purchaseAccount) {
@@ -141,7 +141,7 @@ const generateEntries = async (body, companyId, finPeriodId) => {
     });
   }
   const taxAccount = await Account.findOne({
-    company: company_id,
+    company: companyId,
     name: "Tax",
   });
   if (taxAccount) {

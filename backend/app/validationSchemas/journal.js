@@ -28,7 +28,20 @@ const accountId = yup
 
 export const create = yup.object({
   body: yup.object({
-    dateTime: yup.string().required(),
+    dateTime: yup
+      .string()
+      .test(
+        "checkDate",
+        "dateTime must be within the financial period.",
+        function (v) {
+          const req = this.options.context.req;
+          return (
+            new Date(v) >= new Date(req.finPeriod.startDate) &&
+            new Date(v) <= new Date(req.finPeriod.endDate)
+          );
+        }
+      )
+      .required(),
     detail: yup.string().nullable(),
     accountingEntries: yup
       .array()
@@ -56,7 +69,20 @@ export const update = yup.object({
     }),
   }),
   body: yup.object({
-    dateTime: yup.string().required(),
+    dateTime: yup
+      .string()
+      .test(
+        "checkDate",
+        "dateTime must be within the financial period.",
+        function (v) {
+          const req = this.options.context.req;
+          return (
+            new Date(v) >= new Date(req.finPeriod.startDate) &&
+            new Date(v) <= new Date(req.finPeriod.endDate)
+          );
+        }
+      )
+      .required(),
     detail: yup.string().nullable(),
     accountingEntries: yup
       .array()

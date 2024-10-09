@@ -15,7 +15,6 @@ import {
 import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
-import { da } from "date-fns/locale";
 import VoucherFilters from "./Filters";
 
 const buildTree = (accounts) => {

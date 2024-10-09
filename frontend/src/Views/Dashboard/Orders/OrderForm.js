@@ -325,6 +325,7 @@ const ItemForm = ({ edit, orders, onSuccess }) => {
 };
 
 const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
+  const { finPeriod } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -344,10 +345,16 @@ const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
   } = useFetch(endpoints.orders + `/${edit?._id || ""}`);
 
   useEffect(() => {
+    let date = edit?.dateTime ? new Date(edit?.dateTime) : new Date();
+    if (finPeriod && date < new Date(finPeriod.startDate)) {
+      date = finPeriod.startDate;
+    } else if (finPeriod && date > new Date(finPeriod.endDate)) {
+      date = finPeriod.endDate;
+    }
     reset({
       ...edit,
       status: edit?.status || "pending",
-      dateTime: moment(edit?.dateTime, "YYYY-MM-DD"),
+      dateTime: moment(date, "YYYY-MM-DD"),
       customerName: edit?.customer?.name || "",
       customerDetail: edit?.customer?.detail || "",
     });
@@ -381,6 +388,10 @@ const MainForm = ({ disabled, edit, items, orders, setErr, onSuccess }) => {
       <Input
         label="Date"
         type="date"
+        {...(finPeriod && {
+          min: moment(finPeriod.startDate, "YYYY-MM-DD"),
+          max: moment(finPeriod.endDate, "YYYY-MM-DD"),
+        })}
         {...register("dateTime")}
         required
         error={errors.dateTime}

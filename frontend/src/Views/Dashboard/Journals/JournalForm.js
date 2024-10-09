@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Input, Select, Combobox, moment, Textarea } from "Components/elements";
 import { useFetch, useYup } from "hooks";
@@ -7,12 +7,14 @@ import s from "./journals.module.scss";
 import * as yup from "yup";
 import { endpoints } from "config";
 import { RiCloseLargeFill } from "react-icons/ri";
+import { SiteContext } from "SiteContext";
 
 const schema = yup.object({
   dateTime: yup.date().required(),
 });
 
 const Form = ({ edit, onSuccess }) => {
+  const { finPeriod } = useContext(SiteContext);
   const [entries, setEntries] = useState([]);
   const {
     handleSubmit,
@@ -105,8 +107,14 @@ const Form = ({ edit, onSuccess }) => {
   );
 
   useEffect(() => {
+    let date = edit?.dateTime ? new Date(edit?.dateTime) : new Date();
+    if (finPeriod && date < new Date(finPeriod.startDate)) {
+      date = finPeriod.startDate;
+    } else if (finPeriod && date > new Date(finPeriod.endDate)) {
+      date = finPeriod.endDate;
+    }
     const values = {
-      dateTime: moment(edit?.dateTime || new Date(), "YYYY-MM-DD hh:mm"),
+      dateTime: moment(date, "YYYY-MM-DD"),
       detail: edit?.detail || "",
     };
     if (edit?.entries?.length) {
@@ -151,7 +159,11 @@ const Form = ({ edit, onSuccess }) => {
         >
           <Input
             label="Date"
-            type="datetime-local"
+            type="date"
+            {...(finPeriod && {
+              min: moment(finPeriod.startDate, "YYYY-MM-DD"),
+              max: moment(finPeriod.endDate, "YYYY-MM-DD"),
+            })}
             {...register("dateTime")}
             required
             error={errors.dateTime}

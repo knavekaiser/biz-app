@@ -116,7 +116,7 @@ const Form = ({ edit, purchases, onSuccess }) => {
             <Detail
               className="flex justify-space-between"
               label="Date"
-              value={moment(edit?.date, "DD-MM-YYYY")}
+              value={moment(edit?.dateTime, "DD-MM-YYYY")}
             />
             <Detail
               label="Gross"
@@ -337,6 +337,7 @@ const ItemForm = ({ edit, purchases, onSuccess }) => {
 };
 
 const MainForm = ({ disabled, edit, items, setErr, onSuccess }) => {
+  const { finPeriod } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -355,9 +356,15 @@ const MainForm = ({ disabled, edit, items, setErr, onSuccess }) => {
   } = useFetch(endpoints.purchaseReturns + `/${edit?._id || ""}`);
 
   useEffect(() => {
+    let date = edit?.dateTime ? new Date(edit?.dateTime) : new Date();
+    if (finPeriod && date < new Date(finPeriod.startDate)) {
+      date = finPeriod.startDate;
+    } else if (finPeriod && date > new Date(finPeriod.endDate)) {
+      date = finPeriod.endDate;
+    }
     reset({
       ...edit,
-      date: moment(edit?.date, "YYYY-MM-DD"),
+      date: moment(date, "YYYY-MM-DD"),
       accountId: edit?.accountingEntries?.[0]?.accountId || "",
       accountName: edit?.accountingEntries?.[0]?.accountName || "",
       // vendorName: edit?.vendor?.name || "",
@@ -395,6 +402,10 @@ const MainForm = ({ disabled, edit, items, setErr, onSuccess }) => {
       <Input
         label="Date"
         type="date"
+        {...(finPeriod && {
+          min: moment(finPeriod.startDate, "YYYY-MM-DD"),
+          max: moment(finPeriod.endDate, "YYYY-MM-DD"),
+        })}
         {...register("date")}
         required
         error={errors.date}

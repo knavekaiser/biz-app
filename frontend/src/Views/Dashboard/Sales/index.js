@@ -81,7 +81,7 @@ const Invoices = ({ setSidebarOpen }) => {
               {config?.print?.invoiceNoSuffix || ""}
             </td>
             <td className={s.date}>
-              <Moment format="DD/MM/YYYY">{item.date}</Moment>
+              <Moment format="DD/MM/YYYY">{item.dateTime}</Moment>
             </td>
             <td className={s.customer}>
               {item.accountingEntries?.[0]?.accountName}

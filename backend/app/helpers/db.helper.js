@@ -1,4 +1,4 @@
-import AdminCollection from "../models/adminCollection.model.js";
+import { AdminCollection } from "../models/index.js";
 import mongoose from "mongoose";
 import { dbConn, getModel as getMongoModel } from "../models/index.js";
 

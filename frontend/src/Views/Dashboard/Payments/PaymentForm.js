@@ -134,7 +134,7 @@ const Form = ({ edit, payments, onSuccess }) => {
             <Detail
               label="Date"
               className="flex justify-space-between"
-              value={moment(edit?.date, "DD-MM-YYYY")}
+              value={moment(edit?.dateTime, "DD-MM-YYYY")}
             />
             <Detail
               label="Amount"
@@ -287,7 +287,7 @@ const MainForm = ({
   onSuccess,
   setViewOnly,
 }) => {
-  const { config, setConfig } = useContext(SiteContext);
+  const { config, finPeriod } = useContext(SiteContext);
   const [adjustPurchase, setAdjustPurchase] = useState(
     !!edit?.purchases?.length
   );
@@ -364,9 +364,15 @@ const MainForm = ({
   const vendorName = watch("vendorName");
 
   useEffect(() => {
+    let date = edit?.dateTime ? new Date(edit?.dateTime) : new Date();
+    if (finPeriod && date < new Date(finPeriod.startDate)) {
+      date = finPeriod.startDate;
+    } else if (finPeriod && date > new Date(finPeriod.endDate)) {
+      date = finPeriod.endDate;
+    }
     reset({
       ...edit,
-      date: moment(edit?.date, "YYYY-MM-DD"),
+      date: moment(date, "YYYY-MM-DD"),
       cashAccountId: edit?.accountingEntries?.[0]?.accountId || "",
       cashAccountName: edit?.accountingEntries?.[0]?.accountName || "",
       supplierAccountId: edit?.accountingEntries?.[1]?.accountId || "",
@@ -384,6 +390,10 @@ const MainForm = ({
         <Input
           label="Date"
           type="date"
+          {...(finPeriod && {
+            min: moment(finPeriod.startDate, "YYYY-MM-DD"),
+            max: moment(finPeriod.endDate, "YYYY-MM-DD"),
+          })}
           {...register("date")}
           required
           error={errors.date}

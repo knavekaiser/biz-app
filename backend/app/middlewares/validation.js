@@ -34,7 +34,7 @@ export const validate = (schema) => async (req, res, next) => {
       res,
       {
         type: "field_validation",
-        field: err.params.path,
+        field: err.params?.path,
       },
       err.message,
       400
