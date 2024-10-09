@@ -591,10 +591,15 @@ const Ledgers = ({ account, rows }) => {
 const Analysys = ({ account }) => {
   const [months, setMonths] = useState([]);
   const [data, setData] = useState([]);
-  const [calculation, setCalculation] = useState("sub_debit");
+  const [calculation, setCalculation] = useState("sum_debit");
   const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
   useEffect(() => {
     if (account) {
+      setCalculation(
+        ["Liabilities", "Income"].includes(account?.name)
+          ? "sum_credit"
+          : "sum_debit"
+      );
       get({ query: { accountId: account._id } })
         .then(({ data }) => {
           if (data.success) {
@@ -626,8 +631,8 @@ const Analysys = ({ account }) => {
                 <input
                   name="calculation"
                   type="radio"
-                  value="sub_debit"
-                  defaultChecked
+                  value="sum_debit"
+                  checked={calculation === "sum_debit"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Sum Of Debits
@@ -636,7 +641,8 @@ const Analysys = ({ account }) => {
                 <input
                   name="calculation"
                   type="radio"
-                  value="sub_credit"
+                  value="sum_credit"
+                  checked={calculation === "sum_credit"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Sum Of Credit
@@ -724,9 +730,9 @@ const Analysys = ({ account }) => {
 
 const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   let result = null;
-  if (calculation === "sub_debit") {
+  if (calculation === "sum_debit") {
     result = entries.reduce((p, c) => p + c.debit, 0);
-  } else if (calculation === "sub_credit") {
+  } else if (calculation === "sum_credit") {
     result = entries.reduce((p, c) => p + c.credit, 0);
   } else if (calculation === "net") {
     result = entries.reduce((p, c) => p + c.debit - c.credit, 0);

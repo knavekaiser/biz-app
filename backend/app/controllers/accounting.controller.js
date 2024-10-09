@@ -145,6 +145,7 @@ const entryPipeline = (entryConditions) => {
             "accountingEntries.rec_id": "$_id",
             "accountingEntries.no": "$no",
             "accountingEntries.type": type,
+            "accountingEntries.dateTime": "$dateTime",
             "accountingEntries.createdAt": "$createdAt",
             "accountingEntries.updatedAt": "$updatedAt",
           },
@@ -220,7 +221,7 @@ export const vouchers = async (req, res) => {
       conditions.accountId = ObjectId(req.query.accountId);
     }
     if (req.query.startDate && req.query.endDate) {
-      conditions.createdAt = {
+      conditions.dateTime = {
         $gte: new Date(req.query.startDate),
         $lt: new Date(req.query.endDate),
       };
@@ -316,18 +317,25 @@ const monthNames = [
   "Nov",
   "Dec",
 ];
-const getLast12Months = () => {
+const getLast12Months = (startDate, endDate) => {
   const months = [];
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(new Date().setMonth(new Date().getMonth() - i));
+  for (let i = 0; i < 100; i++) {
+    const date = new Date(
+      new Date(startDate).setMonth(new Date(startDate).getMonth() + i)
+    );
+    if (date > new Date(endDate)) {
+      break;
+    }
     months.push({
+      year: date.getFullYear(),
+      month: date.getMonth(),
       label: `${monthNames[date.getMonth()]} ${`${date.getFullYear()}`.slice(
         2
       )}`,
       value: `${date.getFullYear()}-${date.getMonth()}`,
     });
   }
-  return months.reverse();
+  return months;
 };
 export const monthlyAnalysys = async (req, res) => {
   try {
@@ -349,17 +357,29 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
+    const months = getLast12Months(
+      req.finPeriod.startDate,
+      req.finPeriod.endDate
+    );
     const entryConditions = {};
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
+      dateTime: {
+        $gte: new Date(`${months[0].year}-${months[0].month + 1}-01`),
+        $lt: new Date(
+          `${months[months.length - 1].year}-${
+            months[months.length - 1].month + 2
+          }-01`
+        ),
+      },
     };
     if (req.query.startDate && req.query.endDate) {
-      conditions.createdAt = {
+      conditions.dateTime = {
         $gte: new Date(req.query.startDate),
         $lt: new Date(req.query.endDate),
       };
     }
-    const months = getLast12Months();
+
     Account.aggregate([
       ...entryPipeline(entryConditions),
       { $match: conditions },
@@ -371,7 +391,7 @@ export const monthlyAnalysys = async (req, res) => {
           accountId: { $first: "$accountId" },
           entries: {
             $push: {
-              createdAt: "$createdAt",
+              dateTime: "$dateTime",
               debit: "$debit",
               credit: "$credit",
             },
@@ -393,8 +413,8 @@ export const monthlyAnalysys = async (req, res) => {
               (row?.entries || []).filter(
                 (entry) =>
                   month.value ===
-                  `${new Date(entry.createdAt).getFullYear()}-${new Date(
-                    entry.createdAt
+                  `${new Date(entry.dateTime).getFullYear()}-${new Date(
+                    entry.dateTime
                   ).getMonth()}`
               )
             ),
