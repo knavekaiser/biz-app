@@ -9,7 +9,6 @@ export default function (app) {
   router.get("/journals", authJwt.verifyToken, controller.getJournals);
   router.get("/masters", authJwt.verifyToken, controller.get);
   router.get("/listings", authJwt.verifyToken, controller.listing);
-  router.get("/locations", authJwt.verifyToken, controller.locations);
   router.get(
     "/monthly-analysys",
     authJwt.verifyToken,

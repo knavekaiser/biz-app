@@ -32,7 +32,7 @@ export const get = async (req, res) => {
       conditions.type = { $in: req.query.types.split(",") };
     }
     if (req.query.branch) {
-      conditions[`openingStocks.branch`] = req.query.branch;
+      conditions[`openingStocks.branch`] = ObjectId(req.query.branch);
     }
 
     let pipeline = [

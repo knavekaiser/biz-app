@@ -22,6 +22,7 @@ import DynamicPage from "./dynamicPage.model.js";
 
 import Account from "./account.model.js";
 import Inventory from "./inventory.model.js";
+import InventoryBranch from "./inventoryBranch.model.js";
 import Quote from "./quote.model.js";
 import Order from "./order.model.js";
 import Invoice from "./invoice.model.js";
@@ -82,6 +83,7 @@ export const getModel = ({ companyId, name, finPeriodId }) => {
 
     Account,
     Inventory,
+    InventoryBranch,
     Quote,
     Order,
     Invoice,

@@ -80,7 +80,7 @@ const endpoints = {
 
   inventoryMasters: `${baseApiUrl}/api/inventory/masters`,
   inventoryListing: `${baseApiUrl}/api/inventory/listings`,
-  inventoryLocations: `${baseApiUrl}/api/inventory/locations`,
+  inventoryBranches: `${baseApiUrl}/api/inventory-branches`,
   // accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
   // journals: `${baseApiUrl}/api/journals`,
 

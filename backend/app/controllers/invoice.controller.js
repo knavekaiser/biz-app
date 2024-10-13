@@ -19,6 +19,64 @@ export const findAll = async (req, res) => {
     Invoice.aggregate([
       { $match: conditions },
       {
+        $unwind: {
+          path: "$items",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "inventories",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "items.product",
+        },
+      },
+      {
+        $unwind: {
+          path: "$items.product",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          no: {
+            $first: "$no",
+          },
+          dateTime: {
+            $first: "$dateTime",
+          },
+          gst: {
+            $first: "$gst",
+          },
+          items: {
+            $push: {
+              _id: "$items._id",
+              price: "$items.price",
+              qty: "$items.qty",
+              unit: "$items.unit",
+              product: {
+                _id: "$items.product._id",
+                name: "$items.product.name",
+              },
+            },
+          },
+          accountingEntries: {
+            $first: "$accountingEntries",
+          },
+          createdAt: {
+            $first: "$createdAt",
+          },
+          updatedAt: {
+            $first: "$updatedAt",
+          },
+          customer: {
+            $first: "$customer",
+          },
+        },
+      },
+      {
         $lookup: {
           from: "receipts",
           as: "due",

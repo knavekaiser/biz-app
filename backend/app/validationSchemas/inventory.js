@@ -39,12 +39,21 @@ export const create = yup.object({
       ])
       .nullable(),
     isGroup: yup.boolean().required(),
-    openingStocks: yup.array().of(
-      yup.object({
-        branch: yup.string().required(),
-        amount: yup.number().required(),
-      })
-    ),
+    openingStocks: yup
+      .array()
+      .of(
+        yup.object({
+          branch: yup.string().required(),
+          openingStock: yup.number().required(),
+          cost: yup.number().required(),
+          reorderQty: yup.number().required(),
+        })
+      )
+      .when("isGroup", {
+        is: false,
+        then: (schema) => schema.min(1).required(),
+        otherwise: (schema) => schema,
+      }),
   }),
 });
 export const update = yup.object({
@@ -86,11 +95,20 @@ export const update = yup.object({
       ])
       .nullable(),
     isGroup: yup.boolean().required(),
-    openingStocks: yup.array().of(
-      yup.object({
-        branch: yup.string().required(),
-        amount: yup.number().required(),
-      })
-    ),
+    openingStocks: yup
+      .array()
+      .of(
+        yup.object({
+          branch: yup.string().required(),
+          openingStock: yup.number().required(),
+          cost: yup.number().required(),
+          reorderQty: yup.number().required(),
+        })
+      )
+      .when("isGroup", {
+        is: false,
+        then: (schema) => schema.min(1).required(),
+        otherwise: (schema) => schema,
+      }),
   }),
 });

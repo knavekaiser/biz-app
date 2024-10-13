@@ -21,6 +21,7 @@ import commonRoutes from "./common.routes.js";
 
 import accountingRoutes from "./accounting.routes.js";
 import inventoryRoutes from "./inventory.routes.js";
+import inventoryBranchRoutes from "./inventoryBranch.routes.js";
 import quoteRoutes from "./quote.routes.js";
 import orderRoutes from "./order.routes.js";
 import invoiceRoutes from "./invoice.routes.js";
@@ -58,6 +59,7 @@ export default function (app) {
 
   accountingRoutes(app);
   inventoryRoutes(app);
+  inventoryBranchRoutes(app);
   quoteRoutes(app);
   orderRoutes(app);
   invoiceRoutes(app);

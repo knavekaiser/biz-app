@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Input, Combobox } from "Components/elements";
+import { Input, Select, Combobox } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
 import * as yup from "yup";
@@ -10,23 +10,27 @@ import { RiCloseLargeFill } from "react-icons/ri";
 
 const mainSchema = yup.object({
   name: yup.string().required("Please enter a name"),
-  parent: yup.string(),
-  type: yup
-    .string()
-    .oneOf([
-      "Cash",
-      "Bank",
-      "Customers",
-      "Suppliers",
-      "Sales",
-      "Purchase",
-      "Stock",
-      "null",
-      "Tax",
-      null,
-    ])
-    .nullable(),
   isGroup: yup.boolean().required(),
+  parent: yup.string().when("isGroup", {
+    is: false,
+    then: (schema) => schema.required("Please select a group."),
+    otherwise: (schema) => schema,
+  }),
+  // type: yup
+  //   .string()
+  //   .oneOf([
+  //     "Cash",
+  //     "Bank",
+  //     "Customers",
+  //     "Suppliers",
+  //     "Sales",
+  //     "Purchase",
+  //     "Stock",
+  //     "null",
+  //     "Tax",
+  //     null,
+  //   ])
+  //   .nullable(),
 });
 
 const Form = ({ edit, masters = [], onSuccess }) => {
@@ -38,12 +42,14 @@ const Form = ({ edit, masters = [], onSuccess }) => {
     control,
     setValue,
     setError,
-    setFocus,
+    watch,
     clearErrors,
     formState: { errors },
   } = useForm({
     resolver: useYup(mainSchema),
   });
+
+  const isGroup = watch("isGroup");
 
   const {
     post: createMaster,
@@ -54,18 +60,22 @@ const Form = ({ edit, masters = [], onSuccess }) => {
   useEffect(() => {
     const values = {
       name: edit?.name || "",
-      parent: edit?.parent || "null",
-      type: edit?.type || "null",
+      parent: edit?.parent || "",
+      // type: edit?.type || "null",
       isGroup: edit?.isGroup ?? true,
     };
     if (edit?.openingStocks?.length) {
       edit?.openingStocks?.forEach((entry, i) => {
         values[`entries_${i}_branch`] = entry.branch;
-        values[`entries_${i}_amount`] = entry.amount;
+        values[`entries_${i}_openingStock`] = entry.openingStock;
+        values[`entries_${i}_cost`] = entry.cost;
+        values[`entries_${i}_reorderQty`] = entry.reorderQty;
       });
     } else {
       values.entries_0_branch = "";
-      values.entries_0_amount = "";
+      values.entries_0_openingStock = "";
+      values.entries_0_cost = "";
+      values.entries_0_reorderQty = "";
     }
     reset(values);
     setEntries(
@@ -74,8 +84,9 @@ const Form = ({ edit, masters = [], onSuccess }) => {
         : [
             {
               _id: Math.random().toString(36),
-              name: "",
-              amount: "",
+              branch: "",
+              openingStock: "",
+              reorderQty: "",
             },
           ]
     );
@@ -84,6 +95,7 @@ const Form = ({ edit, masters = [], onSuccess }) => {
     <form
       onSubmit={handleSubmit((values) => {
         if (
+          !values.isGroup &&
           entries.some((entry, i) => {
             if (entry.branch && entry.amount) {
               return false;
@@ -94,10 +106,22 @@ const Form = ({ edit, masters = [], onSuccess }) => {
                 message: "Name is required.",
               });
             }
-            if (!entry.amount) {
-              setError(`entries_${i}_amount`, {
+            if (!entry.openingStock) {
+              setError(`entries_${i}_openingStock`, {
                 type: "custom",
-                message: "Amount is required.",
+                message: "Stock is required.",
+              });
+            }
+            if (!entry.cost) {
+              setError(`entries_${i}_cost`, {
+                type: "custom",
+                message: "Cost is required.",
+              });
+            }
+            if (!entry.reorderQty) {
+              setError(`entries_${i}_reorderQty`, {
+                type: "custom",
+                message: "Reorder QTY is required.",
               });
             }
             return true;
@@ -106,11 +130,8 @@ const Form = ({ edit, masters = [], onSuccess }) => {
           return;
         }
 
-        if (values.parent === "null") {
+        if (!values.parent) {
           values.parent = null;
-        }
-        if (values.type === "null") {
-          values.type = null;
         }
 
         const payload = {
@@ -118,11 +139,15 @@ const Form = ({ edit, masters = [], onSuccess }) => {
           isGroup: values.isGroup,
           parent: values.parent,
           type: values.type,
-          openingStocks: entries.map((entry) => ({
-            branch: entry.branch,
-            amount: entry.amount,
-          })),
         };
+        if (!values.isGroup) {
+          payload.openingStocks = entries.map((entry) => ({
+            branch: entry.branch,
+            openingStock: entry.openingStock,
+            cost: entry.cost,
+            reorderQty: entry.reorderQty,
+          }));
+        }
         (edit?._id ? updateMaster : createMaster)(payload)
           .then(({ data }) => {
             if (!data.success) {
@@ -140,13 +165,15 @@ const Form = ({ edit, masters = [], onSuccess }) => {
         label="Parent"
         name="parent"
         control={control}
+        formOptions={{ required: !isGroup }}
+        placeholder=""
         options={[
-          { label: "None", value: "null" },
+          { label: "None", value: "" },
           ...masters.map((item) => ({ label: item.name, value: item._id })),
         ]}
       />
 
-      <Combobox
+      {/* <Combobox
         label="Type"
         name="type"
         control={control}
@@ -161,7 +188,7 @@ const Form = ({ edit, masters = [], onSuccess }) => {
           { label: "Stock", value: "Stock" },
           { label: "Tax", value: "Tax" },
         ]}
-      />
+      /> */}
 
       <Combobox
         label="Is Group"
@@ -174,80 +201,124 @@ const Form = ({ edit, masters = [], onSuccess }) => {
         ]}
       />
 
-      <h3>Opening Stocks</h3>
+      {!isGroup && (
+        <>
+          <h3>Opening Stocks</h3>
 
-      {(entries || []).map((entry, i) => (
-        <div key={entry._id} className={s.entryForm}>
-          <Input
-            label="Branch Name"
-            required
-            {...register(`entries_${i}_branch`)}
-            onChange={(e) => {
-              clearErrors(`entries_${i}_branch`);
-              setEntries((prev) =>
-                prev.map((item) =>
-                  item._id === entry._id
-                    ? { ...item, branch: e.target.value }
-                    : item
-                )
-              );
-            }}
-            error={errors[`entries_${i}_branch`]}
-          />
-          <Input
-            label="Amount"
-            type="number"
-            required
-            {...register(`entries_${i}_amount`)}
-            onChange={(e) => {
-              clearErrors(`entries_${i}_amount`);
-              setEntries((prev) =>
-                prev.map((item) =>
-                  item._id === entry._id
-                    ? { ...item, amount: e.target.value }
-                    : item
-                )
-              );
-            }}
-            error={errors[`entries_${i}_amount`]}
-          />
+          {(entries || []).map((entry, i) => (
+            <div key={entry._id} className={s.entryForm}>
+              <Select
+                label="Branch"
+                control={control}
+                name={`entries_${i}_branch`}
+                formOptions={{ required: true }}
+                url={endpoints.inventoryBranches}
+                getQuery={(v) => ({ name: v })}
+                handleData={(data) => ({
+                  label: data.name,
+                  value: data._id,
+                })}
+                onChange={(opt) => {
+                  clearErrors(`entries_${i}_openingStock`);
+                  setEntries((prev) =>
+                    prev.map((item) =>
+                      item._id === entry._id
+                        ? { ...item, branch: opt.value }
+                        : item
+                    )
+                  );
+                }}
+              />
+              <Input
+                label="Opening Stock"
+                type="number"
+                required
+                {...register(`entries_${i}_openingStock`)}
+                onChange={(e) => {
+                  clearErrors(`entries_${i}_openingStock`);
+                  setEntries((prev) =>
+                    prev.map((item) =>
+                      item._id === entry._id
+                        ? { ...item, openingStock: e.target.value }
+                        : item
+                    )
+                  );
+                }}
+                error={errors[`entries_${i}_openingStock`]}
+              />
+              <Input
+                label="Cost"
+                type="number"
+                required
+                {...register(`entries_${i}_cost`)}
+                onChange={(e) => {
+                  clearErrors(`entries_${i}_cost`);
+                  setEntries((prev) =>
+                    prev.map((item) =>
+                      item._id === entry._id
+                        ? { ...item, cost: e.target.value }
+                        : item
+                    )
+                  );
+                }}
+                error={errors[`entries_${i}_cost`]}
+              />
+              <Input
+                label="Reorder QTY"
+                type="number"
+                required
+                {...register(`entries_${i}_reorderQty`)}
+                onChange={(e) => {
+                  clearErrors(`entries_${i}_reorderQty`);
+                  setEntries((prev) =>
+                    prev.map((item) =>
+                      item._id === entry._id
+                        ? { ...item, reorderQty: e.target.value }
+                        : item
+                    )
+                  );
+                }}
+                error={errors[`entries_${i}_reorderQty`]}
+              />
 
-          {entries?.length > 1 && (
+              {entries?.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEntries((prev) =>
+                      prev.filter((item) => item._id !== entry._id)
+                    )
+                  }
+                  className="btn clear iconOnly"
+                >
+                  <RiCloseLargeFill />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {!loading && (
             <button
               type="button"
-              onClick={() =>
-                setEntries((prev) =>
-                  prev.filter((item) => item._id !== entry._id)
-                )
-              }
-              className="btn clear iconOnly"
+              className="btn secondary"
+              onClick={() => {
+                setValue(`entries_${entries.length}_type`, "credit");
+                setEntries((prev) => [
+                  ...prev,
+                  {
+                    _id: Math.random().toString(36),
+                    type: "credit",
+                    accountId: "",
+                    debit: "",
+                    credit: "",
+                  },
+                ]);
+              }}
             >
-              <RiCloseLargeFill />
+              Add More Stock
             </button>
           )}
-        </div>
-      ))}
-
-      {!loading && (
-        <button
-          type="button"
-          className="btn secondary"
-          onClick={() => {
-            setValue(`entries_${entries.length}_type`, "credit");
-            setEntries((prev) => [
-              ...prev,
-              {
-                _id: Math.random().toString(36),
-                type: "credit",
-                accountId: "",
-                debit: "",
-                credit: "",
-              },
-            ]);
-          }}
-        >
-          Add More Stock
-        </button>
+        </>
       )}
 
       <div className="btns">

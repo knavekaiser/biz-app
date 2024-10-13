@@ -191,7 +191,7 @@ export const Combobox = ({
                       ((multiple && selected?.length === 0) ||
                         selected === undefined ||
                         selected === "") &&
-                      (placeholder || "Select")}
+                      (placeholder ?? "Select")}
                   </>
                 )}
               </p>

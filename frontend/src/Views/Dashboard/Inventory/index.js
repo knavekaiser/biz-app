@@ -5,6 +5,7 @@ import s from "./quotes.module.scss";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
 
+import BranchForm from "./BranchForm";
 import MasterForm from "./MasterForm";
 import {
   BsDashSquare,
@@ -145,7 +146,11 @@ const AccountNode = ({
             <button
               className={s.addButton}
               onClick={() =>
-                setAddMaster({ parent: account._id, type: account.type || "" })
+                setAddMaster({
+                  parent: account._id,
+                  type: account.type || "",
+                  isGroup: false,
+                })
               }
             >
               <BsFillPlusSquareFill />
@@ -180,6 +185,8 @@ const Accounting = ({ setSidebarOpen }) => {
   const [addMaster, setAddMaster] = useState(null);
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
+  const [addBranch, setAddBranch] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState("accounts");
   const [open, setOpen] = useState(true);
   const [analysysAcc, setAnalysysAcc] = useState(null);
   const [ledger, setLedger] = useState({});
@@ -214,144 +221,168 @@ const Accounting = ({ setSidebarOpen }) => {
 
       <div className={`${s.innerWrapper} ${open ? s.open : ""}`}>
         <div className={s.sidebar}>
-          <button className={s.addButton} onClick={() => setAddMaster({})}>
-            <BsFillPlusSquareFill />
-          </button>
-          <ul>
-            {masters.length > 0 ? (
-              treeData.map((account) => (
-                <AccountNode
-                  key={account._id}
-                  account={account}
-                  setAddMaster={setAddMaster}
-                  activeGroup={tab === "analysys" ? analysysAcc?._id : null}
-                  activeLeaf={tab === "ledgers" ? ledger?.account?._id : null}
-                  activeLeavs={
-                    tab === "journals" ? journalAcc.map((acc) => acc._id) : []
-                  }
-                  onClick={(account) => {
-                    // if (tab === "journals") {
-                    //   if (!account.isGroup) {
-                    //     setJournalAcc((prev) =>
-                    //       prev.some((acc) => acc._id === account._id)
-                    //         ? prev.filter((acc) => acc._id !== account._id)
-                    //         : [...prev, account].filter(
-                    //             (acc, i, arr) =>
-                    //               arr.findIndex(
-                    //                 (item) => item._id === acc._id
-                    //               ) === i
-                    //           )
-                    //     );
-                    //   }
-                    //   return;
-                    // }
-                    // if (account.isGroup) {
-                    //   setAnalysysAcc(account);
-                    //   setTab("analysys");
-                    // } else {
-                    //   const firstRecords = (vouchers || []).filter(
-                    //     (item) => item.accountId === account._id
-                    //   );
-                    //   const otherRecords = (vouchers || []).filter((item) =>
-                    //     firstRecords.some((rec) => rec.rec_id === item.rec_id)
-                    //   );
-                    //   const allRecords = [
-                    //     ...firstRecords,
-                    //     ...otherRecords,
-                    //   ].filter(
-                    //     (obj, index, self) =>
-                    //       index ===
-                    //       self.findIndex(
-                    //         (o) =>
-                    //           o.rec_id === obj.rec_id && o.index === obj.index
-                    //       )
-                    //   );
-                    //   const detailedRows = allRecords
-                    //     .filter((row) => row.accountId !== account._id)
-                    //     .reduce((p, c) => {
-                    //       const index = p.findIndex((item) =>
-                    //         item.some((row) => row.rec_id === c.rec_id)
-                    //       );
-                    //       if (index === -1) {
-                    //         p.push([c]);
-                    //       } else {
-                    //         p[index].push(c);
-                    //       }
-                    //       return p;
-                    //     }, [])
-                    //     .map((item) => {
-                    //       const accRec = allRecords.find(
-                    //         (rec) => rec.rec_id === item[0].rec_id
-                    //       );
-                    //       if (item.length <= 1) {
-                    //         return {
-                    //           ...item[0],
-                    //           debit: accRec.debit,
-                    //           credit: accRec.credit,
-                    //         };
-                    //       } else {
-                    //         return {
-                    //           ...item[0],
-                    //           details: item.map((row) => ({
-                    //             label: row.accountName,
-                    //             value: row.credit || row.debit,
-                    //           })),
-                    //           // credit: item.reduce((p, c) => p + c.credit, 0),
-                    //           // debit: item.reduce((p, c) => p + c.debit, 0),
-                    //           debit: accRec.debit,
-                    //           credit: accRec.credit,
-                    //         };
-                    //       }
-                    //     })
-                    //     .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                    //     .sort((a, b) => (a.index > b.index ? 1 : -1))
-                    //     .reduce((p, c) => {
-                    //       if (c.details?.length) {
-                    //         p.push(
-                    //           ...[
-                    //             c,
-                    //             ...c.details.map((item) => ({
-                    //               createdAt: null,
-                    //               no: null,
-                    //               type: null,
-                    //               accountName: (
-                    //                 <p>
-                    //                   {item.label}: {item.value.toFixed(2)}
-                    //                 </p>
-                    //               ),
-                    //               debit: null,
-                    //               credit: null,
-                    //             })),
-                    //           ]
-                    //         );
-                    //       } else {
-                    //         p.push(c);
-                    //       }
-                    //       return p;
-                    //     }, []);
-                    //   setLedger({
-                    //     account,
-                    //     rows: detailedRows,
-                    //   });
-                    //   setTab("ledgers");
-                    // }
+          <div>
+            <Tabs
+              activeTab={sidebarTab}
+              tabs={[
+                { label: "Accounts", value: "accounts" },
+                { label: "Branches", value: "branches" },
+              ]}
+              onChange={(tab) => setSidebarTab(tab.value)}
+            />
+            <button
+              className={s.addButton}
+              onClick={() => {
+                if (sidebarTab === "accounts") {
+                  setAddMaster({});
+                } else if (sidebarTab === "branches") {
+                  setAddBranch(true);
+                }
+              }}
+            >
+              <BsFillPlusSquareFill />
+            </button>
+          </div>
+          {sidebarTab === "accounts" && (
+            <ul>
+              {masters.length > 0 ? (
+                treeData.map((account) => (
+                  <AccountNode
+                    key={account._id}
+                    account={account}
+                    setAddMaster={setAddMaster}
+                    activeGroup={tab === "analysys" ? analysysAcc?._id : null}
+                    activeLeaf={tab === "ledgers" ? ledger?.account?._id : null}
+                    activeLeavs={
+                      tab === "journals" ? journalAcc.map((acc) => acc._id) : []
+                    }
+                    onClick={(account) => {
+                      // if (tab === "journals") {
+                      //   if (!account.isGroup) {
+                      //     setJournalAcc((prev) =>
+                      //       prev.some((acc) => acc._id === account._id)
+                      //         ? prev.filter((acc) => acc._id !== account._id)
+                      //         : [...prev, account].filter(
+                      //             (acc, i, arr) =>
+                      //               arr.findIndex(
+                      //                 (item) => item._id === acc._id
+                      //               ) === i
+                      //           )
+                      //     );
+                      //   }
+                      //   return;
+                      // }
+                      // if (account.isGroup) {
+                      //   setAnalysysAcc(account);
+                      //   setTab("analysys");
+                      // } else {
+                      //   const firstRecords = (vouchers || []).filter(
+                      //     (item) => item.accountId === account._id
+                      //   );
+                      //   const otherRecords = (vouchers || []).filter((item) =>
+                      //     firstRecords.some((rec) => rec.rec_id === item.rec_id)
+                      //   );
+                      //   const allRecords = [
+                      //     ...firstRecords,
+                      //     ...otherRecords,
+                      //   ].filter(
+                      //     (obj, index, self) =>
+                      //       index ===
+                      //       self.findIndex(
+                      //         (o) =>
+                      //           o.rec_id === obj.rec_id && o.index === obj.index
+                      //       )
+                      //   );
+                      //   const detailedRows = allRecords
+                      //     .filter((row) => row.accountId !== account._id)
+                      //     .reduce((p, c) => {
+                      //       const index = p.findIndex((item) =>
+                      //         item.some((row) => row.rec_id === c.rec_id)
+                      //       );
+                      //       if (index === -1) {
+                      //         p.push([c]);
+                      //       } else {
+                      //         p[index].push(c);
+                      //       }
+                      //       return p;
+                      //     }, [])
+                      //     .map((item) => {
+                      //       const accRec = allRecords.find(
+                      //         (rec) => rec.rec_id === item[0].rec_id
+                      //       );
+                      //       if (item.length <= 1) {
+                      //         return {
+                      //           ...item[0],
+                      //           debit: accRec.debit,
+                      //           credit: accRec.credit,
+                      //         };
+                      //       } else {
+                      //         return {
+                      //           ...item[0],
+                      //           details: item.map((row) => ({
+                      //             label: row.accountName,
+                      //             value: row.credit || row.debit,
+                      //           })),
+                      //           // credit: item.reduce((p, c) => p + c.credit, 0),
+                      //           // debit: item.reduce((p, c) => p + c.debit, 0),
+                      //           debit: accRec.debit,
+                      //           credit: accRec.credit,
+                      //         };
+                      //       }
+                      //     })
+                      //     .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                      //     .sort((a, b) => (a.index > b.index ? 1 : -1))
+                      //     .reduce((p, c) => {
+                      //       if (c.details?.length) {
+                      //         p.push(
+                      //           ...[
+                      //             c,
+                      //             ...c.details.map((item) => ({
+                      //               createdAt: null,
+                      //               no: null,
+                      //               type: null,
+                      //               accountName: (
+                      //                 <p>
+                      //                   {item.label}: {item.value.toFixed(2)}
+                      //                 </p>
+                      //               ),
+                      //               debit: null,
+                      //               credit: null,
+                      //             })),
+                      //           ]
+                      //         );
+                      //       } else {
+                      //         p.push(c);
+                      //       }
+                      //       return p;
+                      //     }, []);
+                      //   setLedger({
+                      //     account,
+                      //     rows: detailedRows,
+                      //   });
+                      //   setTab("ledgers");
+                      // }
+                    }}
+                  />
+                ))
+              ) : (
+                <p
+                  style={{
+                    marginTop: "1rem",
+                    marginBottom: "1rem",
+                    textAlign: "center",
+                    textWrap: "balance",
+                    color: "#797979",
                   }}
-                />
-              ))
-            ) : (
-              <p
-                style={{
-                  marginTop: "1rem",
-                  marginBottom: "1rem",
-                  textAlign: "center",
-                  textWrap: "balance",
-                  color: "#797979",
-                }}
-              >
-                No accounts have been added yet.
-              </p>
-            )}
-          </ul>
+                >
+                  No accounts have been added yet.
+                </p>
+              )}
+            </ul>
+          )}
+          {sidebarTab === "branches" && (
+            <Branches addBranch={addBranch} setAddBranch={setAddBranch} />
+          )}
         </div>
         <div className={s.innerContent}>
           <div className="flex gap-1 align-center">
@@ -409,6 +440,71 @@ const Accounting = ({ setSidebarOpen }) => {
         />
       </Modal>
     </div>
+  );
+};
+
+const Branches = ({ addBranch, setAddBranch }) => {
+  const [branches, setBranches] = useState([]);
+  const { get: getBranches } = useFetch(endpoints.inventoryBranches);
+  useEffect(() => {
+    getBranches()
+      .then(({ data }) => {
+        if (data.success) {
+          setBranches(data.data);
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+  }, []);
+  return (
+    <>
+      <ul>
+        {branches.map((branch) => (
+          <li key={branch._id} className={s.listItem}>
+            {
+              <div className={s.label}>
+                <strong>{branch.name}</strong>
+                <div className={s.btns}>
+                  <button
+                    className={s.addButton}
+                    onClick={() => setAddBranch(branch)}
+                  >
+                    <FiEdit3 />
+                  </button>
+                </div>
+              </div>
+            }
+          </li>
+        ))}
+        {branches.length === 0 && (
+          <p className="text-center m-2">No branch has been added yet.</p>
+        )}
+      </ul>
+      <Modal
+        open={addBranch}
+        head
+        label={`${addBranch?._id ? "Update" : "Add"} Branch`}
+        className={s.masterFormModal}
+        setOpen={() => {
+          setAddBranch(null);
+        }}
+      >
+        <BranchForm
+          edit={addBranch}
+          onSuccess={(newBranch) => {
+            if (addBranch?._id) {
+              setBranches((prev) =>
+                prev.map((b) => (b._id === newBranch._id ? newBranch : b))
+              );
+            } else {
+              setBranches((prev) => [...prev, newBranch]);
+            }
+            setAddBranch(false);
+          }}
+        />
+      </Modal>
+    </>
   );
 };
 

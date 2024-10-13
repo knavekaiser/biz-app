@@ -154,20 +154,17 @@ const Form = ({ edit, sales, onSuccess }) => {
       )}
 
       <Select
-        label="Location"
+        label="Branch"
         control={control}
         name="location"
         formOptions={{ required: true }}
-        url={endpoints.inventoryLocations}
+        url={endpoints.inventoryBranches}
         getQuery={(v) => ({
-          // types: "Cash,Bank,Customers",
-          // isGroup: "false",
           name: v,
         })}
         handleData={(data) => ({
-          label: `${data.branch}`,
-          value: data.branch,
-          account: data,
+          label: `${data.name}`,
+          value: data.name,
         })}
       />
 

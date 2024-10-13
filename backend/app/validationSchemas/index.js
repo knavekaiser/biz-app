@@ -21,4 +21,5 @@ export * as chatbot from "./chatbot.js";
 export * as dynamicPage from "./dynamicPage.js";
 export * as accounting from "./accounting.js";
 export * as inventory from "./inventory.js";
+export * as inventoryBranch from "./inventoryBranch.js";
 export * as finPeriod from "./finPeriod.js";
