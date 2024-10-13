@@ -97,7 +97,12 @@ const Form = ({ edit, masters = [], onSuccess }) => {
         if (
           !values.isGroup &&
           entries.some((entry, i) => {
-            if (entry.branch && entry.amount) {
+            if (
+              entry.branch &&
+              entry.openingStock &&
+              entry.cost &&
+              entry.reorderQty
+            ) {
               return false;
             }
             if (!entry.branch) {
@@ -172,23 +177,6 @@ const Form = ({ edit, masters = [], onSuccess }) => {
           ...masters.map((item) => ({ label: item.name, value: item._id })),
         ]}
       />
-
-      {/* <Combobox
-        label="Type"
-        name="type"
-        control={control}
-        options={[
-          { label: "None", value: "null" },
-          { label: "Cash", value: "Cash" },
-          { label: "Bank", value: "Bank" },
-          { label: "Customers", value: "Customers" },
-          { label: "Suppliers", value: "Suppliers" },
-          { label: "Sales", value: "Sales" },
-          { label: "Purchase", value: "Purchase" },
-          { label: "Stock", value: "Stock" },
-          { label: "Tax", value: "Tax" },
-        ]}
-      /> */}
 
       <Combobox
         label="Is Group"
