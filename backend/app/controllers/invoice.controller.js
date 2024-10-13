@@ -166,6 +166,17 @@ const generateEntries = async (body, companyId, finPeriodId) => {
   return accountingEntries;
 };
 
+const generateStockEntries = async (body, companyId, finPeriodId) => {
+  const accountingEntries = body.items.map((item) => ({
+    accountId: item.product._id,
+    accountName: item.product.name,
+    outward: item.qty,
+    inward: 0,
+  }));
+
+  return accountingEntries;
+};
+
 export const create = async (req, res) => {
   try {
     const Invoice = getModel({
@@ -184,8 +195,18 @@ export const create = async (req, res) => {
       req.finPeriod._id
     );
 
+    req.body.stockEntries = await generateStockEntries(
+      req.body,
+      req.business?._id || req.authUser._id,
+      req.finPeriod._id
+    );
+
     new Invoice({
       ...req.body,
+      items: req.body.items.map((item) => ({
+        ...item,
+        product: item.product?._id,
+      })),
       no: nextInvoiceNo || 1,
     })
       .save()

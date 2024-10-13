@@ -21,7 +21,12 @@ export const create = yup.object({
       .array()
       .of(
         yup.object().shape({
-          name: yup.string().required(),
+          product: yup
+            .object({
+              _id: yup.string().required(),
+              name: yup.string().required(),
+            })
+            .required(),
           price: yup.number().min(0).required(),
           qty: yup.number().min(0).required(),
           unit: yup.string().required(),
@@ -57,7 +62,12 @@ export const update = yup.object({
       .array()
       .of(
         yup.object().shape({
-          name: yup.string().required(),
+          product: yup
+            .object({
+              _id: yup.string().required(),
+              name: yup.string().required(),
+            })
+            .required(),
           price: yup.number().min(0).required(),
           qty: yup.number().min(0).required(),
           unit: yup.string().required(),

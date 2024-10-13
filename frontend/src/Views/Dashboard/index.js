@@ -18,7 +18,7 @@ import { paths } from "config";
 import { FaArrowLeftLong } from "react-icons/fa6";
 
 import s from "./dashboard.module.scss";
-import { FaRegUser } from "react-icons/fa";
+import { FaBoxes, FaRegUser } from "react-icons/fa";
 import { Prompt } from "Components/modal";
 import { useFetch } from "hooks";
 import { endpoints } from "config";
@@ -74,6 +74,7 @@ import {
   RiShoppingBag2Fill,
   RiShoppingBag2Line,
 } from "react-icons/ri";
+import { CiBoxes } from "react-icons/ci";
 import { CgSpinner } from "react-icons/cg";
 import { Combobox } from "Components/elements";
 import { useForm } from "react-hook-form";
@@ -98,6 +99,7 @@ const Employees = lazy(() => import("./Employees"));
 const Chats = lazy(() => import("./Chats"));
 const Reports = lazy(() => import("./Reports"));
 const Accounting = lazy(() => import("./Accounting"));
+const Inventory = lazy(() => import("./Inventory"));
 
 const Dashboard = () => {
   const { user, business, userType, finPeriod, checkPermission } =
@@ -172,6 +174,15 @@ const Dashboard = () => {
         ),
         label: "Accounting",
         path: paths.accounting,
+      });
+      menuItems.push({
+        section: "collection",
+        icon: <CiBoxes style={{ marginTop: "0.2em" }} />,
+        activeIcon: (
+          <FaBoxes style={{ marginTop: "0.2em" }} className={s.filled} />
+        ),
+        label: "Inventory",
+        path: paths.inventory,
       });
       if (checkPermission("quote_read")) {
         menuItems.push({
@@ -591,6 +602,14 @@ const Dashboard = () => {
             element={
               <Suspense fallback={<LoadingSaklleton />}>
                 <Accounting setSidebarOpen={setSidebarOpen} />
+              </Suspense>
+            }
+          />
+          <Route
+            path={paths.inventory}
+            element={
+              <Suspense fallback={<LoadingSaklleton />}>
+                <Inventory setSidebarOpen={setSidebarOpen} />
               </Suspense>
             }
           />

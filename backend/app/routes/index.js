@@ -20,6 +20,7 @@ import chatbotRoutes from "./chatbot.routes.js";
 import commonRoutes from "./common.routes.js";
 
 import accountingRoutes from "./accounting.routes.js";
+import inventoryRoutes from "./inventory.routes.js";
 import quoteRoutes from "./quote.routes.js";
 import orderRoutes from "./order.routes.js";
 import invoiceRoutes from "./invoice.routes.js";
@@ -56,6 +57,7 @@ export default function (app) {
   dynamicPageRoutes(app);
 
   accountingRoutes(app);
+  inventoryRoutes(app);
   quoteRoutes(app);
   orderRoutes(app);
   invoiceRoutes(app);

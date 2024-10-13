@@ -1,0 +1,139 @@
+@import "Components/variables";
+
+.content {
+  background: white;
+  margin-bottom: 0;
+  border-radius: 1rem;
+  padding: 1rem;
+  // max-width: 60rem;
+  width: 100%;
+  grid-template-rows: min-content 1fr;
+  .innerWrapper {
+    display: grid;
+    grid-template-columns: 0 1fr;
+    grid-gap: 0;
+    transition: grid-template-columns 0.5s ease-in-out,
+      grid-gap 0.5s ease-in-out;
+    .sidebar {
+      border-radius: 0.5rem;
+      overflow: auto;
+      .addButton {
+        margin-left: auto;
+        margin-right: 0;
+        color: $primary-color;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .btns {
+        display: flex;
+        margin-left: auto;
+        margin-right: 0;
+        grid-gap: 0.5rem;
+      }
+      & > .addButton {
+        margin-bottom: 0.5rem;
+        font-size: 1.2rem;
+      }
+      .listItem {
+        display: grid;
+        .label {
+          padding: 0.25rem;
+          display: flex;
+          align-items: center;
+          grid-gap: 0.5rem;
+          button {
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+          }
+          .addButton {
+            opacity: 0;
+          }
+          .accountName {
+            cursor: pointer;
+            &:hover {
+              text-decoration: underline;
+            }
+            &.highlight {
+              color: $primary-color-dark1;
+            }
+          }
+          &:hover {
+            background: rgba(0, 0, 0, 0.05);
+            .addButton {
+              opacity: 1;
+            }
+          }
+        }
+        .nestedList {
+          margin-left: 0.75rem;
+          padding-left: 0.5rem;
+          border-left: 1px dashed rgb(168, 168, 168);
+          &.highlight strong {
+            color: $primary-color;
+          }
+        }
+      }
+    }
+    &.open {
+      grid-gap: 1rem;
+      grid-template-columns: 18rem 1fr;
+      .sidebar {
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+      }
+    }
+  }
+  .innerContent {
+    .innerContentWrapper {
+      display: grid;
+      .vouchers {
+        tr {
+          grid-template-columns: 6rem 3rem 8rem 1fr 7rem 7rem;
+        }
+        .footer {
+          border-top: 1px solid rgb(109, 109, 109);
+          padding-top: 0.5rem;
+        }
+      }
+      .analysysPlaceholder {
+        padding: 4rem 0;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.entryForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr 3rem;
+  grid-gap: 1rem;
+  align-items: flex-end;
+}
+
+.voucherFilters {
+  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 320px));
+}
+
+.masterFormModal {
+  width: 100%;
+  max-width: 35rem;
+  .masterForm {
+    padding: 1rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .content {
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    .head {
+      padding: 1rem;
+      padding-bottom: 0;
+    }
+  }
+}

@@ -8,7 +8,11 @@ export default new Schema(
     gst: { type: Schema.Types.Number, min: 0, required: true },
     items: [
       new Schema({
-        name: { type: String, required: true },
+        product: {
+          type: Schema.Types.ObjectId,
+          ref: "Inventory",
+          required: true,
+        },
         price: { type: Schema.Types.Number, required: true },
         qty: { type: Schema.Types.Number, required: true },
         unit: { type: Schema.Types.String, required: true },
@@ -24,6 +28,18 @@ export default new Schema(
         accountName: { type: Schema.Types.String, required: true },
         debit: { type: Schema.Types.Number, required: true },
         credit: { type: Schema.Types.Number, required: true },
+      }),
+    ],
+    stockEntries: [
+      new Schema({
+        accountId: {
+          type: Schema.Types.ObjectId,
+          ref: "Inventory",
+          required: true,
+        },
+        accountName: { type: Schema.Types.String, required: true },
+        inward: { type: Schema.Types.Number, required: true },
+        outward: { type: Schema.Types.Number, required: true },
       }),
     ],
     customer: {

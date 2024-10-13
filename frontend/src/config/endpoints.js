@@ -78,6 +78,12 @@ const endpoints = {
   accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
   journals: `${baseApiUrl}/api/journals`,
 
+  inventoryMasters: `${baseApiUrl}/api/inventory/masters`,
+  inventoryListing: `${baseApiUrl}/api/inventory/listings`,
+  inventoryLocations: `${baseApiUrl}/api/inventory/locations`,
+  // accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
+  // journals: `${baseApiUrl}/api/journals`,
+
   comifyChat: `${
     process.env.NODE_ENV === "development"
       ? "http://localhost:8060"

@@ -26,6 +26,18 @@ export default new Schema(
         credit: { type: Schema.Types.Number, required: true },
       }),
     ],
+    stockEntries: [
+      new Schema({
+        accountId: {
+          type: Schema.Types.ObjectId,
+          ref: "Inventory",
+          required: true,
+        },
+        accountName: { type: Schema.Types.String, required: true },
+        inward: { type: Schema.Types.Number, required: true },
+        outward: { type: Schema.Types.Number, required: true },
+      }),
+    ],
     vendor: {
       //   name: { type: String },
       detail: { type: String },

@@ -28,6 +28,7 @@ const paths = {
   subcategories: "sub-categories",
   subPlans: "subscription-plans",
   accounting: "accounting",
+  inventory: "inventory",
   chats: "chats",
   finPeriods: "financial-periods",
 
