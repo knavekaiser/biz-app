@@ -358,7 +358,12 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
-    const months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
+    let months = [];
+    if (req.query.startDate && req.query.endDate) {
+      months = getMonths(req.query.startDate, req.query.endDate);
+    } else {
+      months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
+    }
     const entryConditions = {};
     if (req.query.branch) {
       entryConditions.branch = ObjectId(req.query.branch);
@@ -379,6 +384,71 @@ export const monthlyAnalysys = async (req, res) => {
         $lt: new Date(req.query.endDate),
       };
     }
+
+    const openingBalance = req.query.branch
+      ? await Inventory.aggregate([
+          {
+            $unwind: {
+              path: "$openingStocks",
+              preserveNullAndEmptyArrays: false,
+            },
+          },
+          {
+            $set: {
+              "rec.accountId": "$_id",
+              "rec.accountName": "$name",
+              "rec.branchId": "$openingStocks.branch",
+              "rec.openingBalance": "$openingStocks.openingStock",
+            },
+          },
+          { $replaceRoot: { newRoot: "$rec" } },
+          { $match: { branchId: ObjectId(req.query.branch) } },
+        ])
+      : 0;
+
+    const openingStocks = await Inventory.aggregate([
+      ...entryPipeline(entryConditions),
+      {
+        $match: {
+          accountId: { $in: accounts.map((acc) => acc._id) },
+          dateTime: { $lt: startDate },
+        },
+      },
+      {
+        $lookup: {
+          from: "inventories",
+          foreignField: "_id",
+          localField: "accountId",
+          as: "rec",
+        },
+      },
+      {
+        $set: {
+          rec: {
+            $getField: {
+              input: { $first: "$rec" },
+              field: "openingStocks",
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$accountId",
+          inward: { $sum: "$inward" },
+          outward: { $sum: "$outward" },
+        },
+      },
+    ]).then((data) =>
+      data.reduce((p, c) => {
+        p[c._id] =
+          (openingBalance.find(
+            (item) => item.accountId.toString() === c._id.toString()
+          )?.openingBalance || 0) +
+          (c.inward - c.outward);
+        return p;
+      }, {})
+    );
 
     Inventory.aggregate([
       ...entryPipeline(entryConditions),
@@ -420,6 +490,7 @@ export const monthlyAnalysys = async (req, res) => {
           };
         }),
         months,
+        openingStocks,
       });
     });
   } catch (error) {

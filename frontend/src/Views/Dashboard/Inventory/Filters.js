@@ -1,8 +1,11 @@
 import { useForm } from "react-hook-form";
-import { Input, Combobox } from "Components/elements";
+import { Input, Combobox, moment } from "Components/elements";
 import s from "./quotes.module.scss";
+import { useContext, useState } from "react";
+import { SiteContext } from "SiteContext";
 
 export const VoucherFilters = ({ filters, setFilters }) => {
+  const { finPeriod } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
@@ -40,15 +43,23 @@ export const VoucherFilters = ({ filters, setFilters }) => {
 
       <Input
         label="Start Date"
-        type="datetime-local"
+        type="date"
         {...register("startDate")}
+        {...(finPeriod && {
+          min: moment(finPeriod.startDate, "YYYY-MM-DD"),
+        })}
+        {...(finPeriod && {
+          max: moment(finPeriod.endDate, "YYYY-MM-DD"),
+        })}
         required
         error={errors.startDate}
       />
       <Input
         label="End Date"
-        type="datetime-local"
+        type="date"
         {...register("endDate")}
+        {...(finPeriod && { min: moment(finPeriod.startDate, "YYYY-MM-DD") })}
+        {...(finPeriod && { max: moment(finPeriod.endDate, "YYYY-MM-DD") })}
         required
         error={errors.endDate}
       />
@@ -71,11 +82,11 @@ export const VoucherFilters = ({ filters, setFilters }) => {
 };
 
 export const AnalysysFilters = ({ filters, setFilters }) => {
+  const { finPeriod } = useContext(SiteContext);
   const {
     handleSubmit,
     register,
     reset,
-    control,
     formState: { errors },
   } = useForm();
 
@@ -96,15 +107,19 @@ export const AnalysysFilters = ({ filters, setFilters }) => {
     >
       <Input
         label="Start Date"
-        type="datetime-local"
+        type="date"
         {...register("startDate")}
+        // {...(finPeriod && { min: moment(finPeriod.startDate, "YYYY-MM-DD") })}
+        // {...(finPeriod && { max: moment(finPeriod.endDate, "YYYY-MM-DD") })}
         required
         error={errors.startDate}
       />
       <Input
         label="End Date"
-        type="datetime-local"
+        type="date"
         {...register("endDate")}
+        // {...(finPeriod && { min: moment(finPeriod.startDate, "YYYY-MM-DD") })}
+        // {...(finPeriod && { max: moment(finPeriod.endDate, "YYYY-MM-DD") })}
         required
         error={errors.endDate}
       />

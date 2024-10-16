@@ -703,6 +703,7 @@ const Analysys = ({ branch, account }) => {
   const [months, setMonths] = useState([]);
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({});
+  const [openingStocks, setOpeningStocks] = useState({});
   const [calculation, setCalculation] = useState("sum_debit");
   const { get, loading } = useFetch(endpoints.inventoryMonthlyAnalysys);
   useEffect(() => {
@@ -725,6 +726,7 @@ const Analysys = ({ branch, account }) => {
           if (data.success) {
             setData(data.data);
             setMonths(data.months);
+            setOpeningStocks(data.openingStocks);
           } else {
             Prompt({ type: "error", message: data.message });
           }
@@ -793,6 +795,7 @@ const Analysys = ({ branch, account }) => {
             className={s.analysys}
             columns={[
               { label: account.name },
+              { label: "Opening Stock", className: "text-right" },
               ...(months || []).map((item) => ({
                 label: item.label,
                 className: "text-right",
@@ -809,6 +812,9 @@ const Analysys = ({ branch, account }) => {
                   }}
                 >
                   <td>Total</td>
+                  <td className="text-right">
+                    {Object.values(openingStocks).reduce((p, c) => p + c, 0)}
+                  </td>
                   {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
@@ -828,12 +834,13 @@ const Analysys = ({ branch, account }) => {
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
+                  <td className="text-right">{openingStocks[row._id] || 0}</td>
                   {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
                         calculation,
                         row.entries[i],
-                        row.openingBalance
+                        openingStocks[row._id]
                       )}
                     </td>
                   ))}
