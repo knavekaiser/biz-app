@@ -278,69 +278,70 @@ const Accounting = ({ setSidebarOpen }) => {
                                 o.rec_id === obj.rec_id && o.index === obj.index
                             )
                         );
-                        const detailedRows = allRecords
-                          .filter((row) => row.accountId !== account._id)
-                          .reduce((p, c) => {
-                            const index = p.findIndex((item) =>
-                              item.some((row) => row.rec_id === c.rec_id)
-                            );
-                            if (index === -1) {
-                              p.push([c]);
-                            } else {
-                              p[index].push(c);
-                            }
-                            return p;
-                          }, [])
-                          .map((item) => {
-                            const accRec = allRecords.find(
-                              (rec) => rec.rec_id === item[0].rec_id
-                            );
-                            if (item.length <= 1) {
-                              return {
-                                ...item[0],
-                                outward: accRec.outward,
-                                inward: accRec.inward,
-                              };
-                            } else {
-                              return {
-                                ...item[0],
-                                details: item.map((row) => ({
-                                  label: row.accountName,
-                                  value: row.inward || row.outward,
-                                })),
-                                // inward: item.reduce((p, c) => p + c.inward, 0),
-                                // outward: item.reduce((p, c) => p + c.outward, 0),
-                                outward: accRec.outward,
-                                inward: accRec.inward,
-                              };
-                            }
-                          })
-                          .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                          .sort((a, b) => (a.index > b.index ? 1 : -1))
-                          .reduce((p, c) => {
-                            if (c.details?.length) {
-                              p.push(
-                                ...[
-                                  c,
-                                  ...c.details.map((item) => ({
-                                    createdAt: null,
-                                    no: null,
-                                    type: null,
-                                    accountName: (
-                                      <p>
-                                        {item.label}: {item.value.toFixed(2)}
-                                      </p>
-                                    ),
-                                    outward: null,
-                                    inward: null,
-                                  })),
-                                ]
-                              );
-                            } else {
-                              p.push(c);
-                            }
-                            return p;
-                          }, []);
+                        const detailedRows = allRecords.filter(
+                          (row) => row.accountId === account._id
+                        );
+                        // .reduce((p, c) => {
+                        //   const index = p.findIndex((item) =>
+                        //     item.some((row) => row.rec_id === c.rec_id)
+                        //   );
+                        //   if (index === -1) {
+                        //     p.push([c]);
+                        //   } else {
+                        //     p[index].push(c);
+                        //   }
+                        //   return p;
+                        // }, [])
+                        // .map((item) => {
+                        //   const accRec = allRecords.find(
+                        //     (rec) => rec.rec_id === item[0].rec_id
+                        //   );
+                        //   if (item.length <= 1) {
+                        //     return {
+                        //       ...item[0],
+                        //       outward: accRec.outward,
+                        //       inward: accRec.inward,
+                        //     };
+                        //   } else {
+                        //     return {
+                        //       ...item[0],
+                        //       details: item.map((row) => ({
+                        //         label: row.accountName,
+                        //         value: row.inward || row.outward,
+                        //       })),
+                        //       // inward: item.reduce((p, c) => p + c.inward, 0),
+                        //       // outward: item.reduce((p, c) => p + c.outward, 0),
+                        //       outward: accRec.outward,
+                        //       inward: accRec.inward,
+                        //     };
+                        //   }
+                        // })
+                        // .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                        // .sort((a, b) => (a.index > b.index ? 1 : -1))
+                        // .reduce((p, c) => {
+                        //   if (c.details?.length) {
+                        //     p.push(
+                        //       ...[
+                        //         c,
+                        //         ...c.details.map((item) => ({
+                        //           createdAt: null,
+                        //           no: null,
+                        //           type: null,
+                        //           accountName: (
+                        //             <p>
+                        //               {item.label}: {item.value.toFixed(2)}
+                        //             </p>
+                        //           ),
+                        //           outward: null,
+                        //           inward: null,
+                        //         })),
+                        //       ]
+                        //     );
+                        //   } else {
+                        //     p.push(c);
+                        //   }
+                        //   return p;
+                        // }, []);
                         setLedger({
                           account,
                           rows: detailedRows,
