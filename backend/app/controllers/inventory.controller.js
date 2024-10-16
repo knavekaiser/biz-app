@@ -210,6 +210,9 @@ export const listing = async (req, res) => {
     });
 
     const entryConditions = {};
+    if (req.query.branch) {
+      entryConditions.branch = ObjectId(req.query.branch);
+    }
     const conditions = {};
     if (req.query.type) {
       conditions.type = req.query.type;
@@ -223,6 +226,7 @@ export const listing = async (req, res) => {
         $lt: new Date(req.query.endDate),
       };
     }
+
     Inventory.aggregate([
       ...entryPipeline(entryConditions),
       { $sort: { updatedAt: 1, index: 1 } },
@@ -314,7 +318,7 @@ const monthNames = [
   "Nov",
   "Dec",
 ];
-const getLast12Months = (startDate, endDate) => {
+const getMonths = (startDate, endDate) => {
   const months = [];
   for (let i = 0; i < 100; i++) {
     const date = new Date(
@@ -354,11 +358,11 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
-    const months = getLast12Months(
-      req.finPeriod.startDate,
-      req.finPeriod.endDate
-    );
+    const months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
     const entryConditions = {};
+    if (req.query.branch) {
+      entryConditions.branch = ObjectId(req.query.branch);
+    }
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
       dateTime: {

@@ -15,7 +15,7 @@ import {
 import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
-import VoucherFilters from "./Filters";
+import { VoucherFilters, AnalysysFilters } from "./Filters";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -590,6 +590,7 @@ const Ledgers = ({ account, rows }) => {
 
 const Analysys = ({ account }) => {
   const [months, setMonths] = useState([]);
+  const [filters, setFilters] = useState({});
   const [data, setData] = useState([]);
   const [calculation, setCalculation] = useState("sum_debit");
   const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
@@ -600,7 +601,12 @@ const Analysys = ({ account }) => {
           ? "sum_credit"
           : "sum_debit"
       );
-      get({ query: { accountId: account._id } })
+      const query = { accountId: account._id };
+      if (filters.startDate && filters.endDate) {
+        query.startDate = filters.startDate;
+        query.endDate = filters.endDate;
+      }
+      get({ query })
         .then(({ data }) => {
           if (data.success) {
             setData(data.data);
@@ -614,11 +620,12 @@ const Analysys = ({ account }) => {
       setData([]);
       setMonths([]);
     }
-  }, [account]);
+  }, [account, filters]);
   return (
     <div className={s.innerContentWrapper}>
       {account ? (
         <div>
+          <AnalysysFilters filters={filters} setFilters={setFilters} />
           <div className="mt-1 flex gap-2 align-center">
             <p
               style={{ fontWeight: "600", fontSize: "1.2em" }}

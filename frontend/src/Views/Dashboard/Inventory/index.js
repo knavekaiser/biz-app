@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Table, Moment, Tabs } from "Components/elements";
+import { Table, Moment, Tabs, Combobox } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
 import { useFetch } from "hooks";
@@ -16,7 +16,8 @@ import {
 import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
-import VoucherFilters from "./Filters";
+import { VoucherFilters, AnalysysFilters } from "./Filters";
+import { useForm } from "react-hook-form";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -192,12 +193,31 @@ const Accounting = ({ setSidebarOpen }) => {
   const [ledger, setLedger] = useState({});
   const [vouchers, setVouchers] = useState([]);
   const [journalAcc, setJournalAcc] = useState([]);
+  const { control, reset } = useForm();
 
   const { get: getMasters } = useFetch(endpoints.inventoryMasters);
+  const { get: getBranches } = useFetch(endpoints.inventoryBranches);
+
+  const [branches, setBranches] = useState([]);
+  const [branch, setBranch] = useState(null);
 
   const treeData = useMemo(() => buildTree(masters), [masters]);
 
   useEffect(() => {
+    getBranches()
+      .then(({ data }) => {
+        if (data.success) {
+          setBranches(data.data);
+          if (data.data.length) {
+            reset({ branch: data.data[0]._id });
+            setBranch(data.data[0]);
+          }
+        } else {
+          Prompt({ type: "error", message: data.message });
+        }
+      })
+      .catch((err) => Prompt({ type: "error", message: err.message }));
+
     getMasters({ query: { isGroup: "true" } })
       .then(({ data }) => {
         if (data.success) {
@@ -225,7 +245,7 @@ const Accounting = ({ setSidebarOpen }) => {
             <Tabs
               activeTab={sidebarTab}
               tabs={[
-                { label: "Accounts", value: "accounts" },
+                { label: "Products", value: "accounts" },
                 { label: "Branches", value: "branches" },
               ]}
               onChange={(tab) => setSidebarTab(tab.value)}
@@ -367,10 +387,33 @@ const Accounting = ({ setSidebarOpen }) => {
             </ul>
           )}
           {sidebarTab === "branches" && (
-            <Branches addBranch={addBranch} setAddBranch={setAddBranch} />
+            <Branches
+              branches={branches}
+              setBranches={setBranches}
+              addBranch={addBranch}
+              setAddBranch={setAddBranch}
+            />
           )}
         </div>
         <div className={s.innerContent}>
+          <div style={{ maxWidth: "15rem" }}>
+            <Combobox
+              label="Branch"
+              control={control}
+              name="branch"
+              options={branches.map((b) => ({
+                label: b.name,
+                value: b._id,
+                branch: b,
+              }))}
+              onChange={(opt) => {
+                if (opt?.branch) {
+                  setBranch(opt.branch);
+                }
+              }}
+              className="mb-2"
+            />
+          </div>
           <div className="flex gap-1 align-center">
             <button
               className="btn clear iconOnly"
@@ -382,19 +425,25 @@ const Accounting = ({ setSidebarOpen }) => {
               activeTab={tab}
               tabs={[
                 { label: "Listing", value: "voucherListing" },
-                { label: "Traking", value: "ledgers" },
-                { label: "Accounting Analysys", value: "analysys" },
+                { label: "Stock Ledgers", value: "ledgers" },
+                { label: "Inventory Analysys", value: "analysys" },
               ]}
               onChange={(tab) => setTab(tab.value)}
             />
           </div>
           {tab === "voucherListing" && (
-            <Vouchers vouchers={vouchers} setVouchers={setVouchers} />
+            <Vouchers
+              branch={branch}
+              vouchers={vouchers}
+              setVouchers={setVouchers}
+            />
           )}
           {tab === "ledgers" && (
             <Ledgers account={ledger?.account} rows={ledger?.rows} />
           )}
-          {tab === "analysys" && <Analysys account={analysysAcc} />}
+          {tab === "analysys" && (
+            <Analysys branch={branch} account={analysysAcc} />
+          )}
           {
             // tab === "journals" && <Journals accounts={journalAcc} />
           }
@@ -429,20 +478,7 @@ const Accounting = ({ setSidebarOpen }) => {
   );
 };
 
-const Branches = ({ addBranch, setAddBranch }) => {
-  const [branches, setBranches] = useState([]);
-  const { get: getBranches } = useFetch(endpoints.inventoryBranches);
-  useEffect(() => {
-    getBranches()
-      .then(({ data }) => {
-        if (data.success) {
-          setBranches(data.data);
-        } else {
-          Prompt({ type: "error", message: data.message });
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, []);
+const Branches = ({ branches, setBranches, addBranch, setAddBranch }) => {
   return (
     <>
       <ul>
@@ -494,14 +530,18 @@ const Branches = ({ addBranch, setAddBranch }) => {
   );
 };
 
-const Vouchers = ({ vouchers, setVouchers }) => {
+const Vouchers = ({ branch, vouchers, setVouchers }) => {
   const [filters, setFilters] = useState({});
   const voucherTableRef = useRef();
 
   const { get: getVouchers } = useFetch(endpoints.inventoryListing);
 
   useEffect(() => {
-    getVouchers({ query: filters })
+    const query = { ...filters };
+    if (branch) {
+      query.branch = branch._id;
+    }
+    getVouchers({ query })
       .then(({ data }) => {
         if (data.success) {
           setVouchers(data.data);
@@ -510,7 +550,7 @@ const Vouchers = ({ vouchers, setVouchers }) => {
         }
       })
       .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, [filters]);
+  }, [filters, branch]);
 
   return (
     <div className={s.innerContentWrapper}>
@@ -659,9 +699,10 @@ const Ledgers = ({ account, rows }) => {
   );
 };
 
-const Analysys = ({ account }) => {
+const Analysys = ({ branch, account }) => {
   const [months, setMonths] = useState([]);
   const [data, setData] = useState([]);
+  const [filters, setFilters] = useState({});
   const [calculation, setCalculation] = useState("sum_debit");
   const { get, loading } = useFetch(endpoints.inventoryMonthlyAnalysys);
   useEffect(() => {
@@ -671,7 +712,15 @@ const Analysys = ({ account }) => {
           ? "sum_credit"
           : "sum_debit"
       );
-      get({ query: { accountId: account._id } })
+      const query = { accountId: account._id };
+      if (branch) {
+        query.branch = branch._id;
+      }
+      if (filters.startDate && filters.endDate) {
+        query.startDate = filters.startDate;
+        query.endDate = filters.endDate;
+      }
+      get({ query })
         .then(({ data }) => {
           if (data.success) {
             setData(data.data);
@@ -685,11 +734,12 @@ const Analysys = ({ account }) => {
       setData([]);
       setMonths([]);
     }
-  }, [account]);
+  }, [account, filters, branch]);
   return (
     <div className={s.innerContentWrapper}>
       {account ? (
         <div>
+          <AnalysysFilters filter={filters} setFilters={setFilters} />
           <div className="mt-1 flex gap-2 align-center">
             <p
               style={{ fontWeight: "600", fontSize: "1.2em" }}
