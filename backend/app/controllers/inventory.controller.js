@@ -366,10 +366,16 @@ export const monthlyAnalysys = async (req, res) => {
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
       dateTime: {
-        $gte: new Date(`${months[0].year}-${months[0].month + 1}-01`),
+        $gte: new Date(
+          `${months[0].year}-${
+            (months[0].month + 1) % 12 === 0 ? 12 : (months[0].month + 1) % 12
+          }-01`
+        ),
         $lt: new Date(
           `${months[months.length - 1].year}-${
-            months[months.length - 1].month + 2
+            (months[months.length - 1].month + 2) % 12 === 0
+              ? 12
+              : (months[months.length - 1].month + 2) % 12
           }-01`
         ),
       },
@@ -384,7 +390,6 @@ export const monthlyAnalysys = async (req, res) => {
     Inventory.aggregate([
       ...entryPipeline(entryConditions),
       { $match: conditions },
-      { $match: { accountId: { $in: accounts.map((item) => item._id) } } },
       {
         $group: {
           _id: "$accountId",

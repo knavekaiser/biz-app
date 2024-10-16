@@ -317,7 +317,7 @@ const monthNames = [
   "Nov",
   "Dec",
 ];
-const getLast12Months = (startDate, endDate) => {
+const getMonths = (startDate, endDate) => {
   const months = [];
   for (let i = 0; i < 100; i++) {
     const date = new Date(
@@ -357,18 +357,21 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
-    const months = getLast12Months(
-      req.finPeriod.startDate,
-      req.finPeriod.endDate
-    );
+    const months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
     const entryConditions = {};
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
       dateTime: {
-        $gte: new Date(`${months[0].year}-${months[0].month + 1}-01`),
+        $gte: new Date(
+          `${months[0].year}-${
+            (months[0].month + 1) % 12 === 0 ? 12 : (months[0].month + 1) % 12
+          }-01`
+        ),
         $lt: new Date(
           `${months[months.length - 1].year}-${
-            months[months.length - 1].month + 2
+            (months[months.length - 1].month + 2) % 12 === 0
+              ? 12
+              : (months[months.length - 1].month + 2) % 12
           }-01`
         ),
       },
@@ -383,7 +386,6 @@ export const monthlyAnalysys = async (req, res) => {
     Account.aggregate([
       ...entryPipeline(entryConditions),
       { $match: conditions },
-      { $match: { accountId: { $in: accounts.map((item) => item._id) } } },
       {
         $group: {
           _id: "$accountId",
