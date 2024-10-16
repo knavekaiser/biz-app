@@ -30,7 +30,8 @@ const mainSchema = yup.object({
 });
 
 const itemSchema = yup.object({
-  name: yup.string().required(),
+  product_id: yup.string().required(),
+  product_name: yup.string().required(),
   price: yup
     .number()
     .min(0, "Price can not be less than 0")
@@ -64,12 +65,18 @@ const Detail = ({ label, value, className }) => {
 
 const Form = ({ edit, sales, onSuccess }) => {
   const { user, config, checkPermission } = useContext(SiteContext);
+  const { control, watch, reset } = useForm();
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
   const [err, setErr] = useState(null);
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
+
+  const location = watch("branch");
+  useEffect(() => {
+    reset({ branch: edit?.branch || "" });
+  }, [edit]);
   return (
     <div
       className={`grid gap-1 p-1 ${s.addSaleForm} ${
@@ -148,6 +155,23 @@ const Form = ({ edit, sales, onSuccess }) => {
         </div>
       )}
 
+      {!viewOnly && (
+        <Select
+          label="Branch"
+          control={control}
+          name="branch"
+          formOptions={{ required: true }}
+          url={endpoints.inventoryBranches}
+          getQuery={(v) => ({
+            name: v,
+          })}
+          handleData={(data) => ({
+            label: `${data.name}`,
+            value: data._id,
+          })}
+        />
+      )}
+
       <h3>Items</h3>
       {items.length > 0 ? (
         <Table
@@ -164,7 +188,7 @@ const Form = ({ edit, sales, onSuccess }) => {
           {items.map((item, i) => (
             <tr key={i}>
               <td className={s.name}>
-                <span className="ellipsis">{item.name}</span>
+                <span className="ellipsis">{item.product?.name}</span>
               </td>
               <td className="text-right">{item.qty}</td>
               <td>{item.unit}</td>
@@ -216,6 +240,7 @@ const Form = ({ edit, sales, onSuccess }) => {
       {!viewOnly && (
         <>
           <ItemForm
+            location={location}
             key={editItem ? "edit" : "add"}
             edit={editItem}
             sales={sales}
@@ -237,6 +262,7 @@ const Form = ({ edit, sales, onSuccess }) => {
           <h3 className="mt-1">Other Information</h3>
 
           <MainForm
+            location={location}
             disabled={editItem}
             edit={edit}
             items={items}
@@ -251,7 +277,7 @@ const Form = ({ edit, sales, onSuccess }) => {
   );
 };
 
-const ItemForm = ({ edit, sales, onSuccess }) => {
+const ItemForm = ({ location, edit, sales, onSuccess }) => {
   const { config } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -268,7 +294,11 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
     resolver: useYup(itemSchema),
   });
   useEffect(() => {
-    reset({ ...edit });
+    reset({
+      ...edit,
+      product_id: edit?.product?._id || "",
+      product_name: edit?.product?.name || "",
+    });
   }, [edit]);
   return (
     <form
@@ -276,35 +306,38 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
         if (!edit) {
           values._id = Math.random().toString().substr(-8);
         }
-        onSuccess(values);
+        onSuccess({
+          ...values,
+          product: {
+            _id: values.product_id,
+            name: values.product_name,
+          },
+        });
         reset();
       })}
       className={`${s.itemForm} grid gap-1`}
     >
-      <SearchField
+      <Select
+        control={control}
+        url={endpoints.inventoryMasters}
+        getQuery={(v) => ({
+          branch: location,
+          isGroup: "false",
+          name: v,
+        })}
+        handleData={(data) => ({
+          label: `${data.name}`,
+          value: data._id,
+          account: data,
+        })}
         label="Product"
-        data={sales
-          .reduce((p, c) => [...p, ...c.items], [])
-          .map((item) => ({
-            label: item.name,
-            value: item.name,
-            data: item,
-          }))}
-        register={register}
-        name="name"
+        name="product_id"
         formOptions={{ required: true }}
-        renderListItem={(item) => <>{item.label}</>}
-        watch={watch}
-        setValue={setValue}
-        onChange={(item) => {
-          if (typeof item === "string") {
-            setValue("name", item);
-          } else {
-            setValue("name", item.name);
-            setValue("price", item.price);
+        onChange={(opt) => {
+          if (opt) {
+            setValue("product_name", opt.label);
           }
         }}
-        error={errors.name}
         className={s.itemName}
       />
 
@@ -337,7 +370,15 @@ const ItemForm = ({ edit, sales, onSuccess }) => {
   );
 };
 
-const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
+const MainForm = ({
+  location,
+  disabled,
+  edit,
+  items,
+  sales,
+  setErr,
+  onSuccess,
+}) => {
   const { finPeriod } = useContext(SiteContext);
   const {
     handleSubmit,
@@ -386,6 +427,7 @@ const MainForm = ({ disabled, edit, items, sales, setErr, onSuccess }) => {
           gst: values.gst,
           accountId: values.accountId,
           accountName: values.accountName,
+          branch: location,
           // status: values.status,
           customer: {
             //   name: values.customerName,

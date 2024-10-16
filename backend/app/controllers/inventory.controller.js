@@ -261,8 +261,8 @@ export const getJournals = async (req, res) => {
         $group: {
           _id: "$accountId",
           accountName: { $first: "$accountName" },
-          debit: { $sum: "$debit" },
-          credit: { $sum: "$credit" },
+          outward: { $sum: "$outward" },
+          inward: { $sum: "$inward" },
         },
       },
     ]).then((data) => {
@@ -389,8 +389,8 @@ export const monthlyAnalysys = async (req, res) => {
           entries: {
             $push: {
               dateTime: "$dateTime",
-              debit: "$debit",
-              credit: "$credit",
+              outward: "$outward",
+              inward: "$inward",
             },
           },
         },

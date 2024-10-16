@@ -3,6 +3,11 @@ const Schema = mongoose.Schema;
 
 export default new Schema(
   {
+    branch: {
+      type: Schema.Types.ObjectId,
+      ref: "InventoryBranch",
+      required: true,
+    },
     no: { type: Schema.Types.Number, min: 1, required: true },
     dateTime: { type: Schema.Types.Date, required: true },
     gst: { type: Schema.Types.Number, min: 0, required: true },

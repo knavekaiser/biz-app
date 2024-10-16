@@ -3,12 +3,21 @@ const Schema = mongoose.Schema;
 
 export default new Schema(
   {
+    branch: {
+      type: Schema.Types.ObjectId,
+      ref: "InventoryBranch",
+      required: true,
+    },
     no: { type: Schema.Types.Number, min: 1, required: true },
     dateTime: { type: Schema.Types.Date, required: true },
     gst: { type: Schema.Types.Number, min: 0, required: true },
     items: [
       new Schema({
-        name: { type: String, required: true },
+        product: {
+          type: Schema.Types.ObjectId,
+          ref: "Inventory",
+          required: true,
+        },
         price: { type: Schema.Types.Number, required: true },
         qty: { type: Schema.Types.Number, required: true },
         unit: { type: Schema.Types.String, required: true },

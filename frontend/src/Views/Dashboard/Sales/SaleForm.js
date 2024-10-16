@@ -65,7 +65,7 @@ const Detail = ({ label, value, className }) => {
 
 const Form = ({ edit, sales, onSuccess }) => {
   const { user, config, checkPermission } = useContext(SiteContext);
-  const { control, setValue, watch } = useForm();
+  const { control, watch, reset } = useForm();
   const [viewOnly, setViewOnly] = useState(!!edit);
   const [items, setItems] = useState(edit?.items || []);
   const [editItem, setEditItem] = useState(null);
@@ -73,8 +73,10 @@ const Form = ({ edit, sales, onSuccess }) => {
   const printRef = useRef();
   const handlePrint = useReactToPrint({ content: () => printRef.current });
 
-  const location = watch("location");
-
+  const location = watch("branch");
+  useEffect(() => {
+    reset({ branch: edit?.branch || "" });
+  }, [edit]);
   return (
     <div
       className={`grid gap-1 p-1 ${s.addSaleForm} ${
@@ -153,20 +155,22 @@ const Form = ({ edit, sales, onSuccess }) => {
         </div>
       )}
 
-      <Select
-        label="Branch"
-        control={control}
-        name="location"
-        formOptions={{ required: true }}
-        url={endpoints.inventoryBranches}
-        getQuery={(v) => ({
-          name: v,
-        })}
-        handleData={(data) => ({
-          label: `${data.name}`,
-          value: data.name,
-        })}
-      />
+      {!viewOnly && (
+        <Select
+          label="Branch"
+          control={control}
+          name="branch"
+          formOptions={{ required: true }}
+          url={endpoints.inventoryBranches}
+          getQuery={(v) => ({
+            name: v,
+          })}
+          handleData={(data) => ({
+            label: `${data.name}`,
+            value: data._id,
+          })}
+        />
+      )}
 
       <h3>Items</h3>
       {items.length > 0 ? (
@@ -317,7 +321,6 @@ const ItemForm = ({ location, edit, sales, onSuccess }) => {
         control={control}
         url={endpoints.inventoryMasters}
         getQuery={(v) => ({
-          // types: "Cash,Bank,Customers",
           branch: location,
           isGroup: "false",
           name: v,
@@ -420,11 +423,11 @@ const MainForm = ({
         }
 
         (edit ? updateInvoice : saveInvoice)({
+          branch: location,
           dateTime: values.date,
           gst: values.gst,
           accountId: values.accountId,
           accountName: values.accountName,
-          location,
           // status: values.status,
           customer: {
             //   name: values.customerName,

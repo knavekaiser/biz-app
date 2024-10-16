@@ -257,111 +257,96 @@ const Accounting = ({ setSidebarOpen }) => {
                       tab === "journals" ? journalAcc.map((acc) => acc._id) : []
                     }
                     onClick={(account) => {
-                      // if (tab === "journals") {
-                      //   if (!account.isGroup) {
-                      //     setJournalAcc((prev) =>
-                      //       prev.some((acc) => acc._id === account._id)
-                      //         ? prev.filter((acc) => acc._id !== account._id)
-                      //         : [...prev, account].filter(
-                      //             (acc, i, arr) =>
-                      //               arr.findIndex(
-                      //                 (item) => item._id === acc._id
-                      //               ) === i
-                      //           )
-                      //     );
-                      //   }
-                      //   return;
-                      // }
-                      // if (account.isGroup) {
-                      //   setAnalysysAcc(account);
-                      //   setTab("analysys");
-                      // } else {
-                      //   const firstRecords = (vouchers || []).filter(
-                      //     (item) => item.accountId === account._id
-                      //   );
-                      //   const otherRecords = (vouchers || []).filter((item) =>
-                      //     firstRecords.some((rec) => rec.rec_id === item.rec_id)
-                      //   );
-                      //   const allRecords = [
-                      //     ...firstRecords,
-                      //     ...otherRecords,
-                      //   ].filter(
-                      //     (obj, index, self) =>
-                      //       index ===
-                      //       self.findIndex(
-                      //         (o) =>
-                      //           o.rec_id === obj.rec_id && o.index === obj.index
-                      //       )
-                      //   );
-                      //   const detailedRows = allRecords
-                      //     .filter((row) => row.accountId !== account._id)
-                      //     .reduce((p, c) => {
-                      //       const index = p.findIndex((item) =>
-                      //         item.some((row) => row.rec_id === c.rec_id)
-                      //       );
-                      //       if (index === -1) {
-                      //         p.push([c]);
-                      //       } else {
-                      //         p[index].push(c);
-                      //       }
-                      //       return p;
-                      //     }, [])
-                      //     .map((item) => {
-                      //       const accRec = allRecords.find(
-                      //         (rec) => rec.rec_id === item[0].rec_id
-                      //       );
-                      //       if (item.length <= 1) {
-                      //         return {
-                      //           ...item[0],
-                      //           debit: accRec.debit,
-                      //           credit: accRec.credit,
-                      //         };
-                      //       } else {
-                      //         return {
-                      //           ...item[0],
-                      //           details: item.map((row) => ({
-                      //             label: row.accountName,
-                      //             value: row.credit || row.debit,
-                      //           })),
-                      //           // credit: item.reduce((p, c) => p + c.credit, 0),
-                      //           // debit: item.reduce((p, c) => p + c.debit, 0),
-                      //           debit: accRec.debit,
-                      //           credit: accRec.credit,
-                      //         };
-                      //       }
-                      //     })
-                      //     .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                      //     .sort((a, b) => (a.index > b.index ? 1 : -1))
-                      //     .reduce((p, c) => {
-                      //       if (c.details?.length) {
-                      //         p.push(
-                      //           ...[
-                      //             c,
-                      //             ...c.details.map((item) => ({
-                      //               createdAt: null,
-                      //               no: null,
-                      //               type: null,
-                      //               accountName: (
-                      //                 <p>
-                      //                   {item.label}: {item.value.toFixed(2)}
-                      //                 </p>
-                      //               ),
-                      //               debit: null,
-                      //               credit: null,
-                      //             })),
-                      //           ]
-                      //         );
-                      //       } else {
-                      //         p.push(c);
-                      //       }
-                      //       return p;
-                      //     }, []);
-                      //   setLedger({
-                      //     account,
-                      //     rows: detailedRows,
-                      //   });
-                      //   setTab("ledgers");
-                      // }
+                      if (account.isGroup) {
+                        setAnalysysAcc(account);
+                        setTab("analysys");
+                      } else {
+                        const firstRecords = (vouchers || []).filter(
+                          (item) => item.accountId === account._id
+                        );
+                        const otherRecords = (vouchers || []).filter((item) =>
+                          firstRecords.some((rec) => rec.rec_id === item.rec_id)
+                        );
+                        const allRecords = [
+                          ...firstRecords,
+                          ...otherRecords,
+                        ].filter(
+                          (obj, index, self) =>
+                            index ===
+                            self.findIndex(
+                              (o) =>
+                                o.rec_id === obj.rec_id && o.index === obj.index
+                            )
+                        );
+                        const detailedRows = allRecords
+                          .filter((row) => row.accountId !== account._id)
+                          .reduce((p, c) => {
+                            const index = p.findIndex((item) =>
+                              item.some((row) => row.rec_id === c.rec_id)
+                            );
+                            if (index === -1) {
+                              p.push([c]);
+                            } else {
+                              p[index].push(c);
+                            }
+                            return p;
+                          }, [])
+                          .map((item) => {
+                            const accRec = allRecords.find(
+                              (rec) => rec.rec_id === item[0].rec_id
+                            );
+                            if (item.length <= 1) {
+                              return {
+                                ...item[0],
+                                outward: accRec.outward,
+                                inward: accRec.inward,
+                              };
+                            } else {
+                              return {
+                                ...item[0],
+                                details: item.map((row) => ({
+                                  label: row.accountName,
+                                  value: row.inward || row.outward,
+                                })),
+                                // inward: item.reduce((p, c) => p + c.inward, 0),
+                                // outward: item.reduce((p, c) => p + c.outward, 0),
+                                outward: accRec.outward,
+                                inward: accRec.inward,
+                              };
+                            }
+                          })
+                          .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+                          .sort((a, b) => (a.index > b.index ? 1 : -1))
+                          .reduce((p, c) => {
+                            if (c.details?.length) {
+                              p.push(
+                                ...[
+                                  c,
+                                  ...c.details.map((item) => ({
+                                    createdAt: null,
+                                    no: null,
+                                    type: null,
+                                    accountName: (
+                                      <p>
+                                        {item.label}: {item.value.toFixed(2)}
+                                      </p>
+                                    ),
+                                    outward: null,
+                                    inward: null,
+                                  })),
+                                ]
+                              );
+                            } else {
+                              p.push(c);
+                            }
+                            return p;
+                          }, []);
+                        setLedger({
+                          account,
+                          rows: detailedRows,
+                        });
+                        setTab("ledgers");
+                      }
                     }}
                   />
                 ))
@@ -396,8 +381,8 @@ const Accounting = ({ setSidebarOpen }) => {
               activeTab={tab}
               tabs={[
                 { label: "Listing", value: "voucherListing" },
-                // { label: "Ledgers", value: "ledgers" },
-                // { label: "Accounting Analysys", value: "analysys" },
+                { label: "Traking", value: "ledgers" },
+                { label: "Accounting Analysys", value: "analysys" },
               ]}
               onChange={(tab) => setTab(tab.value)}
             />
@@ -435,7 +420,7 @@ const Accounting = ({ setSidebarOpen }) => {
                 }
               })
               .catch((err) => Prompt({ type: "error", message: err.message }));
-            setAddMaster(false);
+            setAddMaster({});
           }}
         />
       </Modal>
@@ -542,9 +527,9 @@ const Vouchers = ({ vouchers, setVouchers }) => {
           { label: "Date" },
           { label: "No" },
           { label: "Type" },
-          { label: "Account Name" },
-          { label: "Outward", className: "text-right" },
-          { label: "Inward", className: "text-right" },
+          { label: "Product Name" },
+          { label: "Out", className: "text-right" },
+          { label: "In", className: "text-right" },
           // { label: "Action" },
         ]}
         tfoot={() => (
@@ -609,9 +594,9 @@ const Ledgers = ({ account, rows }) => {
               { label: "Date" },
               { label: "No" },
               { label: "Type" },
-              { label: "Account Name" },
-              { label: "Debit", className: "text-right" },
-              { label: "Credit", className: "text-right" },
+              { label: "Product Name" },
+              { label: "Out", className: "text-right" },
+              { label: "In", className: "text-right" },
             ]}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
@@ -652,10 +637,10 @@ const Ledgers = ({ account, rows }) => {
                     {row.details?.length > 0 ? "Details:" : row.accountName}
                   </td>
                   <td className="text-right">
-                    {row.debit ? row.debit.toFixed(2) : null}
+                    {row.outward ? row.outward.toFixed(2) : null}
                   </td>
                   <td className="text-right">
-                    {row.credit ? row.credit.toFixed(2) : null}
+                    {row.inward ? row.inward.toFixed(2) : null}
                   </td>
                 </tr>
               );
@@ -677,7 +662,7 @@ const Analysys = ({ account }) => {
   const [months, setMonths] = useState([]);
   const [data, setData] = useState([]);
   const [calculation, setCalculation] = useState("sum_debit");
-  const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
+  const { get, loading } = useFetch(endpoints.inventoryMonthlyAnalysys);
   useEffect(() => {
     if (account) {
       setCalculation(
@@ -720,7 +705,7 @@ const Analysys = ({ account }) => {
                   checked={calculation === "sum_debit"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
-                Sum Of Debits
+                Total Out
               </label>
               <label className="flex align-center gap_5">
                 <input
@@ -730,7 +715,7 @@ const Analysys = ({ account }) => {
                   checked={calculation === "sum_credit"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
-                Sum Of Credit
+                Total In
               </label>
               <label className="flex align-center gap_5">
                 <input
@@ -816,14 +801,14 @@ const Analysys = ({ account }) => {
 const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   let result = null;
   if (calculation === "sum_debit") {
-    result = entries.reduce((p, c) => p + c.debit, 0);
+    result = entries.reduce((p, c) => p + c.outward, 0);
   } else if (calculation === "sum_credit") {
-    result = entries.reduce((p, c) => p + c.credit, 0);
+    result = entries.reduce((p, c) => p + c.inward, 0);
   } else if (calculation === "net") {
-    result = entries.reduce((p, c) => p + c.debit - c.credit, 0);
+    result = entries.reduce((p, c) => p + c.outward - c.inward, 0);
   } else if (calculation === "balance") {
     result =
-      entries.reduce((p, c) => p + c.debit - c.credit, 0) + openingBalance;
+      entries.reduce((p, c) => p + c.outward - c.inward, 0) + openingBalance;
     // return;
   }
   return result.toFixed(2);
