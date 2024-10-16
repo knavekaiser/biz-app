@@ -363,22 +363,15 @@ export const monthlyAnalysys = async (req, res) => {
     if (req.query.branch) {
       entryConditions.branch = ObjectId(req.query.branch);
     }
+    let startDate = new Date(`${months[0].year}-${months[0].month}-01`);
+    startDate = new Date(startDate.setMonth(months[0].month));
+    let endDate = new Date(
+      `${months[months.length - 1].year}-${months[months.length - 1].month}-01`
+    );
+    endDate = new Date(endDate.setMonth(months[months.length - 1].month + 1));
     const conditions = {
       accountId: { $in: accounts.map((acc) => acc._id) },
-      dateTime: {
-        $gte: new Date(
-          `${months[0].year}-${
-            (months[0].month + 1) % 12 === 0 ? 12 : (months[0].month + 1) % 12
-          }-01`
-        ),
-        $lt: new Date(
-          `${months[months.length - 1].year}-${
-            (months[months.length - 1].month + 2) % 12 === 0
-              ? 12
-              : (months[months.length - 1].month + 2) % 12
-          }-01`
-        ),
-      },
+      dateTime: { $gte: startDate, $lt: endDate },
     };
     if (req.query.startDate && req.query.endDate) {
       conditions.dateTime = {
