@@ -659,6 +659,7 @@ const Analysys = ({ account }) => {
                   name="calculation"
                   type="radio"
                   value="net"
+                  checked={calculation === "net"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Net
@@ -668,6 +669,7 @@ const Analysys = ({ account }) => {
                   name="calculation"
                   type="radio"
                   value="balance"
+                  checked={calculation === "balance"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Balance

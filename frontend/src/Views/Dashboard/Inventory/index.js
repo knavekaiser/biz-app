@@ -750,6 +750,7 @@ const Analysys = ({ branch, account }) => {
                   name="calculation"
                   type="radio"
                   value="statement"
+                  checked={calculation === "statement"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Stock Statement
@@ -779,6 +780,7 @@ const Analysys = ({ branch, account }) => {
                   name="calculation"
                   type="radio"
                   value="net"
+                  checked={calculation === "net"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Net
