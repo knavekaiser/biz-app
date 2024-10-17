@@ -678,7 +678,10 @@ const Ledgers = ({ account, branch }) => {
                   {/* <td /> */}
                   <td className="text-right">Total</td>
                   <td className="text-right">
-                    {data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                    {(
+                      (openingStock || 0) +
+                      data.reduce((p, c) => p + c.inward, 0)
+                    ).toFixed(2)}
                   </td>
                   <td className="text-right">
                     {data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
