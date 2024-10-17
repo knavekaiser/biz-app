@@ -704,15 +704,10 @@ const Analysys = ({ branch, account }) => {
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({});
   const [openingStocks, setOpeningStocks] = useState({});
-  const [calculation, setCalculation] = useState("sum_debit");
+  const [calculation, setCalculation] = useState("statement");
   const { get, loading } = useFetch(endpoints.inventoryMonthlyAnalysys);
   useEffect(() => {
     if (account) {
-      setCalculation(
-        ["Liabilities", "Income"].includes(account?.name)
-          ? "sum_credit"
-          : "sum_debit"
-      );
       const query = { accountId: account._id };
       if (branch) {
         query.branch = branch._id;
@@ -754,8 +749,17 @@ const Analysys = ({ branch, account }) => {
                 <input
                   name="calculation"
                   type="radio"
-                  value="sum_debit"
-                  checked={calculation === "sum_debit"}
+                  value="statement"
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Stock Statement
+              </label>
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="sum_out"
+                  checked={calculation === "sum_out"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Total Out
@@ -764,8 +768,8 @@ const Analysys = ({ branch, account }) => {
                 <input
                   name="calculation"
                   type="radio"
-                  value="sum_credit"
-                  checked={calculation === "sum_credit"}
+                  value="sum_in"
+                  checked={calculation === "sum_in"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Total In
@@ -779,15 +783,6 @@ const Analysys = ({ branch, account }) => {
                 />
                 Net
               </label>
-              {/* <label className="flex align-center gap_5">
-                <input
-                  name="calculation"
-                  type="radio"
-                  value="balance"
-                  onChange={(e) => setCalculation(e.target.value)}
-                />
-                Balance
-              </label> */}
             </div>
           </div>
           <Table
@@ -795,16 +790,17 @@ const Analysys = ({ branch, account }) => {
             className={s.analysys}
             columns={[
               { label: account.name },
-              ...(calculation !== "net"
-                ? [{ label: "Opening Stock", className: "text-right" }]
-                : []),
-              ...(months || []).map((item) => ({
-                label: item.label,
-                className: "text-right",
-              })),
-              ...(calculation !== "net"
-                ? [{ label: "Closing Stock", className: "text-right" }]
-                : []),
+              ...(calculation === "statement"
+                ? [
+                    { label: "Opening Stock", className: "text-right" },
+                    { label: "Total In", className: "text-right" },
+                    { label: "Total Out", className: "text-right" },
+                    { label: "Closing Stock", className: "text-right" },
+                  ]
+                : (months || []).map((item) => ({
+                    label: item.label,
+                    className: "text-right",
+                  }))),
             ]}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
@@ -817,34 +813,60 @@ const Analysys = ({ branch, account }) => {
                   }}
                 >
                   <td>Total</td>
-                  {calculation !== "net" && (
-                    <td className="text-right">
-                      {Object.values(openingStocks).reduce((p, c) => p + c, 0)}
-                    </td>
-                  )}
-                  {(months || []).map((month, i) => (
-                    <td key={i} className="text-right">
-                      {analyzeAccounts(
-                        calculation,
-                        data.reduce((prev, curr, j) => {
-                          prev.push(...curr.entries[i]);
-                          return prev;
-                        }, [])
-                      )}
-                    </td>
-                  ))}
-                  {calculation !== "net" && (
-                    <td className="text-right">
-                      {Object.values(openingStocks).reduce((p, c) => p + c, 0) +
-                        data.reduce(
-                          (p, c) =>
-                            p +
-                            c.entries
-                              .flat()
-                              .reduce((p, c) => p + (c.inward - c.outward), 0),
+                  {calculation === "statement" ? (
+                    <>
+                      <td className="text-right">
+                        {Object.values(openingStocks).reduce(
+                          (p, c) => p + c,
                           0
                         )}
-                    </td>
+                      </td>
+                      <td className="text-right">
+                        {data.reduce(
+                          (p, c) =>
+                            p +
+                            c.entries.flat().reduce((p, c) => p + c.inward, 0),
+                          0
+                        )}
+                      </td>
+                      <td className="text-right">
+                        {data.reduce(
+                          (p, c) =>
+                            p +
+                            c.entries.flat().reduce((p, c) => p + c.outward, 0),
+                          0
+                        )}
+                      </td>
+                      <td className="text-right">
+                        {Object.values(openingStocks).reduce(
+                          (p, c) => p + c,
+                          0
+                        ) +
+                          data.reduce(
+                            (p, c) =>
+                              p +
+                              c.entries
+                                .flat()
+                                .reduce(
+                                  (p, c) => p + (c.inward - c.outward),
+                                  0
+                                ),
+                            0
+                          )}
+                      </td>
+                    </>
+                  ) : (
+                    (months || []).map((month, i) => (
+                      <td key={i} className="text-right">
+                        {analyzeAccounts(
+                          calculation,
+                          data.reduce((prev, curr, j) => {
+                            prev.push(...curr.entries[i]);
+                            return prev;
+                          }, [])
+                        )}
+                      </td>
+                    ))
                   )}
                 </tr>
               </tfoot>
@@ -854,28 +876,39 @@ const Analysys = ({ branch, account }) => {
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
-                  {calculation !== "net" && (
-                    <td className="text-right">
-                      {openingStocks[row._id] || 0}
-                    </td>
-                  )}
-                  {(months || []).map((month, i) => (
-                    <td key={i} className="text-right">
-                      {analyzeAccounts(
-                        calculation,
-                        row.entries[i],
-                        openingStocks[row._id]
-                      )}
-                    </td>
-                  ))}
-                  {calculation !== "net" && (
-                    <td className="text-right">
-                      {(openingStocks[row._id] || 0) +
-                        row.entries.flat().reduce((p, c) => {
-                          console.log(c);
-                          return p + ((c.inward || 0) - (c.outward || 0));
-                        }, 0)}
-                    </td>
+                  {calculation === "statement" ? (
+                    <>
+                      <td className="text-right">
+                        {openingStocks[row._id] || 0}
+                      </td>
+                      <td className="text-right">
+                        {row.entries.flat().reduce((p, c) => p + c.inward, 0)}
+                      </td>
+                      <td className="text-right">
+                        {" "}
+                        {row.entries.flat().reduce((p, c) => p + c.outward, 0)}
+                      </td>
+                      <td className="text-right">
+                        {(openingStocks[row._id] || 0) +
+                          row.entries
+                            .flat()
+                            .reduce(
+                              (p, c) =>
+                                p + ((c.inward || 0) - (c.outward || 0)),
+                              0
+                            )}
+                      </td>
+                    </>
+                  ) : (
+                    (months || []).map((month, i) => (
+                      <td key={i} className="text-right">
+                        {analyzeAccounts(
+                          calculation,
+                          row.entries[i],
+                          openingStocks[row._id]
+                        )}
+                      </td>
+                    ))
                   )}
                 </tr>
               );
@@ -891,13 +924,13 @@ const Analysys = ({ branch, account }) => {
 
 const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   let result = null;
-  if (calculation === "sum_debit") {
+  if (calculation === "sum_in") {
     result = entries.reduce((p, c) => p + c.outward, 0);
-  } else if (calculation === "sum_credit") {
+  } else if (calculation === "sum_out") {
     result = entries.reduce((p, c) => p + c.inward, 0);
   } else if (calculation === "net") {
     result = entries.reduce((p, c) => p + c.outward - c.inward, 0);
-  } else if (calculation === "balance") {
+  } else if (calculation === "statement") {
     result =
       entries.reduce((p, c) => p + c.outward - c.inward, 0) + openingBalance;
     // return;
