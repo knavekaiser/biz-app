@@ -885,7 +885,6 @@ const Analysys = ({ branch, account }) => {
                         {row.entries.flat().reduce((p, c) => p + c.inward, 0)}
                       </td>
                       <td className="text-right">
-                        {" "}
                         {row.entries.flat().reduce((p, c) => p + c.outward, 0)}
                       </td>
                       <td className="text-right">
@@ -925,14 +924,14 @@ const Analysys = ({ branch, account }) => {
 const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   let result = null;
   if (calculation === "sum_in") {
-    result = entries.reduce((p, c) => p + c.outward, 0);
-  } else if (calculation === "sum_out") {
     result = entries.reduce((p, c) => p + c.inward, 0);
+  } else if (calculation === "sum_out") {
+    result = entries.reduce((p, c) => p + c.outward, 0);
   } else if (calculation === "net") {
-    result = entries.reduce((p, c) => p + c.outward - c.inward, 0);
+    result = entries.reduce((p, c) => p + (c.inward - c.outward), 0);
   } else if (calculation === "statement") {
     result =
-      entries.reduce((p, c) => p + c.outward - c.inward, 0) + openingBalance;
+      entries.reduce((p, c) => p + (c.inward - c.outward), 0) + openingBalance;
     // return;
   }
   return result.toFixed(2);
