@@ -152,7 +152,7 @@ export const Table = forwardRef(
             <tr className={`${s.filters} ${s.rowCount}`}>
               <td>
                 Showing Records:{" "}
-                {countRecord?.(dynamicData) || (children || dynamicData).length}
+                {countRecord?.(dynamicData) ?? (children || dynamicData).length}
               </td>
             </tr>
             {productTable && productView === "grid" ? null : (

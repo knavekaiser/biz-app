@@ -439,11 +439,7 @@ const Accounting = ({ setSidebarOpen }) => {
             />
           )}
           {tab === "ledgers" && (
-            <Ledgers
-              account={ledger?.account}
-              rows={ledger?.rows}
-              branch={branch}
-            />
+            <Ledgers account={ledger?.account} branch={branch} />
           )}
           {tab === "analysys" && (
             <Analysys branch={branch} account={analysysAcc} />
@@ -570,8 +566,8 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
           { label: "No" },
           { label: "Type" },
           { label: "Product Name" },
-          { label: "Out", className: "text-right" },
           { label: "In", className: "text-right" },
+          { label: "Out", className: "text-right" },
           // { label: "Action" },
         ]}
         tfoot={() => (
@@ -580,12 +576,12 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
               <td />
               <td />
               <td />
-              <td className="text-right">Total</td>
-              <td className="text-right">
-                {vouchers.reduce((p, c) => p + c.outward, 0).toFixed(2)}
-              </td>
+              <td style={{ fontWeight: "bold" }}>Total</td>
               <td className="text-right">
                 {vouchers.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+              </td>
+              <td className="text-right">
+                {vouchers.reduce((p, c) => p + c.outward, 0).toFixed(2)}
               </td>
             </tr>
           </tfoot>
@@ -607,10 +603,10 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
             <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
             <td>{row.accountName}</td>
             <td className="text-right">
-              {row.outward ? row.outward.toFixed(2) : null}
+              {row.inward ? row.inward.toFixed(2) : null}
             </td>
             <td className="text-right">
-              {row.inward ? row.inward.toFixed(2) : null}
+              {row.outward ? row.outward.toFixed(2) : null}
             </td>
           </tr>
         ))}
@@ -666,26 +662,34 @@ const Ledgers = ({ account, branch }) => {
               { label: "Date" },
               { label: "No" },
               { label: "Type" },
-              // { label: "Product Name" },
               { label: "In", className: "text-right" },
               { label: "Out", className: "text-right" },
             ]}
+            countRecord={() => data.length}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
                 <tr className={s.footer}>
                   <td />
                   <td />
-                  {/* <td /> */}
-                  <td className="text-right">Total</td>
+                  <td style={{ fontWeight: "bold" }}>Totals</td>
                   <td className="text-right">
-                    {(
-                      (openingStock || 0) +
-                      data.reduce((p, c) => p + c.inward, 0)
-                    ).toFixed(2)}
+                    {data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
                   </td>
                   <td className="text-right">
                     {data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
                   </td>
+                </tr>
+                <tr className={s.closing}>
+                  <td />
+                  <td />
+                  <td style={{ fontWeight: "bold" }}>Closing Stock</td>
+                  <td className="text-right">
+                    {(
+                      (openingStock || 0) +
+                      data.reduce((p, c) => p + (c.inward - c.outward), 0)
+                    ).toFixed(2)}
+                  </td>
+                  <td />
                 </tr>
               </tfoot>
             }
@@ -693,7 +697,7 @@ const Ledgers = ({ account, branch }) => {
             <tr>
               <td />
               <td />
-              <td className="text-right">Opening Stock</td>
+              <td style={{ fontWeight: "bold" }}>Opening Stock</td>
               <td className="text-right">{openingStock}</td>
               <td />
             </tr>
@@ -715,9 +719,6 @@ const Ledgers = ({ account, branch }) => {
                   </td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                  {/* <td className="grid">
-                    {row.details?.length > 0 ? "Details:" : row.accountName}
-                  </td> */}
                   <td className="text-right">
                     {row.inward ? row.inward.toFixed(2) : null}
                   </td>
@@ -796,21 +797,21 @@ const Analysys = ({ branch, account }) => {
                 <input
                   name="calculation"
                   type="radio"
-                  value="sum_out"
-                  checked={calculation === "sum_out"}
-                  onChange={(e) => setCalculation(e.target.value)}
-                />
-                Total Out
-              </label>
-              <label className="flex align-center gap_5">
-                <input
-                  name="calculation"
-                  type="radio"
                   value="sum_in"
                   checked={calculation === "sum_in"}
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Total In
+              </label>
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="sum_out"
+                  checked={calculation === "sum_out"}
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Total Out
               </label>
               <label className="flex align-center gap_5">
                 <input
