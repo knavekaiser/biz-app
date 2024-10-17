@@ -440,12 +440,15 @@ export const monthlyAnalysys = async (req, res) => {
         },
       },
     ]).then((data) =>
-      data.reduce((p, c) => {
+      accounts.reduce((p, c) => {
+        const stock = data.find(
+          (item) => item._id.toString === c._id.toString()
+        );
         p[c._id] =
           (openingBalance.find(
             (item) => item.accountId.toString() === c._id.toString()
           )?.openingBalance || 0) +
-          (c.inward - c.outward);
+          ((stock?.inward || 0) - (stock?.outward || 0));
         return p;
       }, {})
     );
