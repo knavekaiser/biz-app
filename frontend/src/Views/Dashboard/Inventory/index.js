@@ -779,7 +779,7 @@ const Analysys = ({ branch, account }) => {
                 />
                 Net
               </label>
-              <label className="flex align-center gap_5">
+              {/* <label className="flex align-center gap_5">
                 <input
                   name="calculation"
                   type="radio"
@@ -787,7 +787,7 @@ const Analysys = ({ branch, account }) => {
                   onChange={(e) => setCalculation(e.target.value)}
                 />
                 Balance
-              </label>
+              </label> */}
             </div>
           </div>
           <Table
@@ -795,11 +795,16 @@ const Analysys = ({ branch, account }) => {
             className={s.analysys}
             columns={[
               { label: account.name },
-              { label: "Opening Stock", className: "text-right" },
+              ...(calculation !== "net"
+                ? [{ label: "Opening Stock", className: "text-right" }]
+                : []),
               ...(months || []).map((item) => ({
                 label: item.label,
                 className: "text-right",
               })),
+              ...(calculation !== "net"
+                ? [{ label: "Closing Stock", className: "text-right" }]
+                : []),
             ]}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
@@ -812,9 +817,11 @@ const Analysys = ({ branch, account }) => {
                   }}
                 >
                   <td>Total</td>
-                  <td className="text-right">
-                    {Object.values(openingStocks).reduce((p, c) => p + c, 0)}
-                  </td>
+                  {calculation !== "net" && (
+                    <td className="text-right">
+                      {Object.values(openingStocks).reduce((p, c) => p + c, 0)}
+                    </td>
+                  )}
                   {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
@@ -826,6 +833,19 @@ const Analysys = ({ branch, account }) => {
                       )}
                     </td>
                   ))}
+                  {calculation !== "net" && (
+                    <td className="text-right">
+                      {Object.values(openingStocks).reduce((p, c) => p + c, 0) +
+                        data.reduce(
+                          (p, c) =>
+                            p +
+                            c.entries
+                              .flat()
+                              .reduce((p, c) => p + (c.inward - c.outward), 0),
+                          0
+                        )}
+                    </td>
+                  )}
                 </tr>
               </tfoot>
             }
@@ -834,7 +854,11 @@ const Analysys = ({ branch, account }) => {
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
-                  <td className="text-right">{openingStocks[row._id] || 0}</td>
+                  {calculation !== "net" && (
+                    <td className="text-right">
+                      {openingStocks[row._id] || 0}
+                    </td>
+                  )}
                   {(months || []).map((month, i) => (
                     <td key={i} className="text-right">
                       {analyzeAccounts(
@@ -844,6 +868,15 @@ const Analysys = ({ branch, account }) => {
                       )}
                     </td>
                   ))}
+                  {calculation !== "net" && (
+                    <td className="text-right">
+                      {(openingStocks[row._id] || 0) +
+                        row.entries.flat().reduce((p, c) => {
+                          console.log(c);
+                          return p + ((c.inward || 0) - (c.outward || 0));
+                        }, 0)}
+                    </td>
+                  )}
                 </tr>
               );
             })}
