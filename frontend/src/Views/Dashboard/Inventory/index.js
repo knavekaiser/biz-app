@@ -381,7 +381,7 @@ const Accounting = ({ setSidebarOpen }) => {
                     color: "#797979",
                   }}
                 >
-                  No accounts have been added yet.
+                  No product have been added yet.
                 </p>
               )}
             </ul>
@@ -439,14 +439,15 @@ const Accounting = ({ setSidebarOpen }) => {
             />
           )}
           {tab === "ledgers" && (
-            <Ledgers account={ledger?.account} rows={ledger?.rows} />
+            <Ledgers
+              account={ledger?.account}
+              rows={ledger?.rows}
+              branch={branch}
+            />
           )}
           {tab === "analysys" && (
             <Analysys branch={branch} account={analysysAcc} />
           )}
-          {
-            // tab === "journals" && <Journals accounts={journalAcc} />
-          }
         </div>
       </div>
 
@@ -618,11 +619,41 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
   );
 };
 
-const Ledgers = ({ account, rows }) => {
+const Ledgers = ({ account, branch }) => {
+  const [data, setData] = useState([]);
+  const [openingStock, setOpeningStock] = useState(0);
+  const [filters, setFilters] = useState({});
+  const { get: getLedgers } = useFetch(endpoints.inventoryLedgers);
+
+  useEffect(() => {
+    if (account) {
+      const query = { accountId: account._id };
+      if (branch) {
+        query.branch = branch._id;
+      }
+      if (filters.startDate && filters.endDate) {
+        query.startDate = filters.startDate;
+        query.endDate = filters.endDate;
+      }
+      getLedgers({ query })
+        .then(({ data }) => {
+          if (data.success) {
+            setData(data.data);
+            setOpeningStock(data.openingStock || 0);
+          } else {
+            Prompt({ type: "error", message: data.message });
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    } else {
+      setData([]);
+    }
+  }, [account, filters, branch]);
   return (
     <div className={s.innerContentWrapper}>
-      {rows?.length > 0 ? (
+      {account ? (
         <>
+          <AnalysysFilters filter={filters} setFilters={setFilters} />
           <p
             style={{ fontWeight: "600", fontSize: "1.2em" }}
             className="mt-1 pl_5"
@@ -630,33 +661,40 @@ const Ledgers = ({ account, rows }) => {
             {account.name}
           </p>
           <Table
-            className={s.vouchers}
+            className={s.ledgers}
             columns={[
               { label: "Date" },
               { label: "No" },
               { label: "Type" },
-              { label: "Product Name" },
-              { label: "Out", className: "text-right" },
+              // { label: "Product Name" },
               { label: "In", className: "text-right" },
+              { label: "Out", className: "text-right" },
             ]}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
                 <tr className={s.footer}>
                   <td />
                   <td />
-                  <td />
+                  {/* <td /> */}
                   <td className="text-right">Total</td>
                   <td className="text-right">
-                    {rows.reduce((p, c) => p + c.outward, 0).toFixed(2)}
+                    {data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
                   </td>
                   <td className="text-right">
-                    {rows.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                    {data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
                   </td>
                 </tr>
               </tfoot>
             }
           >
-            {rows.map((row, i, arr) => {
+            <tr>
+              <td />
+              <td />
+              <td className="text-right">Opening Stock</td>
+              <td className="text-right">{openingStock}</td>
+              <td />
+            </tr>
+            {data.map((row, i, arr) => {
               return (
                 <tr key={i}>
                   <td className="grid">
@@ -674,26 +712,22 @@ const Ledgers = ({ account, rows }) => {
                   </td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
-                  <td className="grid">
+                  {/* <td className="grid">
                     {row.details?.length > 0 ? "Details:" : row.accountName}
+                  </td> */}
+                  <td className="text-right">
+                    {row.inward ? row.inward.toFixed(2) : null}
                   </td>
                   <td className="text-right">
                     {row.outward ? row.outward.toFixed(2) : null}
-                  </td>
-                  <td className="text-right">
-                    {row.inward ? row.inward.toFixed(2) : null}
                   </td>
                 </tr>
               );
             })}
           </Table>
         </>
-      ) : account ? (
-        <p className={s.analysysPlaceholder}>
-          No records found for <strong>{account.name}</strong>.
-        </p>
       ) : (
-        <p className={s.analysysPlaceholder}>No account has been selected.</p>
+        <p className={s.analysysPlaceholder}>No product has been selected.</p>
       )}
     </div>
   );

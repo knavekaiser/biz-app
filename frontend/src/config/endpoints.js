@@ -79,6 +79,7 @@ const endpoints = {
   journals: `${baseApiUrl}/api/journals`,
 
   inventoryMasters: `${baseApiUrl}/api/inventory/masters`,
+  inventoryLedgers: `${baseApiUrl}/api/inventory/ledgers`,
   inventoryListing: `${baseApiUrl}/api/inventory/listings`,
   inventoryBranches: `${baseApiUrl}/api/inventory-branches`,
   inventoryMonthlyAnalysys: `${baseApiUrl}/api/inventory/monthly-analysys`,

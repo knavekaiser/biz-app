@@ -239,7 +239,7 @@ export const listing = async (req, res) => {
   }
 };
 
-export const getJournals = async (req, res) => {
+export const getLedgers = async (req, res) => {
   try {
     const Inventory = getModel({
       companyId: (req.business || req.authUser)._id,
@@ -248,29 +248,95 @@ export const getJournals = async (req, res) => {
     });
 
     const entryConditions = {};
+    if (req.query.branch) {
+      entryConditions.branch = ObjectId(req.query.branch);
+    }
     const conditions = {};
     if (req.query.type) {
       conditions.type = req.query.type;
     }
-    if (req.query.accountIds) {
-      conditions.accountId = {
-        $in: req.query.accountIds.split(",").map((_id) => ObjectId(_id)),
+    if (req.query.accountId) {
+      conditions.accountId = ObjectId(req.query.accountId);
+    }
+    if (req.query.startDate && req.query.endDate) {
+      conditions.dateTime = {
+        $gte: new Date(req.query.startDate),
+        $lt: new Date(req.query.endDate),
       };
     }
+
+    const openingBalance = req.query.branch
+      ? await Inventory.aggregate([
+          {
+            $unwind: {
+              path: "$openingStocks",
+              preserveNullAndEmptyArrays: false,
+            },
+          },
+          {
+            $set: {
+              "rec.accountId": "$_id",
+              "rec.accountName": "$name",
+              "rec.branchId": "$openingStocks.branch",
+              "rec.openingBalance": "$openingStocks.openingStock",
+            },
+          },
+          { $replaceRoot: { newRoot: "$rec" } },
+          { $match: { branchId: ObjectId(req.query.branch) } },
+        ])
+      : 0;
+
+    const openingStock = conditions.dateTime
+      ? await Inventory.aggregate([
+          ...entryPipeline(entryConditions),
+          {
+            $match: {
+              accountId: ObjectId(req.query.accountId),
+              dateTime: { $lt: new Date(req.query.startDate) },
+            },
+          },
+          {
+            $lookup: {
+              from: "inventories",
+              foreignField: "_id",
+              localField: "accountId",
+              as: "rec",
+            },
+          },
+          {
+            $set: {
+              rec: {
+                $getField: {
+                  input: { $first: "$rec" },
+                  field: "openingStocks",
+                },
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$accountId",
+              inward: { $sum: "$inward" },
+              outward: { $sum: "$outward" },
+            },
+          },
+        ]).then(
+          ([stock]) =>
+            (openingBalance.find(
+              (item) => item.accountId.toString() === req.query.accountId
+            )?.openingBalance || 0) +
+            ((stock?.inward || 0) - (stock?.outward || 0))
+        )
+      : openingBalance.find(
+          (item) => item.accountId.toString() === req.query.accountId
+        )?.openingBalance || 0;
+
     Inventory.aggregate([
       ...entryPipeline(entryConditions),
       { $sort: { updatedAt: 1, index: 1 } },
       { $match: conditions },
-      {
-        $group: {
-          _id: "$accountId",
-          accountName: { $first: "$accountName" },
-          outward: { $sum: "$outward" },
-          inward: { $sum: "$inward" },
-        },
-      },
     ]).then((data) => {
-      return responseFn.success(res, { data });
+      return responseFn.success(res, { data, openingStock });
     });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -442,7 +508,7 @@ export const monthlyAnalysys = async (req, res) => {
     ]).then((data) =>
       accounts.reduce((p, c) => {
         const stock = data.find(
-          (item) => item._id.toString === c._id.toString()
+          (item) => item._id.toString() === c._id.toString()
         );
         p[c._id] =
           (openingBalance.find(
