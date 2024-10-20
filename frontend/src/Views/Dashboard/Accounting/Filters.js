@@ -98,14 +98,14 @@ export const AnalysysFilters = ({ filters, setFilters }) => {
     >
       <Input
         label="Start Date"
-        type="datetime-local"
+        type="date"
         {...register("startDate")}
         required
         error={errors.startDate}
       />
       <Input
         label="End Date"
-        type="datetime-local"
+        type="date"
         {...register("endDate")}
         required
         error={errors.endDate}

@@ -9,6 +9,7 @@ export default function (app) {
   router.get("/journals", authJwt.verifyToken, controller.getJournals);
   router.get("/masters", authJwt.verifyToken, controller.get);
   router.get("/vouchers", authJwt.verifyToken, controller.vouchers);
+  router.get("/ledgers", authJwt.verifyToken, controller.ledgers);
   router.get(
     "/monthly-analysys",
     authJwt.verifyToken,

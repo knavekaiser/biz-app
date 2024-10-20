@@ -238,6 +238,72 @@ export const vouchers = async (req, res) => {
   }
 };
 
+export const ledgers = async (req, res) => {
+  try {
+    const Account = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Account",
+    });
+
+    const entryConditions = {};
+    const conditions = {};
+    if (req.query.type) {
+      conditions.type = req.query.type;
+    }
+    // if (req.query.accountId) {
+    //   conditions.accountId = ObjectId(req.query.accountId);
+    // }
+    if (req.query.startDate && req.query.endDate) {
+      conditions.dateTime = {
+        $gte: new Date(req.query.startDate),
+        $lt: new Date(req.query.endDate),
+      };
+    }
+
+    const account = await Account.findOne({ _id: req.query.accountId });
+
+    const openingBalance = await Account.aggregate([
+      ...entryPipeline(entryConditions),
+      {
+        $match: {
+          accountId: account._id,
+          ...(conditions.dateTime && {
+            dateTime: { $lt: new Date(req.query.startDate) },
+          }),
+        },
+      },
+      {
+        $group: {
+          _id: "$accountId",
+          openingBalance: { $first: "$openingBalance" },
+          debit: { $sum: "$debit" },
+          credit: { $sum: "$credit" },
+        },
+      },
+    ]).then(
+      ([account]) =>
+        (account?.openingBalance || 0) +
+        ((account?.debit || 0) - (account?.credit || 0))
+    );
+
+    Account.aggregate([
+      ...entryPipeline(entryConditions),
+      { $sort: { updatedAt: 1, index: 1 } },
+      {
+        $match: {
+          ...conditions,
+          $or: [{ accountId: account._id }, { rec_id: account._i }],
+        },
+      },
+    ]).then((data) => {
+      return responseFn.success(res, { data, openingBalance });
+    });
+  } catch (error) {
+    return responseFn.error(res, {}, error.message, 500);
+  }
+};
+
 export const getJournals = async (req, res) => {
   try {
     const Account = getModel({
@@ -357,7 +423,12 @@ export const monthlyAnalysys = async (req, res) => {
       return responseFn.success(res, { data: [], months: [] });
     }
 
-    const months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
+    let months = [];
+    if (req.query.startDate && req.query.endDate) {
+      months = getMonths(req.query.startDate, req.query.endDate);
+    } else {
+      months = getMonths(req.finPeriod.startDate, req.finPeriod.endDate);
+    }
     const entryConditions = {};
     let startDate = new Date(`${months[0].year}-${months[0].month}-01`);
     startDate = new Date(startDate.setMonth(months[0].month));
@@ -375,6 +446,53 @@ export const monthlyAnalysys = async (req, res) => {
         $lt: new Date(req.query.endDate),
       };
     }
+
+    const openingBalances = await Account.aggregate([
+      ...entryPipeline(entryConditions),
+      {
+        $match: {
+          accountId: conditions.accountId,
+          dateTime: { $lt: new Date(startDate) },
+        },
+      },
+      {
+        $lookup: {
+          from: "accounts",
+          foreignField: "_id",
+          localField: "accountId",
+          as: "rec",
+        },
+      },
+      {
+        $set: {
+          rec: {
+            $getField: {
+              input: { $first: "$rec" },
+              field: "openingBalance",
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$accountId",
+          openingBalance: { $first: "$rec" },
+          debit: { $sum: "$debit" },
+          credit: { $sum: "$credit" },
+        },
+      },
+    ]).then((acc) =>
+      accounts.reduce((p, account) => {
+        const curr = acc.find(
+          (ac) => ac._id.toString() === account._id.toString()
+        );
+        p[account._id] =
+          (curr?.openingBalance || 0) +
+          (curr?.debit || 0) -
+          (curr?.credit || 0);
+        return p;
+      }, {})
+    );
 
     Account.aggregate([
       ...entryPipeline(entryConditions),
@@ -416,6 +534,7 @@ export const monthlyAnalysys = async (req, res) => {
           };
         }),
         months,
+        openingBalances,
       });
     });
   } catch (error) {

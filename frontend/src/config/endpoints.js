@@ -75,6 +75,7 @@ const endpoints = {
 
   accountingMasters: `${baseApiUrl}/api/accounting/masters`,
   accountingVouchers: `${baseApiUrl}/api/accounting/vouchers`,
+  accountingLedgers: `${baseApiUrl}/api/accounting/ledgers`,
   accountingMonthlyAnalysys: `${baseApiUrl}/api/accounting/monthly-analysys`,
   journals: `${baseApiUrl}/api/journals`,
 

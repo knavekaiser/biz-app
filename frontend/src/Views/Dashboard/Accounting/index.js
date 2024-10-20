@@ -389,9 +389,6 @@ const Accounting = ({ setSidebarOpen }) => {
             <Ledgers account={ledger?.account} rows={ledger?.rows} />
           )}
           {tab === "analysys" && <Analysys account={analysysAcc} />}
-          {
-            // tab === "journals" && <Journals accounts={journalAcc} />
-          }
         </div>
       </div>
 
@@ -508,10 +505,35 @@ const Vouchers = ({ vouchers, setVouchers }) => {
 };
 
 const Ledgers = ({ account, rows }) => {
+  const [data, setData] = useState([]);
+  const [filters, setFilters] = useState({});
+  const { get: getData } = useFetch(endpoints.accountingLedgers);
+  useEffect(() => {
+    if (account) {
+      const query = { accountId: account._id };
+      if (filters.startDate && filters.endDate) {
+        query.startDate = filters.startDate;
+        query.endDate = filters.endDate;
+      }
+      getData({ query })
+        .then(({ data }) => {
+          if (data.success) {
+            setData(data.data);
+            console.log(data.data, rows);
+          } else {
+            Prompt({ type: "error", message: data.message });
+          }
+        })
+        .catch((err) => Prompt({ type: "error", message: err.message }));
+    } else {
+      setData([]);
+    }
+  }, [account, filters]);
   return (
     <div className={s.innerContentWrapper}>
-      {rows?.length > 0 ? (
+      {account ? (
         <>
+          <AnalysysFilters filter={filters} setFilters={setFilters} />
           <p
             style={{ fontWeight: "600", fontSize: "1.2em" }}
             className="mt-1 pl_5"
@@ -577,10 +599,6 @@ const Ledgers = ({ account, rows }) => {
             })}
           </Table>
         </>
-      ) : account ? (
-        <p className={s.analysysPlaceholder}>
-          No records found for <strong>{account.name}</strong>.
-        </p>
       ) : (
         <p className={s.analysysPlaceholder}>No account has been selected.</p>
       )}
@@ -591,16 +609,12 @@ const Ledgers = ({ account, rows }) => {
 const Analysys = ({ account }) => {
   const [months, setMonths] = useState([]);
   const [filters, setFilters] = useState({});
+  const [openingBalances, setOpeningBalances] = useState({});
   const [data, setData] = useState([]);
   const [calculation, setCalculation] = useState("sum_debit");
   const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
   useEffect(() => {
     if (account) {
-      setCalculation(
-        ["Liabilities", "Income"].includes(account?.name)
-          ? "sum_credit"
-          : "sum_debit"
-      );
       const query = { accountId: account._id };
       if (filters.startDate && filters.endDate) {
         query.startDate = filters.startDate;
@@ -611,6 +625,7 @@ const Analysys = ({ account }) => {
           if (data.success) {
             setData(data.data);
             setMonths(data.months);
+            setOpeningBalances(data.openingBalances);
           } else {
             Prompt({ type: "error", message: data.message });
           }
@@ -621,6 +636,15 @@ const Analysys = ({ account }) => {
       setMonths([]);
     }
   }, [account, filters]);
+  useEffect(() => {
+    if (account) {
+      setCalculation(
+        ["Liabilities", "Income"].includes(account?.name)
+          ? "sum_credit"
+          : "sum_debit"
+      );
+    }
+  }, [account]);
   return (
     <div className={s.innerContentWrapper}>
       {account ? (
@@ -634,6 +658,16 @@ const Analysys = ({ account }) => {
               {account.name}
             </p>
             <div className="flex gap-2">
+              <label className="flex align-center gap_5">
+                <input
+                  name="calculation"
+                  type="radio"
+                  value="statement"
+                  checked={calculation === "statement"}
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                Accounting Statement
+              </label>
               <label className="flex align-center gap_5">
                 <input
                   name="calculation"
@@ -681,10 +715,17 @@ const Analysys = ({ account }) => {
             className={s.analysys}
             columns={[
               { label: account.name },
-              ...(months || []).map((item) => ({
-                label: item.label,
-                className: "text-right",
-              })),
+              ...(calculation === "statement"
+                ? [
+                    { label: "Opening Balance", className: "text-right" },
+                    { label: "Total Debit", className: "text-right" },
+                    { label: "Total Credit", className: "text-right" },
+                    { label: "Closing Balance", className: "text-right" },
+                  ]
+                : (months || []).map((item) => ({
+                    label: item.label,
+                    className: "text-right",
+                  }))),
             ]}
             tfoot={
               <tfoot style={{ marginTop: "0" }}>
@@ -697,17 +738,67 @@ const Analysys = ({ account }) => {
                   }}
                 >
                   <td>Total</td>
-                  {(months || []).map((month, i) => (
-                    <td key={i} className="text-right">
-                      {analyzeAccounts(
-                        calculation,
-                        data.reduce((prev, curr, j) => {
-                          prev.push(...curr.entries[i]);
-                          return prev;
-                        }, [])
-                      )}
-                    </td>
-                  ))}
+                  {calculation === "statement" ? (
+                    <>
+                      <td className="text-right">
+                        {Object.values(openingBalances)
+                          .reduce((p, c) => p + (c || 0), 0)
+                          .toFixed(2)}
+                      </td>
+                      <td className="text-right">
+                        {data
+                          .reduce(
+                            (p, row) =>
+                              p +
+                              row.entries
+                                .flat()
+                                .reduce((p, c) => p + c.debit, 0),
+                            0
+                          )
+                          .toFixed(2)}
+                      </td>
+                      <td className="text-right">
+                        {data
+                          .reduce(
+                            (p, row) =>
+                              p +
+                              row.entries
+                                .flat()
+                                .reduce((p, c) => p + c.credit, 0),
+                            0
+                          )
+                          .toFixed(2)}
+                      </td>
+                      <td className="text-right">
+                        {data
+                          .reduce(
+                            (p, row) =>
+                              p +
+                              ((openingBalances[row._id] || 0) +
+                                row.entries
+                                  .flat()
+                                  .reduce((p, c) => p + c.debit, 0) -
+                                row.entries
+                                  .flat()
+                                  .reduce((p, c) => p + c.credit, 0)),
+                            0
+                          )
+                          .toFixed(2)}
+                      </td>
+                    </>
+                  ) : (
+                    (months || []).map((month, i) => (
+                      <td key={i} className="text-right">
+                        {analyzeAccounts(
+                          calculation,
+                          data.reduce((prev, curr, j) => {
+                            prev.push(...curr.entries[i]);
+                            return prev;
+                          }, [])
+                        )}
+                      </td>
+                    ))
+                  )}
                 </tr>
               </tfoot>
             }
@@ -716,15 +807,38 @@ const Analysys = ({ account }) => {
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
-                  {(months || []).map((month, i) => (
-                    <td key={i} className="text-right">
-                      {analyzeAccounts(
-                        calculation,
-                        row.entries[i],
-                        row.openingBalance
-                      )}
-                    </td>
-                  ))}
+                  {calculation === "statement" ? (
+                    <>
+                      <td className="text-right">
+                        {openingBalances[row._id]?.toFixed(2)}
+                      </td>
+                      <td className="text-right">
+                        {row.entries.flat().reduce((p, c) => p + c.debit, 0)}
+                      </td>
+                      <td className="text-right">
+                        {row.entries.flat().reduce((p, c) => p + c.credit, 0)}
+                      </td>
+                      <td className="text-right">
+                        {(
+                          (openingBalances[row._id] || 0) +
+                          row.entries.flat().reduce((p, c) => p + c.debit, 0) -
+                          row.entries.flat().reduce((p, c) => p + c.credit, 0)
+                        ).toFixed(2)}
+                      </td>
+                    </>
+                  ) : (
+                    (months || []).map((month, i) => (
+                      <td key={i} className="text-right">
+                        {analyzeAccounts(
+                          calculation,
+                          row.entries[i],
+                          row.openingBalance
+                        )}
+                      </td>
+                    ))
+                  )}
+
+                  {}
                 </tr>
               );
             })}
@@ -741,6 +855,8 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   let result = null;
   if (calculation === "sum_debit") {
     result = entries.reduce((p, c) => p + c.debit, 0);
+  } else if (calculation === "statement") {
+    result = entries.reduce((p, c) => p + c.debit - c.credit, 0);
   } else if (calculation === "sum_credit") {
     result = entries.reduce((p, c) => p + c.credit, 0);
   } else if (calculation === "net") {
@@ -751,103 +867,6 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
     // return;
   }
   return result.toFixed(2);
-};
-
-const Journals = ({ accounts }) => {
-  const [data, setData] = useState([]);
-  const { get, loading } = useFetch(endpoints.accountingjournals);
-
-  useEffect(() => {
-    get({ query: { accountIds: accounts.map((acc) => acc._id).join(",") } })
-      .then(({ data }) => {
-        if (data.success) {
-          setData(data.data);
-        } else {
-          Prompt({ type: "error", message: data.message });
-        }
-      })
-      .catch((err) => Prompt({ type: "error", message: err.message }));
-  }, [accounts]);
-  return (
-    <div className={s.innerContentWrapper}>
-      {accounts.length ? (
-        <div>
-          <div className="mt-1 flex gap-2 align-center">
-            <p
-              style={{ fontWeight: "600", fontSize: "1.2em" }}
-              className="pl_5"
-            >
-              {accounts.length} Accounts
-            </p>
-          </div>
-          <Table
-            loading={loading}
-            className={s.analysys}
-            columns={[
-              { label: "Account" },
-              { label: "Debit", className: "text-right" },
-              { label: "Credit", className: "text-right" },
-              { label: "Balance", className: "text-right" },
-            ]}
-            tfoot={
-              <tfoot style={{ marginTop: "0" }}>
-                <tr
-                  className={s.footer}
-                  style={{
-                    borderTop: "1px solid #979797",
-                    padding: "0 0.5rem",
-                    paddingTop: "1rem",
-                  }}
-                >
-                  <td>Total</td>
-                  <td className="text-right">
-                    {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
-                  </td>
-                  <td className="text-right">
-                    {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
-                  </td>
-                  <td className="text-right">
-                    {data
-                      .reduce((p, c) => {
-                        const balance =
-                          c.debit -
-                          c.credit +
-                          (accounts.find((acc) => acc._id === c._id)
-                            ?.openingBalance || 0);
-                        return p + balance;
-                      }, 0)
-                      .toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
-            }
-          >
-            {(data || []).map((row, i) => {
-              const balance =
-                row.debit -
-                row.credit +
-                (accounts.find((acc) => acc._id === row._id)?.openingBalance ||
-                  0);
-              return (
-                <tr key={i}>
-                  <td className="grid">{row.accountName}</td>
-                  <td className="grid text-right">
-                    {row.debit ? row.debit.toFixed(2) : null}
-                  </td>
-                  <td className="grid text-right">
-                    {row.credit ? row.credit.toFixed(2) : null}
-                  </td>
-                  <td className="grid text-right">{balance.toFixed(2)}</td>
-                </tr>
-              );
-            })}
-          </Table>
-        </div>
-      ) : (
-        <p className={s.analysysPlaceholder}>No group has been selected.</p>
-      )}
-    </div>
-  );
 };
 
 export default Accounting;
