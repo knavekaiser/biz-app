@@ -506,6 +506,7 @@ const Vouchers = ({ vouchers, setVouchers }) => {
 
 const Ledgers = ({ account, rows }) => {
   const [data, setData] = useState([]);
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [filters, setFilters] = useState({});
   const { get: getData } = useFetch(endpoints.accountingLedgers);
   useEffect(() => {
@@ -519,7 +520,7 @@ const Ledgers = ({ account, rows }) => {
         .then(({ data }) => {
           if (data.success) {
             setData(data.data);
-            console.log(data.data, rows);
+            setOpeningBalance(data.openingBalance || 0);
           } else {
             Prompt({ type: "error", message: data.message });
           }
@@ -555,19 +556,43 @@ const Ledgers = ({ account, rows }) => {
                 <tr className={s.footer}>
                   <td />
                   <td />
+                  <td style={{ fontWeight: "bold" }}>Total</td>
                   <td />
-                  <td className="text-right">Total</td>
                   <td className="text-right">
-                    {rows.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                    {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
                   </td>
                   <td className="text-right">
-                    {rows.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                    {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
                   </td>
+                </tr>
+                <tr className={s.footer}>
+                  <td />
+                  <td />
+                  <td style={{ fontWeight: "bold" }}>Closing Balance</td>
+                  <td />
+                  <td className="text-right">
+                    {(
+                      openingBalance +
+                      data.reduce((p, c) => p + c.debit, 0) -
+                      data.reduce((p, c) => p + c.credit, 0)
+                    ).toFixed(2)}
+                  </td>
+                  <td />
                 </tr>
               </tfoot>
             }
           >
-            {rows.map((row, i, arr) => {
+            <tr>
+              <td />
+              <td />
+              <td style={{ fontWeight: "bold" }} className="grid">
+                Opening Balance
+              </td>
+              <td />
+              <td className="text-right">{(openingBalance || 0).toFixed(2)}</td>
+              <td />
+            </tr>
+            {data.map((row, i, arr) => {
               return (
                 <tr key={i}>
                   <td className="grid">

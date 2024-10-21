@@ -228,7 +228,7 @@ export const vouchers = async (req, res) => {
     }
     Account.aggregate([
       ...entryPipeline(entryConditions),
-      { $sort: { updatedAt: 1, index: 1 } },
+      { $sort: { dateTime: 1, index: 1 } },
       { $match: conditions },
     ]).then((data) => {
       return responseFn.success(res, { data });
@@ -251,9 +251,6 @@ export const ledgers = async (req, res) => {
     if (req.query.type) {
       conditions.type = req.query.type;
     }
-    // if (req.query.accountId) {
-    //   conditions.accountId = ObjectId(req.query.accountId);
-    // }
     if (req.query.startDate && req.query.endDate) {
       conditions.dateTime = {
         $gte: new Date(req.query.startDate),
@@ -263,42 +260,140 @@ export const ledgers = async (req, res) => {
 
     const account = await Account.findOne({ _id: req.query.accountId });
 
-    const openingBalance = await Account.aggregate([
+    const firstRecords = await Account.aggregate([
       ...entryPipeline(entryConditions),
-      {
-        $match: {
-          accountId: account._id,
-          ...(conditions.dateTime && {
-            dateTime: { $lt: new Date(req.query.startDate) },
-          }),
-        },
-      },
-      {
-        $group: {
-          _id: "$accountId",
-          openingBalance: { $first: "$openingBalance" },
-          debit: { $sum: "$debit" },
-          credit: { $sum: "$credit" },
-        },
-      },
-    ]).then(
-      ([account]) =>
-        (account?.openingBalance || 0) +
-        ((account?.debit || 0) - (account?.credit || 0))
-    );
-
-    Account.aggregate([
-      ...entryPipeline(entryConditions),
-      { $sort: { updatedAt: 1, index: 1 } },
+      { $sort: { dateTime: 1, index: 1 } },
       {
         $match: {
           ...conditions,
-          $or: [{ accountId: account._id }, { rec_id: account._i }],
+          accountId: account._id,
         },
       },
-    ]).then((data) => {
-      return responseFn.success(res, { data, openingBalance });
-    });
+    ]);
+
+    const otherRecords = await Account.aggregate([
+      ...entryPipeline(entryConditions),
+      { $sort: { dateTime: 1, index: 1 } },
+      {
+        $match: {
+          ...conditions,
+          _id: { $ne: firstRecords._id },
+          rec_id: { $in: firstRecords.map((item) => item.rec_id) },
+        },
+      },
+    ]);
+    const allRecords = [...firstRecords, ...otherRecords].filter(
+      (obj, index, self) =>
+        index ===
+        self.findIndex(
+          (o) =>
+            o.rec_id.toString() === obj.rec_id.toString() &&
+            o.index === obj.index
+        )
+    );
+
+    const openingBalance = conditions.dateTime
+      ? await Account.aggregate([
+          ...entryPipeline(entryConditions),
+          {
+            $match: {
+              accountId: account._id,
+              dateTime: { $lt: new Date(req.query.startDate) },
+            },
+          },
+          {
+            $lookup: {
+              from: "accounts",
+              foreignField: "_id",
+              localField: "accountId",
+              as: "rec",
+            },
+          },
+          {
+            $set: {
+              rec: {
+                $getField: {
+                  input: { $first: "$rec" },
+                  field: "openingBalance",
+                },
+              },
+            },
+          },
+          {
+            $group: {
+              _id: "$accountId",
+              openingBalance: { $first: "$rec" },
+              debit: { $sum: "$debit" },
+              credit: { $sum: "$credit" },
+            },
+          },
+        ]).then(
+          ([curr]) =>
+            (curr?.openingBalance || 0) +
+            (curr?.debit || 0) -
+            (curr?.credit || 0)
+        )
+      : account.openingBalance;
+
+    const detailedRows = allRecords
+      .filter((row) => row.accountId.toString() !== account._id.toString())
+      .reduce((p, c) => {
+        const index = p.findIndex((item) =>
+          item.some((row) => row.rec_id.toString() === c.rec_id.toString())
+        );
+        if (index === -1) {
+          p.push([c]);
+        } else {
+          p[index].push(c);
+        }
+        return p;
+      }, [])
+      .map((item) => {
+        const accRec = allRecords.find(
+          (rec) => rec.rec_id.toString() === item[0].rec_id.toString()
+        );
+        if (item.length <= 1) {
+          return {
+            ...item[0],
+            debit: accRec.debit,
+            credit: accRec.credit,
+          };
+        } else {
+          return {
+            ...item[0],
+            details: item.map((row) => ({
+              label: row.accountName,
+              value: row.credit || row.debit,
+            })),
+            debit: accRec.debit,
+            credit: accRec.credit,
+          };
+        }
+      })
+      .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
+      .sort((a, b) => (a.index > b.index ? 1 : -1))
+      .reduce((p, c) => {
+        if (c.details?.length) {
+          p.push(
+            ...[
+              c,
+              ...c.details.map((item) => ({
+                createdAt: null,
+                no: null,
+                type: null,
+                accountName: `${item.label}: ${item.value.toFixed(2)}`,
+                debit: null,
+                credit: null,
+              })),
+            ]
+          );
+        } else {
+          p.push(c);
+        }
+        return p;
+      }, []);
+
+    return responseFn.success(res, { data: detailedRows, openingBalance });
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
   }
@@ -324,7 +419,7 @@ export const getJournals = async (req, res) => {
     }
     Account.aggregate([
       ...entryPipeline(entryConditions),
-      { $sort: { updatedAt: 1, index: 1 } },
+      { $sort: { dateTime: 1, index: 1 } },
       { $match: conditions },
       {
         $group: {
