@@ -363,7 +363,7 @@ export const ledgers = async (req, res) => {
             ...item[0],
             details: item.map((row) => ({
               label: row.accountName,
-              type: row.credit > row.debit ? "Credit" : "Debit",
+              type: row.credit > row.debit ? "credit" : "debit",
               value: row.credit || row.debit,
             })),
             debit: accRec.debit,
