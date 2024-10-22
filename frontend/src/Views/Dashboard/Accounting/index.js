@@ -521,6 +521,11 @@ const Ledgers = ({ account, rows }) => {
   const [openingBalance, setOpeningBalance] = useState(0);
   const [filters, setFilters] = useState({});
   const { get: getData } = useFetch(endpoints.accountingLedgers);
+
+  const closingBalance =
+    openingBalance +
+    data.reduce((p, c) => p + c.debit, 0) -
+    data.reduce((p, c) => p + c.credit, 0);
   useEffect(() => {
     if (account) {
       const query = { accountId: account._id };
@@ -582,14 +587,21 @@ const Ledgers = ({ account, rows }) => {
                   <td />
                   <td style={{ fontWeight: "bold" }}>Closing Balance</td>
                   <td />
-                  <td className="text-right">
-                    {(
-                      openingBalance +
-                      data.reduce((p, c) => p + c.debit, 0) -
-                      data.reduce((p, c) => p + c.credit, 0)
-                    ).toFixed(2)}
-                  </td>
-                  <td />
+                  {closingBalance < 0 ? (
+                    <>
+                      <td />
+                      <td className="text-right">
+                        {Math.abs(closingBalance).toFixed(2)}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="text-right">
+                        {Math.abs(closingBalance).toFixed(2)}
+                      </td>
+                      <td />
+                    </>
+                  )}
                 </tr>
               </tfoot>
             }
@@ -662,6 +674,20 @@ const Analysys = ({ account }) => {
   const [openingBalances, setOpeningBalances] = useState({});
   const [data, setData] = useState([]);
   const [calculation, setCalculation] = useState("sum_debit");
+
+  const totalOpeningBalance = Object.values(openingBalances).reduce(
+    (p, c) => p + (c || 0),
+    0
+  );
+  const totalClosingBalance = data.reduce(
+    (p, row) =>
+      p +
+      ((openingBalances[row._id] || 0) +
+        row.entries.flat().reduce((p, c) => p + c.debit, 0) -
+        row.entries.flat().reduce((p, c) => p + c.credit, 0)),
+    0
+  );
+
   const { get, loading } = useFetch(endpoints.accountingMonthlyAnalysys);
   useEffect(() => {
     if (account) {
@@ -791,9 +817,8 @@ const Analysys = ({ account }) => {
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {Object.values(openingBalances)
-                          .reduce((p, c) => p + (c || 0), 0)
-                          .toFixed(2)}
+                        {Math.abs(totalOpeningBalance).toFixed(2)}{" "}
+                        {totalOpeningBalance < 0 ? "Cr." : "Dr."}
                       </td>
                       <td className="text-right">
                         {data
@@ -820,20 +845,8 @@ const Analysys = ({ account }) => {
                           .toFixed(2)}
                       </td>
                       <td className="text-right">
-                        {data
-                          .reduce(
-                            (p, row) =>
-                              p +
-                              ((openingBalances[row._id] || 0) +
-                                row.entries
-                                  .flat()
-                                  .reduce((p, c) => p + c.debit, 0) -
-                                row.entries
-                                  .flat()
-                                  .reduce((p, c) => p + c.credit, 0)),
-                            0
-                          )
-                          .toFixed(2)}
+                        {Math.abs(totalClosingBalance).toFixed(2)}{" "}
+                        {totalClosingBalance < 0 ? "Cr." : "Dr."}
                       </td>
                     </>
                   ) : (
@@ -854,13 +867,18 @@ const Analysys = ({ account }) => {
             }
           >
             {(data || []).map((row, i, arr) => {
+              const closingBalance =
+                (openingBalances[row._id] || 0) +
+                row.entries.flat().reduce((p, c) => p + c.debit, 0) -
+                row.entries.flat().reduce((p, c) => p + c.credit, 0);
               return (
                 <tr key={i}>
                   <td className="grid">{row.name}</td>
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {openingBalances[row._id]?.toFixed(2)}
+                        {Math.abs(openingBalances[row._id])?.toFixed(2)}{" "}
+                        {openingBalances[row._id] < 0 ? "Cr." : "Dr."}
                       </td>
                       <td className="text-right">
                         {row.entries
@@ -875,11 +893,8 @@ const Analysys = ({ account }) => {
                           .toFixed(2)}
                       </td>
                       <td className="text-right">
-                        {(
-                          (openingBalances[row._id] || 0) +
-                          row.entries.flat().reduce((p, c) => p + c.debit, 0) -
-                          row.entries.flat().reduce((p, c) => p + c.credit, 0)
-                        ).toFixed(2)}
+                        {Math.abs(closingBalance).toFixed(2)}{" "}
+                        {closingBalance < 0 ? "Cr." : "Dr."}
                       </td>
                     </>
                   ) : (
@@ -893,8 +908,6 @@ const Analysys = ({ account }) => {
                       </td>
                     ))
                   )}
-
-                  {}
                 </tr>
               );
             })}

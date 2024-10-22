@@ -382,10 +382,9 @@ export const ledgers = async (req, res) => {
                 createdAt: null,
                 no: null,
                 type: null,
-                accountName: `${item.label}: ${item.type.substring(
-                  0,
-                  2
-                )}. ${item.value.toFixed(2)}`,
+                accountName: `${item.label}: ${item.value.toFixed(2)} ${
+                  item.type === "credit" ? "Cr." : "Dr."
+                }`,
                 debit: null,
                 credit: null,
               })),
@@ -586,7 +585,7 @@ export const monthlyAnalysys = async (req, res) => {
           (ac) => ac._id.toString() === account._id.toString()
         );
         p[account._id] =
-          (curr?.openingBalance || 0) +
+          (curr?.openingBalance || account.openingBalance || 0) +
           (curr?.debit || 0) -
           (curr?.credit || 0);
         return p;
