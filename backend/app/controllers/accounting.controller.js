@@ -363,6 +363,7 @@ export const ledgers = async (req, res) => {
             ...item[0],
             details: item.map((row) => ({
               label: row.accountName,
+              type: row.credit > row.debit ? "Credit" : "Debit",
               value: row.credit || row.debit,
             })),
             debit: accRec.debit,
@@ -381,7 +382,10 @@ export const ledgers = async (req, res) => {
                 createdAt: null,
                 no: null,
                 type: null,
-                accountName: `${item.label}: ${item.value.toFixed(2)}`,
+                accountName: `${item.label}: ${item.type.substring(
+                  0,
+                  2
+                )}. ${item.value.toFixed(2)}`,
                 debit: null,
                 credit: null,
               })),

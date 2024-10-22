@@ -578,10 +578,10 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
               <td />
               <td style={{ fontWeight: "bold" }}>Total</td>
               <td className="text-right">
-                {vouchers.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                {+vouchers.reduce((p, c) => p + c.inward, 0).toFixed(2)}
               </td>
               <td className="text-right">
-                {vouchers.reduce((p, c) => p + c.outward, 0).toFixed(2)}
+                {+vouchers.reduce((p, c) => p + c.outward, 0).toFixed(2)}
               </td>
             </tr>
           </tfoot>
@@ -603,10 +603,10 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
             <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
             <td>{row.accountName}</td>
             <td className="text-right">
-              {row.inward ? row.inward.toFixed(2) : null}
+              {row.inward ? +row.inward.toFixed(2) : null}
             </td>
             <td className="text-right">
-              {row.outward ? row.outward.toFixed(2) : null}
+              {row.outward ? +row.outward.toFixed(2) : null}
             </td>
           </tr>
         ))}
@@ -673,10 +673,10 @@ const Ledgers = ({ account, branch }) => {
                   <td />
                   <td style={{ fontWeight: "bold" }}>Totals</td>
                   <td className="text-right">
-                    {data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                    {+data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
                   </td>
                   <td className="text-right">
-                    {data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
+                    {+data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
                   </td>
                 </tr>
                 <tr className={s.closing}>
@@ -684,10 +684,12 @@ const Ledgers = ({ account, branch }) => {
                   <td />
                   <td style={{ fontWeight: "bold" }}>Closing Stock</td>
                   <td className="text-right">
-                    {(
-                      (openingStock || 0) +
-                      data.reduce((p, c) => p + (c.inward - c.outward), 0)
-                    ).toFixed(2)}
+                    {
+                      +(
+                        (openingStock || 0) +
+                        data.reduce((p, c) => p + (c.inward - c.outward), 0)
+                      ).toFixed(2)
+                    }
                   </td>
                   <td />
                 </tr>
@@ -720,10 +722,10 @@ const Ledgers = ({ account, branch }) => {
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
                   <td className="text-right">
-                    {row.inward ? row.inward.toFixed(2) : null}
+                    {row.inward ? +row.inward.toFixed(2) : null}
                   </td>
                   <td className="text-right">
-                    {row.outward ? row.outward.toFixed(2) : null}
+                    {row.outward ? +row.outward.toFixed(2) : null}
                   </td>
                 </tr>
               );
@@ -974,7 +976,7 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
       entries.reduce((p, c) => p + (c.inward - c.outward), 0) + openingBalance;
     // return;
   }
-  return result.toFixed(2);
+  return +result.toFixed(2);
 };
 
 export default Accounting;

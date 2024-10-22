@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Input, Combobox } from "Components/elements";
+import { Input, Combobox, CustomRadio } from "Components/elements";
 import { useYup, useFetch } from "hooks";
 import { Prompt } from "Components/modal";
 import * as yup from "yup";
@@ -28,6 +28,7 @@ const mainSchema = yup.object({
   isGroup: yup.boolean().required(),
   openingBalance: yup
     .number()
+    .min(0, "Opening balance can't be less than 0.")
     .required("Please enter opening balance")
     .typeError("Please enter a valid number"),
 });
@@ -55,19 +56,28 @@ const Form = ({ edit, masters = [], onSuccess }) => {
       parent: edit?.parent || "null",
       type: edit?.type || "null",
       isGroup: edit?.isGroup ?? true,
-      openingBalance: edit?.openingBalance || 0,
+      openingBalance: Math.abs(edit?.openingBalance || 0),
+      balanceType:
+        edit?.balanceType || (edit?.openingBalance < 0 ? "credit" : "debit"),
     });
   }, [edit]);
   return (
     <form
       onSubmit={handleSubmit((values) => {
+        const payload = {
+          ...values,
+          openingBalance:
+            values.balanceType === "credit"
+              ? -values.openingBalance
+              : values.openingBalance,
+        };
         if (values.parent === "null") {
-          values.parent = null;
+          payload.parent = null;
         }
         if (values.type === "null") {
-          values.type = null;
+          payload.type = null;
         }
-        (edit?._id ? updateMaster : createMaster)(values)
+        (edit?._id ? updateMaster : createMaster)(payload)
           .then(({ data }) => {
             if (!data.success) {
               return Prompt({ type: "error", message: data.message });
@@ -118,8 +128,23 @@ const Form = ({ edit, masters = [], onSuccess }) => {
         ]}
       />
 
+      <label
+        style={{
+          fontWeight: "semibold",
+          fontSize: "14px",
+        }}
+      >
+        Opening Balance *
+      </label>
+      <CustomRadio
+        control={control}
+        name="balanceType"
+        options={[
+          { label: "Credit", value: "credit" },
+          { label: "Debit", value: "debit" },
+        ]}
+      />
       <Input
-        label="Opening Balance"
         type="number"
         {...register("openingBalance")}
         required

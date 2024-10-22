@@ -41,11 +41,13 @@ const buildTree = (accounts) => {
 };
 
 const AccountNode = ({
+  masters,
   account,
   setAddMaster,
   activeGroup,
   activeLeaf,
   activeLeavs = [],
+  defaultBalanceType,
   onClick = () => {},
 }) => {
   const [children, setChildren] = useState([]);
@@ -144,9 +146,13 @@ const AccountNode = ({
           {account.isGroup && (
             <button
               className={s.addButton}
-              onClick={() =>
-                setAddMaster({ parent: account._id, type: account.type || "" })
-              }
+              onClick={() => {
+                setAddMaster({
+                  parent: account._id,
+                  type: account.type || "",
+                  balanceType: defaultBalanceType,
+                });
+              }}
             >
               <BsFillPlusSquareFill />
             </button>
@@ -162,6 +168,8 @@ const AccountNode = ({
           {children.map((child) => (
             <AccountNode
               key={child._id}
+              defaultBalanceType={defaultBalanceType}
+              masters={masters}
               activeGroup={activeGroup}
               activeLeaf={activeLeaf}
               activeLeavs={activeLeavs}
@@ -230,6 +238,10 @@ const Accounting = ({ setSidebarOpen }) => {
             {masters.length > 0 ? (
               treeData.map((account) => (
                 <AccountNode
+                  defaultBalanceType={
+                    account.name === "Assets" ? "debit" : "credit"
+                  }
+                  masters={masters}
                   key={account._id}
                   account={account}
                   setAddMaster={setAddMaster}
@@ -556,7 +568,7 @@ const Ledgers = ({ account, rows }) => {
                 <tr className={s.footer}>
                   <td />
                   <td />
-                  <td style={{ fontWeight: "bold" }}>Total</td>
+                  <td style={{ fontWeight: "bold" }}>Totals</td>
                   <td />
                   <td className="text-right">
                     {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
@@ -589,8 +601,21 @@ const Ledgers = ({ account, rows }) => {
                 Opening Balance
               </td>
               <td />
-              <td className="text-right">{(openingBalance || 0).toFixed(2)}</td>
-              <td />
+              {openingBalance < 0 ? (
+                <>
+                  <td />
+                  <td className="text-right">
+                    {Math.abs(openingBalance || 0).toFixed(2)}
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td className="text-right">
+                    {Math.abs(openingBalance || 0).toFixed(2)}
+                  </td>
+                  <td />
+                </>
+              )}
             </tr>
             {data.map((row, i, arr) => {
               return (
@@ -838,10 +863,16 @@ const Analysys = ({ account }) => {
                         {openingBalances[row._id]?.toFixed(2)}
                       </td>
                       <td className="text-right">
-                        {row.entries.flat().reduce((p, c) => p + c.debit, 0)}
+                        {row.entries
+                          .flat()
+                          .reduce((p, c) => p + c.debit, 0)
+                          .toFixed(2)}
                       </td>
                       <td className="text-right">
-                        {row.entries.flat().reduce((p, c) => p + c.credit, 0)}
+                        {row.entries
+                          .flat()
+                          .reduce((p, c) => p + c.credit, 0)
+                          .toFixed(2)}
                       </td>
                       <td className="text-right">
                         {(
