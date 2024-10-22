@@ -755,7 +755,7 @@ export const CustomRadio = ({
             )}
             <div className={s.options} ref={containerRef}>
               {opts
-                .sort((a, b) => (a.order > b.order ? 1 : -1))
+                // .sort((a, b) => (a.order > b.order ? 1 : -1))
                 .map(({ label, value: v, disabled }, i) => (
                   <label
                     htmlFor={name + v}
