@@ -156,7 +156,7 @@ const Dashboard = () => {
           <PiUsersFourFill className={s.filled} style={{ fontSize: "1.2em" }} />
         ),
         label: "Micro Apps",
-        path: paths.businesses,
+        path: "https://crm.infinai.in",
         target: "_blank",
       });
       menuItems.push({
@@ -386,7 +386,7 @@ const Dashboard = () => {
             />
           ),
           label: "Micro Apps",
-          path: paths.businesses,
+          path: "https://crm.infinai.in",
           target: "_blank",
         },
       ];
