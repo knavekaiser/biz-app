@@ -201,6 +201,25 @@ const entryPipeline = (entryConditions) => {
     },
     { $unwind: { path: "$entries" } },
     { $replaceRoot: { newRoot: "$entries" } },
+    {
+      $lookup: {
+        from: "accounts",
+        localField: "accountId",
+        foreignField: "_id",
+        as: "account",
+      },
+    },
+    {
+      $set: {
+        accountName: {
+          $getField: {
+            input: { $first: "$account" },
+            field: "name",
+          },
+        },
+      },
+    },
+    { $unset: "account" },
   ];
 };
 

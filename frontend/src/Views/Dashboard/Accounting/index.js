@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { Table, Moment, Tabs } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
@@ -16,6 +16,7 @@ import { FiEdit3 } from "react-icons/fi";
 import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
 import { VoucherFilters, AnalysysFilters } from "./Filters";
+import { SiteContext } from "SiteContext";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -185,6 +186,7 @@ const AccountNode = ({
 };
 
 const Accounting = ({ setSidebarOpen }) => {
+  const { config } = useContext(SiteContext);
   const [addMaster, setAddMaster] = useState(null);
   const [masters, setMasters] = useState([]);
   const [tab, setTab] = useState("voucherListing");
@@ -338,7 +340,11 @@ const Accounting = ({ setSidebarOpen }) => {
                                   type: null,
                                   accountName: (
                                     <p>
-                                      {item.label}: {item.value.toFixed(2)}
+                                      {item.label}:{" "}
+                                      {item.value.fix(
+                                        2,
+                                        config?.numberSeparator
+                                      )}
                                     </p>
                                   ),
                                   debit: null,
@@ -433,6 +439,7 @@ const Accounting = ({ setSidebarOpen }) => {
 };
 
 const Vouchers = ({ vouchers, setVouchers }) => {
+  const { config } = useContext(SiteContext);
   const [filters, setFilters] = useState({});
   const voucherTableRef = useRef();
 
@@ -479,10 +486,14 @@ const Vouchers = ({ vouchers, setVouchers }) => {
               <td />
               <td className="text-right">Total</td>
               <td className="text-right">
-                {vouchers.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                {vouchers
+                  .reduce((p, c) => p + c.debit, 0)
+                  .fix(2, config?.numberSeparator)}
               </td>
               <td className="text-right">
-                {vouchers.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                {vouchers
+                  .reduce((p, c) => p + c.credit, 0)
+                  .fix(2, config?.numberSeparator)}
               </td>
             </tr>
           </tfoot>
@@ -504,10 +515,10 @@ const Vouchers = ({ vouchers, setVouchers }) => {
             <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
             <td>{row.accountName}</td>
             <td className="text-right">
-              {row.debit ? row.debit.toFixed(2) : null}
+              {row.debit ? row.debit.fix(2, config?.numberSeparator) : null}
             </td>
             <td className="text-right">
-              {row.credit ? row.credit.toFixed(2) : null}
+              {row.credit ? row.credit.fix(2, config?.numberSeparator) : null}
             </td>
           </tr>
         ))}
@@ -517,6 +528,7 @@ const Vouchers = ({ vouchers, setVouchers }) => {
 };
 
 const Ledgers = ({ account, rows }) => {
+  const { config } = useContext(SiteContext);
   const [data, setData] = useState([]);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [filters, setFilters] = useState({});
@@ -576,10 +588,14 @@ const Ledgers = ({ account, rows }) => {
                   <td style={{ fontWeight: "bold" }}>Totals</td>
                   <td />
                   <td className="text-right">
-                    {data.reduce((p, c) => p + c.debit, 0).toFixed(2)}
+                    {data
+                      .reduce((p, c) => p + c.debit, 0)
+                      .fix(2, config?.numberSeparator)}
                   </td>
                   <td className="text-right">
-                    {data.reduce((p, c) => p + c.credit, 0).toFixed(2)}
+                    {data
+                      .reduce((p, c) => p + c.credit, 0)
+                      .fix(2, config?.numberSeparator)}
                   </td>
                 </tr>
                 <tr className={s.footer}>
@@ -591,13 +607,19 @@ const Ledgers = ({ account, rows }) => {
                     <>
                       <td />
                       <td className="text-right">
-                        {Math.abs(closingBalance).toFixed(2)}
+                        {Math.abs(closingBalance).fix(
+                          2,
+                          config?.numberSeparator
+                        )}
                       </td>
                     </>
                   ) : (
                     <>
                       <td className="text-right">
-                        {Math.abs(closingBalance).toFixed(2)}
+                        {Math.abs(closingBalance).fix(
+                          2,
+                          config?.numberSeparator
+                        )}
                       </td>
                       <td />
                     </>
@@ -617,13 +639,19 @@ const Ledgers = ({ account, rows }) => {
                 <>
                   <td />
                   <td className="text-right">
-                    {Math.abs(openingBalance || 0).toFixed(2)}
+                    {Math.abs(openingBalance || 0).fix(
+                      2,
+                      config?.numberSeparator
+                    )}
                   </td>
                 </>
               ) : (
                 <>
                   <td className="text-right">
-                    {Math.abs(openingBalance || 0).toFixed(2)}
+                    {Math.abs(openingBalance || 0).fix(
+                      2,
+                      config?.numberSeparator
+                    )}
                   </td>
                   <td />
                 </>
@@ -651,10 +679,14 @@ const Ledgers = ({ account, rows }) => {
                     {row.details?.length > 0 ? "Details:" : row.accountName}
                   </td>
                   <td className="text-right">
-                    {row.debit ? row.debit.toFixed(2) : null}
+                    {row.debit
+                      ? row.debit.fix(2, config?.numberSeparator)
+                      : null}
                   </td>
                   <td className="text-right">
-                    {row.credit ? row.credit.toFixed(2) : null}
+                    {row.credit
+                      ? row.credit.fix(2, config?.numberSeparator)
+                      : null}
                   </td>
                 </tr>
               );
@@ -669,13 +701,14 @@ const Ledgers = ({ account, rows }) => {
 };
 
 const Analysys = ({ account }) => {
+  const { config } = useContext(SiteContext);
   const [months, setMonths] = useState([]);
   const [filters, setFilters] = useState({});
   const [openingBalances, setOpeningBalances] = useState({});
   const [data, setData] = useState([]);
   const [calculation, setCalculation] = useState("sum_debit");
 
-  const totalOpeningBalance = Object.values(openingBalances).reduce(
+  const totalOpeningBalance = Object.values(openingBalances || {}).reduce(
     (p, c) => p + (c || 0),
     0
   );
@@ -817,7 +850,10 @@ const Analysys = ({ account }) => {
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {Math.abs(totalOpeningBalance).toFixed(2)}{" "}
+                        {Math.abs(totalOpeningBalance).fix(
+                          2,
+                          config?.numberSeparator
+                        )}{" "}
                         {totalOpeningBalance < 0 ? "Cr." : "Dr."}
                       </td>
                       <td className="text-right">
@@ -830,7 +866,7 @@ const Analysys = ({ account }) => {
                                 .reduce((p, c) => p + c.debit, 0),
                             0
                           )
-                          .toFixed(2)}
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
                         {data
@@ -842,10 +878,13 @@ const Analysys = ({ account }) => {
                                 .reduce((p, c) => p + c.credit, 0),
                             0
                           )
-                          .toFixed(2)}
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {Math.abs(totalClosingBalance).toFixed(2)}{" "}
+                        {Math.abs(totalClosingBalance).fix(
+                          2,
+                          config?.numberSeparator
+                        )}{" "}
                         {totalClosingBalance < 0 ? "Cr." : "Dr."}
                       </td>
                     </>
@@ -857,7 +896,9 @@ const Analysys = ({ account }) => {
                           data.reduce((prev, curr, j) => {
                             prev.push(...curr.entries[i]);
                             return prev;
-                          }, [])
+                          }, []),
+                          0,
+                          config?.numberSeparator
                         )}
                       </td>
                     ))
@@ -877,23 +918,29 @@ const Analysys = ({ account }) => {
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {Math.abs(openingBalances[row._id])?.toFixed(2)}{" "}
+                        {Math.abs(openingBalances[row._id])?.fix(
+                          2,
+                          config?.numberSeparator
+                        )}{" "}
                         {openingBalances[row._id] < 0 ? "Cr." : "Dr."}
                       </td>
                       <td className="text-right">
                         {row.entries
                           .flat()
                           .reduce((p, c) => p + c.debit, 0)
-                          .toFixed(2)}
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
                         {row.entries
                           .flat()
                           .reduce((p, c) => p + c.credit, 0)
-                          .toFixed(2)}
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {Math.abs(closingBalance).toFixed(2)}{" "}
+                        {Math.abs(closingBalance).fix(
+                          2,
+                          config?.numberSeparator
+                        )}{" "}
                         {closingBalance < 0 ? "Cr." : "Dr."}
                       </td>
                     </>
@@ -903,7 +950,8 @@ const Analysys = ({ account }) => {
                         {analyzeAccounts(
                           calculation,
                           row.entries[i],
-                          row.openingBalance
+                          row.openingBalance,
+                          config?.numberSeparator
                         )}
                       </td>
                     ))
@@ -920,7 +968,7 @@ const Analysys = ({ account }) => {
   );
 };
 
-const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
+const analyzeAccounts = (calculation, entries, openingBalance = 0, locale) => {
   let result = null;
   if (calculation === "sum_debit") {
     result = entries.reduce((p, c) => p + c.debit, 0);
@@ -933,9 +981,11 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
   } else if (calculation === "balance") {
     result =
       entries.reduce((p, c) => p + c.debit - c.credit, 0) + openingBalance;
-    // return;
   }
-  return result.toFixed(2);
+  if (["net", "balance"].includes(calculation)) {
+    return `${Math.abs(result).fix(2, locale)} ${result < 0 ? "Cr." : "Dr."}`;
+  }
+  return result.fix(2, locale);
 };
 
 export default Accounting;

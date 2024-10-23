@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { Table, Moment, Tabs, Combobox } from "Components/elements";
 import { Prompt, Modal } from "Components/modal";
 import s from "./quotes.module.scss";
@@ -18,6 +18,7 @@ import { PiTreeViewBold } from "react-icons/pi";
 import { CgSpinner } from "react-icons/cg";
 import { VoucherFilters, AnalysysFilters } from "./Filters";
 import { useForm } from "react-hook-form";
+import { SiteContext } from "SiteContext";
 
 const buildTree = (accounts) => {
   const accountMap = {};
@@ -301,67 +302,6 @@ const Accounting = ({ setSidebarOpen }) => {
                         const detailedRows = allRecords.filter(
                           (row) => row.accountId === account._id
                         );
-                        // .reduce((p, c) => {
-                        //   const index = p.findIndex((item) =>
-                        //     item.some((row) => row.rec_id === c.rec_id)
-                        //   );
-                        //   if (index === -1) {
-                        //     p.push([c]);
-                        //   } else {
-                        //     p[index].push(c);
-                        //   }
-                        //   return p;
-                        // }, [])
-                        // .map((item) => {
-                        //   const accRec = allRecords.find(
-                        //     (rec) => rec.rec_id === item[0].rec_id
-                        //   );
-                        //   if (item.length <= 1) {
-                        //     return {
-                        //       ...item[0],
-                        //       outward: accRec.outward,
-                        //       inward: accRec.inward,
-                        //     };
-                        //   } else {
-                        //     return {
-                        //       ...item[0],
-                        //       details: item.map((row) => ({
-                        //         label: row.accountName,
-                        //         value: row.inward || row.outward,
-                        //       })),
-                        //       // inward: item.reduce((p, c) => p + c.inward, 0),
-                        //       // outward: item.reduce((p, c) => p + c.outward, 0),
-                        //       outward: accRec.outward,
-                        //       inward: accRec.inward,
-                        //     };
-                        //   }
-                        // })
-                        // .sort((a, b) => (new Date(a) > new Date(b) ? 1 : -1))
-                        // .sort((a, b) => (a.index > b.index ? 1 : -1))
-                        // .reduce((p, c) => {
-                        //   if (c.details?.length) {
-                        //     p.push(
-                        //       ...[
-                        //         c,
-                        //         ...c.details.map((item) => ({
-                        //           createdAt: null,
-                        //           no: null,
-                        //           type: null,
-                        //           accountName: (
-                        //             <p>
-                        //               {item.label}: {item.value.toFixed(2)}
-                        //             </p>
-                        //           ),
-                        //           outward: null,
-                        //           inward: null,
-                        //         })),
-                        //       ]
-                        //     );
-                        //   } else {
-                        //     p.push(c);
-                        //   }
-                        //   return p;
-                        // }, []);
                         setLedger({
                           account,
                           rows: detailedRows,
@@ -528,6 +468,7 @@ const Branches = ({ branches, setBranches, addBranch, setAddBranch }) => {
 };
 
 const Vouchers = ({ branch, vouchers, setVouchers }) => {
+  const { config } = useContext(SiteContext);
   const [filters, setFilters] = useState({});
   const voucherTableRef = useRef();
 
@@ -578,10 +519,14 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
               <td />
               <td style={{ fontWeight: "bold" }}>Total</td>
               <td className="text-right">
-                {+vouchers.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                {vouchers
+                  .reduce((p, c) => p + c.inward, 0)
+                  .fix(2, config?.numberSeparator)}
               </td>
               <td className="text-right">
-                {+vouchers.reduce((p, c) => p + c.outward, 0).toFixed(2)}
+                {vouchers
+                  .reduce((p, c) => p + c.outward, 0)
+                  .fix(2, config?.numberSeparator)}
               </td>
             </tr>
           </tfoot>
@@ -603,10 +548,10 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
             <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
             <td>{row.accountName}</td>
             <td className="text-right">
-              {row.inward ? +row.inward.toFixed(2) : null}
+              {row.inward ? row.inward.fix(2, config?.numberSeparator) : null}
             </td>
             <td className="text-right">
-              {row.outward ? +row.outward.toFixed(2) : null}
+              {row.outward ? row.outward.fix(2, config?.numberSeparator) : null}
             </td>
           </tr>
         ))}
@@ -616,6 +561,7 @@ const Vouchers = ({ branch, vouchers, setVouchers }) => {
 };
 
 const Ledgers = ({ account, branch }) => {
+  const { config } = useContext(SiteContext);
   const [data, setData] = useState([]);
   const [openingStock, setOpeningStock] = useState(0);
   const [filters, setFilters] = useState({});
@@ -673,10 +619,14 @@ const Ledgers = ({ account, branch }) => {
                   <td />
                   <td style={{ fontWeight: "bold" }}>Totals</td>
                   <td className="text-right">
-                    {+data.reduce((p, c) => p + c.inward, 0).toFixed(2)}
+                    {data
+                      .reduce((p, c) => p + c.inward, 0)
+                      .fix(2, config?.numberSeparator)}
                   </td>
                   <td className="text-right">
-                    {+data.reduce((p, c) => p + c.outward, 0).toFixed(2)}
+                    {data
+                      .reduce((p, c) => p + c.outward, 0)
+                      .fix(2, config?.numberSeparator)}
                   </td>
                 </tr>
                 <tr className={s.closing}>
@@ -684,12 +634,10 @@ const Ledgers = ({ account, branch }) => {
                   <td />
                   <td style={{ fontWeight: "bold" }}>Closing Stock</td>
                   <td className="text-right">
-                    {
-                      +(
-                        (openingStock || 0) +
-                        data.reduce((p, c) => p + (c.inward - c.outward), 0)
-                      ).toFixed(2)
-                    }
+                    {(
+                      (openingStock || 0) +
+                      data.reduce((p, c) => p + (c.inward - c.outward), 0)
+                    ).fix(2, config?.numberSeparator)}
                   </td>
                   <td />
                 </tr>
@@ -700,7 +648,9 @@ const Ledgers = ({ account, branch }) => {
               <td />
               <td />
               <td style={{ fontWeight: "bold" }}>Opening Stock</td>
-              <td className="text-right">{openingStock}</td>
+              <td className="text-right">
+                {(openingStock || 0).fix(2, config?.numberSeparator)}
+              </td>
               <td />
             </tr>
             {data.map((row, i, arr) => {
@@ -722,10 +672,14 @@ const Ledgers = ({ account, branch }) => {
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.no}</td>
                   <td>{arr[i - 1]?.rec_id !== row.rec_id && row.type}</td>
                   <td className="text-right">
-                    {row.inward ? +row.inward.toFixed(2) : null}
+                    {row.inward
+                      ? row.inward.fix(2, config?.numberSeparator)
+                      : null}
                   </td>
                   <td className="text-right">
-                    {row.outward ? +row.outward.toFixed(2) : null}
+                    {row.outward
+                      ? row.outward.fix(2, config?.numberSeparator)
+                      : null}
                   </td>
                 </tr>
               );
@@ -740,6 +694,7 @@ const Ledgers = ({ account, branch }) => {
 };
 
 const Analysys = ({ branch, account }) => {
+  const { config } = useContext(SiteContext);
   const [months, setMonths] = useState([]);
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({});
@@ -858,32 +813,40 @@ const Analysys = ({ branch, account }) => {
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {Object.values(openingStocks).reduce(
-                          (p, c) => p + c,
-                          0
-                        )}
+                        {Object.values(openingStocks)
+                          .reduce((p, c) => p + c, 0)
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {data.reduce(
-                          (p, c) =>
-                            p +
-                            c.entries.flat().reduce((p, c) => p + c.inward, 0),
-                          0
-                        )}
+                        {data
+                          .reduce(
+                            (p, c) =>
+                              p +
+                              c.entries
+                                .flat()
+                                .reduce((p, c) => p + c.inward, 0),
+                            0
+                          )
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {data.reduce(
-                          (p, c) =>
-                            p +
-                            c.entries.flat().reduce((p, c) => p + c.outward, 0),
-                          0
-                        )}
+                        {data
+                          .reduce(
+                            (p, c) =>
+                              p +
+                              c.entries
+                                .flat()
+                                .reduce((p, c) => p + c.outward, 0),
+                            0
+                          )
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {Object.values(openingStocks).reduce(
-                          (p, c) => p + c,
-                          0
-                        ) +
+                        {(
+                          Object.values(openingStocks || {}).reduce(
+                            (p, c) => p + c,
+                            0
+                          ) +
                           data.reduce(
                             (p, c) =>
                               p +
@@ -894,7 +857,8 @@ const Analysys = ({ branch, account }) => {
                                   0
                                 ),
                             0
-                          )}
+                          )
+                        ).fix(2, config?.numberSeparator)}
                       </td>
                     </>
                   ) : (
@@ -905,7 +869,9 @@ const Analysys = ({ branch, account }) => {
                           data.reduce((prev, curr, j) => {
                             prev.push(...curr.entries[i]);
                             return prev;
-                          }, [])
+                          }, []),
+                          0,
+                          config?.numberSeparator
                         )}
                       </td>
                     ))
@@ -921,23 +887,34 @@ const Analysys = ({ branch, account }) => {
                   {calculation === "statement" ? (
                     <>
                       <td className="text-right">
-                        {openingStocks[row._id] || 0}
+                        {(openingStocks[row._id] || 0).fix(
+                          2,
+                          config?.numberSeparator
+                        )}
                       </td>
                       <td className="text-right">
-                        {row.entries.flat().reduce((p, c) => p + c.inward, 0)}
+                        {row.entries
+                          .flat()
+                          .reduce((p, c) => p + c.inward, 0)
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {row.entries.flat().reduce((p, c) => p + c.outward, 0)}
+                        {row.entries
+                          .flat()
+                          .reduce((p, c) => p + c.outward, 0)
+                          .fix(2, config?.numberSeparator)}
                       </td>
                       <td className="text-right">
-                        {(openingStocks[row._id] || 0) +
+                        {(
+                          (openingStocks[row._id] || 0) +
                           row.entries
                             .flat()
                             .reduce(
                               (p, c) =>
                                 p + ((c.inward || 0) - (c.outward || 0)),
                               0
-                            )}
+                            )
+                        ).fix(2, config?.numberSeparator)}
                       </td>
                     </>
                   ) : (
@@ -946,7 +923,8 @@ const Analysys = ({ branch, account }) => {
                         {analyzeAccounts(
                           calculation,
                           row.entries[i],
-                          openingStocks[row._id]
+                          openingStocks[row._id],
+                          config?.numberSeparator
                         )}
                       </td>
                     ))
@@ -963,7 +941,7 @@ const Analysys = ({ branch, account }) => {
   );
 };
 
-const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
+const analyzeAccounts = (calculation, entries, openingBalance = 0, locale) => {
   let result = null;
   if (calculation === "sum_in") {
     result = entries.reduce((p, c) => p + c.inward, 0);
@@ -976,7 +954,7 @@ const analyzeAccounts = (calculation, entries, openingBalance = 0) => {
       entries.reduce((p, c) => p + (c.inward - c.outward), 0) + openingBalance;
     // return;
   }
-  return +result.toFixed(2);
+  return result.fix(2, locale);
 };
 
 export default Accounting;
