@@ -179,7 +179,7 @@ export const profile = (req, res) => {
             user: { $in: data.businesses.map((item) => item.business._id) },
           });
           const allFinPeriod = await Promise.all(
-            businesses.map(async (business) => {
+            data.businesses.map(async (business) => {
               const FinPeriod = getModel({
                 companyId: business._id,
                 name: "FinancialPeriod",

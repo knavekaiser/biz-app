@@ -206,7 +206,7 @@ export const genPipeline = async (req, res) => {
     columns
       .filter((col) => col.type === "module-coll-lookup")
       .forEach((col) => {
-        let tableName = `${companyId}_${col.table.module}_${col.table.name}`;
+        let tableName = `mod_${col.table.module}_${col.table.name}`;
         pipeline.push(
           ...[
             {
@@ -224,7 +224,7 @@ export const genPipeline = async (req, res) => {
     columns
       .filter((col) => col.type === "submodule-lookup")
       .forEach((col) => {
-        let tableName = `${companyId}_${col.table.module}_${col.table.name}`;
+        let tableName = `mod_${col.table.module}_${col.table.name}`;
         pipeline.push(
           ...[
             {
@@ -251,7 +251,7 @@ export const genPipeline = async (req, res) => {
     columns
       .filter((col) => col.type === "submodule-coll-lookup")
       .forEach((col) => {
-        let tableName = `${companyId}_${col.table.module}_${col.table.submodule}_${col.table.name}`;
+        let tableName = `mod_${col.table.module}_${col.table.submodule}_${col.table.name}`;
         pipeline.push(
           ...[
             {
@@ -358,27 +358,27 @@ export const genPipeline = async (req, res) => {
   }
 };
 
-const getModelForReport = async ({ companyId, table }) => {
+const getModelForReport = async ({ companyId, finPeriodId, table }) => {
   const Module = getModel({
-    companyId: (req.business || req.authUser)._id,
+    companyId,
     name: "Module",
   });
   const Submodule = getModel({
-    companyId: (req.business || req.authUser)._id,
+    companyId,
     name: "Submodule",
   });
 
-  let tableName = `${companyId}_${table.name}`;
+  let tableName = `dynamic_${table.name}`;
   if (["module-coll", "submodule-coll"].includes(table.type)) {
-    tableName = `${companyId}_${table.module || table.submodule}_${table.name}`;
+    tableName = `dynamic_${table.module || table.submodule}_${table.name}`;
   }
 
   let Model = null;
   if (table.type === "collection") {
     Model = await dbHelper
       .getModel({
-        companyId: (req.business || req.authUser)._id,
-        finPeriodId: req.finPeriod._id,
+        companyId,
+        finPeriodId,
         name: tableName,
       })
       .then((data) => data.Model);
@@ -388,7 +388,7 @@ const getModelForReport = async ({ companyId, table }) => {
     );
     Model = await dbHelper
       .getModuleModel({
-        name: `${companyId}_${module.name}`,
+        name: `mod_${module.name}`,
         fields: module.fields,
       })
       .then((data) => data.Model);
@@ -398,7 +398,7 @@ const getModelForReport = async ({ companyId, table }) => {
     );
     Model = await dbHelper
       .getModuleModel({
-        name: `${companyId}_${module.name}_${table.name}`,
+        name: `mod_${module.name}_${table.name}`,
         fields: module.fields.find((f) => f.name === table.name)?.fields,
       })
       .then((data) => data.Model);
@@ -408,10 +408,23 @@ const getModelForReport = async ({ companyId, table }) => {
 export const testPipeline = async (req, res) => {
   try {
     const companyId = req.business?._id || req.authUser._id;
-    const Model = await getModelForReport({ companyId, table: req.body.table });
+    const Model = await getModelForReport({
+      companyId,
+      finPeriodId: req.finPeriod._id,
+      table: req.body.table,
+    });
 
-    const data = await Model.aggregate(req.body.pipeline);
-    return responseFn.success(res, { data });
+    console.log("this also rean", Model);
+
+    Model.aggregate(req.body.pipeline)
+      .then((data) => {
+        console.log(data);
+        responseFn.success(res, { data });
+      })
+      .catch((err) => {
+        console.log(err);
+        responseFn.error(res, {}, err.message);
+      });
   } catch (err) {
     return responseFn.error(res, {}, err.message, 500);
   }
@@ -437,7 +450,11 @@ export const genReport = async (req, res) => {
       };
     }
 
-    const Model = await getModelForReport({ companyId, table });
+    const Model = await getModelForReport({
+      companyId,
+      finPeriodId: req.finPeriod._id,
+      table,
+    });
     const data = await Model.aggregate([
       { $match: match },
       ...reportTemplate.pipeline,
@@ -463,9 +480,7 @@ export const getReports = async (req, res) => {
       name: "Report",
     });
 
-    const conditions = {
-      company: ObjectId(req.business?._id || req.authUser._id),
-    };
+    const conditions = {};
     if (req.params._id) {
       conditions._id = req.params._id;
     }
@@ -489,7 +504,13 @@ export const getReports = async (req, res) => {
 
 export const createReport = async (req, res) => {
   try {
-    new Report({ ...req.body, company: req.business?._id || req.authUser._id })
+    const Report = getModel({
+      companyId: (req.business || req.authUser)._id,
+      finPeriodId: req.finPeriod._id,
+      name: "Report",
+    });
+
+    new Report(req.body)
       .save()
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
@@ -508,11 +529,7 @@ export const updateReport = async (req, res) => {
       name: "Report",
     });
 
-    Report.findOneAndUpdate(
-      { _id: req.params._id, company: req.business?._id || req.authUser._id },
-      req.body,
-      { new: true }
-    )
+    Report.findOneAndUpdate({ _id: req.params._id }, req.body, { new: true })
       .then((data) => {
         return responseFn.success(res, { data }, responseStr.record_updated);
       })
@@ -530,10 +547,7 @@ export const deleteReport = async (req, res) => {
       name: "Report",
     });
 
-    Report.deleteMany({
-      _id: req.params._id,
-      company: req.business?._id || req.authUser._id,
-    })
+    Report.deleteMany({ _id: req.params._id })
       .then((num) => responseFn.success(res, {}, responseStr.record_deleted))
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (err) {

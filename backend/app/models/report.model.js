@@ -3,7 +3,6 @@ const Schema = mongoose.Schema;
 
 export default new Schema(
   {
-    company: { type: Schema.Types.ObjectId, ref: "Company" },
     name: { type: Schema.Types.String, min: 3, required: true },
     tables: [
       new Schema({
