@@ -181,24 +181,17 @@ export const profile = (req, res) => {
           const allFinPeriod = await Promise.all(
             data.businesses.map(async (business) => {
               const FinPeriod = getModel({
-                companyId: business.business,
+                companyId: business.business._id,
                 name: "FinancialPeriod",
               });
               return FinPeriod.find().then((data) =>
                 data.map((item) => ({
                   ...item.toJSON(),
-                  company: business.business,
+                  company: business.business._id,
                 }))
               );
             })
           ).then((data) => data.flat());
-          console.dir(
-            {
-              assignedBusinesses: data.businesses.length,
-              allFinPeriod,
-            },
-            { depth: null }
-          );
           businesses = data.businesses.map((item) => ({
             ...item._doc,
             config: allConfigs.find(
@@ -206,8 +199,8 @@ export const profile = (req, res) => {
                 config.user.toString() === item.business._id.toString()
             ),
             finPeriods: allFinPeriod.filter(
-              (item) =>
-                item.company.toString() === item.business.business.toString()
+              (finPeriod) =>
+                finPeriod.company.toString() === item.business._id.toString()
             ),
           }));
         }
