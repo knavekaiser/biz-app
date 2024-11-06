@@ -185,7 +185,10 @@ export const profile = (req, res) => {
                 name: "FinancialPeriod",
               });
               return FinPeriod.find().then((data) =>
-                data.map({ ...item.toJSON(), company: business._id })
+                data.map((item) => ({
+                  ...item.toJSON(),
+                  company: business._id,
+                }))
               );
             })
           ).then((data) => data.flat());
