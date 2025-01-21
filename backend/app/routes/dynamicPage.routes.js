@@ -20,14 +20,14 @@ export default function (app) {
     file.upload([
       {
         name: "files",
-        path: "/dynamic_pages",
+        pathname: "dynamic_pages/",
         multiple: true,
         fileSize: appConfig.supportedFileSizes,
         fileTypes: appConfig.supportedFileTypes,
       },
       {
         name: "thumbnail",
-        path: "/dynamic_pages",
+        path: "dynamic_pages/",
         fileSize: appConfig.supportedFileSizes,
         fileTypes: appConfig.supportedFileTypes,
       },
@@ -43,7 +43,7 @@ export default function (app) {
       {
         name: "files",
         multiple: true,
-        path: "/dynamic_page",
+        pathname: "/dynamic_page",
         fileSize: appConfig.supportedFileSizes,
         fileTypes: appConfig.supportedFileTypes,
       },

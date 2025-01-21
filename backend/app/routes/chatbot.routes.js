@@ -15,7 +15,7 @@ export default function (app) {
     file.upload([
       {
         name: "avatar",
-        path: "/chatbot_avatars",
+        pathname: "chatbot_avatars/",
         fileSize: appConfig.supportedImageSizes,
         fileTypes: appConfig.supportedImageTypes,
       },

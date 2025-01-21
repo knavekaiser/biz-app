@@ -1,5 +1,6 @@
 import { responseFn } from "../config/app.config.js";
 import * as fileHelper from "../helpers/file.helper.js";
+import { cdnHelper } from "../helpers/index.js";
 
 export const validate = (schema) => async (req, res, next) => {
   try {
@@ -22,12 +23,7 @@ export const validate = (schema) => async (req, res, next) => {
       fileHelper.deleteFiles(req.file.path);
     }
     if (req.files) {
-      fileHelper.deleteFiles(
-        Object.values(req.files).reduce(
-          (p, files) => [...p, ...files.map((f) => f.path)],
-          []
-        )
-      );
+      cdnHelper.deleteFiles(req.files.map((file) => file.key));
     }
 
     return responseFn.error(

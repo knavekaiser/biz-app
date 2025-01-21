@@ -102,7 +102,7 @@ export const upload = (fields) => {
                   req.body[field.name] =
                     field.store === "keyOnly"
                       ? existingFiles[0].url
-                      : existingFiles;
+                      : existingFiles[0];
                 } else {
                   req.body[field.name] = null;
                 }

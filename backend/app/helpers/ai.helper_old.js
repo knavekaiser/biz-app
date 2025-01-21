@@ -211,7 +211,7 @@ export const getContext = async ({
       for (let i = 0; i < files?.length; i++) {
         const file = files[i];
         context +=
-          (await readContext({
+          (await fetchContext({
             filename: file.name,
             ext: file.url.replace(/.+\./, ""),
             path: __dirname + file.url,

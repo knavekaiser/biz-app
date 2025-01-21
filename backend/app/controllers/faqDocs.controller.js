@@ -59,6 +59,10 @@ export const create = async (req, res) => {
       name: "FaqDoc",
     });
 
+    if (req.body.urls === "[]") {
+      req.body.urls = [];
+    }
+
     const subPlan = await SubPlan.findOne({
       _id: (req.business || req.authUser).subscription?.plan,
     });
@@ -85,6 +89,7 @@ export const create = async (req, res) => {
       .then(async (data) => {
         newDoc = data;
         return aiHelper.pushToPinecone({
+          FaqDoc,
           files: req.body.files || [],
           urls: req.body.urls || [],
           metadata: {
@@ -163,6 +168,10 @@ export const update = async (req, res) => {
       name: "FaqDoc",
     });
 
+    if (req.body.urls === "[]") {
+      req.body.urls = [];
+    }
+
     const doc = await FaqDoc.findOne({ _id: req.params._id });
     const subPlan = await SubPlan.findOne({
       _id: (req.business || req.authUser).subscription?.plan,
@@ -202,6 +211,7 @@ export const update = async (req, res) => {
           !compareArrWithObj(doc.files, data.files)
         ) {
           await aiHelper.pushToPinecone({
+            FaqDoc,
             files: req.body.files || [],
             urls: req.body.urls || [],
             oldVectorIds: data.vectorIds,
