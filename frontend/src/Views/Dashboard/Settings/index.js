@@ -137,7 +137,7 @@ const BusinessInformation = ({ next }) => {
     const client = business?.business || user;
     if (client) {
       reset({
-        logo: client.logo ? [client.logo] : [],
+        logo: client.logo ? { url: client.logo } : null,
         name: client.name || "",
         motto: client.motto || "",
         phone: client.phone || "",
@@ -158,7 +158,7 @@ const BusinessInformation = ({ next }) => {
         ifsc: client.ifsc || "",
         domain: client.domain || "",
         chatbotDomain: client.chatbot?.domain || "",
-        favicon: client.favicon ? [client.favicon] : [],
+        favicon: client.favicon ? { url: client.favicon } : null,
       });
       if (client?.address?.latitude && client?.address?.longitude) {
         setMarker(true);
@@ -466,8 +466,8 @@ const OwnerDetails = ({ next }) => {
       ownerPhone: client?.ownerDetails?.phone || "",
       ownerEmail: client?.ownerDetails?.email || "",
       signature: client?.ownerDetails?.signature
-        ? [client?.ownerDetails?.signature]
-        : [],
+        ? { url: client?.ownerDetails?.signature }
+        : null,
     });
   }, [user, business]);
 

@@ -7,7 +7,7 @@ const { responseFn, responseStr } = appConfig;
 export const findAll = async (req, res) => {
   try {
     const DynamicPage = getModel({
-      companyId: req.business._id,
+      companyId: (req.business || req.authUser)._id,
       name: "DynamicPage",
     });
 
@@ -55,7 +55,7 @@ export const findAll = async (req, res) => {
 export const create = async (req, res) => {
   try {
     const DynamicPage = getModel({
-      companyId: req.business._id,
+      companyId: (req.business || req.authUser)._id,
       name: "DynamicPage",
     });
 
@@ -74,7 +74,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const DynamicPage = getModel({
-      companyId: req.business._id,
+      companyId: (req.business || req.authUser)._id,
       name: "DynamicPage",
     });
 
@@ -111,7 +111,7 @@ export const update = async (req, res) => {
 export const deletePage = async (req, res) => {
   try {
     const DynamicPage = getModel({
-      companyId: req.business._id,
+      companyId: (req.business || req.authUser)._id,
       name: "DynamicPage",
     });
 

@@ -244,6 +244,7 @@ const DocForm = ({ edit, onSuccess }) => {
         label="File"
         accept="txt,pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
         control={control}
+        multiple
         name="files"
       />
 
