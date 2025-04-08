@@ -15,12 +15,7 @@ export default function (app) {
         { name: "siteConfig.landingPage.hero.slides", multiple: true },
         { name: "dynamicPageFiles", multiple: true },
       ],
-      "/",
-      {
-        fileSize: appConfig.supportedImageSizes,
-        fileTypes: appConfig.supportedImageTypes,
-        override: true,
-      }
+      { pathname: "user-config/" }
     ),
     validate(schema.update),
     controller.update

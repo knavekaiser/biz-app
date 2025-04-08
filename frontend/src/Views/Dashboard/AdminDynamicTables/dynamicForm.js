@@ -81,7 +81,7 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
               }
               if (field.inputType === "file" && value.length) {
                 for (const file of value) {
-                  payload.append(`${field.name}`, file.uploadFilePath || file);
+                  payload.append(`${field.name}`, file.url || file);
                 }
                 return;
               }
@@ -648,15 +648,13 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
         multiple
         selectedClassName={s.selected}
         options={images
-          .filter(
-            (item) => typeof item === "string" || "uploadFilePath" in item
-          )
+          .filter((item) => typeof item === "string" || "url" in item)
           .map((item) => {
             if (typeof item === "string") {
               return { value: item };
             }
-            if ("uploadFilePath" in item) {
-              return { value: item.uploadFilePath };
+            if ("url" in item) {
+              return { value: item.url };
             }
             if ("type" in item && item.type.startsWith("image")) {
               const url = URL.createObjectURL(item);

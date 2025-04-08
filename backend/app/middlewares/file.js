@@ -15,7 +15,7 @@ const getPath = (str) =>
     .replace(/\\/g, "/")
     .replace(new RegExp(`.*(?=${appConfig.uploadDir})`, "gi"), "");
 
-export const upload = (fields) => {
+export const upload = (fields, options) => {
   try {
     let upload = multer({
       storage: multer.memoryStorage(),
@@ -42,7 +42,10 @@ export const upload = (fields) => {
       filename: (req, file, cb) => {
         const field = fields.find((field) => field.name === file.name);
         const ext = path.extname(file.name);
-        cb(null, `${field.pathname}${new ObjectId()}${ext}`);
+        cb(
+          null,
+          `${options?.pathname || field.pathname || ""}${new ObjectId()}${ext}`
+        );
       },
     });
 
@@ -96,11 +99,13 @@ export const upload = (fields) => {
               if (existingFiles.length) {
                 if (field.multiple) {
                   req.body[field.name] = existingFiles.map((file) =>
-                    field.store === "keyOnly" ? file.url : file
+                    (options?.store || field.store) === "keyOnly"
+                      ? file.url
+                      : file
                   );
                 } else if (req.files[field.name]) {
                   req.body[field.name] =
-                    field.store === "keyOnly"
+                    (options?.store || field.store) === "keyOnly"
                       ? existingFiles[0].url
                       : existingFiles[0];
                 } else {
@@ -124,7 +129,9 @@ export const upload = (fields) => {
                     originalName: file.originalname,
                     mime: file.mimetype || file.type,
                   },
-                  key: `${field.pathname}${new ObjectId()}${ext}`,
+                  key: `${
+                    options?.pathname || field.pathname || ""
+                  }${new ObjectId()}${ext}`,
                   buffer: file.buffer,
                 };
               });
@@ -141,7 +148,7 @@ export const upload = (fields) => {
         response.forEach((file, i) => {
           const field = fields.find((item) => item.name === file.field);
           const final =
-            field.store === "keyOnly"
+            (options?.store || field.store) === "keyOnly"
               ? file.key
               : {
                   url: file.key,
@@ -177,29 +184,26 @@ export const upload = (fields) => {
 
 export const dynamicUpload = async (req, res, next) => {
   const { Model, collection } = req;
+  const companyId =
+    req.authToken.userType === "admin"
+      ? req.query.business || req.business._id
+      : (req.business || req.authUser)?._id;
   // get options from collection
   // size limit, file types
   const options = {};
   const fields = collection.fields
-    .filter((field) => field.inputType === "file")
-    .map((field) => ({ name: field.name, multiple: field.multiple }));
-
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = `${uploadDir}/dynamicTables/${collection.name}_${collection.user}`;
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname);
-      const fileName = `${ObjectId()}${ext}`;
-
-      cb(null, fileName);
-    },
-  });
+    .filter((f) => f.fieldType === "input" && f.inputType === "file")
+    .map((f) => ({
+      name: f.name,
+      multiple: f.multiple,
+      store:
+        f[f.multiple ? "dataElementType" : "dataType"] === "string"
+          ? "keyOnly"
+          : "full",
+    }));
 
   let upload = multer({
-    storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: (options?.fileSize || 10) * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       if (options?.fileTypes) {
@@ -218,52 +222,142 @@ export const dynamicUpload = async (req, res, next) => {
         cb(null, true);
       }
     },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.name);
+      cb(
+        null,
+        `${companyId}/dynamic/${collection.name}/${new ObjectId()}${ext}`
+      );
+    },
   });
 
   upload = upload.fields(fields);
 
   return upload(req, res, async (err) => {
-    if (req.files) {
-      Object.entries(req.files).forEach(([fieldname, files]) => {
-        const field = fields.find((f) => f.name === fieldname);
-        if (field.multiple) {
-          req.body[fieldname] = [
-            ...(typeof req.body[fieldname] === "string"
-              ? [req.body[fieldname]]
-              : req.body[fieldname] || []),
-            ...files.map((file) => getPath(file.path)),
-          ];
+    let response = [];
+    const files = await Promise.all(
+      fields
+        .map((field) => {
+          if (field.name in req.body) {
+            const value = req.body[field.name];
+            if (!value || value === "null") {
+              req.body[field.name] = field.multiple ? [] : null;
+            } else if (typeof value === "string" || Array.isArray(value)) {
+              const existingFile = Array.isArray(value)
+                ? value.map((file) => JSON.parse(file))
+                : JSON.parse(value);
+              req.files[field.name] = Array.isArray(existingFile)
+                ? [...(req.files[field.name] || []), ...existingFile]
+                : [...(req.files[field.name] || []), existingFile];
+              delete req.body[field.name];
+            }
+          }
+
+          if (!(field.name in (req.files || {}))) return null;
+          const files = (req.files[field.name] || []).filter(
+            (file) => file && file.buffer
+          );
+          const existingFiles = (req.files[field.name] || []).filter(
+            (file) => file && file.url
+          );
+
+          if (existingFiles.length) {
+            if (field.multiple) {
+              req.body[field.name] = existingFiles.map((file) =>
+                field.store === "keyOnly" ? file.url : file
+              );
+            } else if (req.files[field.name]) {
+              req.body[field.name] =
+                field.store === "keyOnly"
+                  ? existingFiles[0].url
+                  : existingFiles[0];
+            } else {
+              req.body[field.name] = null;
+            }
+          } else {
+            if (field.multiple) {
+              req.body[field.name] = [];
+            } else {
+              req.body[field.name] = null;
+            }
+          }
+          if (!files?.length) return null;
+
+          return files.map(async (file) => {
+            const ext = path.extname(file.originalname);
+            return {
+              metadata: {
+                field: field.name,
+                size: file.size,
+                originalName: file.originalname,
+                mime: file.mimetype || file.type,
+              },
+              key: `${companyId}/dynamic/${
+                collection.name
+              }/${new ObjectId()}${ext}`,
+              buffer: file.buffer,
+            };
+          });
+        })
+        .filter((x) => x)
+        .flat()
+    ).catch((err) => {
+      throw err;
+    });
+
+    response = await cdnHelper.uploadFiles(files);
+    req.files = [...response];
+
+    response.forEach((file, i) => {
+      const field = fields.find((item) => item.name === file.field);
+      const final =
+        field.store === "keyOnly"
+          ? file.key
+          : {
+              url: file.key,
+              mime: file.mime,
+              size: file.size,
+              name: file.originalName,
+              ...(file.dimensions && { dimensions: file.dimensions }),
+            };
+
+      if (!field.multiple) {
+        req.body[field.name] = final;
+        return;
+      }
+
+      if (req.body[field.name]) {
+        if (Array.isArray(req.body[field.name])) {
+          req.body[field.name] = [...req.body[field.name], final];
         } else {
-          req.body[fieldname] = getPath(files[0].path);
+          req.body[field.name] = [req.body[field.name], final];
         }
-      });
-    }
+      } else {
+        req.body[field.name] = final;
+      }
+    });
 
     const record = req.params.id
       ? await Model.findOne({ _id: ObjectId(req.params.id) })
       : null;
     if (record) {
-      collection.fields.forEach((field) => {
-        if (field.inputType === "file" && record[field.name]?.length > 0) {
+      fields.forEach(async (field) => {
+        if (record[field.name]?.length > 0) {
           if (field.multiple) {
-            record[field.name].forEach((fileLink) => {
-              if (!req.body[field.name]?.includes(fileLink)) {
-                fs.unlink(
-                  uploadDir + fileLink.replace(appConfig.uploadDir, ""),
-                  (err) => {
-                    // store reminder to remove this file later
-                  }
-                );
-              }
-            });
+            const oldFiles = record[field.name].map((file) => file.url || file);
+            const newFiles = req.body[field.name].map(
+              (file) => file.url || file
+            );
+            const filesToDelete = oldFiles.filter(
+              (file) => !newFiles.includes(file)
+            );
+            await cdnHelper.deleteFiles(filesToDelete);
           } else {
-            if (req.body[field.name] !== record[field.name]) {
-              fs.unlink(
-                uploadDir + record[field.name].replace(appConfig.uploadDir, ""),
-                (err) => {
-                  // store reminder to remove this file later
-                }
-              );
+            const oldFile = record[field.name]?.url || record[field.name];
+            const newFile = req.body[field.name]?.url || req.body[field.name];
+
+            if (oldFile && oldFile !== newFile) {
+              await cdnHelper.deleteFiles(oldFile);
             }
           }
         }

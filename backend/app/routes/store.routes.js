@@ -27,12 +27,7 @@ export default function (app) {
         { name: "products__9__image" },
         { name: "products__10__image" },
       ],
-      "/store_images",
-      {
-        fileSize: appConfig.supportedImageSizes,
-        fileTypes: appConfig.supportedImageTypes,
-        override: true,
-      }
+      { pathname: "store_images/" }
     ),
     validate(schema.create),
     controller.create
@@ -54,12 +49,7 @@ export default function (app) {
         { name: "products__9__image" },
         { name: "products__10__image" },
       ],
-      "/store_images",
-      {
-        fileSize: appConfig.supportedImageSizes,
-        fileTypes: appConfig.supportedImageTypes,
-        override: true,
-      }
+      { pathname: "store_images/" }
     ),
     validate(schema.update),
     controller.update

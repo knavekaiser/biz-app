@@ -31,12 +31,7 @@ export default function (app) {
     authJwt.verifyToken,
     file.upload(
       [{ name: "logo" }, { name: "ownerSignature" }, { name: "favicon" }],
-      "/",
-      {
-        fileSize: appConfig.supportedImageSizes,
-        fileTypes: appConfig.supportedImageTypes,
-        override: true,
-      }
+      { pathname: "staffs/", store: "keyOnly" }
     ),
     validate(schema.update),
     controller.update

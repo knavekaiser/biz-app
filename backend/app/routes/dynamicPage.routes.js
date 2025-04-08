@@ -17,21 +17,22 @@ export default function (app) {
     "/",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_page_create"),
-    file.upload([
-      {
-        name: "files",
-        pathname: "dynamic_pages/",
-        multiple: true,
-        fileSize: appConfig.supportedFileSizes,
-        fileTypes: appConfig.supportedFileTypes,
-      },
-      {
-        name: "thumbnail",
-        path: "dynamic_pages/",
-        fileSize: appConfig.supportedFileSizes,
-        fileTypes: appConfig.supportedFileTypes,
-      },
-    ]),
+    file.upload(
+      [
+        {
+          name: "files",
+          multiple: true,
+          fileSize: appConfig.supportedFileSizes,
+          fileTypes: appConfig.supportedFileTypes,
+        },
+        {
+          name: "thumbnail",
+          fileSize: appConfig.supportedFileSizes,
+          fileTypes: appConfig.supportedFileTypes,
+        },
+      ],
+      { pathname: "dynamic_pages/" }
+    ),
     validate(schema.create),
     controller.create
   );
@@ -39,15 +40,22 @@ export default function (app) {
     "/:_id",
     authJwt.verifyToken,
     authJwt.checkPermission("dynamic_page_update"),
-    file.upload([
-      {
-        name: "files",
-        multiple: true,
-        pathname: "/dynamic_page",
-        fileSize: appConfig.supportedFileSizes,
-        fileTypes: appConfig.supportedFileTypes,
-      },
-    ]),
+    file.upload(
+      [
+        {
+          name: "files",
+          multiple: true,
+          fileSize: appConfig.supportedFileSizes,
+          fileTypes: appConfig.supportedFileTypes,
+        },
+        {
+          name: "thumbnail",
+          fileSize: appConfig.supportedFileSizes,
+          fileTypes: appConfig.supportedFileTypes,
+        },
+      ],
+      { pathname: "dynamic_pages/" }
+    ),
     validate(schema.update),
     controller.update
   );

@@ -212,10 +212,10 @@ export const SearchField = ({
   );
 };
 
-const compressImg = async (file) => {
+const compressImg = async (file, imgOptions) => {
   return new Promise((res, rej) => {
     try {
-      const maxDim = 1200;
+      const maxDim = imgOptions?.maxDim || 1200;
       const reader = new FileReader();
       reader.onload = function (e) {
         const img = new Image();
@@ -257,7 +257,7 @@ const compressImg = async (file) => {
                 })
               ),
             "image/webp",
-            0.8
+            imgOptions?.quality || 0.8
           );
         };
       };
@@ -275,27 +275,36 @@ export const FileInputNew = ({
   formOptions,
   multiple,
   accept,
+  disabled,
+  imgOptions,
+  className,
 }) => {
+  const [resizeImg, setResizeImg] = useState(null);
+  const [showFiles, setShowFiles] = useState(false);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showFiles, setShowFiles] = useState(false);
-  const [resizeImg, setResizeImg] = useState(null);
   useEffect(() => {
-    if (control._formValues[name]?.length !== files.length) {
-      setFiles(
-        control._formValues[name]?.map((file) =>
-          typeof file === "string" ? { name: file, uploadFilePath: file } : file
-        ) || []
-      );
+    if (multiple === true || multiple > 1) {
+      if (
+        control._formValues[name] &&
+        control._formValues[name]?.length !== files.length
+      ) {
+        setFiles(control._formValues[name]);
+      }
+    } else {
+      const _file = control._formValues[name];
+      if (_file) {
+        setFiles([_file]);
+      }
     }
-  }, [control._formValues[name]?.length]);
+  }, [control._formValues[name]?.length, control._formValues[name]]);
   return (
     <Controller
       control={control}
       name={name}
       render={({
         field: { onChange, onBlur, value = multiple ? [] : "", name, ref },
-        fieldState: { invalid, isTouched, isDirty, error },
+        fieldState: { error },
       }) => (
         <section
           data-testid="fileInput"
@@ -312,26 +321,30 @@ export const FileInputNew = ({
             )}
           </div>
           <input
-            disabled={loading}
+            disabled={disabled || loading}
             id={name}
             style={{ display: "none" }}
             type="file"
-            multiple={multiple}
+            multiple={multiple === true || multiple > 1}
             accept={accept}
-            // required={formOptions?.required}
+            // max={multiple}
             onChange={async (e) => {
               if (e.target.files.length > 0) {
                 let _files;
-                if (multiple) {
+                if (multiple > 1) {
+                  _files = [
+                    ...files,
+                    ...[...e.target.files]
+                      .splice(0, multiple - files.length)
+                      .filter(
+                        (item) => !files.some((file) => file.name === item.name)
+                      ),
+                  ];
+                } else if (multiple === true) {
                   _files = [
                     ...files,
                     ...[...e.target.files].filter(
-                      (item) =>
-                        !files.some(
-                          (file) =>
-                            (file.name || file.fileName) ===
-                            (item.name || item.fileName)
-                        )
+                      (item) => !files.some((file) => file.name === item.name)
                     ),
                   ];
                 } else {
@@ -341,12 +354,12 @@ export const FileInputNew = ({
                   const item = _files[i];
                   if (item.type?.startsWith("image/")) {
                     setLoading(true);
-                    _files[i] = await compressImg(item);
+                    _files[i] = await compressImg(item, imgOptions);
                     setLoading(false);
                   }
                 }
                 setFiles(_files);
-                onChange(_files);
+                onChange(multiple ? _files : _files[0] || null);
               }
             }}
           />
@@ -358,12 +371,15 @@ export const FileInputNew = ({
                     className={`clear ${s.clear}`}
                     type="button"
                     onClick={() => {
-                      let _files = files.filter((f) =>
-                        typeof f === "string"
-                          ? f !== file
-                          : (f.name || f.fileName) !==
-                            (file.name || file.fileName)
-                      );
+                      let _files = files.filter((f) => {
+                        if (file.url) {
+                          return f.url !== file.url;
+                        }
+                        return (
+                          (f.name || f.fileName) !==
+                          (file.name || file.fileName)
+                        );
+                      });
                       setFiles(_files);
                       onChange(_files);
                     }}
@@ -374,24 +390,14 @@ export const FileInputNew = ({
 
                 if (
                   file.url &&
-                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.name)
+                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.url)
                 ) {
                   return (
                     <li className={s.file} key={i}>
                       <ClearBtn />
-                      <img src={file.url} />
-                    </li>
-                  );
-                }
-
-                if (
-                  file.uploadFilePath &&
-                  new RegExp(/\.(jpg|jpeg|png|gif|webp|ico)$/).test(file.name)
-                ) {
-                  return (
-                    <li className={s.file} key={i}>
-                      <ClearBtn />
-                      <img src={file.uploadFilePath} />
+                      <img
+                        src={process.env.REACT_APP_PUBLIC_R2_URL + file.url}
+                      />
                     </li>
                   );
                 }
@@ -465,8 +471,8 @@ export const FileInputNew = ({
                   {files.map((file, i) => (
                     <tr key={i}>
                       <td>
-                        <a target="_blank" href={file.uploadFilePath}>
-                          {file.name || file.fileName || file.uploadFilePath}
+                        <a target="_blank" href={file.url}>
+                          {file.name || file.fileName || file.url}
                         </a>
                       </td>
                       <TableActions
@@ -587,7 +593,7 @@ export const uploadFiles = async ({ files, uploadFiles }) => {
     const newFiles = [];
 
     for (var _file of files) {
-      if (typeof _file === "string" || _file.uploadFilePath) {
+      if (typeof _file === "string" || _file.url) {
         uploaded.push(_file);
       } else {
         newFiles.push(_file);

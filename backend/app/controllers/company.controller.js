@@ -6,14 +6,7 @@ import {
   fileHelper,
   emailHelper,
 } from "../helpers/index.js";
-import {
-  Company,
-  Otp,
-  Config,
-  // Collection,
-  SubPlan,
-  getModel,
-} from "../models/index.js";
+import { Company, Otp, Config, SubPlan, getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
 const { genId } = appHelper;
@@ -35,6 +28,11 @@ export const signup = async (req, res) => {
         },
       };
     }
+
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Collection",
+    });
 
     new Company({
       ...req.body,
@@ -589,6 +587,11 @@ export const createBusiness = async (req, res) => {
       };
       delete req.body.subPlan;
     }
+
+    const Collection = getModel({
+      companyId: (req.business || req.authUser)._id,
+      name: "Collection",
+    });
 
     new Company({
       ...req.body,

@@ -11,7 +11,6 @@ export const getSiteConfig = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 
@@ -25,6 +24,7 @@ export const getSiteConfig = async (req, res) => {
     const orderCollection = await Collection.findOne({
       name: "Order",
     });
+
     Company.aggregate([
       { $match: { domain } },
       {
@@ -79,6 +79,7 @@ export const getSiteConfig = async (req, res) => {
       )
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
+    console.log(error);
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -91,7 +92,6 @@ export const sitemapUrls = async (req, res) => {
 
     const { Model: Product } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Product",
     });
 
@@ -156,7 +156,6 @@ export const browse = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Product",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -167,13 +166,15 @@ export const browse = async (req, res) => {
         query._id = ObjectId(req.params._id);
       }
     }
-    const sort = { _bestSeller: -1, "cat.order": 1 };
+    const sort = {};
     if (req.query.sort) {
       const [col, order] = req.query.sort.split("-");
       sort[col] = order === "asc" ? 1 : -1;
     } else {
       sort.price = -1;
     }
+    sort._bestSeller = -1;
+    sort["cat.order"] = 1;
     const page = +req.query.page || 1;
     const pageSize = +req.query.pageSize || 10;
 
@@ -296,7 +297,6 @@ export const getRelatedProducts = async (req, res) => {
 
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Product",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -420,7 +420,6 @@ export const getElements = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: req.params.table,
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -442,7 +441,6 @@ export const getLandingPageShelves = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Product",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -538,7 +536,6 @@ export const getLandingPageCategories = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Category",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -575,7 +572,6 @@ export const validateAccount = async (req, res) => {
     }
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Customer",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -604,7 +600,6 @@ export const signup = async (req, res) => {
 
   const { Model, collection } = await dbHelper.getModel({
     companyId: req.business._id,
-    finPeriodId: req.finPeriod._id,
     name: "Customer",
   });
   if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -641,7 +636,6 @@ export const login = async (req, res) => {
     }
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Customer",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -674,7 +668,6 @@ export const profile = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Customer",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -690,7 +683,6 @@ export const updateProfile = async (req, res) => {
   try {
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Customer",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -721,7 +713,6 @@ export const addReview = async (req, res) => {
   try {
     const { Model: Product } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Product",
     });
     const product = await Product.findOne({ _id: req.body.product });
@@ -731,7 +722,6 @@ export const addReview = async (req, res) => {
 
     const { Model, collection } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Review",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -755,7 +745,6 @@ export const getReviews = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Review",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -799,7 +788,6 @@ export const getCart = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Order",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -816,7 +804,6 @@ export const updateCart = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Order",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -857,7 +844,6 @@ export const orders = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Order",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -877,7 +863,6 @@ export const placeOrder = async (req, res) => {
   try {
     const { Model } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Order",
     });
     if (!Model) return responseFn.error(res, {}, responseStr.record_not_found);
@@ -901,7 +886,6 @@ export const placeOrder = async (req, res) => {
         ? await razorpayHelper
             .createOrder({
               business_id: req.business._id,
-              fin_period_id: req.finPeriod._id,
               order_id: cart._id,
               amount: cart.price,
             })
@@ -941,7 +925,6 @@ export const categories = async (req, res) => {
   try {
     const { Model: Category } = await dbHelper.getModel({
       companyId: req.business._id,
-      finPeriodId: req.finPeriod._id,
       name: "Category",
     });
     if (!Category)

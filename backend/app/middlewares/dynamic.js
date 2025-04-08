@@ -29,7 +29,7 @@ export const getModel = async (req, res, next) => {
         req.authToken.userType === "admin"
           ? req.query.business || req.business._id
           : (req.business || req.authUser)?._id,
-      finPeriodId: req.finPeriod?._id,
+      // finPeriodId: req.finPeriod?._id,
       name: req.params.table,
     });
     if (!Model || !collection) {

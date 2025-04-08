@@ -29,7 +29,12 @@ export function Images({ images, className }) {
           imgs.length > 1 ? s.multiple : ""
         }`}
       >
-        {mainView && <img src={mainView} onClick={() => setOpen(true)} />}
+        {mainView && (
+          <img
+            src={process.env.REACT_APP_PUBLIC_R2_URL + mainView}
+            onClick={() => setOpen(true)}
+          />
+        )}
       </div>
       <Modal
         open={open}
@@ -44,11 +49,14 @@ export function Images({ images, className }) {
         >
           <FaTimes />
         </button>
-        <img className={s.mainImg} src={mainView} />
+        <img
+          className={s.mainImg}
+          src={process.env.REACT_APP_PUBLIC_R2_URL + mainView}
+        />
         <div className={s.thumbnails}>
           {imgs.map((src, i) => (
             <img
-              src={src}
+              src={process.env.REACT_APP_PUBLIC_R2_URL + src}
               key={i}
               onClick={() => setMainView(src)}
               className={src === mainView ? s.selected : ""}

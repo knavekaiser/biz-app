@@ -43,7 +43,7 @@ export default function (app) {
       {
         name: "files",
         multiple: true,
-        pathname: "/faq_documents",
+        pathname: "faq_documents/",
         fileSize: appConfig.supportedFileSizes,
         fileTypes: appConfig.supportedFileTypes,
       },

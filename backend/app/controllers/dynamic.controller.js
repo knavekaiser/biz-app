@@ -169,7 +169,7 @@ export const create = async (req, res) => {
         );
         responseFn.success(res, { data: newItem[0] });
         if (collection.name === "Product") {
-          await aiHelper.addProductVector({ product: data });
+          await aiHelper.addProductVector({ product: data }).catch((err) => {});
         }
       })
       .catch((err) => {
@@ -218,6 +218,13 @@ export const bulkCreate = async (req, res) => {
 
     Model.insertMany(data, { ordered: false })
       .then(async (data) => {
+        if (collection.name === "Product") {
+          for (const item of data) {
+            await aiHelper
+              .addProductVector({ product: item })
+              .catch((err) => {});
+          }
+        }
         return responseFn.success(
           res,
           {},
@@ -272,7 +279,6 @@ export const update = async (req, res) => {
         if (collection.name === "Category" && record.name !== data.name) {
           const { Model: Product } = await dbHelper.getModel({
             companyId: (req.business || req.authUser)._id,
-            finPeriodId: req.finPeriod._id,
             name: "Product",
           });
           await Product.updateMany(
@@ -281,7 +287,6 @@ export const update = async (req, res) => {
           );
           const { Model: Subcategory } = await dbHelper.getModel({
             companyId: (req.business || req.authUser)._id,
-            finPeriodId: req.finPeriod._id,
             name: "Subcategory",
           });
           await Subcategory.updateMany(
@@ -292,7 +297,6 @@ export const update = async (req, res) => {
         if (collection.name === "Subcategory" && record.name !== data.name) {
           const { Model: Product } = await dbHelper.getModel({
             companyId: (req.business || req.authUser)._id,
-            finPeriodId: req.finPeriod._id,
             name: "Product",
           });
           await Product.updateMany(
@@ -305,7 +309,7 @@ export const update = async (req, res) => {
           collection.name === "Product"
           // && (record.name !== data.name || record.description !== data.description)
         ) {
-          await aiHelper.addProductVector({ product: data });
+          await aiHelper.addProductVector({ product: data }).catch((err) => {});
         }
       })
       .catch((err) => responseFn.error(res, {}, err.message));

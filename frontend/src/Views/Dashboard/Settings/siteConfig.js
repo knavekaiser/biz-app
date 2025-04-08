@@ -242,7 +242,7 @@ const SiteConfig = ({ next }) => {
           } else {
             formData.append(
               "siteConfig.landingPage.hero.slides",
-              file.uploadFilePath || file
+              file.url || file
             );
           }
         });

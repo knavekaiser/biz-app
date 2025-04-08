@@ -628,7 +628,15 @@ export const DynamicTable = ({
             ) {
               return (
                 <td key={j} onClick={(e) => e.stopPropagation()}>
-                  <Images images={item[field.name]} />
+                  <Images
+                    images={
+                      item[field.name]
+                        ? Array.isArray(item[field.name])
+                          ? item[field.name]
+                          : [item[field.name]]
+                        : []
+                    }
+                  />
                 </td>
               );
             }

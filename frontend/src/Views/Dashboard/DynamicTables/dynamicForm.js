@@ -79,8 +79,18 @@ const MainForm = ({ collection, productCollection, edit, onSuccess }) => {
               }
               if (field.inputType === "file" && value.length) {
                 for (const file of value) {
-                  payload.append(`${field.name}`, file.uploadFilePath || file);
+                  payload.append(
+                    `${field.name}`,
+                    file.url ? JSON.stringify(file) : file
+                  );
                 }
+                return;
+              }
+              if (field.inputType === "file" && value) {
+                payload.append(
+                  `${field.name}`,
+                  value.url ? JSON.stringify(value) : value
+                );
                 return;
               }
               if (["array", "variantArray"].includes(field.dataType)) {
@@ -186,6 +196,17 @@ const DynamicForm = ({
           _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD");
         } else if (field.inputType === "datetime-local") {
           _edit[field.name] = moment(_edit[field.name], "YYYY-MM-DD hh:mm");
+        }
+        if (field.inputType === "file" && field.multiple) {
+          _edit[field.name] = (edit[field.name] || []).map((item) =>
+            item.url ? item : { url: item }
+          );
+        } else if (field.inputType === "file" && !field.multiple) {
+          _edit[field.name] = edit[field.name]
+            ? edit[field.name]?.url
+              ? edit[field.name]
+              : { url: edit[field.name] }
+            : null;
         } else if (
           field.dataType === "objectId" &&
           typeof edit[field.name] === "object"
@@ -696,15 +717,13 @@ const VariantForm = ({ edit, fields, images, onSubmit }) => {
         multiple
         selectedClassName={s.selected}
         options={images
-          .filter(
-            (item) => typeof item === "string" || "uploadFilePath" in item
-          )
+          .filter((item) => typeof item === "string" || "url" in item)
           .map((item) => {
             if (typeof item === "string") {
               return { value: item };
             }
-            if ("uploadFilePath" in item) {
-              return { value: item.uploadFilePath };
+            if ("url" in item) {
+              return { value: item.url };
             }
             if ("type" in item && item.type.startsWith("image")) {
               const url = URL.createObjectURL(item);

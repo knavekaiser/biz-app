@@ -119,7 +119,6 @@ export const findAll = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 
@@ -181,7 +180,6 @@ export const create = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 
@@ -200,7 +198,6 @@ export const update = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 
@@ -219,7 +216,6 @@ export const deleteColl = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 
@@ -277,7 +273,6 @@ export const addSchemaTemplates = async (req, res) => {
   try {
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
-      finPeriodId: req.finPeriod._id,
       name: "Collection",
     });
 

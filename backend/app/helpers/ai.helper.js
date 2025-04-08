@@ -356,7 +356,6 @@ export const getContext = async ({
         context += content + "\n\n";
       }
       for (const url of urls.filter(Boolean)) {
-        console.log("this is running");
         const { error, content } = await fetchContext(url);
         if (error) throw new Error(error);
         context += content + "\n\n";
@@ -382,9 +381,29 @@ export const generateResponse = async ({
   metadata = {},
 }) => {
   return new Promise(async (resolve, reject) => {
-    if (stream) {
-      const eventStream = await agentExecutor.streamEvents(
-        {
+    try {
+      if (stream) {
+        const eventStream = await agentExecutor.streamEvents(
+          {
+            // system_prompt: '',
+            chat_history: history?.map((m) => {
+              if (m.role === "system") {
+                return new SystemMessage(m.content);
+              }
+              if (m.role === "user") {
+                return new HumanMessage(m.content);
+              }
+              if (m.role === "assistant") {
+                return new AIMessage(m.content);
+              }
+            }),
+            input: message,
+          },
+          { version: "v1" }
+        );
+        return resolve(eventStream);
+      } else {
+        const result = await agentExecutor.invoke({
           // system_prompt: '',
           chat_history: history?.map((m) => {
             if (m.role === "system") {
@@ -398,69 +417,12 @@ export const generateResponse = async ({
             }
           }),
           input: message,
-        },
-        { version: "v1" }
-      );
-      return resolve(eventStream);
-
-      for await (const event of eventStream) {
-        const eventType = event.event;
-        if (eventType === "on_chain_start") {
-          // Was assigned when creating the agent with `.withConfig({"runName": "Agent"})` above
-          if (event.name === "Agent") {
-            console.log("\n-----");
-            console.log(
-              `Starting agent: ${event.name} with input: ${JSON.stringify(
-                event.data.input
-              )}`
-            );
-          }
-        } else if (eventType === "on_chain_end") {
-          // Was assigned when creating the agent with `.withConfig({"runName": "Agent"})` above
-          if (event.name === "Agent") {
-            console.log("\n-----");
-            console.log(`Finished agent: ${event.name}\n`);
-            console.log(`Agent output was: ${event.data.output}`);
-            console.log("\n-----");
-          }
-        } else if (eventType === "on_llm_stream") {
-          const content = event.data?.chunk?.message?.content;
-          // Empty content in the context of OpenAI means
-          // that the model is asking for a tool to be invoked via function call.
-          // So we only print non-empty content
-          if (content !== undefined && content !== "") {
-            resolve({ output: content });
-          }
-        } else if (eventType === "on_tool_start") {
-          console.log("\n-----");
-          console.log(
-            `Starting tool: ${event.name} with inputs: ${event.data.input}`
-          );
-        } else if (eventType === "on_tool_end") {
-          console.log("\n-----");
-          console.log(`Finished tool: ${event.name}\n`);
-          console.log(`Tool output was: ${event.data.output}`);
-          console.log("\n-----");
-        }
+        });
+        // console.log(result);
+        return resolve(result);
       }
-    } else {
-      const result = await agentExecutor.invoke({
-        // system_prompt: '',
-        chat_history: history?.map((m) => {
-          if (m.role === "system") {
-            return new SystemMessage(m.content);
-          }
-          if (m.role === "user") {
-            return new HumanMessage(m.content);
-          }
-          if (m.role === "assistant") {
-            return new AIMessage(m.content);
-          }
-        }),
-        input: message,
-      });
-      // console.log(result);
-      return resolve(result);
+    } catch (err) {
+      reject(err);
     }
   });
 };
@@ -506,61 +468,68 @@ Description: <Description Summary>`,
           .join("\n")}`,
       },
     ];
-    const { message, usage } = await generateResponse(messages);
-    const embedding = await openai.embeddings
-      .create({
-        model: "text-embedding-3-large",
-        input: message.content,
-        encoding_format: "float",
-      })
-      .then((data) => data.data[0].embedding);
+    const { message, usage } = await generateResponse(messages).catch((err) => {
+      return {};
+    });
 
-    const metadata = Object.entries(product.toJSON())
-      .filter(
-        ([key]) =>
-          ![
-            "_id",
-            "__v",
-            "createdAt",
-            "updatedAt",
-            "images",
-            "whatsappNumber",
-            "description",
-          ].includes(key)
-      )
-      .reduce((p, [k, v]) => {
-        p[k] = v;
-        return p;
-      }, {});
+    const embedding = message
+      ? await openai.embeddings
+          .create({
+            model: "text-embedding-3-large",
+            input: message.content,
+            encoding_format: "float",
+          })
+          .then((data) => data.data[0].embedding)
+          .catch((err) => console.log("embedding error ==>", err.message))
+      : null;
 
-    if (existingVector.length) {
-      await pc
-        .update({
-          id: product._id.toString(),
-          values: embedding,
-          setMetadata: metadata,
-        })
-        .then((data) => {
-          console.log("vector updated", data);
-        });
-    } else {
-      await pc
-        .upsert({
-          vectors: [
-            {
-              id: product._id.toString(),
-              values: embedding,
-              metadata,
-            },
-          ],
-        })
-        .then((data) => {
-          console.log("vector saved", data);
-        });
+    if (embedding) {
+      const metadata = Object.entries(product.toJSON())
+        .filter(
+          ([key]) =>
+            ![
+              "_id",
+              "__v",
+              "createdAt",
+              "updatedAt",
+              "images",
+              "whatsappNumber",
+              "description",
+            ].includes(key)
+        )
+        .reduce((p, [k, v]) => {
+          p[k] = v;
+          return p;
+        }, {});
+
+      if (existingVector.length) {
+        await pc
+          .update({
+            id: product._id.toString(),
+            values: embedding,
+            setMetadata: metadata,
+          })
+          .then((data) => {
+            console.log("vector updated", data);
+          });
+      } else {
+        await pc
+          .upsert({
+            vectors: [
+              {
+                id: product._id.toString(),
+                values: embedding,
+                metadata,
+              },
+            ],
+          })
+          .then((data) => {
+            console.log("vector saved", data);
+          });
+      }
     }
-    // console.log("bullet points", embedding);
   } catch (err) {
-    console.log(err);
+    console.log("======>", err);
   }
 };
 
