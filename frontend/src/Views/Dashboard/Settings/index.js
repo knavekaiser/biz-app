@@ -185,21 +185,19 @@ const BusinessInformation = ({ next }) => {
           delete values.street;
           delete values.latlng;
         }
-        let logo = values.logo[0];
-        let favicon = values.favicon[0];
 
         const formData = new FormData();
 
-        if (logo?.type) {
-          formData.append(`logo`, logo);
-        } else if (!logo) {
-          formData.append(`logo`, "");
-        }
-        if (favicon?.type) {
-          formData.append(`favicon`, favicon);
-        } else if (!favicon) {
-          formData.append(`favicon`, "");
-        }
+        formData.append(
+          "logo",
+          (values.logo?.url ? JSON.stringify(values.logo) : values.logo) || null
+        );
+        formData.append(
+          "favicon",
+          (values.favicon?.url
+            ? JSON.stringify(values.favicon)
+            : values.favicon) || null
+        );
 
         formData.append(`name`, values.name);
         formData.append(`motto`, values.motto);
