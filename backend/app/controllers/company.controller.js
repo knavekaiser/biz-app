@@ -47,9 +47,7 @@ export const signup = async (req, res) => {
           companyId: user._id,
           name: "Collection",
         });
-        await Collection.insertMany(
-          dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
-        );
+        await Collection.insertMany(dbHelper.defaultSchemas);
 
         return appHelper.signIn(res, user._doc, "company");
       })
@@ -605,9 +603,7 @@ export const createBusiness = async (req, res) => {
           companyId: user._id,
           name: "Collection",
         });
-        await Collection.insertMany(
-          dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
-        );
+        await Collection.insertMany(dbHelper.defaultSchemas);
         let plan = null;
         if (user.subscription?.plan) {
           plan = await SubPlan.findOne({ _id: user.subscription.plan });

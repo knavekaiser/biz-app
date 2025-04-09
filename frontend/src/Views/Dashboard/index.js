@@ -13,6 +13,7 @@ import {
   Link,
   useLocation,
   useNavigate,
+  redirect,
 } from "react-router-dom";
 import { paths } from "config";
 import { FaArrowLeftLong } from "react-icons/fa6";
@@ -410,39 +411,7 @@ const Dashboard = () => {
   }
 
   if (userType === "admin") {
-    return (
-      <div className={s.container}>
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          sidebarItems={sidebarItems}
-          setSidebarOpen={setSidebarOpen}
-        />
-
-        <div className={s.content}>
-          <Routes>
-            <Route
-              path={"*"}
-              element={
-                <div>
-                  <div className={`flex p-1 align-center gap-1`}>
-                    <div
-                      className={`flex align-center pointer gap_5  ml-1`}
-                      onClick={() => setSidebarOpen((prev) => !prev)}
-                    >
-                      <BsList style={{ fontSize: "1.75rem" }} />
-                      <h2>Dashboard</h2>
-                    </div>
-                  </div>
-                  <div style={{ padding: "1rem" }}>
-                    <h2>Please login as a company or staff.</h2>
-                  </div>
-                </div>
-              }
-            />
-          </Routes>
-        </div>
-      </div>
-    );
+    window.location.href = process.env.REACT_APP_PUBLIC_AUTH_APP_URL;
   }
   if (!finPeriod) {
     return (
