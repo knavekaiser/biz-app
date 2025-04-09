@@ -29,11 +29,6 @@ export const signup = async (req, res) => {
       };
     }
 
-    const Collection = getModel({
-      companyId: (req.business || req.authUser)._id,
-      name: "Collection",
-    });
-
     new Company({
       ...req.body,
       chatbots: [
@@ -48,6 +43,10 @@ export const signup = async (req, res) => {
       .save()
       .then(async (user) => {
         await new Config({ user: user._id }).save();
+        const Collection = getModel({
+          companyId: user._id,
+          name: "Collection",
+        });
         await Collection.insertMany(
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
@@ -588,11 +587,6 @@ export const createBusiness = async (req, res) => {
       delete req.body.subPlan;
     }
 
-    const Collection = getModel({
-      companyId: (req.business || req.authUser)._id,
-      name: "Collection",
-    });
-
     new Company({
       ...req.body,
       chatbots: [
@@ -607,6 +601,10 @@ export const createBusiness = async (req, res) => {
       .save()
       .then(async (user) => {
         const config = await new Config({ user: user._id }).save();
+        const Collection = getModel({
+          companyId: user._id,
+          name: "Collection",
+        });
         await Collection.insertMany(
           dbHelper.defaultSchemas.map((item) => ({ ...item, user: user._id }))
         );
