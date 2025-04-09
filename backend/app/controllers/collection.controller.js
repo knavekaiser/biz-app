@@ -246,23 +246,30 @@ export const deleteColl = async (req, res) => {
 export const getSchemaTemplates = async (req, res) => {
   try {
     Company.aggregate([
-      {
-        $lookup: {
-          from: "schemas",
-          localField: "_id",
-          foreignField: "user",
-          as: "schemas",
-        },
-      },
-      {
-        $match: {
-          $expr: { $gt: [{ $size: "$schemas" }, 0] },
-          _id: { $ne: req.business?._id || req.authUser._id },
-        },
-      },
+      { $match: { _id: { $ne: req.business?._id || req.authUser._id } } },
       { $project: { name: 1, _id: 1 } },
     ])
-      .then((data) => responseFn.success(res, { data }))
+      .then((data) =>
+        Promise.all(
+          data.map(async (company) => {
+            const Collection = getModel({
+              companyId: company._id,
+              name: "Collection",
+            });
+            const colls = await Collection.find({});
+            return {
+              _id: company._id,
+              name: company.name,
+              collections: colls,
+            };
+          })
+        )
+      )
+      .then((data) =>
+        responseFn.success(res, {
+          data: data.filter((company) => company?.collections?.length),
+        })
+      )
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {
     return responseFn.error(res, {}, error.message, 500);
@@ -271,18 +278,22 @@ export const getSchemaTemplates = async (req, res) => {
 
 export const addSchemaTemplates = async (req, res) => {
   try {
+    const SourceCollection = getModel({
+      companyId: req.body.schema_id,
+      name: "Collection",
+    });
+
+    const schemas = await SourceCollection.find({}).then((data) =>
+      data.map((item) => ({
+        name: item.name,
+        fields: item.fields,
+      }))
+    );
+
     const Collection = getModel({
       companyId: (req.business || req.authUser)._id,
       name: "Collection",
     });
-
-    const schemas = await Collection.find({}).then((data) =>
-      data.map((item) => ({
-        name: item.name,
-        fields: item.fields,
-        user: req.business?._id || req.authUser._id,
-      }))
-    );
 
     await Collection.deleteMany({
       name: { $in: schemas.map((item) => item.name) },
