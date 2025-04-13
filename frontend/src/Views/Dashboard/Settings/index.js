@@ -171,9 +171,8 @@ const BusinessInformation = ({ next }) => {
       onSubmit={handleSubmit((values) => {
         if (values.address) {
           values.address = {
-            ...values.address.address,
-            street: values.street,
-            formatted: values.address.formatted,
+            street: values.street || null,
+            formatted: values.address?.formatted || null,
             // latitude: values.latitude,
             // longitude: values.longitude,
           };
