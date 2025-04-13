@@ -19,9 +19,6 @@ export const validate = (schema) => async (req, res, next) => {
 
     return next();
   } catch (err) {
-    if (req.file) {
-      fileHelper.deleteFiles(req.file.path);
-    }
     if (req.files) {
       cdnHelper.deleteFiles(req.files.map((file) => file.key));
     }

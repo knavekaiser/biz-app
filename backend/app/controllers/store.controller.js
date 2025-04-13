@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { appConfig } from "../config/index.js";
-import { fileHelper, dbHelper } from "../helpers/index.js";
+import { cdnHelper, dbHelper } from "../helpers/index.js";
 import { Store, StoreConfig, AdSchema, Company } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
@@ -244,7 +244,7 @@ export const create = async (req, res) => {
       .catch((err) => responseFn.error(res, {}, err.message));
   } catch (error) {
     if (req.body.image) {
-      fileHelper.deleteFiles(req.body.image);
+      cdnHelper.deleteFiles(req.body.image);
     }
     return responseFn.error(res, {}, error.message, 500);
   }
@@ -282,7 +282,7 @@ export const deleteStore = async (req, res) => {
     );
     stores.forEach(async (store) => {
       if (store.photo) {
-        fileHelper.deleteFiles(store.photo);
+        cdnHelper.deleteFiles(store.photo);
       }
     });
     Store.deleteMany({

@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { fileHelper } from "../helpers/index.js";
+import { cdnHelper } from "../helpers/index.js";
 import { Config } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
@@ -20,6 +20,7 @@ export const findOne = async (req, res) => {
 
 export const update = async (req, res) => {
   try {
+    delete req.body._id;
     const conditions = { user: req.authUser._id };
     if (["admin", "staff"].includes(req.authToken.userType)) {
       conditions.user = req.business._id;
@@ -64,7 +65,7 @@ export const update = async (req, res) => {
         (url) => !reqSlides.some((u) => u === url)
       );
       if (filesToRemove?.length) {
-        fileHelper.deleteFiles(filesToRemove);
+        cdnHelper.deleteFiles(filesToRemove);
       }
 
       const oldDynamicPageFiles = [];
@@ -83,9 +84,15 @@ export const update = async (req, res) => {
         (url) => !reqDynamicPageFiles.some((u) => u === url)
       );
       if (dynamicPagesToRemove?.length) {
-        fileHelper.deleteFiles(dynamicPagesToRemove);
+        cdnHelper.deleteFiles(dynamicPagesToRemove);
       }
     }
+
+    ["print", "printQuote", "siteConfig", "unitsOfMeasure"].forEach((key) => {
+      if (typeof key === "string") {
+        req.body[key] = JSON.parse(req.body[key]);
+      }
+    });
 
     Config.findOneAndUpdate(conditions, req.body, { new: true })
       .then((data) => {

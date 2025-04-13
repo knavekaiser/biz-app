@@ -163,8 +163,8 @@ const pageSchema = yup.object({
       return /^\/[a-zA-Z0-9\-._~!$&'()*+,;=:@]+$/.test(value);
     }),
   // .required(),
-  thumbnail: yup.array().of(yup.mixed()),
-  files: yup.array().of(yup.mixed()),
+  thumbnail: yup.mixed().required("Please provide an image."),
+  files: yup.mixed().required("Please provide a file."),
 });
 
 const PageForm = ({ edit, onSuccess }) => {
@@ -184,7 +184,11 @@ const PageForm = ({ edit, onSuccess }) => {
   );
 
   useEffect(() => {
-    reset({ ...edit, thumbnail: edit?.thumbnail ? [edit.thumbnail] : [] });
+    reset({
+      ...edit,
+      thumbnail: edit?.thumbnail || null,
+      files: edit?.files?.[0] || null,
+    });
   }, [edit]);
   return (
     <form
@@ -199,13 +203,14 @@ const PageForm = ({ edit, onSuccess }) => {
               values.title
                 .replaceAll(" ", "-")
                 .replace(/[^a-zA-Z0-9\-._~!$&'()*+,;=:@\/]/g, ""),
-          // files: values.files,
         };
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
-          if (["thumbnail", "files"].includes(key) && value?.length) {
-            const file = value[0];
-            formData.append(key, file.url ? JSON.stringify(file) : file);
+          if (["thumbnail", "files"].includes(key)) {
+            formData.append(
+              key,
+              (value?.url ? JSON.stringify(value) : value) || null
+            );
             return;
           }
           if (Array.isArray(value)) {

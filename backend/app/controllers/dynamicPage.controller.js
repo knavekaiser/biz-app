@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { fileHelper } from "../helpers/index.js";
+import { cdnHelper } from "../helpers/index.js";
 import { getModel } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
@@ -64,9 +64,14 @@ export const create = async (req, res) => {
       .then(async (data) => responseFn.success(res, { data }))
       .catch((err) => {
         responseFn.error(res, {}, err.message);
-        // remove uploaded files
+        if (req.files?.length) {
+          cdnHelper.deleteFiles(req.files.map((item) => item.key));
+        }
       });
   } catch (error) {
+    if (req.files?.length) {
+      cdnHelper.deleteFiles(req.files.map((item) => item.key));
+    }
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -94,16 +99,19 @@ export const update = async (req, res) => {
       .then((data) => {
         responseFn.success(res, { data }, responseStr.record_updated);
         if (filesToRemove.length) {
-          fileHelper.deleteFiles(filesToRemove.map((item) => item.url));
+          cdnHelper.deleteFiles(filesToRemove.map((item) => item.url));
         }
       })
       .catch((err) => {
         if (req.files?.length) {
-          // fileHelper.deleteFiles(req.files.map((item) => item.url));
+          cdnHelper.deleteFiles(req.files.map((item) => item.key));
         }
         responseFn.error(res, {}, err.message);
       });
   } catch (error) {
+    if (req.files?.length) {
+      cdnHelper.deleteFiles(req.files.map((item) => item.key));
+    }
     return responseFn.error(res, {}, error.message, 500);
   }
 };
@@ -128,7 +136,7 @@ export const deletePage = async (req, res) => {
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);
-        fileHelper.deleteFiles(files.map((item) => item.url));
+        cdnHelper.deleteFiles(files.map((item) => item.url));
       })
       .catch((err) => responseFn.error(res, {}, err.message, 500));
   } catch (error) {

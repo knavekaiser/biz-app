@@ -2,7 +2,7 @@ import { appConfig } from "../config/index.js";
 import { ObjectId } from "mongodb";
 
 import { Company, getModel } from "../models/index.js";
-import { fileHelper } from "../helpers/index.js";
+import { cdnHelper } from "../helpers/index.js";
 
 const { responseFn, responseStr } = appConfig;
 
@@ -162,13 +162,13 @@ export const updateChatbot = async (req, res) => {
       .then((data) => {
         responseFn.success(res, { data: data.chatbots[0] });
         if (filesToDelete?.length) {
-          fileHelper.deleteFiles(filesToDelete);
+          cdnHelper.deleteFiles(filesToDelete);
         }
       })
       .catch((err) => {
         responseFn.error(res, {}, err.message);
         if (req.files) {
-          fileHelper.deleteFiles(
+          cdnHelper.deleteFiles(
             Object.values(req.files)
               .flat()
               .map((item) => item.path)
@@ -179,7 +179,7 @@ export const updateChatbot = async (req, res) => {
     console.log(error);
     responseFn.error(res, {}, error.message, 500);
     if (req.files) {
-      fileHelper.deleteFiles(
+      cdnHelper.deleteFiles(
         Object.values(req.files)
           .flat()
           .map((item) => item.path)

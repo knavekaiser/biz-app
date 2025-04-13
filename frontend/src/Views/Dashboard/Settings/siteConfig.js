@@ -234,17 +234,16 @@ const SiteConfig = ({ next }) => {
         });
         const formData = new FormData();
         Object.entries(payload).forEach(([key, value]) => {
-          formData.append(key, JSON.stringify(value));
+          formData.append(
+            key,
+            typeof value === "object" ? JSON.stringify(value) : value
+          );
         });
         values.heroImages.forEach((file) => {
-          if (file.type) {
-            formData.append("siteConfig.landingPage.hero.slides", file);
-          } else {
-            formData.append(
-              "siteConfig.landingPage.hero.slides",
-              file.url || file
-            );
-          }
+          formData.append(
+            "siteConfig.landingPage.hero.slides",
+            (file?.url ? JSON.stringify(file) : file) || null
+          );
         });
 
         updateConfig(formData)

@@ -449,8 +449,6 @@ const OwnerDetails = ({ next }) => {
     formState: { errors },
   } = useForm();
 
-  const signature = watch("signature");
-
   const { put: updateOwnerDetails, loading } = useFetch(
     business
       ? endpoints.businesses + `/${business.business._id}`
@@ -473,15 +471,14 @@ const OwnerDetails = ({ next }) => {
     <form
       className="grid gap-1"
       onSubmit={handleSubmit((values) => {
-        let signature = values.signature[0];
-
         const formData = new FormData();
 
-        if (signature?.type) {
-          formData.append(`ownerSignature`, signature);
-        } else if (!signature) {
-          formData.append(`ownerDetails[signature]`, "");
-        }
+        formData.append(
+          `ownerSignature`,
+          (values.signature?.url
+            ? JSON.stringify(values.signature)
+            : values.signature) || null
+        );
 
         formData.append(`ownerDetails[name]`, values.ownerName);
         formData.append(`ownerDetails[phone]`, values.ownerPhone);

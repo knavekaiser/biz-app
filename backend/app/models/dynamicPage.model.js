@@ -9,14 +9,14 @@ export default new Schema(
     thumbnail: {
       name: { type: String, required: true },
       url: { type: String, required: true },
-      type: { type: String, required: true },
+      mime: { type: String, required: true },
       size: { type: Number, required: true },
     },
     files: [
       new Schema({
         name: { type: String, required: true },
         url: { type: String, required: true },
-        type: { type: String, required: true },
+        mime: { type: String, required: true },
         size: { type: Number, required: true },
       }),
     ],

@@ -277,7 +277,6 @@ export const FileInputNew = ({
   accept,
   disabled,
   imgOptions,
-  className,
 }) => {
   const [resizeImg, setResizeImg] = useState(null);
   const [showFiles, setShowFiles] = useState(false);
@@ -381,7 +380,7 @@ export const FileInputNew = ({
                         );
                       });
                       setFiles(_files);
-                      onChange(_files);
+                      onChange(multiple ? _files : _files[0] || null);
                     }}
                   >
                     <FaTimes />
@@ -488,7 +487,7 @@ export const FileInputNew = ({
                                     (file.name || file.fileName)
                               );
                               setFiles(_files);
-                              onChange(_files);
+                              onChange(multiple ? _files : _files[0] || null);
                             },
                           },
                         ]}
@@ -513,7 +512,7 @@ export const FileInputNew = ({
                     return _files;
                   });
                   setTimeout(() => {
-                    onChange(_files);
+                    onChange(multiple ? _files : _files[0] || null);
                   }, 10);
                 }
                 setResizeImg(null);

@@ -3,7 +3,7 @@ import { appConfig } from "../config/index.js";
 import {
   appHelper,
   dbHelper,
-  fileHelper,
+  cdnHelper,
   emailHelper,
 } from "../helpers/index.js";
 import { Company, Otp, Config, SubPlan, getModel } from "../models/index.js";
@@ -363,13 +363,16 @@ export const updateProfile = async (req, res) => {
     if (req.body.logo && req.authUser.logo) {
       filesToDelete.push(req.authUser.logo);
     }
-    if (req.body.ownerSignature) {
-      if (req.authUser.ownerDetails.signature) {
+    if ("ownerSignature" in req.body) {
+      if (
+        req.authUser.ownerDetails.signature &&
+        req.authUser.ownerDetails.signature !== req.body.ownerSignature
+      ) {
         filesToDelete.push(req.authUser.ownerDetails.signature);
       }
       req.body.ownerDetails = {
         ...req.body.ownerDetails,
-        signature: req.body.ownerSignature,
+        signature: req.body.ownerSignature || null,
       };
     }
     if (req.body.chatbotDomain) {
@@ -379,7 +382,7 @@ export const updateProfile = async (req, res) => {
     }
     Company.findOneAndUpdate({ _id: req.authUser._id }, req.body, { new: true })
       .then((data) => {
-        fileHelper.deleteFiles(filesToDelete);
+        cdnHelper.deleteFiles(filesToDelete);
         responseFn.success(
           res,
           {
@@ -453,7 +456,7 @@ export const updateBusiness = async (req, res) => {
         if (data.subscription?.plan) {
           plan = await SubPlan.findOne({ _id: data.subscription.plan });
         }
-        fileHelper.deleteFiles(filesToDelete);
+        cdnHelper.deleteFiles(filesToDelete);
         responseFn.success(
           res,
           {

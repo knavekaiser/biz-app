@@ -1,5 +1,5 @@
 import { appConfig } from "../config/index.js";
-import { fileHelper, aiHelper } from "../helpers/index.js";
+import { cdnHelper, aiHelper } from "../helpers/index.js";
 import { getModel, SubPlan } from "../models/index.js";
 
 const { responseFn, responseStr } = appConfig;
@@ -223,12 +223,12 @@ export const update = async (req, res) => {
         }
         responseFn.success(res, { data }, responseStr.record_updated);
         if (filesToRemove.length) {
-          fileHelper.deleteFiles(filesToRemove.map((item) => item.url));
+          cdnHelper.deleteFiles(filesToRemove.map((item) => item.url));
         }
       })
       .catch((err) => {
         if (req.files?.length) {
-          // fileHelper.deleteFiles(req.files.map((item) => item.url));
+          // cdnHelper.deleteFiles(req.files.map((item) => item.url));
         }
         responseFn.error(res, {}, err.message);
       });
@@ -257,7 +257,7 @@ export const deleteDoc = async (req, res) => {
     })
       .then((num) => {
         responseFn.success(res, {}, responseStr.record_deleted);
-        fileHelper.deleteFiles(
+        cdnHelper.deleteFiles(
           doc
             .map((item) => item.files)
             .flat()
